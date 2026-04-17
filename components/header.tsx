@@ -108,7 +108,12 @@ export function Header() {
                 <div className="text-right">
                   <p className="text-xs font-medium text-foreground">{user.username}</p>
                   {user.is_admin && (
-                    <p className="text-xs text-accent font-semibold">Admin</p>
+                    <div className="flex flex-col gap-1">
+                      <p className="text-xs text-accent font-semibold">Admin</p>
+                      <Link href="/admin" className="text-xs text-primary hover:underline">
+                        Panel Admin
+                      </Link>
+                    </div>
                   )}
                 </div>
                 <button
