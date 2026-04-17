@@ -128,14 +128,17 @@ export default function BlogPostPage() {
           {post.content.split('\n\n').map((paragraph, i) => {
             // Check if it's a heading
             if (paragraph.startsWith('#')) {
-              const level = paragraph.match(/#*/)[0].length
+              const match = paragraph.match(/#*/)
+              const level = match ? match[0].length : 1
               const text = paragraph.replace(/#\s+/, '')
-              const HeadingTag = `h${Math.min(level + 1, 6)}` as keyof JSX.IntrinsicElements
-              return (
-                <HeadingTag key={i} className={`text-${level === 1 ? '2xl' : level === 2 ? 'xl' : 'lg'} font-bold text-foreground mt-8 mb-4`}>
-                  {text}
-                </HeadingTag>
-              )
+              const headingClass = level === 1 ? 'text-2xl' : level === 2 ? 'text-xl' : 'text-lg'
+              
+              if (level === 1) return <h1 key={i} className={`${headingClass} font-bold text-foreground mt-8 mb-4`}>{text}</h1>
+              if (level === 2) return <h2 key={i} className={`${headingClass} font-bold text-foreground mt-8 mb-4`}>{text}</h2>
+              if (level === 3) return <h3 key={i} className={`${headingClass} font-bold text-foreground mt-8 mb-4`}>{text}</h3>
+              if (level === 4) return <h4 key={i} className={`${headingClass} font-bold text-foreground mt-8 mb-4`}>{text}</h4>
+              if (level === 5) return <h5 key={i} className={`${headingClass} font-bold text-foreground mt-8 mb-4`}>{text}</h5>
+              return <h6 key={i} className={`${headingClass} font-bold text-foreground mt-8 mb-4`}>{text}</h6>
             }
 
             // Check if it's a list

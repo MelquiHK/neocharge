@@ -2,8 +2,7 @@ import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
-import { Button } from '@/components/ui/button'
-import { Package, FileText, Settings, BarChart3, LogOut } from 'lucide-react'
+import { Package, FileText, Settings, BarChart3 } from 'lucide-react'
 import { LogoutButton } from '@/components/logout-button'
 
 export default async function AdminPage() {
@@ -25,28 +24,7 @@ export default async function AdminPage() {
     redirect('/')
   }
 
-  const user = { ...authUser, ...profile }
-
-export default async function AdminPage() {
-  const supabase = await createClient()
-
-  const { data: { user: authUser } } = await supabase.auth.getUser()
-
-  if (!authUser) {
-    redirect('/auth/login')
-  }
-
-  const { data: profile } = await supabase
-    .from('profiles')
-    .select('*')
-    .eq('id', authUser.id)
-    .single()
-
-  if (!profile?.is_admin) {
-    redirect('/')
-  }
-
-  const user = { ...authUser, ...profile }
+  const adminUser = { ...authUser, ...profile }
 
   const adminSections = [
     {
@@ -86,10 +64,10 @@ export default async function AdminPage() {
       {/* Header */}
       <section className="border-b bg-gradient-to-r from-primary/5 to-accent/5">
         <div className="container mx-auto px-4 py-12">
-          <div className="flex items-center justify-between mb-4">
+          <div className="flex items-center justify-between">
             <div>
               <h1 className="text-4xl font-bold text-foreground">Panel de Administrador</h1>
-              <p className="text-muted-foreground">Bienvenido, {user?.username}</p>
+              <p className="text-muted-foreground">Bienvenido, {adminUser?.username}</p>
             </div>
             <LogoutButton />
           </div>
@@ -104,34 +82,13 @@ export default async function AdminPage() {
             return (
               <Link key={i} href={section.href}>
                 <div className={`h-full p-8 rounded-lg border-2 hover:shadow-lg transition cursor-pointer ${section.color}`}>
-                  <Icon className="w-12 h-12 mb-4 opacity-80" />
+                  <Icon className="w-12 h-12 mb-4" />
                   <h2 className="text-2xl font-bold mb-2">{section.title}</h2>
-                  <p className="text-sm opacity-80">{section.description}</p>
-                  <div className="mt-6">
-                    <span className="text-sm font-semibold opacity-60">Ir →</span>
-                  </div>
+                  <p className="text-sm">{section.description}</p>
                 </div>
               </Link>
             )
           })}
-        </div>
-      </section>
-
-      {/* Quick Stats */}
-      <section className="container mx-auto px-4 py-12 border-t">
-        <h2 className="text-2xl font-bold text-foreground mb-8">Resumen Rapido</h2>
-        <div className="grid md:grid-cols-4 gap-6">
-          {[
-            { label: 'Total de Productos', value: '0', color: 'bg-blue-50 border-blue-200' },
-            { label: 'Articulos de Blog', value: '0', color: 'bg-purple-50 border-purple-200' },
-            { label: 'Pedidos Pendientes', value: '0', color: 'bg-orange-50 border-orange-200' },
-            { label: 'Total de Clientes', value: '0', color: 'bg-green-50 border-green-200' }
-          ].map((stat, i) => (
-            <div key={i} className={`p-6 rounded-lg border ${stat.color}`}>
-              <p className="text-sm font-medium opacity-80">{stat.label}</p>
-              <p className="text-3xl font-bold mt-2">{stat.value}</p>
-            </div>
-          ))}
         </div>
       </section>
     </div>
