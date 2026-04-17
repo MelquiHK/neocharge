@@ -26,10 +26,10 @@ export default function ProductDetailPage() {
   const [loading, setLoading] = useState(true)
   const [quantity, setQuantity] = useState(1)
   const [selectedImage, setSelectedImage] = useState(0)
-  const supabase = createClient()
 
   useEffect(() => {
     const fetchProduct = async () => {
+      const supabase = createClient()
       try {
         const { data } = await supabase
           .from('products')

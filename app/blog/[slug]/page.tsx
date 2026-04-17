@@ -24,10 +24,10 @@ export default function BlogPostPage() {
   const slug = params.slug as string
   const [post, setPost] = useState<BlogPost | null>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     const fetchPost = async () => {
+      const supabase = createClient()
       try {
         const { data } = await supabase
           .from('blog_posts')

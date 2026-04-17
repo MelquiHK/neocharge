@@ -8,10 +8,10 @@ import { CheckCircle, Clock, MapPin, Phone } from 'lucide-react'
 export default function AboutPage() {
   const [settings, setSettings] = useState<any>(null)
   const [loading, setLoading] = useState(true)
-  const supabase = createClient()
 
   useEffect(() => {
     const fetchSettings = async () => {
+      const supabase = createClient()
       try {
         const { data } = await supabase
           .from('site_settings')

@@ -13,16 +13,17 @@ export function Header() {
   const [user, setUser] = useState<any>(null)
   const [loading, setLoading] = useState(true)
   const router = useRouter()
-  const supabase = createClient()
 
   useEffect(() => {
+    const client = createClient()
+
     const getUser = async () => {
       const {
         data: { user: authUser },
-      } = await supabase.auth.getUser()
+      } = await client.auth.getUser()
 
       if (authUser) {
-        const { data: profile, error } = await supabase
+        const { data: profile, error } = await client
           .from('profiles')
           .select('*')
           .eq('id', authUser.id)
@@ -39,7 +40,7 @@ export function Header() {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = client.auth.onAuthStateChange((event, session) => {
       if (session?.user) {
         setUser(session.user)
       } else {
