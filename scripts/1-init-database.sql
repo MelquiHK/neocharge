@@ -25,12 +25,14 @@ CREATE TABLE IF NOT EXISTS products (
   slug TEXT UNIQUE,
   description TEXT,
   specifications TEXT,
-  price DECIMAL(10, 2) NOT NULL,
+  price DECIMAL(10, 2) NOT NULL CHECK (price >= 0),
+  compare_price DECIMAL(10, 2) CHECK (compare_price >= 0),
   category_id UUID REFERENCES categories(id),
   images TEXT[] DEFAULT '{}',
   main_image_index INTEGER DEFAULT 0,
-  stock INTEGER DEFAULT 0,
+  stock INTEGER DEFAULT 0 CHECK (stock >= 0),
   is_active BOOLEAN DEFAULT TRUE,
+  is_featured BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -52,7 +54,7 @@ CREATE TABLE IF NOT EXISTS blog_posts (
   content TEXT NOT NULL,
   image_url TEXT,
   category_id UUID REFERENCES blog_categories(id),
-  author TEXT,
+  author_id UUID REFERENCES profiles(id),
   is_published BOOLEAN DEFAULT FALSE,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
@@ -62,11 +64,19 @@ CREATE TABLE IF NOT EXISTS blog_posts (
 CREATE TABLE IF NOT EXISTS orders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   user_id UUID REFERENCES profiles(id),
+  customer_name TEXT,
+  customer_phone TEXT,
+  customer_address TEXT,
+  location_lat DECIMAL(10, 8),
+  location_lng DECIMAL(11, 8),
+  location_link TEXT,
+  delivery_method TEXT CHECK (delivery_method IN ('pickup', 'delivery')),
+  pickup_location TEXT,
+  subtotal DECIMAL(10, 2) DEFAULT 0,
+  delivery_fee DECIMAL(10, 2) DEFAULT 0,
   total_amount DECIMAL(10, 2) NOT NULL,
-  status TEXT DEFAULT 'pending',
-  shipping_address TEXT,
-  phone TEXT,
-  notes TEXT,
+  status TEXT DEFAULT 'pending' CHECK (status IN ('pending', 'confirmed', 'preparing', 'shipped', 'delivered', 'cancelled')),
+  admin_notes TEXT,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP,
   updated_at TIMESTAMP WITH TIME ZONE DEFAULT CURRENT_TIMESTAMP
 );
@@ -144,3 +154,12 @@ CREATE INDEX IF NOT EXISTS idx_blog_posts_is_published ON blog_posts(is_publishe
 CREATE INDEX IF NOT EXISTS idx_orders_user ON orders(user_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_order ON order_items(order_id);
 CREATE INDEX IF NOT EXISTS idx_order_items_product ON order_items(product_id);
+
+-- Enable pg_trgm extension for text search
+CREATE EXTENSION IF NOT EXISTS pg_trgm;
+
+-- Search indexes
+CREATE INDEX IF NOT EXISTS idx_products_name_search ON products 
+  USING GIN(name gin_trgm_ops);
+CREATE INDEX IF NOT EXISTS idx_blog_posts_title_search ON blog_posts 
+  USING GIN(title gin_trgm_ops);

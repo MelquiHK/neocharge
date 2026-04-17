@@ -2,6 +2,19 @@
 
 import { createClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
+import { z } from 'zod'
+
+const signUpSchema = z.object({
+  email: z.string().email('Email inválido'),
+  password: z.string()
+    .min(12, 'La contraseña debe tener al menos 12 caracteres')
+    .regex(/[A-Z]/, 'La contraseña debe incluir al menos una mayúscula')
+    .regex(/[a-z]/, 'La contraseña debe incluir al menos una minúscula')
+    .regex(/[0-9]/, 'La contraseña debe incluir al menos un número')
+    .regex(/[!@#$%^&*]/, 'La contraseña debe incluir al menos un carácter especial'),
+  username: z.string().min(3, 'El nombre de usuario debe tener al menos 3 caracteres').max(20, 'El nombre de usuario no puede tener más de 20 caracteres'),
+  phone: z.string().regex(/^\d{8,}$/, 'El teléfono debe tener al menos 8 dígitos'),
+})
 
 export async function signUpAction(formData: {
   email: string
@@ -9,16 +22,18 @@ export async function signUpAction(formData: {
   username: string
   phone: string
 }) {
+  const validated = signUpSchema.parse(formData)
+
   const supabase = await createClient()
 
   const { data, error } = await supabase.auth.signUp({
-    email: formData.email,
-    password: formData.password,
+    email: validated.email,
+    password: validated.password,
     options: {
       emailRedirectTo: `${process.env.NEXT_PUBLIC_BASE_URL}/auth/callback`,
       data: {
-        username: formData.username,
-        phone: formData.phone,
+        username: validated.username,
+        phone: validated.phone,
       },
     },
   })
@@ -33,8 +48,8 @@ export async function signUpAction(formData: {
       .from('profiles')
       .insert({
         id: data.user.id,
-        username: formData.username,
-        phone: formData.phone,
+        username: validated.username,
+        phone: validated.phone,
         is_admin: false,
       })
 
@@ -84,11 +99,16 @@ export async function getCurrentUser() {
 
   if (!user) return null
 
-  const { data: profile } = await supabase
+  const { data: profile, error } = await supabase
     .from('profiles')
     .select('*')
     .eq('id', user.id)
     .single()
+
+  if (error || !profile) {
+    console.error('Error fetching profile:', error)
+    return null
+  }
 
   return {
     ...user,

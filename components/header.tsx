@@ -22,13 +22,15 @@ export function Header() {
       } = await supabase.auth.getUser()
 
       if (authUser) {
-        const { data: profile } = await supabase
+        const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', authUser.id)
           .single()
 
-        setUser({ ...authUser, ...profile })
+        if (!error && profile) {
+          setUser({ ...authUser, ...profile })
+        }
       }
       setLoading(false)
     }

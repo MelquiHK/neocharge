@@ -1,68 +1,52 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
 import { Package, FileText, Settings, BarChart3, LogOut } from 'lucide-react'
-import { signOutAction } from '@/lib/auth-actions'
+import { LogoutButton } from '@/components/logout-button'
 
-export default function AdminPage() {
-  const [user, setUser] = useState<any>(null)
-  const [loading, setLoading] = useState(true)
-  const router = useRouter()
-  const supabase = createClient()
+export default async function AdminPage() {
+  const supabase = await createClient()
 
-  useEffect(() => {
-    const checkAdmin = async () => {
-      try {
-        const {
-          data: { user: authUser },
-        } = await supabase.auth.getUser()
+  const { data: { user: authUser } } = await supabase.auth.getUser()
 
-        if (!authUser) {
-          router.push('/auth/login')
-          return
-        }
-
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authUser.id)
-          .single()
-
-        if (!profile?.is_admin) {
-          router.push('/')
-          return
-        }
-
-        setUser({ ...authUser, ...profile })
-      } catch (error) {
-        router.push('/')
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkAdmin()
-  }, [])
-
-  const handleLogout = async () => {
-    await signOutAction()
+  if (!authUser) {
+    redirect('/auth/login')
   }
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-white">
-        <Header />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <p className="text-muted-foreground">Verificando acceso...</p>
-        </div>
-      </div>
-    )
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', authUser.id)
+    .single()
+
+  if (!profile?.is_admin) {
+    redirect('/')
   }
+
+  const user = { ...authUser, ...profile }
+
+export default async function AdminPage() {
+  const supabase = await createClient()
+
+  const { data: { user: authUser } } = await supabase.auth.getUser()
+
+  if (!authUser) {
+    redirect('/auth/login')
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', authUser.id)
+    .single()
+
+  if (!profile?.is_admin) {
+    redirect('/')
+  }
+
+  const user = { ...authUser, ...profile }
 
   const adminSections = [
     {
@@ -107,13 +91,7 @@ export default function AdminPage() {
               <h1 className="text-4xl font-bold text-foreground">Panel de Administrador</h1>
               <p className="text-muted-foreground">Bienvenido, {user?.username}</p>
             </div>
-            <button
-              onClick={handleLogout}
-              className="flex items-center gap-2 px-4 py-2 text-destructive hover:bg-destructive/10 rounded-lg transition"
-            >
-              <LogOut size={18} />
-              Cerrar Sesion
-            </button>
+            <LogoutButton />
           </div>
         </div>
       </section>

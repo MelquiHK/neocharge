@@ -1,6 +1,7 @@
 import type { Metadata, Viewport } from 'next'
 import { Poppins, PT_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
+import { ThemeProvider } from '@/components/theme-provider'
 import './globals.css'
 
 const poppins = Poppins({
@@ -41,7 +42,9 @@ export default function RootLayout({
         <link rel="apple-touch-icon" href="/images/logo-192.png" />
       </head>
       <body className="font-pt-sans antialiased">
-        {children}
+        <ThemeProvider attribute="class" defaultTheme="light">
+          {children}
+        </ThemeProvider>
         <Analytics />
       </body>
     </html>

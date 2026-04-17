@@ -32,16 +32,32 @@ export default function SignUpPage() {
       setError('Todos los campos son requeridos')
       return false
     }
-    if (formData.password.length < 6) {
-      setError('La contrasena debe tener al menos 6 caracteres')
+    if (formData.password.length < 12) {
+      setError('La contraseña debe tener al menos 12 caracteres')
+      return false
+    }
+    if (!/[A-Z]/.test(formData.password)) {
+      setError('La contraseña debe incluir al menos una mayúscula')
+      return false
+    }
+    if (!/[a-z]/.test(formData.password)) {
+      setError('La contraseña debe incluir al menos una minúscula')
+      return false
+    }
+    if (!/[0-9]/.test(formData.password)) {
+      setError('La contraseña debe incluir al menos un número')
+      return false
+    }
+    if (!/[!@#$%^&*]/.test(formData.password)) {
+      setError('La contraseña debe incluir al menos un carácter especial')
       return false
     }
     if (formData.password !== formData.confirmPassword) {
-      setError('Las contrasenas no coinciden')
+      setError('Las contraseñas no coinciden')
       return false
     }
     if (formData.phone.length < 8) {
-      setError('Ingresa un numero de telefono valido')
+      setError('Ingresa un número de teléfono válido')
       return false
     }
     return true

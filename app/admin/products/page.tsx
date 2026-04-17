@@ -1,12 +1,10 @@
-'use client'
-
-import { useEffect, useState } from 'react'
-import { useRouter } from 'next/navigation'
+import { redirect } from 'next/navigation'
 import Link from 'next/link'
-import { createClient } from '@/lib/supabase/client'
+import { createClient } from '@/lib/supabase/server'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Edit, Trash2, Plus, Search, ChevronLeft } from 'lucide-react'
+import { AdminProductsClient } from '@/components/admin-products-client'
 
 interface Product {
   id: string
@@ -18,78 +16,31 @@ interface Product {
   created_at: string
 }
 
-export default function AdminProductsPage() {
-  const [products, setProducts] = useState<Product[]>([])
-  const [loading, setLoading] = useState(true)
-  const [searchQuery, setSearchQuery] = useState('')
-  const router = useRouter()
-  const supabase = createClient()
+export default async function AdminProductsPage() {
+  const supabase = await createClient()
 
-  useEffect(() => {
-    const checkAdmin = async () => {
-      const {
-        data: { user },
-      } = await supabase.auth.getUser()
+  const { data: { user } } = await supabase.auth.getUser()
 
-      if (!user) {
-        router.push('/auth/login')
-        return
-      }
-
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', user.id)
-        .single()
-
-      if (!profile?.is_admin) {
-        router.push('/')
-        return
-      }
-
-      fetchProducts()
-    }
-
-    const fetchProducts = async () => {
-      try {
-        const { data } = await supabase
-          .from('products')
-          .select('*')
-          .order('created_at', { ascending: false })
-
-        if (data) {
-          setProducts(data)
-        }
-      } catch (error) {
-        console.error('Error fetching products:', error)
-      } finally {
-        setLoading(false)
-      }
-    }
-
-    checkAdmin()
-  }, [])
-
-  const handleDelete = async (id: string) => {
-    if (!confirm('Estas seguro de que quieres eliminar este producto?')) return
-
-    try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id)
-
-      if (!error) {
-        setProducts(products.filter(p => p.id !== id))
-      }
-    } catch (error) {
-      console.error('Error deleting product:', error)
-    }
+  if (!user) {
+    redirect('/auth/login')
   }
 
-  const filteredProducts = products.filter(p =>
-    p.name.toLowerCase().includes(searchQuery.toLowerCase())
-  )
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('*')
+    .eq('id', user.id)
+    .single()
+
+  if (!profile?.is_admin) {
+    redirect('/')
+  }
+
+  const { data: products } = await supabase
+    .from('products')
+    .select('*')
+    .order('created_at', { ascending: false })
+
+  return <AdminProductsClient initialProducts={products || []} />
 
   return (
     <div className="min-h-screen bg-white">
