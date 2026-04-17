@@ -1,6 +1,5 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
-import { v4 as uuidv4 } from 'uuid'
 
 export const maxDuration = 60 // For Vercel Hobby tier
 
@@ -46,7 +45,7 @@ export async function POST(request: NextRequest) {
 
     // Generate unique filename
     const ext = file.name.split('.').pop() || 'jpg'
-    const fileName = `${uuidv4()}.${ext}`
+    const fileName = `${crypto.randomUUID()}.${ext}`
     const bucket = 'products'
 
     // Convert File to Uint8Array
