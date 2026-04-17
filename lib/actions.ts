@@ -21,55 +21,87 @@ async function verifyAdmin() {
   return supabase
 }
 
+// Helper: Upload file to Supabase Storage
+export async function uploadImage(file: Buffer, bucket: string, fileName: string) {
+  const supabase = await createClient()
+  
+  const { data, error } = await supabase.storage
+    .from(bucket)
+    .upload(fileName, file, {
+      cacheControl: '3600',
+      upsert: true,
+    })
+  
+  if (error) throw new Error(`Upload failed: ${error.message}`)
+  
+  const { data: { publicUrl } } = supabase.storage
+    .from(bucket)
+    .getPublicUrl(fileName)
+  
+  return publicUrl
+}
+
 // Products
 export async function createProductAction(formData: any) {
   const supabase = await verifyAdmin()
 
-  const { error, data } = await supabase
-    .from('products')
-    .insert({
-      name: formData.name,
-      slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
-      description: formData.description,
-      specifications: formData.specifications,
-      price: parseFloat(formData.price),
-      compare_price: formData.compare_price ? parseFloat(formData.compare_price) : null,
-      category_id: formData.category_id,
-      images: formData.images || [],
-      stock: parseInt(formData.stock),
-      is_active: formData.is_active !== false,
-      is_featured: formData.is_featured === true,
-    })
-    .select()
+  try {
+    if (!formData.name || !formData.price || formData.stock === undefined) {
+      throw new Error('Campos requeridos: nombre, precio y stock')
+    }
 
-  if (error) throw new Error(error.message)
-  return data[0]
+    const { error, data } = await supabase
+      .from('products')
+      .insert({
+        name: formData.name,
+        slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
+        description: formData.description || '',
+        specifications: formData.specifications || '',
+        price: parseFloat(formData.price),
+        compare_price: formData.compare_price ? parseFloat(formData.compare_price) : null,
+        category_id: formData.category_id || null,
+        image_url: formData.image_url || null,
+        stock: parseInt(formData.stock),
+        is_active: formData.is_active !== false,
+        is_featured: formData.is_featured === true,
+      })
+      .select()
+
+    if (error) throw new Error(`Error en base de datos: ${error.message}`)
+    return data[0]
+  } catch (err) {
+    throw err instanceof Error ? err : new Error('Error desconocido al crear producto')
+  }
 }
 
 export async function updateProductAction(id: string, formData: any) {
   const supabase = await verifyAdmin()
 
-  const { error, data } = await supabase
-    .from('products')
-    .update({
-      name: formData.name,
-      slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
-      description: formData.description,
-      specifications: formData.specifications,
-      price: parseFloat(formData.price),
-      compare_price: formData.compare_price ? parseFloat(formData.compare_price) : null,
-      category_id: formData.category_id,
-      images: formData.images || [],
-      stock: parseInt(formData.stock),
-      is_active: formData.is_active !== false,
-      is_featured: formData.is_featured === true,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', id)
-    .select()
+  try {
+    const { error, data } = await supabase
+      .from('products')
+      .update({
+        name: formData.name,
+        slug: formData.slug || formData.name.toLowerCase().replace(/\s+/g, '-'),
+        description: formData.description || '',
+        specifications: formData.specifications || '',
+        price: parseFloat(formData.price),
+        compare_price: formData.compare_price ? parseFloat(formData.compare_price) : null,
+        category_id: formData.category_id || null,
+        image_url: formData.image_url || null,
+        stock: parseInt(formData.stock),
+        is_active: formData.is_active !== false,
+        is_featured: formData.is_featured === true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
 
-  if (error) throw new Error(error.message)
-  return data[0]
+    if (error) throw new Error(`Error en base de datos: ${error.message}`)
+    return data[0]
+  } catch (err) {
+    throw err instanceof Error ? err : new Error('Error desconocido al actualizar producto')
+  }
 }
 
 export async function deleteProductAction(id: string) {
@@ -84,44 +116,56 @@ export async function createBlogPostAction(formData: any) {
   const supabase = await verifyAdmin()
   const { data: { user } } = await supabase.auth.getUser()
 
-  const { error, data } = await supabase
-    .from('blog_posts')
-    .insert({
-      title: formData.title,
-      slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-'),
-      excerpt: formData.excerpt,
-      content: formData.content,
-      image_url: formData.image_url,
-      category_id: formData.category_id,
-      author_id: user?.id,
-      is_published: formData.is_published === true,
-    })
-    .select()
+  try {
+    if (!formData.title || !formData.content) {
+      throw new Error('Campos requeridos: título y contenido')
+    }
 
-  if (error) throw new Error(error.message)
-  return data[0]
+    const { error, data } = await supabase
+      .from('blog_posts')
+      .insert({
+        title: formData.title,
+        slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-'),
+        excerpt: formData.excerpt || '',
+        content: formData.content,
+        image_url: formData.image_url || null,
+        category_id: formData.category_id || null,
+        author_id: user?.id,
+        is_published: formData.is_published === true,
+      })
+      .select()
+
+    if (error) throw new Error(`Error en base de datos: ${error.message}`)
+    return data[0]
+  } catch (err) {
+    throw err instanceof Error ? err : new Error('Error desconocido al crear artículo')
+  }
 }
 
 export async function updateBlogPostAction(id: string, formData: any) {
   const supabase = await verifyAdmin()
 
-  const { error, data } = await supabase
-    .from('blog_posts')
-    .update({
-      title: formData.title,
-      slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-'),
-      excerpt: formData.excerpt,
-      content: formData.content,
-      image_url: formData.image_url,
-      category_id: formData.category_id,
-      is_published: formData.is_published === true,
-      updated_at: new Date().toISOString(),
-    })
-    .eq('id', id)
-    .select()
+  try {
+    const { error, data } = await supabase
+      .from('blog_posts')
+      .update({
+        title: formData.title,
+        slug: formData.slug || formData.title.toLowerCase().replace(/\s+/g, '-'),
+        excerpt: formData.excerpt || '',
+        content: formData.content,
+        image_url: formData.image_url || null,
+        category_id: formData.category_id || null,
+        is_published: formData.is_published === true,
+        updated_at: new Date().toISOString(),
+      })
+      .eq('id', id)
+      .select()
 
-  if (error) throw new Error(error.message)
-  return data[0]
+    if (error) throw new Error(`Error en base de datos: ${error.message}`)
+    return data[0]
+  } catch (err) {
+    throw err instanceof Error ? err : new Error('Error desconocido al actualizar artículo')
+  }
 }
 
 export async function deleteBlogPostAction(id: string) {

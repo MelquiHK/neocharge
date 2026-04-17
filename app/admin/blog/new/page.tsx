@@ -5,12 +5,15 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ChevronLeft, Save } from 'lucide-react'
+import { ChevronLeft, Save, Upload } from 'lucide-react'
 import { createBlogPostAction } from '@/lib/actions'
+import Image from 'next/image'
 
 export default function NewBlogPostPage() {
   const router = useRouter()
   const [loading, setLoading] = useState(false)
+  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [uploadingImage, setUploadingImage] = useState(false)
   const [formData, setFormData] = useState({
     title: '',
     slug: '',
@@ -29,6 +32,43 @@ export default function NewBlogPostPage() {
     }))
   }
 
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0]
+    if (!file) return
+
+    setUploadingImage(true)
+    try {
+      // Mostrar preview
+      const reader = new FileReader()
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+
+      // Subir a Supabase Storage
+      const formDataFile = new FormData()
+      formDataFile.append('file', file)
+
+      const response = await fetch('/api/upload', {
+        method: 'POST',
+        body: formDataFile,
+      })
+
+      if (!response.ok) throw new Error('Error al subir la imagen')
+
+      const data = await response.json()
+      setFormData(prev => ({
+        ...prev,
+        image_url: data.url,
+      }))
+    } catch (error) {
+      console.error('Error uploading image:', error)
+      alert('Error al subir la imagen')
+    } finally {
+      setUploadingImage(false)
+    }
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -38,7 +78,8 @@ export default function NewBlogPostPage() {
       router.push('/admin/blog')
     } catch (error) {
       console.error('Error creating blog post:', error)
-      alert('Error al crear el artículo')
+      const errorMsg = error instanceof Error ? error.message : 'Error desconocido'
+      alert(`Error al crear el artículo: ${errorMsg}`)
     } finally {
       setLoading(false)
     }
@@ -129,7 +170,37 @@ export default function NewBlogPostPage() {
             <div className="space-y-4">
               <div>
                 <label className="block text-sm font-medium text-foreground mb-2">
-                  URL de la Imagen
+                  Subir Imagen
+                </label>
+                <div className="flex gap-4">
+                  <input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleImageUpload}
+                    disabled={uploadingImage}
+                    className="flex-1 px-3 py-2 border border-border rounded-lg text-sm"
+                  />
+                  {uploadingImage && <span className="text-sm text-muted-foreground">Subiendo...</span>}
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  JPG, PNG, WebP (máx. 5MB)
+                </p>
+              </div>
+
+              {imagePreview && (
+                <div className="relative w-full h-48 rounded-lg overflow-hidden border border-border">
+                  <Image
+                    src={imagePreview}
+                    alt="Preview"
+                    fill
+                    className="object-cover"
+                  />
+                </div>
+              )}
+
+              <div>
+                <label className="block text-sm font-medium text-foreground mb-2">
+                  O pegue una URL de imagen
                 </label>
                 <Input
                   name="image_url"
