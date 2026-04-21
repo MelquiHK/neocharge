@@ -51,12 +51,19 @@ export async function uploadImage(file: Buffer, bucket: string, fileName: string
 
 // Products
 export async function createProductAction(formData: any) {
-  const supabase = await verifyAdmin()
-
   try {
+    const supabase = await verifyAdmin()
+
     if (!formData.name || !formData.price || formData.stock === undefined) {
       throw new Error('Campos requeridos: nombre, precio y stock')
     }
+
+    console.log('[createProductAction] Inserting product:', {
+      name: formData.name,
+      price: formData.price,
+      stock: formData.stock,
+      image_url: formData.image_url ? 'provided' : 'none',
+    })
 
     const { error, data } = await supabase
       .from('products')
@@ -75,10 +82,17 @@ export async function createProductAction(formData: any) {
       })
       .select()
 
-    if (error) throw new Error(`Error en base de datos: ${error.message}`)
+    if (error) {
+      console.error('[createProductAction] Database error:', error)
+      throw new Error(`Error en BD: ${error.message}`)
+    }
+
+    console.log('[createProductAction] Product created:', data[0]?.id)
     return data[0]
   } catch (err) {
-    throw err instanceof Error ? err : new Error('Error desconocido al crear producto')
+    const errorMsg = err instanceof Error ? err.message : 'Error desconocido'
+    console.error('[createProductAction] Error:', errorMsg)
+    throw new Error(`Crear producto falló: ${errorMsg}`)
   }
 }
 
