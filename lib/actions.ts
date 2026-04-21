@@ -6,17 +6,25 @@ import { redirect } from 'next/navigation'
 // Helper: Verify admin access
 async function verifyAdmin() {
   const supabase = await createClient()
-  const { data: { user } } = await supabase.auth.getUser()
+  const { data: { user }, error: authError } = await supabase.auth.getUser()
   
-  if (!user) throw new Error('Unauthorized')
+  if (authError || !user) {
+    throw new Error(`No autenticado: ${authError?.message || 'Usuario no encontrado'}`)
+  }
 
-  const { data: profile } = await supabase
+  const { data: profile, error: profileError } = await supabase
     .from('profiles')
     .select('is_admin')
     .eq('id', user.id)
     .single()
 
-  if (!profile?.is_admin) throw new Error('Forbidden')
+  if (profileError) {
+    throw new Error(`Error al verificar perfil: ${profileError.message}`)
+  }
+
+  if (!profile?.is_admin) {
+    throw new Error('Permiso denegado: No tienes acceso de administrador')
+  }
   
   return supabase
 }

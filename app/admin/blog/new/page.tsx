@@ -54,16 +54,21 @@ export default function NewBlogPostPage() {
         body: formDataFile,
       })
 
-      if (!response.ok) throw new Error('Error al subir la imagen')
+      if (!response.ok) {
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Error al subir la imagen')
+      }
 
       const data = await response.json()
+      if (!data.url) throw new Error('No se obtuvo URL de la imagen')
       setFormData(prev => ({
         ...prev,
         image_url: data.url,
       }))
     } catch (error) {
       console.error('Error uploading image:', error)
-      alert('Error al subir la imagen')
+      const errorMsg = error instanceof Error ? error.message : 'Error desconocido al subir imagen'
+      alert(`Subida fallida: ${errorMsg}`)
     } finally {
       setUploadingImage(false)
     }
