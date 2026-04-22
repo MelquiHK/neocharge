@@ -83,12 +83,15 @@ export default function NewProductPage() {
     setLoading(true)
 
     try {
-      await createProductAction(formData)
+      console.log('[handleSubmit] Enviando producto:', formData)
+      const result = await createProductAction(formData)
+      console.log('[handleSubmit] Producto creado:', result)
+      alert('✅ Producto creado exitosamente!')
       router.push('/admin/products')
     } catch (error) {
-      console.error('Error creating product:', error)
+      console.error('[handleSubmit] Error:', error)
       const errorMsg = error instanceof Error ? error.message : 'Error desconocido'
-      alert(`Error al crear el producto: ${errorMsg}`)
+      alert(`❌ Error al crear producto:\n\n${errorMsg}`)
     } finally {
       setLoading(false)
     }

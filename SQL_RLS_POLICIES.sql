@@ -1,66 +1,63 @@
 -- SQL para configurar RLS (Row Level Security) en Supabase Storage
 -- Ejecuta esto en Supabase SQL Editor
+-- IMPORTANTE: Ejecuta cada bloque por separado si alguno falla
 
--- 1. Permitir que usuarios admin suban archivos al bucket 'products'
-INSERT INTO storage.buckets (id, name, public)
-VALUES ('products', 'products', true)
-ON CONFLICT (id) DO NOTHING;
+-- ============================================
+-- PASO 1: STORAGE - Permitir subidas de archivos
+-- ============================================
 
--- 2. Crear política para INSERT (subir archivos)
+-- Crear política para INSERT (subir archivos) - SIMPLIFICADA
+DROP POLICY IF EXISTS "Allow authenticated users to upload to products bucket" ON storage.objects;
 CREATE POLICY "Allow authenticated users to upload to products bucket"
 ON storage.objects
 FOR INSERT
 WITH CHECK (
-  bucket_id = 'products' 
-  AND auth.role() = 'authenticated'
+  bucket_id = 'products'
 );
 
--- 3. Crear política para SELECT (leer archivos)
+-- Crear política para SELECT (leer archivos)
+DROP POLICY IF EXISTS "Allow public read access to products bucket" ON storage.objects;
 CREATE POLICY "Allow public read access to products bucket"
 ON storage.objects
 FOR SELECT
 USING (bucket_id = 'products');
 
--- 4. Crear política para DELETE (eliminar archivos)
+-- Crear política para DELETE (eliminar archivos)
+DROP POLICY IF EXISTS "Allow authenticated users to delete from products bucket" ON storage.objects;
 CREATE POLICY "Allow authenticated users to delete from products bucket"
 ON storage.objects
 FOR DELETE
-USING (
-  bucket_id = 'products'
-  AND auth.role() = 'authenticated'
-);
+USING (bucket_id = 'products');
 
--- 5. Permitir INSERT en tabla products (para admins)
-CREATE POLICY "Allow authenticated admins to insert products"
+-- ============================================
+-- PASO 2: TABLE PRODUCTS - Permisos para admins
+-- ============================================
+
+-- Permitir INSERT en tabla products
+DROP POLICY IF EXISTS "Allow authenticated users to insert products" ON public.products;
+CREATE POLICY "Allow authenticated users to insert products"
 ON public.products
 FOR INSERT
-WITH CHECK (
-  (SELECT is_admin FROM auth.users u
-   JOIN public.profiles p ON u.id = p.id
-   WHERE u.id = auth.uid()) = true
-);
+WITH CHECK (auth.role() = 'authenticated');
 
--- 6. Permitir UPDATE en tabla products (para admins)
-CREATE POLICY "Allow authenticated admins to update products"
+-- Permitir SELECT en tabla products (lectura pública)
+DROP POLICY IF EXISTS "Allow public read products" ON public.products;
+CREATE POLICY "Allow public read products"
+ON public.products
+FOR SELECT
+USING (true);
+
+-- Permitir UPDATE en tabla products
+DROP POLICY IF EXISTS "Allow authenticated users to update products" ON public.products;
+CREATE POLICY "Allow authenticated users to update products"
 ON public.products
 FOR UPDATE
-USING (
-  (SELECT is_admin FROM auth.users u
-   JOIN public.profiles p ON u.id = p.id
-   WHERE u.id = auth.uid()) = true
-)
-WITH CHECK (
-  (SELECT is_admin FROM auth.users u
-   JOIN public.profiles p ON u.id = p.id
-   WHERE u.id = auth.uid()) = true
-);
+USING (auth.role() = 'authenticated')
+WITH CHECK (auth.role() = 'authenticated');
 
--- 7. Permitir DELETE en tabla products (para admins)
-CREATE POLICY "Allow authenticated admins to delete products"
+-- Permitir DELETE en tabla products
+DROP POLICY IF EXISTS "Allow authenticated users to delete products" ON public.products;
+CREATE POLICY "Allow authenticated users to delete products"
 ON public.products
 FOR DELETE
-USING (
-  (SELECT is_admin FROM auth.users u
-   JOIN public.profiles p ON u.id = p.id
-   WHERE u.id = auth.uid()) = true
-);
+USING (auth.role() = 'authenticated');
