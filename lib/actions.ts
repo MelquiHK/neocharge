@@ -67,34 +67,58 @@ export async function uploadImage(file: Buffer, bucket: string, fileName: string
 
 // Products - CREATE
 export async function createProductAction(formData: any) {
-  console.log('[createProductAction] Starting...')
+  console.log('[createProductAction] Starting with formData:', {
+    name: formData.name,
+    price: formData.price,
+    stock: formData.stock,
+  })
   
   try {
     const supabase = await verifyAdmin()
     console.log('[createProductAction] Admin verified')
 
     // Validate required fields
-    if (!formData.name?.trim()) {
+    if (!formData.name || formData.name.trim() === '') {
       throw new Error('El nombre del producto es requerido')
     }
-    if (!formData.price) {
+
+    if (!formData.price || formData.price === '') {
       throw new Error('El precio es requerido')
     }
+
     if (formData.stock === undefined || formData.stock === null || formData.stock === '') {
       throw new Error('El stock es requerido')
     }
+
+    // Parse numeric values and validate
+    const price = parseFloat(String(formData.price))
+    if (isNaN(price) || price < 0) {
+      throw new Error(`Precio inválido: "${formData.price}". Debe ser un número mayor o igual a 0`)
+    }
+
+    const stock = parseInt(String(formData.stock), 10)
+    if (isNaN(stock) || stock < 0) {
+      throw new Error(`Stock inválido: "${formData.stock}". Debe ser un número entero mayor o igual a 0`)
+    }
+
+    const comparePriceValue = formData.compare_price ? parseFloat(String(formData.compare_price)) : null
+    if (formData.compare_price && (isNaN(comparePriceValue!) || comparePriceValue! < 0)) {
+      throw new Error(`Precio de comparación inválido: "${formData.compare_price}". Debe ser un número válido`)
+    }
+
+    console.log('[createProductAction] Validation passed')
+    console.log('[createProductAction] Parsed values:', { price, stock, comparePrice: comparePriceValue })
 
     const productData = {
       name: formData.name.trim(),
       slug: (formData.slug?.trim() || formData.name.toLowerCase().replace(/\s+/g, '-')).trim(),
       description: formData.description?.trim() || null,
       specifications: formData.specifications?.trim() || null,
-      price: parseFloat(formData.price),
-      compare_price: formData.compare_price ? parseFloat(formData.compare_price) : null,
+      price,
+      compare_price: comparePriceValue,
       category_id: formData.category_id && formData.category_id !== '' ? formData.category_id : null,
       image_url: formData.image_url?.trim() || null,
-      images: formData.images || [],
-      stock: parseInt(formData.stock, 10),
+      stock,
       is_active: formData.is_active !== false,
       is_featured: formData.is_featured === true,
     }
