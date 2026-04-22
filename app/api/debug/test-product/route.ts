@@ -1,7 +1,7 @@
 import { createClient } from '@/lib/supabase/server'
 import { NextRequest, NextResponse } from 'next/server'
 
-export async function POST(request: NextRequest) {
+export async function GET(request: NextRequest) {
   try {
     const supabase = await createClient()
 
@@ -12,7 +12,11 @@ export async function POST(request: NextRequest) {
     console.log('Auth Error:', authError)
 
     if (!user) {
-      return NextResponse.json({ error: 'No user authenticated' }, { status: 401 })
+      console.log('❌ No user authenticated - are you logged in?')
+      return NextResponse.json({ 
+        error: 'No estás autenticado. Por favor inicia sesión primero en /auth/login',
+        status: 'NOT_AUTHENTICATED'
+      }, { status: 401 })
     }
 
     // Test 2: Check profile
@@ -25,11 +29,20 @@ export async function POST(request: NextRequest) {
     console.log('Profile:', profile)
     console.log('Profile Error:', profileError)
 
+    if (profileError) {
+      return NextResponse.json({
+        error: 'Profile check failed',
+        status: 'PROFILE_ERROR',
+        userId: user.id,
+        details: profileError,
+      }, { status: 400 })
+    }
+
     // Test 3: Check products table structure
     console.log('\n=== TEST 3: Products Table Info ===')
     const { data: tableInfo, error: tableError } = await supabase
       .from('products')
-      .select()
+      .select('*')
       .limit(1)
     console.log('Table accessible:', !tableError)
     console.log('Table Error:', tableError)
@@ -58,8 +71,10 @@ export async function POST(request: NextRequest) {
     if (insertError) {
       return NextResponse.json({
         error: 'Insert failed',
+        status: 'INSERT_ERROR',
         details: insertError,
         testProduct,
+        hint: 'Revisa que RLS policies no bloqueen el INSERT. Si ves "row-level security" error, las políticas están muy restrictivas.'
       }, { status: 400 })
     }
 
@@ -76,26 +91,26 @@ export async function POST(request: NextRequest) {
 
     return NextResponse.json({
       success: true,
+      message: '✅ Todo funcionando correctamente!',
+      status: 'ALL_TESTS_PASSED',
       tests: {
         authenticated: !!user,
         hasProfile: !!profile,
+        isAdmin: profile?.is_admin,
         tableAccessible: !tableError,
         insertWorked: !insertError,
         queryWorked: !queryError,
       },
-      inserted,
-      details: {
-        user: user?.id,
-        profile,
-        insertError,
-        queryError,
-      },
+      userId: user.id,
+      productId: inserted?.[0]?.id,
     })
   } catch (err) {
     console.error('Test error:', err)
     return NextResponse.json({
       error: 'Test failed',
+      status: 'GENERAL_ERROR',
       details: err instanceof Error ? err.message : String(err),
+      stack: err instanceof Error ? err.stack : null,
     }, { status: 500 })
   }
 }
