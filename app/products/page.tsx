@@ -6,7 +6,8 @@ import { createClient } from '@/lib/supabase/client'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Search, Filter } from 'lucide-react'
+import { Search, Filter, ShoppingCart } from 'lucide-react'
+import { useCart } from '@/hooks/use-cart-context'
 
 interface Product {
   id: string
@@ -15,6 +16,7 @@ interface Product {
   category_id: string
   images: string[]
   main_image_index: number
+  slug?: string
 }
 
 interface Category {
@@ -24,11 +26,13 @@ interface Category {
 }
 
 export default function ProductsPage() {
+  const { addItem } = useCart()
   const [products, setProducts] = useState<Product[]>([])
   const [categories, setCategories] = useState<Category[]>([])
   const [selectedCategory, setSelectedCategory] = useState<string>('all')
   const [searchQuery, setSearchQuery] = useState('')
   const [loading, setLoading] = useState(true)
+  const [addingToCart, setAddingToCart] = useState<string | null>(null)
 
   useEffect(() => {
     const fetchData = async () => {
@@ -69,6 +73,25 @@ export default function ProductsPage() {
     const matchesSearch = product.name.toLowerCase().includes(searchQuery.toLowerCase())
     return matchesCategory && matchesSearch
   })
+
+  const handleAddToCart = (e: React.MouseEvent, product: Product) => {
+    e.preventDefault()
+    e.stopPropagation()
+    
+    setAddingToCart(product.id)
+    setTimeout(() => {
+      addItem({
+        id: product.id,
+        name: product.name,
+        price: product.price,
+        quantity: 1,
+        image: product.images?.[product.main_image_index || 0],
+        slug: product.slug,
+      })
+      alert(`✅ "${product.name}" agregado al carrito`)
+      setAddingToCart(null)
+    }, 300)
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -137,29 +160,40 @@ export default function ProductsPage() {
         ) : filteredProducts.length > 0 ? (
           <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
             {filteredProducts.map(product => (
-              <Link key={product.id} href={`/products/${product.id}`}>
-                <div className="group cursor-pointer space-y-3">
-                  <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border group-hover:border-primary transition">
-                    {product.images && product.images.length > 0 ? (
-                      <img
-                        src={product.images[product.main_image_index || 0]}
-                        alt={product.name}
-                        className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
-                      />
-                    ) : (
-                      <div className="w-full h-full bg-muted flex items-center justify-center">
-                        <span className="text-muted-foreground">Sin imagen</span>
-                      </div>
-                    )}
+              <div key={product.id} className="group flex flex-col h-full">
+                <Link href={`/products/${product.id}`} className="flex-1">
+                  <div className="cursor-pointer space-y-3 h-full flex flex-col">
+                    <div className="aspect-square bg-muted rounded-lg overflow-hidden border border-border group-hover:border-primary transition">
+                      {product.images && product.images.length > 0 ? (
+                        <img
+                          src={product.images[product.main_image_index || 0]}
+                          alt={product.name}
+                          className="w-full h-full object-cover group-hover:scale-105 transition duration-300"
+                        />
+                      ) : (
+                        <div className="w-full h-full bg-muted flex items-center justify-center">
+                          <span className="text-muted-foreground">Sin imagen</span>
+                        </div>
+                      )}
+                    </div>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-foreground group-hover:text-primary transition line-clamp-2">
+                        {product.name}
+                      </h3>
+                      <p className="text-lg font-bold text-primary mt-2">USD ${product.price.toFixed(2)}</p>
+                    </div>
                   </div>
-                  <div>
-                    <h3 className="font-semibold text-foreground group-hover:text-primary transition">
-                      {product.name}
-                    </h3>
-                    <p className="text-lg font-bold text-primary">USD ${product.price.toFixed(2)}</p>
-                  </div>
-                </div>
-              </Link>
+                </Link>
+                <Button
+                  onClick={(e) => handleAddToCart(e, product)}
+                  disabled={addingToCart === product.id}
+                  className="w-full mt-3 gap-2"
+                  variant="outline"
+                >
+                  <ShoppingCart className="w-4 h-4" />
+                  {addingToCart === product.id ? 'Agregando...' : 'Agregar al Carrito'}
+                </Button>
+              </div>
             ))}
           </div>
         ) : (

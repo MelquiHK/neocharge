@@ -32,8 +32,8 @@ export default function SignUpPage() {
       setError('Todos los campos son requeridos')
       return false
     }
-    if (formData.password.length < 12) {
-      setError('La contraseña debe tener al menos 12 caracteres')
+    if (formData.password.length < 6) {
+      setError('La contraseña debe tener al menos 6 caracteres')
       return false
     }
     if (!/[A-Z]/.test(formData.password)) {
@@ -46,10 +46,6 @@ export default function SignUpPage() {
     }
     if (!/[0-9]/.test(formData.password)) {
       setError('La contraseña debe incluir al menos un número')
-      return false
-    }
-    if (!/[!@#$%^&*]/.test(formData.password)) {
-      setError('La contraseña debe incluir al menos un carácter especial')
       return false
     }
     if (formData.password !== formData.confirmPassword) {

@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from 'next'
 import { Poppins, PT_Sans } from 'next/font/google'
 import { Analytics } from '@vercel/analytics/next'
 import { ThemeProvider } from '@/components/theme-provider'
+import { CartProvider } from '@/hooks/use-cart-context'
 import './globals.css'
 
 const poppins = Poppins({
@@ -43,7 +44,9 @@ export default function RootLayout({
       </head>
       <body className="font-pt-sans antialiased">
         <ThemeProvider attribute="class" defaultTheme="light">
-          {children}
+          <CartProvider>
+            {children}
+          </CartProvider>
         </ThemeProvider>
         <Analytics />
       </body>

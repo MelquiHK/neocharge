@@ -7,11 +7,10 @@ import { z } from 'zod'
 const signUpSchema = z.object({
   email: z.string().email('Email inválido'),
   password: z.string()
-    .min(12, 'La contraseña debe tener al menos 12 caracteres')
+    .min(6, 'La contraseña debe tener al menos 6 caracteres')
     .regex(/[A-Z]/, 'La contraseña debe incluir al menos una mayúscula')
     .regex(/[a-z]/, 'La contraseña debe incluir al menos una minúscula')
-    .regex(/[0-9]/, 'La contraseña debe incluir al menos un número')
-    .regex(/[!@#$%^&*]/, 'La contraseña debe incluir al menos un carácter especial'),
+    .regex(/[0-9]/, 'La contraseña debe incluir al menos un número'),
   username: z.string().min(3, 'El nombre de usuario debe tener al menos 3 caracteres').max(20, 'El nombre de usuario no puede tener más de 20 caracteres'),
   phone: z.string().regex(/^\d{8,}$/, 'El teléfono debe tener al menos 8 dígitos'),
 })
