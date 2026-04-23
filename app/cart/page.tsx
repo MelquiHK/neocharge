@@ -1,13 +1,45 @@
 'use client'
 
+import { useState } from 'react'
 import { Header } from '@/components/header'
 import { Button } from '@/components/ui/button'
-import { Minus, Plus, Trash2, ShoppingCart } from 'lucide-react'
+import { Input } from '@/components/ui/input'
+import { Minus, Plus, Trash2, ShoppingCart, MessageCircle } from 'lucide-react'
 import Link from 'next/link'
 import { useCart } from '@/hooks/use-cart-context'
+import { generateWhatsAppMessage, getWhatsAppLink } from '@/lib/whatsapp-utils'
 
 export default function CartPage() {
-  const { items, removeItem, updateQuantity, total } = useCart()
+  const { items, removeItem, updateQuantity, total, clearCart } = useCart()
+  const [customerName, setCustomerName] = useState('')
+  const [customerPhone, setCustomerPhone] = useState('')
+  const [showCheckout, setShowCheckout] = useState(false)
+
+  const handleWhatsAppCheckout = () => {
+    if (!customerName.trim()) {
+      alert('Por favor ingresa tu nombre')
+      return
+    }
+    if (!customerPhone.trim()) {
+      alert('Por favor ingresa tu teléfono')
+      return
+    }
+
+    const message = generateWhatsAppMessage(items, total, customerPhone, customerName)
+    const whatsappLink = getWhatsAppLink('+53 63180910', message)
+    
+    // Open WhatsApp in new window
+    window.open(whatsappLink, '_blank')
+    
+    // Clear cart after sending
+    setTimeout(() => {
+      clearCart()
+      setCustomerName('')
+      setCustomerPhone('')
+      setShowCheckout(false)
+      alert('🎉 ¡Pedido enviado! Te contactaremos pronto para confirmar.')
+    }, 500)
+  }
 
   return (
     <div className="min-h-screen bg-white">
@@ -80,25 +112,71 @@ export default function CartPage() {
 
             {/* Order Summary */}
             <div className="space-y-6">
-              <div className="border border-border rounded-lg p-6">
+              <div className="border border-border rounded-lg p-6 sticky top-20">
                 <h3 className="text-lg font-semibold text-foreground mb-4">Resumen del Pedido</h3>
-                <div className="space-y-2">
-                  <div className="flex justify-between">
-                    <span>Subtotal</span>
+                <div className="space-y-2 mb-6">
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Subtotal</span>
                     <span>USD ${total.toFixed(2)}</span>
                   </div>
-                  <div className="flex justify-between">
-                    <span>Envío</span>
-                    <span>Por calcular</span>
+                  <div className="flex justify-between text-sm">
+                    <span className="text-muted-foreground">Envío</span>
+                    <span className="text-sm">Se calculará</span>
                   </div>
                   <div className="border-t pt-2 flex justify-between font-semibold">
                     <span>Total</span>
-                    <span>USD ${total.toFixed(2)}</span>
+                    <span className="text-lg text-primary">USD ${total.toFixed(2)}</span>
                   </div>
                 </div>
-                <Button className="w-full mt-6" size="lg">
-                  Proceder al Pago
-                </Button>
+
+                {!showCheckout ? (
+                  <Button 
+                    onClick={() => setShowCheckout(true)} 
+                    className="w-full mb-3 gap-2"
+                    size="lg"
+                  >
+                    <MessageCircle className="w-4 h-4" />
+                    Comprar por WhatsApp
+                  </Button>
+                ) : (
+                  <div className="space-y-3">
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Nombre</label>
+                      <Input
+                        type="text"
+                        placeholder="Tu nombre"
+                        value={customerName}
+                        onChange={(e) => setCustomerName(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <div>
+                      <label className="block text-sm font-medium mb-1">Teléfono</label>
+                      <Input
+                        type="tel"
+                        placeholder="+53 12345678"
+                        value={customerPhone}
+                        onChange={(e) => setCustomerPhone(e.target.value)}
+                        className="w-full"
+                      />
+                    </div>
+                    <Button 
+                      onClick={handleWhatsAppCheckout}
+                      className="w-full gap-2 bg-green-600 hover:bg-green-700"
+                      size="lg"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Enviar a WhatsApp
+                    </Button>
+                    <Button 
+                      onClick={() => setShowCheckout(false)}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      Cancelar
+                    </Button>
+                  </div>
+                )}
               </div>
 
               <div className="text-center">

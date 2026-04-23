@@ -5,7 +5,7 @@ import { useRouter, useParams } from 'next/navigation'
 import Link from 'next/link'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { ChevronLeft, Save, Upload } from 'lucide-react'
+import { ChevronLeft, Save, Upload, X } from 'lucide-react'
 import { updateProductAction } from '@/lib/actions'
 import Image from 'next/image'
 import { createClient } from '@/lib/supabase/client'
@@ -20,6 +20,7 @@ interface Product {
   compare_price?: number
   category_id?: string
   image_url?: string
+  images?: string[]
   stock: number
   is_active: boolean
   is_featured: boolean
@@ -32,8 +33,9 @@ export default function EditProductPage() {
 
   const [loading, setLoading] = useState(true)
   const [submitting, setSubmitting] = useState(false)
-  const [imagePreview, setImagePreview] = useState<string | null>(null)
+  const [imagePreview, setImagePreview] = useState<string[]>([])
   const [uploadingImage, setUploadingImage] = useState(false)
+  const [images, setImages] = useState<string[]>([])
   const [formData, setFormData] = useState<Product>({
     id: '',
     name: '',
@@ -47,6 +49,7 @@ export default function EditProductPage() {
     is_active: true,
     is_featured: false,
     image_url: '',
+    images: [],
   })
 
   // Fetch product data
@@ -66,9 +69,10 @@ export default function EditProductPage() {
 
         if (data) {
           setFormData(data)
-          if (data.image_url) {
-            setImagePreview(data.image_url)
-          }
+          // Load images array or use single image_url
+          const productImages = data.images && data.images.length > 0 ? data.images : (data.image_url ? [data.image_url] : [])
+          setImages(productImages)
+          setImagePreview(productImages)
         }
       } catch (error) {
         const msg = error instanceof Error ? error.message : 'Error al cargar producto'
@@ -91,45 +95,58 @@ export default function EditProductPage() {
   }
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0]
-    if (!file) return
+    const files = e.target.files
+    if (!files) return
+
+    if (imagePreview.length + files.length > 5) {
+      alert('Máximo 5 imágenes permitidas')
+      return
+    }
 
     setUploadingImage(true)
     try {
-      // Mostrar preview
-      const reader = new FileReader()
-      reader.onloadend = () => {
-        setImagePreview(reader.result as string)
+      const newImages: string[] = []
+
+      for (let i = 0; i < files.length; i++) {
+        const file = files[i]
+
+        const reader = new FileReader()
+        reader.onloadend = () => {
+          setImagePreview(prev => [...prev, reader.result as string])
+        }
+        reader.readAsDataURL(file)
+
+        const formDataFile = new FormData()
+        formDataFile.append('file', file)
+
+        const response = await fetch('/api/upload', {
+          method: 'POST',
+          body: formDataFile,
+        })
+
+        if (!response.ok) {
+          const errorData = await response.json()
+          throw new Error(errorData.error || 'Error al subir')
+        }
+
+        const data = await response.json()
+        if (!data.url) throw new Error('No URL')
+        newImages.push(data.url)
       }
-      reader.readAsDataURL(file)
 
-      // Subir a Supabase Storage
-      const formDataFile = new FormData()
-      formDataFile.append('file', file)
-
-      const response = await fetch('/api/upload', {
-        method: 'POST',
-        body: formDataFile,
-      })
-
-      if (!response.ok) {
-        const errorData = await response.json()
-        throw new Error(errorData.error || 'Error al subir la imagen')
-      }
-
-      const data = await response.json()
-      if (!data.url) throw new Error('No se obtuvo URL de la imagen')
-      setFormData(prev => ({
-        ...prev,
-        image_url: data.url,
-      }))
+      setImages(prev => [...prev, ...newImages])
     } catch (error) {
-      console.error('Error uploading image:', error)
-      const errorMsg = error instanceof Error ? error.message : 'Error desconocido al subir imagen'
-      alert(`Subida fallida: ${errorMsg}`)
+      const msg = error instanceof Error ? error.message : 'Error'
+      alert(`Fallo: ${msg}`)
+      setImagePreview([])
     } finally {
       setUploadingImage(false)
     }
+  }
+
+  const removeImage = (index: number) => {
+    setImages(prev => prev.filter((_, i) => i !== index))
+    setImagePreview(prev => prev.filter((_, i) => i !== index))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -137,15 +154,22 @@ export default function EditProductPage() {
     setSubmitting(true)
 
     try {
-      console.log('[handleSubmit] Enviando actualización:', formData)
-      const result = await updateProductAction(formData.id, formData)
-      console.log('[handleSubmit] Producto actualizado:', result)
-      alert('✅ Producto actualizado exitosamente!')
+      if (images.length === 0) {
+        alert('Mantén al menos una imagen')
+        setSubmitting(false)
+        return
+      }
+
+      const result = await updateProductAction(formData.id, {
+        ...formData,
+        images,
+        image_url: images[0],
+      })
+      alert('✅ Producto actualizado!')
       router.push('/admin/products')
     } catch (error) {
-      console.error('[handleSubmit] Error:', error)
-      const errorMsg = error instanceof Error ? error.message : 'Error desconocido'
-      alert(`❌ Error al actualizar producto:\n\n${errorMsg}`)
+      const msg = error instanceof Error ? error.message : 'Error'
+      alert(`❌ ${msg}`)
     } finally {
       setSubmitting(false)
     }
@@ -188,35 +212,34 @@ export default function EditProductPage() {
       {/* Form */}
       <div className="container mx-auto px-4 py-8">
         <form onSubmit={handleSubmit} className="max-w-2xl space-y-6">
-          {/* Image Section */}
+          {/* Images Section */}
           <div className="bg-card border border-border rounded-lg p-6">
-            <h2 className="text-lg font-semibold mb-4">Imagen del Producto</h2>
-            {imagePreview && (
-              <div className="mb-4 relative w-full h-64 bg-muted rounded-lg overflow-hidden">
-                <Image
-                  src={imagePreview}
-                  alt={formData.name}
-                  fill
-                  className="object-contain"
-                />
+            <h2 className="text-lg font-semibold mb-4">Imágenes del Producto (1-5)</h2>
+
+            {imagePreview.length > 0 && (
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-4 mb-4">
+                {imagePreview.map((preview, idx) => (
+                  <div key={idx} className="relative group">
+                    <img src={preview} alt={`${idx}`} className="w-full h-32 object-cover rounded-lg border" />
+                    <button onClick={() => removeImage(idx)} type="button" className="absolute top-1 right-1 bg-red-500 text-white p-1 rounded opacity-0 group-hover:opacity-100">
+                      <X size={16} />
+                    </button>
+                    {idx === 0 && <div className="absolute top-2 left-2 bg-primary text-white text-xs px-2 py-1 rounded">Principal</div>}
+                  </div>
+                ))}
               </div>
             )}
-            <label className="block border-2 border-dashed border-border rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors">
-              <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
-                {uploadingImage ? 'Subiendo...' : 'Haz clic para cambiar la imagen'}
-              </p>
-              <input
-                type="file"
-                accept="image/*"
-                onChange={handleImageUpload}
-                disabled={uploadingImage}
-                className="hidden"
-              />
-            </label>
+
+            {imagePreview.length < 5 && (
+              <label className="block border-2 border-dashed rounded-lg p-6 text-center cursor-pointer hover:border-primary">
+                <Upload className="w-8 h-8 mx-auto mb-2 text-muted-foreground" />
+                <p className="text-sm text-muted-foreground">{uploadingImage ? 'Subiendo...' : 'Selecciona'} - {imagePreview.length}/5</p>
+                <input type="file" accept="image/*" onChange={handleImageUpload} disabled={uploadingImage} multiple className="hidden" />
+              </label>
+            )}
           </div>
 
-          {/* Basic Info */}
+          {/* Info */}
           <div className="bg-card border border-border rounded-lg p-6 space-y-4">
             <h2 className="text-lg font-semibold">Información Básica</h2>
 
