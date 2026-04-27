@@ -1,9 +1,6 @@
 {
-  "functions": {
-    "app/api/**/*.ts": {
-      "maxDuration": 60
-    }
-  },
+  "framework": "vite",
   "regions": ["iad1"],
-  "framework": "nextjs"
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist"
 }
