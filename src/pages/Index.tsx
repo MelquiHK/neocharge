@@ -1,0 +1,32 @@
+import { Hero } from "@/components/sections/Hero";
+import { TrustStrip } from "@/components/sections/TrustStrip";
+import { FeaturedProducts } from "@/components/sections/FeaturedProducts";
+import { Categories } from "@/components/sections/Categories";
+import { Features } from "@/components/sections/Features";
+import { Testimonials } from "@/components/sections/Testimonials";
+import { FAQ } from "@/components/sections/FAQ";
+import { CTA } from "@/components/sections/CTA";
+import { useEffect } from "react";
+
+const Index = () => {
+  useEffect(() => {
+    document.title = "Neocharge — Tu tienda de electrónica en La Habana";
+    const desc = document.querySelector('meta[name="description"]');
+    if (desc) desc.setAttribute("content", "Cargadores, cables y baterías premium con entrega 24h en La Habana. Garantía 12 meses y soporte 24/7.");
+  }, []);
+
+  return (
+    <>
+      <Hero />
+      <TrustStrip />
+      <FeaturedProducts />
+      <Categories />
+      <Features />
+      <Testimonials />
+      <FAQ />
+      <CTA />
+    </>
+  );
+};
+
+export default Index;
