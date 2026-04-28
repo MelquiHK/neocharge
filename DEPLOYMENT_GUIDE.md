@@ -112,8 +112,8 @@ WHERE email = 'tu-email@ejemplo.com';
 1. **Vercel Dashboard** → **neocharge** → **Settings** → **Environment Variables**
 
 Deberían estar:
-- ✅ `NEXT_PUBLIC_SUPABASE_URL`
-- ✅ `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+- ✅ `VITE_SUPABASE_URL`
+- ✅ `VITE_SUPABASE_PUBLISHABLE_KEY` (o `VITE_SUPABASE_ANON_KEY`)
 
 ---
 

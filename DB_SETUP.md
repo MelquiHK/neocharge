@@ -46,16 +46,17 @@ El script creará:
 En la raíz del proyecto, crea `.env.local`:
 
 ```env
-NEXT_PUBLIC_SUPABASE_URL=https://tuproyecto.supabase.co
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima_aqui
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
+VITE_SUPABASE_URL=https://tuproyecto.supabase.co
+# Usa tu "Publishable key" o tu "anon public key" (según te muestre Supabase)
+VITE_SUPABASE_PUBLISHABLE_KEY=tu_clave_publica_aqui
+VITE_SUPABASE_PROJECT_ID=tu_project_id
 ```
 
 **¿Dónde obtener estas claves?**
 1. En Supabase, ve a **Settings** → **API**
 2. Copia:
-   - `Project URL` → `NEXT_PUBLIC_SUPABASE_URL`
-   - `anon` (public) key → `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+   - `Project URL` → `VITE_SUPABASE_URL`
+   - `Publishable key` (o `anon` public key) → `VITE_SUPABASE_PUBLISHABLE_KEY`
 
 ### 6. Crear tu Primer Usuario Admin
 

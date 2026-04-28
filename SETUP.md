@@ -2,7 +2,7 @@
 
 ## 🚀 Inicio Rápido
 
-Esta es una tienda completa de electrónica construida con Next.js 16, Supabase, y Tailwind CSS. Incluye autenticación, catálogo de productos, blog y panel de administración.
+Esta es una tienda completa de electrónica construida con Vite + React + TypeScript, Supabase y Tailwind CSS. Incluye autenticación, catálogo de productos, blog y panel de administración.
 
 ## 📋 Requisitos Previos
 
@@ -18,11 +18,10 @@ Crea un archivo `.env.local` en la raíz del proyecto:
 
 ```env
 # Supabase
-NEXT_PUBLIC_SUPABASE_URL=tu_url_de_supabase
-NEXT_PUBLIC_SUPABASE_ANON_KEY=tu_clave_anonima
-
-# Base URL (para emails y callbacks)
-NEXT_PUBLIC_BASE_URL=http://localhost:3000
+VITE_SUPABASE_URL=tu_url_de_supabase
+# Usa tu "Publishable key" o tu "anon public key" (según te muestre Supabase)
+VITE_SUPABASE_PUBLISHABLE_KEY=tu_clave_publica
+VITE_SUPABASE_PROJECT_ID=tu_project_id
 ```
 
 ### 2. Base de Datos
@@ -55,35 +54,13 @@ Crea tu primer usuario admin:
 ## 📁 Estructura del Proyecto
 
 ```
-app/
-├── page.tsx                 # Página principal
-├── auth/
-│   ├── login/page.tsx      # Login
-│   └── signup/page.tsx     # Registro
-├── products/
-│   ├── page.tsx            # Listado de productos
-│   └── [id]/page.tsx       # Detalle del producto
-├── blog/
-│   ├── page.tsx            # Blog
-│   └── [slug]/page.tsx     # Artículo individual
-├── about/page.tsx          # Información
-└── admin/
-    ├── page.tsx            # Dashboard admin
-    └── products/page.tsx   # Gestión de productos
-├── layout.tsx              # Layout global
-└── globals.css             # Estilos globales
-
-lib/
-├── auth-actions.ts         # Acciones de autenticación
-└── supabase/
-    ├── server.ts           # Cliente Supabase servidor
-    └── client.ts           # Cliente Supabase cliente
-
-components/
-└── header.tsx              # Navegación principal
-
-scripts/
-└── 1-init-database.sql     # Script de inicialización BD
+src/
+├── App.tsx
+├── main.tsx
+├── pages/
+├── components/
+├── contexts/
+└── integrations/supabase/
 ```
 
 ## 🔐 Autenticación
