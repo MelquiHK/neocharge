@@ -38,9 +38,9 @@ cp .env.example .env.local
 
 Llenar `.env.local` con credenciales de Supabase:
 ```
-VITE_SUPABASE_URL=https://xchcxeqtanfomrklkquw.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-VITE_SUPABASE_PROJECT_ID=xchcxeqtanfomrklkquw
+VITE_SUPABASE_URL=https://txkgchetianfvypnkziq.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_v_tNhI6VgA5oZh0RTV33lQ_-xfuc5Jd
+VITE_SUPABASE_PROJECT_ID=txkgchetianfvypnkziq
 ```
 
 ## 💻 Desarrollo
@@ -72,9 +72,9 @@ Output en carpeta `dist/`
 En el dashboard de Vercel → Settings → Environment Variables, agregar:
 
 ```
-VITE_SUPABASE_URL              = https://xchcxeqtanfomrklkquw.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY  = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
-VITE_SUPABASE_PROJECT_ID       = xchcxeqtanfomrklkquw
+VITE_SUPABASE_URL              = https://txkgchetianfvypnkziq.supabase.co
+VITE_SUPABASE_PUBLISHABLE_KEY  = sb_publishable_v_tNhI6VgA5oZh0RTV33lQ_-xfuc5Jd
+VITE_SUPABASE_PROJECT_ID       = txkgchetianfvypnkziq
 ```
 
 ### 3. Deploy
