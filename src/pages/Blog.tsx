@@ -9,6 +9,7 @@ interface Post {
   slug: string;
   excerpt: string | null;
   image_url: string | null;
+  images?: string[] | null;
   created_at: string;
 }
 
@@ -20,7 +21,7 @@ const Blog = () => {
     document.title = "Blog — Neocharge";
     supabase
       .from("blog_posts")
-      .select("id,title,slug,excerpt,image_url,created_at")
+      .select("id,title,slug,excerpt,image_url,images,created_at")
       .eq("is_published", true)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
@@ -54,10 +55,18 @@ const Blog = () => {
       ) : (
         <div className="grid md:grid-cols-3 gap-6">
           {posts.map((p) => (
-            <article key={p.id} className="card-elevated overflow-hidden group">
-              {p.image_url && (
+            <Link
+              key={p.id}
+              to={`/blog/${p.slug}`}
+              className="card-elevated overflow-hidden group block hover:shadow-lifted transition-shadow"
+            >
+              {(p.image_url || (Array.isArray(p.images) && p.images[0])) && (
                 <div className="aspect-[4/3] overflow-hidden bg-secondary">
-                  <img src={p.image_url} alt={p.title} className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+                  <img
+                    src={p.image_url ?? p.images?.[0] ?? ""}
+                    alt={p.title}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                  />
                 </div>
               )}
               <div className="p-6 space-y-2">
@@ -67,7 +76,7 @@ const Blog = () => {
                 <h2 className="font-display text-xl font-bold leading-tight group-hover:text-primary transition-colors">{p.title}</h2>
                 {p.excerpt && <p className="text-sm text-muted-foreground line-clamp-3">{p.excerpt}</p>}
               </div>
-            </article>
+            </Link>
           ))}
         </div>
       )}

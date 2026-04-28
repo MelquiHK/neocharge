@@ -16,6 +16,7 @@ import Account from "./pages/Account.tsx";
 import About from "./pages/About.tsx";
 import Contact from "./pages/Contact.tsx";
 import Blog from "./pages/Blog.tsx";
+import BlogPost from "./pages/BlogPost.tsx";
 import Admin from "./pages/Admin.tsx";
 import Garantia from "./pages/Garantia.tsx";
 import NotFound from "./pages/NotFound.tsx";
@@ -41,6 +42,7 @@ const App = () => (
                 <Route path="/sobre-nosotros" element={<About />} />
                 <Route path="/contacto" element={<Contact />} />
                 <Route path="/blog" element={<Blog />} />
+                <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/garantia" element={<Garantia />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

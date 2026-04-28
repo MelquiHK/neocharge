@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -43,6 +43,7 @@ type BlogPost = {
   excerpt: string | null;
   content: string | null;
   image_url: string | null;
+  images?: string[] | null;
   category_id: string | null;
   author_id: string | null;
   is_published: boolean;
@@ -76,6 +77,7 @@ export function AdminBlog() {
   const [postOpen, setPostOpen] = useState(false);
   const [postEditing, setPostEditing] = useState<Partial<BlogPost> | null>(null);
   const [uploading, setUploading] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const categoryOptions = useMemo(() => {
     const opts = [...categories].sort((a, b) => a.name.localeCompare(b.name));
@@ -148,6 +150,7 @@ export function AdminBlog() {
       excerpt: "",
       content: "",
       image_url: null,
+      images: [],
       category_id: null,
       is_published: false,
     });
@@ -170,9 +173,28 @@ export function AdminBlog() {
       return;
     }
     const { data } = supabase.storage.from(BLOG_IMAGE_BUCKET).getPublicUrl(path);
-    setPostEditing((prev) => (prev ? { ...prev, image_url: data.publicUrl } : prev));
+    setPostEditing((prev) => {
+      if (!prev) return prev;
+      const imgs = Array.isArray(prev.images) ? prev.images : [];
+      const next = [...imgs, data.publicUrl];
+      return {
+        ...prev,
+        images: next,
+        image_url: prev.image_url ?? next[0] ?? null, // cover/backcompat
+      };
+    });
     setUploading(false);
     toast.success("Imagen subida");
+  };
+
+  const removeImage = (src: string) => {
+    setPostEditing((prev) => {
+      if (!prev) return prev;
+      const imgs = Array.isArray(prev.images) ? prev.images : [];
+      const next = imgs.filter((x) => x !== src);
+      const cover = prev.image_url === src ? (next[0] ?? null) : prev.image_url ?? (next[0] ?? null);
+      return { ...prev, images: next, image_url: cover };
+    });
   };
 
   const savePost = async () => {
@@ -187,16 +209,17 @@ export function AdminBlog() {
       excerpt: postEditing.excerpt?.trim() || null,
       content: postEditing.content?.trim() || null,
       image_url: postEditing.image_url || null,
+      images: Array.isArray(postEditing.images) ? postEditing.images : [],
       category_id: postEditing.category_id || null,
       is_published: !!postEditing.is_published,
     };
 
     if (postEditing.id) {
-      const { error } = await supabase.from("blog_posts").update(payload).eq("id", postEditing.id);
+      const { error } = await supabase.from("blog_posts").update(payload as any).eq("id", postEditing.id);
       if (error) return toast.error(error.message);
       toast.success("Artículo actualizado");
     } else {
-      const { error } = await supabase.from("blog_posts").insert(payload);
+      const { error } = await supabase.from("blog_posts").insert(payload as any);
       if (error) return toast.error(error.message);
       toast.success("Artículo creado");
     }
@@ -507,16 +530,65 @@ export function AdminBlog() {
 
             <div className="space-y-3">
               <Label>Imagen</Label>
-              {postEditing?.image_url ? (
+              {((postEditing?.image_url && postEditing.image_url) || (Array.isArray(postEditing?.images) && postEditing!.images!.length > 0)) ? (
                 <div className="rounded-2xl border border-border overflow-hidden">
-                  <img src={postEditing.image_url} alt="" className="w-full max-h-[260px] object-cover" />
-                  <div className="p-3 flex justify-end">
-                    <Button
-                      variant="ghost"
-                      onClick={() => setPostEditing((p) => (p ? { ...p, image_url: null } : p))}
-                    >
-                      Quitar imagen
-                    </Button>
+                  {postEditing?.image_url && (
+                    <img src={postEditing.image_url} alt="" className="w-full max-h-[260px] object-cover" />
+                  )}
+                  <div className="p-4 space-y-3">
+                    {Array.isArray(postEditing?.images) && postEditing.images.length > 0 && (
+                      <div className="grid grid-cols-3 md:grid-cols-6 gap-2">
+                        {postEditing.images.map((src) => (
+                          <button
+                            key={src}
+                            type="button"
+                            className="aspect-square rounded-xl overflow-hidden bg-secondary border border-border hover:border-primary/50 transition-colors"
+                            onClick={() => removeImage(src)}
+                            title="Click para quitar"
+                          >
+                            <img src={src} alt="" className="w-full h-full object-cover" />
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    <div className="flex flex-wrap gap-2 justify-end">
+                      <input
+                        ref={fileInputRef}
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        multiple
+                        disabled={uploading}
+                        onChange={(e) => {
+                          const files = Array.from(e.target.files ?? []);
+                          if (files.length > 0) {
+                            // sequential upload (simpler)
+                            (async () => {
+                              for (const f of files) {
+                                // eslint-disable-next-line no-await-in-loop
+                                await handleImageUpload(f);
+                              }
+                            })();
+                          }
+                          e.currentTarget.value = "";
+                        }}
+                      />
+                      <Button
+                        type="button"
+                        variant="secondary"
+                        disabled={uploading}
+                        onClick={() => fileInputRef.current?.click()}
+                      >
+                        <ImageIcon className="w-4 h-4" /> {uploading ? "Subiendo…" : "Agregar imágenes"}
+                      </Button>
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        onClick={() => setPostEditing((p) => (p ? { ...p, image_url: null, images: [] } : p))}
+                      >
+                        Quitar todas
+                      </Button>
+                    </div>
                   </div>
                 </div>
               ) : (
@@ -527,22 +599,29 @@ export function AdminBlog() {
                       Se sube a Storage en el bucket <span className="font-mono">{BLOG_IMAGE_BUCKET}</span>.
                     </p>
                   </div>
-                  <label className="inline-flex">
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={uploading}
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleImageUpload(f);
-                        e.currentTarget.value = "";
-                      }}
-                    />
-                    <Button type="button" disabled={uploading}>
-                      <ImageIcon className="w-4 h-4" /> {uploading ? "Subiendo…" : "Elegir imagen"}
-                    </Button>
-                  </label>
+                  <input
+                    ref={fileInputRef}
+                    type="file"
+                    accept="image/*"
+                    className="hidden"
+                    multiple
+                    disabled={uploading}
+                    onChange={(e) => {
+                      const files = Array.from(e.target.files ?? []);
+                      if (files.length > 0) {
+                        (async () => {
+                          for (const f of files) {
+                            // eslint-disable-next-line no-await-in-loop
+                            await handleImageUpload(f);
+                          }
+                        })();
+                      }
+                      e.currentTarget.value = "";
+                    }}
+                  />
+                  <Button type="button" disabled={uploading} onClick={() => fileInputRef.current?.click()}>
+                    <ImageIcon className="w-4 h-4" /> {uploading ? "Subiendo…" : "Elegir imágenes"}
+                  </Button>
                 </div>
               )}
             </div>
