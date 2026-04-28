@@ -17,30 +17,30 @@ import {
 import { ExternalLink, MapPin, MessageCircle, Trash2, Eye, Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
+import type { Enums, Tables } from "@/integrations/supabase/types";
 
-interface Order {
-  id: string;
-  customer_name: string;
-  customer_phone: string;
-  customer_address: string | null;
-  delivery_method: string;
-  pickup_location: string | null;
-  items: any[];
-  subtotal: number;
-  delivery_fee: number;
-  total: number;
-  total_cup: number | null;
-  status: string;
-  admin_notes: string | null;
-  latitude: number | null;
-  longitude: number | null;
-  location_link: string | null;
-  payment_method: string | null;
-  courier_name: string | null;
-  exchange_rate: number | null;
-  receipt_sent_at: string | null;
-  created_at: string;
-}
+type Order = Tables<"orders">;
+type OrderStatus = Enums<"order_status">;
+
+type OrderItem = {
+  name: string;
+  quantity: number;
+  price: number;
+};
+
+const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
+
+const parseOrderItems = (items: Order["items"]): OrderItem[] => {
+  if (!Array.isArray(items)) return [];
+  return items.flatMap((it) => {
+    if (!isRecord(it)) return [];
+    const name = typeof it.name === "string" ? it.name : "";
+    const quantity = Number(it.quantity);
+    const price = Number(it.price);
+    if (!name || !Number.isFinite(quantity) || !Number.isFinite(price)) return [];
+    return [{ name, quantity, price }];
+  });
+};
 
 const STATUSES = [
   { v: "pending", l: "Pendiente", c: "bg-warning/20 text-warning" },
@@ -49,7 +49,7 @@ const STATUSES = [
   { v: "shipped", l: "Enviado", c: "bg-primary/20 text-primary" },
   { v: "delivered", l: "Entregado", c: "bg-success/20 text-success" },
   { v: "cancelled", l: "Cancelado", c: "bg-destructive/20 text-destructive" },
-];
+] satisfies Array<{ v: OrderStatus; l: string; c: string }>;
 
 export function AdminOrders() {
   const [orders, setOrders] = useState<Order[]>([]);
@@ -61,8 +61,12 @@ export function AdminOrders() {
   const [adminNotes, setAdminNotes] = useState("");
 
   const load = async () => {
-    const { data } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
-    setOrders((data ?? []) as any);
+    const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    setOrders(data ?? []);
   };
 
   useEffect(() => {
@@ -76,8 +80,8 @@ export function AdminOrders() {
 
   const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 
-  const updateStatus = async (id: string, status: string) => {
-    const { error } = await supabase.from("orders").update({ status: status as any }).eq("id", id);
+  const updateStatus = async (id: string, status: OrderStatus) => {
+    const { error } = await supabase.from("orders").update({ status }).eq("id", id);
     if (error) { toast.error(error.message); return; }
     toast.success("Estado actualizado");
     load();
@@ -123,7 +127,9 @@ export function AdminOrders() {
 
   const sendReceipt = async () => {
     if (!viewing) return;
-    const items = (viewing.items ?? []).map((it: any) => `• ${it.name} x${it.quantity} — ${formatPrice(Number(it.price) * Number(it.quantity))}`).join("\n");
+    const items = parseOrderItems(viewing.items)
+      .map((it) => `• ${it.name} x${it.quantity} — ${formatPrice(Number(it.price) * Number(it.quantity))}`)
+      .join("\n");
     const msg = `🛍️ *VALE DE PEDIDO — Neocharge*\n\n` +
       `Hola ${viewing.customer_name}, te confirmamos tu pedido:\n\n` +
       `${items}\n\n` +
@@ -141,7 +147,7 @@ export function AdminOrders() {
     load();
   };
 
-  const statusBadge = (s: string) => {
+  const statusBadge = (s: OrderStatus) => {
     const st = STATUSES.find((x) => x.v === s);
     return <Badge className={st?.c ?? "bg-secondary"}>{st?.l ?? s}</Badge>;
   };
@@ -183,7 +189,10 @@ export function AdminOrders() {
                 <th className="py-3 px-4 w-10">
                   <Checkbox
                     checked={selected.size === filtered.length && filtered.length > 0}
-                    onCheckedChange={(v) => setSelected(v ? new Set(filtered.map((o) => o.id)) : new Set())}
+                    onCheckedChange={(v) => {
+                      const checked = v === true;
+                      setSelected(checked ? new Set(filtered.map((o) => o.id)) : new Set());
+                    }}
                   />
                 </th>
                 <th className="py-3 px-4">Cliente</th>
@@ -202,7 +211,8 @@ export function AdminOrders() {
                       checked={selected.has(o.id)}
                       onCheckedChange={(v) => {
                         const n = new Set(selected);
-                        v ? n.add(o.id) : n.delete(o.id);
+                        if (v === true) n.add(o.id);
+                        else n.delete(o.id);
                         setSelected(n);
                       }}
                     />
@@ -223,7 +233,7 @@ export function AdminOrders() {
                   <td className="py-3 px-4 text-right">
                     <div className="inline-flex gap-1">
                       <Button size="icon" variant="ghost" onClick={() => openView(o)}><Eye className="w-4 h-4" /></Button>
-                      <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v)}>
+                      <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v as OrderStatus)}>
                         <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
                         <SelectContent>{STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.l}</SelectItem>)}</SelectContent>
                       </Select>
@@ -273,7 +283,7 @@ export function AdminOrders() {
               <div className="space-y-2">
                 <p className="text-xs text-muted-foreground uppercase">Productos</p>
                 <div className="space-y-2">
-                  {(viewing.items ?? []).map((it: any, i: number) => (
+                  {parseOrderItems(viewing.items).map((it, i) => (
                     <div key={i} className="flex items-center justify-between bg-muted/30 rounded-xl p-3 text-sm">
                       <span>{it.name} <span className="text-muted-foreground">×{it.quantity}</span></span>
                       <span className="font-bold">{formatPrice(Number(it.price) * Number(it.quantity))}</span>
