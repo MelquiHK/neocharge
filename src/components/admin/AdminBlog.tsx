@@ -59,6 +59,7 @@ const slugify = (s: string) =>
     .replace(/^-|-$/g, "");
 
 const BLOG_IMAGE_BUCKET = "product-images";
+const NONE_CATEGORY_VALUE = "__none__";
 
 export function AdminBlog() {
   const [tab, setTab] = useState<"posts" | "categories">("posts");
@@ -78,7 +79,7 @@ export function AdminBlog() {
 
   const categoryOptions = useMemo(() => {
     const opts = [...categories].sort((a, b) => a.name.localeCompare(b.name));
-    return [{ id: "", name: "Sin categoría", slug: "" } as BlogCategory, ...opts];
+    return opts;
   }, [categories]);
 
   const load = async () => {
@@ -450,16 +451,22 @@ export function AdminBlog() {
               <div className="space-y-2">
                 <Label>Categoría</Label>
                 <Select
-                  value={postEditing?.category_id ?? ""}
-                  onValueChange={(v) => setPostEditing((p) => ({ ...(p ?? {}), category_id: v || null }))}
+                  value={postEditing?.category_id ?? NONE_CATEGORY_VALUE}
+                  onValueChange={(v) =>
+                    setPostEditing((p) => ({
+                      ...(p ?? {}),
+                      category_id: v === NONE_CATEGORY_VALUE ? null : v,
+                    }))
+                  }
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Selecciona categoría" />
                   </SelectTrigger>
                   <SelectContent>
+                    <SelectItem value={NONE_CATEGORY_VALUE}>Sin categoría</SelectItem>
                     {categoryOptions.map((c) => (
-                      <SelectItem key={c.id || "none"} value={c.id}>
-                        {c.id ? c.name : "Sin categoría"}
+                      <SelectItem key={c.id} value={c.id}>
+                        {c.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
