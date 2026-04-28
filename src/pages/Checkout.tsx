@@ -142,7 +142,7 @@ const Checkout = () => {
         delivery_method: delivery,
         pickup_location: delivery === "pickup" ? pickupLoc?.name ?? null : null,
         pickup_location_id: delivery === "pickup" ? pickupLocId : null,
-        items: items as any,
+        items: items as unknown,
         subtotal: total,
         delivery_fee: 0,
         total,
@@ -155,7 +155,7 @@ const Checkout = () => {
       });
       if (error) {
         console.error("Order save error:", error);
-        toast.error("No se pudo guardar el pedido. Intenta de nuevo.");
+        toast.error(error.message || "No se pudo guardar el pedido. Intenta de nuevo.");
         setSubmitting(false);
         return;
       }
