@@ -45,9 +45,9 @@ export function Hero() {
             {/* Mini features */}
             <div className="grid grid-cols-3 gap-4 pt-8 border-t border-border max-w-lg">
               {[
-                { icon: ShieldCheck, label: "Garantía 12 meses" },
+                { icon: ShieldCheck, label: "Garantía" },
                 { icon: Truck, label: "Entrega en 24h" },
-                { icon: Zap, label: "Carga ultrarrápida" },
+                { icon: Zap, label: "Carga rapida y protegida" },
               ].map((f, i) => (
                 <div key={i} className="space-y-1.5">
                   <f.icon className="w-5 h-5 text-primary" />
@@ -75,22 +75,22 @@ export function Hero() {
                   <span className="text-foreground">charge</span>
                 </h2>
                 <p className="mt-4 text-lg text-muted-foreground font-medium tracking-wide">
-                  Tecnología de Vanguardia
+                  Calidad Precio, Pruebanos
                 </p>
                 <div className="mt-6 flex items-center justify-center gap-2">
                   <div className="w-2 h-2 rounded-full bg-primary animate-pulse" />
-                  <span className="text-xs text-muted-foreground uppercase tracking-wider">Electrónica Premium</span>
+                  <span className="text-xs text-muted-foreground uppercase tracking-wider">Nuestra prioridad es usted</span>
                 </div>
               </div>
 
               {/* Floating tags */}
               <div className="absolute top-8 -left-2 md:-left-8 glass rounded-2xl px-4 py-2.5 shadow-elevated animate-float" style={{ animationDelay: "1s" }}>
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Productos</p>
-                <p className="text-lg font-display font-bold text-primary">100+</p>
+                <p className="text-lg font-display font-bold text-primary">50+</p>
               </div>
               <div className="absolute bottom-12 -right-2 md:-right-8 glass rounded-2xl px-4 py-2.5 shadow-elevated animate-float" style={{ animationDelay: "2s" }}>
                 <p className="text-[10px] uppercase tracking-wider text-muted-foreground font-semibold">Soporte</p>
-                <p className="text-lg font-display font-bold text-accent">24/7 ⚡</p>
+                <p className="text-lg font-display font-bold text-accent">24/7</p>
               </div>
             </div>
           </div>
