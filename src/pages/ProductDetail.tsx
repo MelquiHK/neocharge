@@ -329,7 +329,7 @@ const ProductDetail = () => {
           <div className="grid grid-cols-2 gap-3 pt-6 border-t border-border">
             <div className="flex items-center gap-2.5 text-sm">
               <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
-              <span><strong>Garantía 12 meses</strong></span>
+              <span><strong>Garantía 24 horas para su prueba</strong></span>
             </div>
             <div className="flex items-center gap-2.5 text-sm">
               <Truck className="w-5 h-5 text-primary shrink-0" />
