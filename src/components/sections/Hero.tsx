@@ -19,15 +19,15 @@ export function Hero() {
           <div className="space-y-6 lg:space-y-8 animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
-              Tecnología que carga tu vida
+              Bienvenido amigo
             </div>
 
             <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight">
-              Energía <span className="text-gradient">premium</span> para cada dispositivo
+              Tienda de <span className="text-gradient">electronica</span>
             </h1>
 
             <p className="text-lg md:text-xl text-muted-foreground max-w-xl leading-relaxed">
-              Cargadores GaN, cables resistentes y baterías de larga duración.
+              Venta de todo tipo de productos de electronica.
               Calidad certificada con entrega 24h en La Habana.
             </p>
 

@@ -11,14 +11,14 @@ const features = [
   },
   {
     icon: ShieldCheck,
-    title: "Garantía 12 meses",
-    desc: "Todos los productos pasan control de calidad y se prueban frente al cliente al recibirlos.",
+    title: "Garantía",
+    desc: "Todos los productos pasan control de calidad y se prueban frente al cliente al recibirlos. Ademas de que se prueban al cliente.",
     color: "from-accent to-accent-glow",
   },
   {
     icon: Truck,
     title: "Entrega 24 horas",
-    desc: "Mensajería a domicilio en toda La Habana. Recogida disponible en nuestro local del Vedado.",
+    desc: "Mensajería a domicilio en toda La Habana. Recogida disponible en nuestro local del Vedado y en todos los demas locales.",
     color: "from-primary to-accent",
   },
   {
