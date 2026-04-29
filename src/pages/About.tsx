@@ -19,7 +19,7 @@ const About = () => {
             Energía con <span className="text-gradient">propósito</span> en La Habana
           </h1>
           <p className="text-lg text-muted-foreground leading-relaxed">
-            Nacimos en el Vedado con una misión simple: traer a La Habana productos de carga y electrónica que sí funcionan, con garantía real y atención que se siente.
+            Ventas de equipos de electronica, con calidad y atención que se siente.
           </p>
         </div>
       </section>
