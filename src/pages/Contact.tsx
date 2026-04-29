@@ -37,7 +37,7 @@ const Contact = () => {
           {[
             { icon: MessageCircle, title: "WhatsApp", value: "+53 6318-0910", href: "https://wa.me/5363180910", accent: true },
             { icon: Phone, title: "Teléfono", value: "+53 6318-0910", href: "tel:+5363180910" },
-            { icon: Mail, title: "Correo", value: "hola@neocharge.cu", href: "mailto:hola@neocharge.cu" },
+            { icon: Mail, title: "Correo", value: "habanasound90@gmail.com", href: "mailto:habanasound90@gmail.com" },
             { icon: MapPin, title: "Local", value: "D entre 21 y 23, Vedado, La Habana" },
             { icon: Clock, title: "Horario", value: "Atención 24 horas, todos los días" },
           ].map((c, i) => (
