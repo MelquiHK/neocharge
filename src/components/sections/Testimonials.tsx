@@ -6,19 +6,19 @@ const testimonials = [
   {
     name: "María Rodríguez",
     role: "Vedado, La Habana",
-    text: "Pedí un cargador a las 9pm y a las 11am del día siguiente lo tenía en casa. La calidad es excelente, mi MacBook nunca cargó tan rápido.",
+    text: "Pedí un cargador a las 9pm y a las 11am del día siguiente lo tenía en casa.",
     rating: 5,
   },
   {
     name: "Carlos Pérez",
     role: "Centro Habana",
-    text: "Lo mejor es que probaron el producto delante mío antes de irse. Garantía real, servicio profesional. Volveré a comprar sin duda.",
+    text: "Lo mejor es que probaron el producto delante mío antes de irse. No he tenido problemas ni nada y yo quemo la moto",
     rating: 5,
   },
   {
     name: "Yanet García",
     role: "Miramar",
-    text: "El power bank que compré me ha salvado en mil apagones. La capacidad es real, no como otras marcas que exageran. 100% recomendado.",
+    text: "Compre el amplificador de 60w por cada salida, tremenda calidad. 100% recomendado.",
     rating: 5,
   },
 ];

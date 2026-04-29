@@ -31,7 +31,7 @@ export function Footer() {
           <div className="relative grid md:grid-cols-2 gap-8 items-center">
             <div>
               <h3 className="font-display text-3xl md:text-4xl font-bold mb-2">
-                Energízate con novedades
+                Novedades y Ofertas
               </h3>
               <p className="text-primary-foreground/85 text-base md:text-lg">
                 Recibe ofertas exclusivas, nuevos productos y consejos directo en tu correo.
@@ -64,7 +64,7 @@ export function Footer() {
             </p>
             <div className="flex gap-2 pt-2">
               <a
-                href="https://www.facebook.com/share/17fTcvKM4o/"
+                href="https://www.facebook.com/melquisedec.dominguez.9"
                 target="_blank"
                 rel="noopener noreferrer"
                 aria-label="Facebook"
@@ -119,7 +119,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 shrink-0 text-primary" />
-                <a href="mailto:hola@neocharge.cu" className="text-muted-foreground hover:text-primary transition-colors">hola@neocharge.cu</a>
+                <a href="mailto:habanasound90@gmail,com" className="text-muted-foreground hover:text-primary transition-colors">habanasound90@gmail.com</a>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="w-4 h-4 shrink-0 text-primary" />
@@ -131,7 +131,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Neocharge · Hecho con energía en La Habana 🇨🇺
+            © {new Date().getFullYear()} Neocharge · Hecho con amor en La Habana 🇨🇺
           </p>
           <div className="flex gap-5 text-xs text-muted-foreground">
             <Link to="/legales/terminos" className="hover:text-primary transition-colors">Términos</Link>

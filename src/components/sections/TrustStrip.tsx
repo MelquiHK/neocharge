@@ -2,12 +2,12 @@ import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
 const items = [
-  "TecnoHabana",
-  "Revolución Digital",
+  "Bache Cubano",
+  "Electronica Habana",
   "Cuba Tech",
-  "El Comerciante",
-  "Tribuna Digital",
-  "Vedado Daily",
+  "Elecpro Habana",
+  "Milexa",
+  "Habana Tech",
 ];
 
 export function TrustStrip() {
@@ -16,7 +16,7 @@ export function TrustStrip() {
     <section ref={ref} className={cn("py-12 border-y border-border bg-secondary/40 reveal", visible && "is-visible")}>
       <div className="container-page">
         <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-6">
-          + de 10.000 clientes confían en nosotros
+          + de 1000 clientes confían en nosotros
         </p>
         <div className="marquee">
           <div className="marquee-track">

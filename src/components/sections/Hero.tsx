@@ -19,7 +19,7 @@ export function Hero() {
           <div className="space-y-6 lg:space-y-8 animate-fade-in-up">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary text-xs font-semibold">
               <Sparkles className="w-3.5 h-3.5" />
-              Bienvenido amigo
+              Bienvenido amigo/a
             </div>
 
             <h1 className="font-display text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.05] tracking-tight">
@@ -45,7 +45,7 @@ export function Hero() {
             {/* Mini features */}
             <div className="grid grid-cols-3 gap-4 pt-8 border-t border-border max-w-lg">
               {[
-                { icon: ShieldCheck, label: "Garantía" },
+                { icon: ShieldCheck, label: "Garantía para su seguridad" },
                 { icon: Truck, label: "Entrega en 24h" },
                 { icon: Zap, label: "Carga rapida y protegida" },
               ].map((f, i) => (

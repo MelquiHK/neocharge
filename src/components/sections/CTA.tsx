@@ -16,7 +16,7 @@ export function CTA() {
 
           <div className="relative max-w-2xl mx-auto space-y-6">
             <h2 className="font-display text-4xl md:text-5xl lg:text-6xl font-bold leading-[1.05]">
-              ¿Listo para cargar mejor?
+              ¿Listo para sus proyectos?
             </h2>
             <p className="text-lg md:text-xl text-primary-foreground/90 leading-relaxed">
               Explora todo el catálogo o escríbenos directo por WhatsApp. Te asesoramos sin compromiso.

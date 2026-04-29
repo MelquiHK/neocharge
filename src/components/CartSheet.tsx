@@ -32,7 +32,7 @@ export function CartSheet() {
             <div>
               <h3 className="font-display text-lg font-bold">Tu carrito está vacío</h3>
               <p className="text-sm text-muted-foreground mt-1">
-                Descubre nuestros productos y empieza a cargar.
+                Descubre nuestros productos.
               </p>
             </div>
             <Button asChild variant="hero" onClick={closeCart}>

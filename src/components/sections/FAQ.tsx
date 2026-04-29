@@ -30,15 +30,15 @@ const faqs = [
   },
   {
     q: "¿Qué pasa si no sé qué cargador necesito?",
-    a: "Escríbenos por WhatsApp con el voltaje y capacidad de tu batería y te recomendamos el cargador ideal. También puedes visitarnos en cualquiera de nuestros 4 locales.",
+    a: "Escríbenos por WhatsApp con el voltaje y capacidad de tu batería y te recomendamos el cargador ideal. También puedes visitarnos en cualquiera de nuestros 4 locales, siempre llamas antes.",
   },
   {
     q: "¿Hacen envíos a otras provincias?",
-    a: "Por ahora operamos exclusivamente en La Habana, pero estamos trabajando para expandirnos pronto a otras provincias.",
+    a: "Por ahora operamos exclusivamente en La Habana, pero estamos trabajando para expandirnos pronto a otras provincias, en cualquier caso contactenos para decirle.",
   },
   {
     q: "¿Cómo puedo contactarlos?",
-    a: "Estamos disponibles por WhatsApp al +53 6318-0910. Visítanos en cualquiera de nuestros 4 locales: 2 especializados en cargadores de moto eléctrica y 2 en electrónica general.",
+    a: "Estamos disponibles por WhatsApp al +53 6318-0910.",
   },
 ];
 
