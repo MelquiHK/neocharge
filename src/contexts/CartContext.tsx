@@ -109,15 +109,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       let itemPriceCUP = 0;
 
       if (item.currency === "USD") {
-        itemPriceUSD = item.price;
-        itemPriceCUP = item.price * (exchangeRate || 1) + (item.extra_cup_per_usd || 0);
+        itemPriceUSD = Number(item.price);
+        itemPriceCUP = Number(item.price) * Number(exchangeRate || 1) + Number(item.extra_cup_per_usd || 0);
       } else if (item.currency === "CUP") {
-        itemPriceCUP = item.price_cup || 0;
-        itemPriceUSD = itemPriceCUP / (exchangeRate || 1);
+        itemPriceCUP = Number(item.price_cup || 0);
+        itemPriceUSD = Number(itemPriceCUP) / Number(exchangeRate || 1);
       } else {
         // Default to USD if currency is not specified
-        itemPriceUSD = item.price;
-        itemPriceCUP = item.price * (exchangeRate || 1);
+        itemPriceUSD = Number(item.price);
+        itemPriceCUP = Number(item.price) * Number(exchangeRate || 1);
       }
 
       totalUSD += itemPriceUSD * item.quantity;

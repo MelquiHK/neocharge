@@ -37,15 +37,18 @@ interface PriceableProduct {
 export function computeDisplayPrice(product: PriceableProduct, rate: ExchangeRate | null) {
   const currency = (product.currency ?? "USD").toUpperCase();
   const isCharger = product.warranty_type === "charger";
-  const extraPerUsd = Number(product.extra_cup_per_usd ?? 0) || (isCharger && rate ? Number(rate.extra_cup_chargers) : 0);
+  const actualRate = rate ? Number(rate.usd_to_cup) : 1; // Default to 1 if rate is null or undefined
+  const actualExtraCupChargers = (isCharger && rate) ? Number(rate.extra_cup_chargers) : 0;
+  const extraPerUsd = Number(product.extra_cup_per_usd ?? 0) || actualExtraCupChargers;
 
   if (currency === "CUP") {
     const cup = Number(product.price_cup ?? product.price);
-    return { usd: null as number | null, cup, primary: "CUP" as const };
+    const usd = cup / actualRate; // Use actualRate here
+    return { usd, cup, primary: "CUP" as const };
   }
 
   // USD
   const usd = Number(product.price);
-  const cup = rate ? usd * (Number(rate.usd_to_cup) + Number(extraPerUsd)) : null;
+  const cup = usd * (actualRate + extraPerUsd); // Use actualRate here
   return { usd, cup, primary: "USD" as const };
 }
