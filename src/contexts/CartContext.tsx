@@ -102,8 +102,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<CartContextValue>(() => {
-    let totalUSD = 0;
-    let totalCUP = 0;
+    let initialTotalUSD = 0;
+    let initialTotalCUP = 0;
     const updatedItems = items.map(item => {
       let itemPriceUSD = 0;
       let itemPriceCUP = 0;
@@ -120,9 +120,6 @@ export function CartProvider({ children }: { children: ReactNode }) {
         itemPriceCUP = Number(item.price) * Number(exchangeRate || 1);
       }
 
-      totalUSD += itemPriceUSD * item.quantity;
-      totalCUP += itemPriceCUP * item.quantity;
-
       return {
         ...item,
         displayPriceUSD: itemPriceUSD,
@@ -130,11 +127,14 @@ export function CartProvider({ children }: { children: ReactNode }) {
       };
     });
 
+    initialTotalUSD = updatedItems.reduce((sum, i) => sum + (i.displayPriceUSD || 0) * i.quantity, 0);
+    initialTotalCUP = updatedItems.reduce((sum, i) => sum + (i.displayPriceCUP || 0) * i.quantity, 0);
+
     const itemCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
 
     // Apply rounding for profit
-    totalUSD = roundUpToNextWhole(totalUSD);
-    totalCUP = roundUpToNextWhole(totalCUP);
+    let totalUSD = roundUpToNextWhole(initialTotalUSD);
+    let totalCUP = roundUpToNextWhole(initialTotalCUP);
 
     const total = paymentCurrency === "USD" ? totalUSD : totalCUP;
 
