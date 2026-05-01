@@ -1,30 +1,7 @@
 import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
-
-export interface AdminPermissions {
-  is_owner: boolean;
-  can_manage_products: boolean;
-  can_manage_orders: boolean;
-  can_manage_customers: boolean;
-  can_manage_locations: boolean;
-  can_manage_blog: boolean;
-  can_manage_rates: boolean;
-  can_view_finances: boolean;
-  can_manage_admins: boolean;
-}
-
-const NO_PERMS: AdminPermissions = {
-  is_owner: false,
-  can_manage_products: false,
-  can_manage_orders: false,
-  can_manage_customers: false,
-  can_manage_locations: false,
-  can_manage_blog: false,
-  can_manage_rates: false,
-  can_view_finances: false,
-  can_manage_admins: false,
-};
+import { AdminPermissions, NO_PERMS } from "@/types";
 
 interface AuthContextValue {
   user: User | null;

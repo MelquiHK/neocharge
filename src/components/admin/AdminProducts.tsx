@@ -17,30 +17,9 @@ import { Plus, Pencil, Trash2, Image as ImageIcon, X, Star } from "lucide-react"
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
-
-interface Category { id: string; name: string; }
-interface Location { id: string; name: string; }
-
-interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  specifications: string | null;
-  price: number;
-  cost_price: number | null;
-  compare_price: number | null;
-  currency: string;
-  price_cup: number | null;
-  category_id: string | null;
-  images: string[];
-  main_image_index: number;
-  stock: number;
-  low_stock_threshold: number | null;
-  is_active: boolean;
-  is_featured: boolean;
-  warranty_type: string | null;
-}
+import { Product, Category, StoreLocation } from "@/types";
+import { useAdminProducts } from "@/hooks/admin/use-admin-products";
+import { productSchema } from "@/lib/schemas";
 
 const slugify = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -54,27 +33,12 @@ const empty: Partial<Product> = {
 };
 
 export function AdminProducts() {
-  const [products, setProducts] = useState<Product[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
-  const [locations, setLocations] = useState<Location[]>([]);
+  const { products, categories, locations, loading, refresh, deleteProduct } = useAdminProducts();
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [productLocs, setProductLocs] = useState<Record<string, number>>({});
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
-
-  const load = async () => {
-    const [{ data: p }, { data: c }, { data: l }] = await Promise.all([
-      supabase.from("products").select("*").order("created_at", { ascending: false }),
-      supabase.from("categories").select("id,name").order("sort_order"),
-      supabase.from("store_locations").select("id,name").eq("is_active", true).order("sort_order"),
-    ]);
-    setProducts((p ?? []) as any);
-    setCategories(c ?? []);
-    setLocations(l ?? []);
-  };
-
-  useEffect(() => { load(); }, []);
 
   const openNew = () => {
     setEditing({ ...empty });
@@ -113,27 +77,28 @@ export function AdminProducts() {
   };
 
   const saveProduct = async () => {
-    if (!editing?.name?.trim()) { toast.error("Nombre obligatorio"); return; }
-    const slug = editing.slug?.trim() || slugify(editing.name);
-    const payload = {
-      name: editing.name.trim(),
+    if (!editing) return;
+    
+    const slug = editing.slug?.trim() || slugify(editing.name ?? "");
+    const dataToValidate = {
+      ...editing,
       slug,
-      description: editing.description?.trim() || null,
-      specifications: editing.specifications?.trim() || null,
       price: Number(editing.price ?? 0),
-      cost_price: Number(editing.cost_price ?? 0),
+      cost_price: editing.cost_price ? Number(editing.cost_price) : 0,
       compare_price: editing.compare_price ? Number(editing.compare_price) : null,
-      currency: editing.currency ?? "USD",
-      price_cup: editing.price_cup ? Number(editing.price_cup) : null,
-      category_id: editing.category_id || null,
-      images: editing.images ?? [],
-      main_image_index: editing.main_image_index ?? 0,
       stock: Number(editing.stock ?? 0),
       low_stock_threshold: Number(editing.low_stock_threshold ?? 5),
-      is_active: editing.is_active ?? true,
-      is_featured: editing.is_featured ?? false,
-      warranty_type: editing.warranty_type ?? "electronics",
     };
+
+    const result = productSchema.safeParse(dataToValidate);
+    
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(`${firstError.path.join(".")}: ${firstError.message}`);
+      return;
+    }
+
+    const payload = result.data;
 
     let productId = editing.id;
     if (editing.id) {
@@ -156,14 +121,7 @@ export function AdminProducts() {
 
     toast.success("Producto guardado");
     setDialogOpen(false);
-    load();
-  };
-
-  const deleteProduct = async (id: string) => {
-    const { error } = await supabase.from("products").delete().eq("id", id);
-    if (error) { toast.error("Error: " + error.message); return; }
-    toast.success("Producto eliminado");
-    load();
+    refresh();
   };
 
   const filtered = products.filter((p) =>

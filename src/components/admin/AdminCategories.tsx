@@ -13,58 +13,52 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
-
-interface Cat {
-  id?: string;
-  name: string;
-  slug: string;
-  description: string | null;
-  sort_order: number;
-}
+import { Category } from "@/types";
+import { useAdminCategories } from "@/hooks/admin/use-admin-categories";
+import { categorySchema } from "@/lib/schemas";
 
 const slugify = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-const empty: Cat = { name: "", slug: "", description: "", sort_order: 0 };
+const empty: Partial<Category> = { name: "", slug: "", description: "", sort_order: 0 };
 
 export function AdminCategories() {
-  const [cats, setCats] = useState<Cat[]>([]);
-  const [editing, setEditing] = useState<Cat | null>(null);
+  const { categories: cats, loading, refresh, deleteCategory } = useAdminCategories();
+  const [editing, setEditing] = useState<Partial<Category> | null>(null);
   const [open, setOpen] = useState(false);
 
-  const load = async () => {
-    const { data } = await supabase.from("categories").select("*").order("sort_order");
-    setCats((data ?? []) as any);
-  };
-
-  useEffect(() => { load(); }, []);
-
   const save = async () => {
-    if (!editing?.name?.trim()) { toast.error("Nombre obligatorio"); return; }
-    const payload = {
-      name: editing.name.trim(),
-      slug: editing.slug?.trim() || slugify(editing.name),
-      description: editing.description?.trim() || null,
-      sort_order: editing.sort_order,
+    if (!editing) return;
+
+    const dataToValidate = {
+      ...editing,
+      slug: editing.slug?.trim() || slugify(editing.name ?? ""),
+      sort_order: Number(editing.sort_order ?? 0),
     };
+
+    const result = categorySchema.safeParse(dataToValidate);
+    if (!result.success) {
+      const firstError = result.error.errors[0];
+      toast.error(`${firstError.path.join(".")}: ${firstError.message}`);
+      return;
+    }
+
+    const payload = result.data;
     if (editing.id) {
-      const { error } = await supabase.from("categories").update(payload).eq("id", editing.id);
+      const { error } = await supabase.from("categories").update(payload as any).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
     } else {
-      const { error } = await supabase.from("categories").insert(payload);
+      const { error } = await supabase.from("categories").insert(payload as any);
       if (error) { toast.error(error.message); return; }
     }
     toast.success("Categoría guardada");
     setOpen(false);
-    load();
+    refresh();
   };
 
   const remove = async (id: string) => {
-    const { error } = await supabase.from("categories").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Categoría eliminada");
-    load();
+    await deleteCategory(id);
   };
 
   return (

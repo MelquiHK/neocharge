@@ -17,16 +17,8 @@ import {
 import { ExternalLink, MapPin, MessageCircle, Trash2, Eye, Send } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
-import type { Enums, Tables } from "@/integrations/supabase/types";
-
-type Order = Tables<"orders">;
-type OrderStatus = Enums<"order_status">;
-
-type OrderItem = {
-  name: string;
-  quantity: number;
-  price: number;
-};
+import { Order, OrderStatus, OrderItem } from "@/types";
+import { useAdminOrders } from "@/hooks/admin/use-admin-orders";
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
 
@@ -52,7 +44,7 @@ const STATUSES = [
 ] satisfies Array<{ v: OrderStatus; l: string; c: string }>;
 
 export function AdminOrders() {
-  const [orders, setOrders] = useState<Order[]>([]);
+  const { orders, loading, updateStatus, deleteOrder, deleteManyOrders } = useAdminOrders();
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [viewing, setViewing] = useState<Order | null>(null);
@@ -60,47 +52,16 @@ export function AdminOrders() {
   const [courier, setCourier] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
 
-  const load = async () => {
-    const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
-    if (error) {
-      toast.error(error.message);
-      return;
-    }
-    setOrders(data ?? []);
-  };
-
-  useEffect(() => {
-    load();
-    const channel = supabase
-      .channel("orders-admin")
-      .on("postgres_changes", { event: "*", schema: "public", table: "orders" }, () => load())
-      .subscribe();
-    return () => { supabase.removeChannel(channel); };
-  }, []);
-
   const filtered = filter === "all" ? orders : orders.filter((o) => o.status === filter);
 
-  const updateStatus = async (id: string, status: OrderStatus) => {
-    const { error } = await supabase.from("orders").update({ status }).eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Estado actualizado");
-    load();
-  };
-
   const removeOne = async (id: string) => {
-    const { error } = await supabase.from("orders").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Pedido eliminado");
-    load();
+    await deleteOrder(id);
   };
 
   const removeSelected = async () => {
     if (selected.size === 0) return;
-    const { error } = await supabase.from("orders").delete().in("id", Array.from(selected));
-    if (error) { toast.error(error.message); return; }
-    toast.success(`${selected.size} pedidos eliminados`);
-    setSelected(new Set());
-    load();
+    const ok = await deleteManyOrders(Array.from(selected));
+    if (ok) setSelected(new Set());
   };
 
   const openView = (o: Order) => {
