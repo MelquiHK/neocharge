@@ -38,3 +38,28 @@ export interface StoreLocation {
   is_active: boolean;
   sort_order: number;
 }
+
+export interface AdminPermissions {
+  is_owner: boolean;
+  can_manage_products: boolean;
+  can_manage_orders: boolean;
+  can_manage_customers: boolean;
+  can_manage_locations: boolean;
+  can_manage_blog: boolean;
+  can_manage_rates: boolean;
+  can_view_finances: boolean;
+  can_manage_admins: boolean;
+}
+
+export const NO_PERMS: AdminPermissions = {
+  is_owner: false,
+  can_manage_products: false,
+  can_manage_orders: false,
+  can_manage_customers: false,
+  can_manage_locations: false,
+  can_manage_blog: false,
+  can_manage_rates: false,
+  can_view_finances: false,
+  can_manage_admins: false,
+};
+

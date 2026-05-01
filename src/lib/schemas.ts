@@ -17,7 +17,7 @@ export const productSchema = z.object({
   low_stock_threshold: z.number().int().min(0).nullable(),
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),
-  warranty_type: z.string().nullable(),
+  warranty_type: z.enum(["electronics", "charger", "no-warranty"]).nullable(),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;
