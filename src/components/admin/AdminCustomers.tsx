@@ -87,6 +87,24 @@ export function AdminCustomers() {
     toast.success("Acceso de administrador removido");
   };
 
+  const deleteUser = async () => {
+    if (!viewing) return;
+    try {
+      const { error: authError } = await supabase.auth.admin.deleteUser(viewing.id);
+      if (authError) throw authError;
+
+      // Also delete from profiles table
+      const { error: profileError } = await supabase.from("profiles").delete().eq("id", viewing.id);
+      if (profileError) throw profileError;
+
+      toast.success("Cliente eliminado exitosamente.");
+      setViewing(null);
+      load(); // Reload the customer list
+    } catch (error: any) {
+      toast.error("Error al eliminar cliente: " + error.message);
+    }
+  };
+
   const PERM_LABELS: Record<string, string> = {
     can_manage_products: "Gestionar productos",
     can_manage_orders: "Gestionar pedidos",
@@ -214,6 +232,21 @@ export function AdminCustomers() {
                   </div>
                 </div>
               )}
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full">Eliminar Cliente</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Estás seguro de eliminar este cliente?</AlertDialogTitle>
+                  <AlertDialogDescription>Esta acción no se puede deshacer. Se eliminarán permanentemente el cliente y todos sus datos.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={deleteUser} className="bg-destructive">Eliminar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
             </div>
           )}
         </DialogContent>

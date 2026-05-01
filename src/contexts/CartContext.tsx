@@ -1,13 +1,20 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useExchangeRate } from "@/hooks/use-exchange-rate";
 
 export interface CartItem {
   id: string;
   name: string;
   slug: string;
   price: number;
+  currency?: string;
+  price_cup?: number;
+  extra_cup_per_usd?: number;
   image?: string;
   quantity: number;
   stock?: number;
+  warranty_type?: string;
+  displayPriceUSD?: number;
+  displayPriceCUP?: number;
 }
 
 interface CartContextValue {
@@ -20,7 +27,11 @@ interface CartContextValue {
   openCart: () => void;
   closeCart: () => void;
   total: number;
+  totalUSD: number;
+  totalCUP: number;
   itemCount: number;
+  paymentCurrency: "USD" | "CUP";
+  setPaymentCurrency: (currency: "USD" | "CUP") => void;
 }
 
 const CartContext = createContext<CartContextValue | undefined>(undefined);
@@ -30,6 +41,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
+  const [paymentCurrency, setPaymentCurrency] = useState<"USD" | "CUP">("USD");
 
   useEffect(() => {
     try {
@@ -79,11 +91,70 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const openCart = useCallback(() => setIsOpen(true), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
 
+  const { rate: exchangeRate } = useExchangeRate();
+
+  const roundUpToNextWhole = useCallback((num: number) => {
+    const decimalPart = num - Math.floor(num);
+    if (decimalPart === 0) {
+      return num;
+    }
+    return Math.ceil(num);
+  }, []);
+
   const value = useMemo<CartContextValue>(() => {
-    const total = items.reduce((sum, i) => sum + i.price * i.quantity, 0);
-    const itemCount = items.reduce((sum, i) => sum + i.quantity, 0);
-    return { items, addItem, removeItem, updateQuantity, clearCart, isOpen, openCart, closeCart, total, itemCount };
-  }, [items, addItem, removeItem, updateQuantity, clearCart, isOpen, openCart, closeCart]);
+    let totalUSD = 0;
+    let totalCUP = 0;
+    const updatedItems = items.map(item => {
+      let itemPriceUSD = 0;
+      let itemPriceCUP = 0;
+
+      if (item.currency === "USD") {
+        itemPriceUSD = item.price;
+        itemPriceCUP = item.price * (exchangeRate || 1) + (item.extra_cup_per_usd || 0);
+      } else if (item.currency === "CUP") {
+        itemPriceCUP = item.price_cup || 0;
+        itemPriceUSD = itemPriceCUP / (exchangeRate || 1);
+      } else {
+        // Default to USD if currency is not specified
+        itemPriceUSD = item.price;
+        itemPriceCUP = item.price * (exchangeRate || 1);
+      }
+
+      totalUSD += itemPriceUSD * item.quantity;
+      totalCUP += itemPriceCUP * item.quantity;
+
+      return {
+        ...item,
+        displayPriceUSD: itemPriceUSD,
+        displayPriceCUP: itemPriceCUP,
+      };
+    });
+
+    const itemCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
+
+    // Apply rounding for profit
+    totalUSD = roundUpToNextWhole(totalUSD);
+    totalCUP = roundUpToNextWhole(totalCUP);
+
+    const total = paymentCurrency === "USD" ? totalUSD : totalCUP;
+
+    return {
+      items: updatedItems,
+      addItem,
+      removeItem,
+      updateQuantity,
+      clearCart,
+      isOpen,
+      openCart,
+      closeCart,
+      total,
+      totalUSD,
+      totalCUP,
+      itemCount,
+      paymentCurrency,
+      setPaymentCurrency: (currency: "USD" | "CUP") => setPaymentCurrency(currency),
+    };
+  }, [items, addItem, removeItem, updateQuantity, clearCart, isOpen, openCart, closeCart, exchangeRate, paymentCurrency, roundUpToNextWhole]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

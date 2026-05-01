@@ -6,22 +6,7 @@ import { useCart } from "@/contexts/CartContext";
 import { formatPrice, formatCUP, computeDisplayPrice } from "@/lib/format";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { cn } from "@/lib/utils";
-
-export interface Product {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  compare_price: number | null;
-  images: string[];
-  main_image_index: number;
-  stock: number;
-  is_featured: boolean;
-  currency?: string | null;
-  price_cup?: number | null;
-  extra_cup_per_usd?: number | null;
-  warranty_type?: string | null;
-}
+import { Product } from "@/types";
 
 interface ProductCardProps {
   product: Product;
@@ -75,7 +60,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
             alt={product.name}
             loading="lazy"
             className={cn(
-              "absolute inset-0 w-full h-full object-contain p-8 transition-all duration-700",
+              "absolute inset-0 w-full h-full object-cover transition-all duration-700",
               "group-hover:scale-110",
               hoverImage && "group-hover:opacity-0",
             )}
@@ -87,7 +72,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
             alt=""
             aria-hidden
             loading="lazy"
-            className="absolute inset-0 w-full h-full object-contain p-8 opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-105"
+            className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-105"
           />
         )}
 

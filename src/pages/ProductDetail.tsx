@@ -7,13 +7,7 @@ import { useCart } from "@/contexts/CartContext";
 import { formatPrice, formatCUP, computeDisplayPrice } from "@/lib/format";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { cn } from "@/lib/utils";
-import { ProductCard, type Product as ProductBase } from "@/components/ProductCard";
-
-interface Product extends ProductBase {
-  description: string | null;
-  specifications: string | null;
-  category_id: string | null;
-}
+import { Product } from "@/types";
 
 interface LocStock {
   stock: number;
@@ -46,14 +40,15 @@ const ProductDetail = () => {
     const load = async () => {
       const { data } = await supabase
         .from("products")
-        .select("*")
+        .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,currency,price_cup,extra_cup_per_usd,warranty_type,description,specifications,category_id,cost_price,low_stock_threshold")
         .eq("slug", slug)
         .eq("is_active", true)
         .maybeSingle();
       if (data) {
-        setProduct(data as Product);
-        setActiveImage(data.main_image_index ?? 0);
-        document.title = `${data.name} — Neocharge`;
+        const productData = data as Product;
+        setProduct(productData);
+        setActiveImage(productData.main_image_index ?? 0);
+        document.title = `${productData.name} — Neocharge`;
 
         // Stock por local
         const { data: ls } = await supabase
@@ -152,7 +147,7 @@ const ProductDetail = () => {
               <img
                 src={product.images[activeImage]}
                 alt={product.name}
-                className="absolute inset-0 w-full h-full object-contain p-12 animate-scale-in"
+                className="absolute inset-0 w-full h-full object-cover animate-scale-in"
                 key={activeImage}
               />
             )}
@@ -175,7 +170,7 @@ const ProductDetail = () => {
                       : "border-border hover:border-primary/40",
                   )}
                 >
-                  <img src={img} alt="" className="w-full h-full object-contain p-2 bg-secondary/40" />
+                  <img src={img} alt="" className="w-full h-full object-cover bg-secondary/40" />
                 </button>
               ))}
             </div>

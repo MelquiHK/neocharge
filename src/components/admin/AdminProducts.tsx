@@ -293,6 +293,7 @@ export function AdminProducts() {
                     <SelectContent>
                       <SelectItem value="charger">Cargador (24h prueba + cambio)</SelectItem>
                       <SelectItem value="electronics">Electrónica (prueba en local, sin devolución)</SelectItem>
+                      <SelectItem value="no-warranty">Sin garantía</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

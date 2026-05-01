@@ -90,7 +90,7 @@ export function AdminBlog() {
       supabase.from("blog_categories").select("id,name,slug,created_at").order("name"),
       supabase
         .from("blog_posts")
-        .select("id,title,slug,excerpt,content,image_url,category_id,author_id,is_published,created_at,updated_at")
+        .select("id,title,slug,excerpt,content,image_url,images,category_id,author_id,is_published,created_at,updated_at")
         .order("created_at", { ascending: false }),
     ]);
     if (cErr) toast.error(cErr.message);
