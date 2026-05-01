@@ -8,6 +8,7 @@ import { formatPrice, formatCUP, computeDisplayPrice } from "@/lib/format";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { cn } from "@/lib/utils";
 import { Product } from "@/types";
+import { ProductCard } from "@/components/ProductCard";
 
 interface LocStock {
   stock: number;
