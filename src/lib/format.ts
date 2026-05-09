@@ -48,7 +48,7 @@ export function computeDisplayPrice(product: PriceableProduct, rate: ExchangeRat
   }
 
   // USD
-  const usd = Number(product.price);
+  const usd = Number(product.price || 0);
   const cup = usd * (actualRate + extraPerUsd); // Use actualRate here
   return { usd, cup, primary: "USD" as const };
 }

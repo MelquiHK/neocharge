@@ -102,6 +102,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const value = useMemo<CartContextValue>(() => {
+    const currentExchangeRate = exchangeRate?.usd_to_cup ?? 1;
     let initialTotalUSD = 0;
     let initialTotalCUP = 0;
     const updatedItems = items.map(item => {
@@ -109,15 +110,15 @@ export function CartProvider({ children }: { children: ReactNode }) {
       let itemPriceCUP = 0;
 
       if (item.currency === "USD") {
-        itemPriceUSD = Number(item.price);
-        itemPriceCUP = Number(item.price) * Number(exchangeRate || 1) + Number(item.extra_cup_per_usd || 0);
+        itemPriceUSD = Number(item.price || 0);
+        itemPriceCUP = Number(item.price || 0) * currentExchangeRate + Number(item.extra_cup_per_usd || 0);
       } else if (item.currency === "CUP") {
         itemPriceCUP = Number(item.price_cup || 0);
-        itemPriceUSD = Number(itemPriceCUP) / Number(exchangeRate || 1);
+        itemPriceUSD = Number(itemPriceCUP) / currentExchangeRate;
       } else {
         // Default to USD if currency is not specified
-        itemPriceUSD = Number(item.price);
-        itemPriceCUP = Number(item.price) * Number(exchangeRate || 1);
+        itemPriceUSD = Number(item.price || 0);
+        itemPriceCUP = Number(item.price || 0) * currentExchangeRate;
       }
 
       return {
