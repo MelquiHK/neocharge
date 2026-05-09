@@ -11,7 +11,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Image as ImageIcon, Plus, Pencil, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { Category } from "@/types";
 import { useAdminCategories } from "@/hooks/admin/use-admin-categories";
@@ -21,12 +21,26 @@ const slugify = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-const empty: Partial<Category> = { name: "", slug: "", description: "", sort_order: 0 };
+const empty: Partial<Category> = { name: "", slug: "", description: "", sort_order: 0, image_url: "" as any };
 
 export function AdminCategories() {
   const { categories: cats, loading, refresh, deleteCategory } = useAdminCategories();
   const [editing, setEditing] = useState<Partial<Category> | null>(null);
   const [open, setOpen] = useState(false);
+
+  const move = async (id: string, dir: "up" | "down") => {
+    const idx = cats.findIndex((c) => c.id === id);
+    if (idx === -1) return;
+    const otherIdx = dir === "up" ? idx - 1 : idx + 1;
+    if (otherIdx < 0 || otherIdx >= cats.length) return;
+    const a = cats[idx];
+    const b = cats[otherIdx];
+    const { error } = await supabase.from("categories").update({ sort_order: b.sort_order } as any).eq("id", a.id);
+    if (error) return toast.error(error.message);
+    const { error: e2 } = await supabase.from("categories").update({ sort_order: a.sort_order } as any).eq("id", b.id);
+    if (e2) return toast.error(e2.message);
+    refresh();
+  };
 
   const save = async () => {
     if (!editing) return;
@@ -74,18 +88,37 @@ export function AdminCategories() {
         <table className="w-full text-sm">
           <thead className="bg-muted/50">
             <tr className="text-left text-xs uppercase text-muted-foreground">
+              <th className="py-3 px-4 w-16">Orden</th>
+              <th className="py-3 px-4">Imagen</th>
               <th className="py-3 px-4">Nombre</th>
               <th className="py-3 px-4">Slug</th>
-              <th className="py-3 px-4">Orden</th>
               <th className="py-3 px-4 text-right">Acciones</th>
             </tr>
           </thead>
           <tbody>
             {cats.map((c) => (
               <tr key={c.id} className="border-t border-border">
+                <td className="py-3 px-4">
+                  <div className="flex flex-col gap-1">
+                    <Button size="icon" variant="ghost" onClick={() => c.id && move(c.id, "up")} disabled={cats[0]?.id === c.id}>
+                      <ArrowUp className="w-4 h-4" />
+                    </Button>
+                    <Button size="icon" variant="ghost" onClick={() => c.id && move(c.id, "down")} disabled={cats[cats.length - 1]?.id === c.id}>
+                      <ArrowDown className="w-4 h-4" />
+                    </Button>
+                  </div>
+                </td>
+                <td className="py-3 px-4">
+                  <div className="w-12 h-12 rounded-xl bg-secondary overflow-hidden flex items-center justify-center">
+                    {c.image_url ? (
+                      <img src={c.image_url} alt="" className="w-full h-full object-cover" />
+                    ) : (
+                      <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                    )}
+                  </div>
+                </td>
                 <td className="py-3 px-4 font-semibold">{c.name}</td>
                 <td className="py-3 px-4 text-muted-foreground text-xs">{c.slug}</td>
-                <td className="py-3 px-4">{c.sort_order}</td>
                 <td className="py-3 px-4 text-right">
                   <div className="inline-flex gap-1">
                     <Button size="icon" variant="ghost" onClick={() => { setEditing(c); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>
@@ -105,7 +138,7 @@ export function AdminCategories() {
                 </td>
               </tr>
             ))}
-            {cats.length === 0 && <tr><td colSpan={4} className="py-8 text-center text-muted-foreground">Sin categorías. Crea la primera.</td></tr>}
+            {cats.length === 0 && <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">Sin categorías. Crea la primera.</td></tr>}
           </tbody>
         </table>
       </div>
@@ -128,6 +161,10 @@ export function AdminCategories() {
               <div className="space-y-2">
                 <Label>Descripción</Label>
                 <Textarea value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className="min-h-[60px]" />
+              </div>
+              <div className="space-y-2">
+                <Label>Imagen (URL)</Label>
+                <Input value={(editing as any).image_url ?? ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value } as any)} placeholder="https://..." />
               </div>
               <div className="space-y-2">
                 <Label>Orden</Label>

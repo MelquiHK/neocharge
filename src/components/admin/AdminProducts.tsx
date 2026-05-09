@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
-import { Plus, Pencil, Trash2, Image as ImageIcon, X, Star } from "lucide-react";
+import { Copy, Download, Plus, Pencil, Trash2, Image as ImageIcon, X, Star, Sparkles, CheckSquare, Square } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
@@ -39,6 +39,11 @@ export function AdminProducts() {
   const [productLocs, setProductLocs] = useState<Record<string, number>>({});
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState<string>("all");
+  const [statusFilter, setStatusFilter] = useState<"all" | "active" | "inactive" | "lowStock" | "featured">("all");
+  const [sortBy, setSortBy] = useState<"newest" | "name" | "price" | "stock">("newest");
+  const [selected, setSelected] = useState<Set<string>>(new Set());
+  const [bulkCategoryId, setBulkCategoryId] = useState<string>("none");
 
   const openNew = () => {
     setEditing({ ...empty });
@@ -53,6 +58,127 @@ export function AdminProducts() {
     (data ?? []).forEach((r: any) => { map[r.location_id] = r.stock; });
     setProductLocs(map);
     setDialogOpen(true);
+  };
+
+  const isLowStock = (p: Product) => Number(p.stock ?? 0) <= Number(p.low_stock_threshold ?? 5);
+
+  const filtered = useMemo(() => {
+    let list = [...products];
+    if (search.trim()) {
+      const q = search.trim().toLowerCase();
+      list = list.filter((p) => (p.name ?? "").toLowerCase().includes(q) || (p.slug ?? "").toLowerCase().includes(q));
+    }
+    if (categoryFilter !== "all") {
+      list = list.filter((p) => (p.category_id ?? "none") === categoryFilter);
+    }
+    if (statusFilter !== "all") {
+      list = list.filter((p) => {
+        if (statusFilter === "active") return !!p.is_active;
+        if (statusFilter === "inactive") return !p.is_active;
+        if (statusFilter === "featured") return !!p.is_featured;
+        if (statusFilter === "lowStock") return isLowStock(p);
+        return true;
+      });
+    }
+    list.sort((a, b) => {
+      if (sortBy === "name") return (a.name ?? "").localeCompare(b.name ?? "");
+      if (sortBy === "price") return Number(b.price ?? 0) - Number(a.price ?? 0);
+      if (sortBy === "stock") return Number(b.stock ?? 0) - Number(a.stock ?? 0);
+      // newest (fallback): created_at may not be present in type, so keep stable by name+id
+      return String(b.id).localeCompare(String(a.id));
+    });
+    return list;
+  }, [products, search, categoryFilter, statusFilter, sortBy]);
+
+  const allSelectedOnPage = filtered.length > 0 && selected.size === filtered.length;
+
+  const toggleSelectAll = (checked: boolean) => {
+    setSelected(checked ? new Set(filtered.map((p) => p.id)) : new Set());
+  };
+
+  const toggleSelectOne = (id: string, checked: boolean) => {
+    setSelected((prev) => {
+      const n = new Set(prev);
+      if (checked) n.add(id);
+      else n.delete(id);
+      return n;
+    });
+  };
+
+  const patchOne = async (id: string, patch: Partial<Product>) => {
+    const { error } = await supabase.from("products").update(patch as any).eq("id", id);
+    if (error) {
+      toast.error(error.message);
+      return false;
+    }
+    return true;
+  };
+
+  const bulkPatch = async (patch: Partial<Product>) => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from("products").update(patch as any).in("id", ids);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Actualizados ${ids.length} productos`);
+    setSelected(new Set());
+    refresh();
+  };
+
+  const bulkDelete = async () => {
+    const ids = Array.from(selected);
+    if (ids.length === 0) return;
+    const { error } = await supabase.from("products").delete().in("id", ids);
+    if (error) {
+      toast.error(error.message);
+      return;
+    }
+    toast.success(`Eliminados ${ids.length} productos`);
+    setSelected(new Set());
+    refresh();
+  };
+
+  const duplicateProduct = async (p: Product) => {
+    const base = {
+      ...p,
+      id: undefined,
+      name: `${p.name} (copia)`,
+      slug: `${p.slug}-${Math.random().toString(36).slice(2, 6)}`,
+      is_featured: false,
+      is_active: false,
+    } as any;
+    delete base.created_at;
+    delete base.updated_at;
+    const { error } = await supabase.from("products").insert(base);
+    if (error) return toast.error(error.message);
+    toast.success("Producto duplicado (queda inactivo)");
+    refresh();
+  };
+
+  const exportCsv = () => {
+    const rows = filtered.map((p) => ({
+      id: p.id,
+      name: p.name ?? "",
+      slug: p.slug ?? "",
+      price: Number(p.price ?? 0),
+      currency: p.currency ?? "USD",
+      stock: Number(p.stock ?? 0),
+      category_id: p.category_id ?? "",
+      is_active: !!p.is_active,
+      is_featured: !!p.is_featured,
+    }));
+    const headers = Object.keys(rows[0] ?? { id: "" });
+    const esc = (v: unknown) => `"${String(v ?? "").replaceAll('"', '""')}"`;
+    const csv = [headers.join(","), ...rows.map((r) => headers.map((h) => esc((r as any)[h])).join(","))].join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `neocharge-products-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   };
 
   const handleImageUpload = async (file: File) => {
@@ -124,27 +250,116 @@ export function AdminProducts() {
     refresh();
   };
 
-  const filtered = products.filter((p) =>
-    !search || p.name.toLowerCase().includes(search.toLowerCase()),
-  );
-
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center gap-3 justify-between">
-        <Input
-          placeholder="Buscar producto..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="max-w-sm"
-        />
-        <Button onClick={openNew} variant="hero"><Plus className="w-4 h-4" /> Nuevo producto</Button>
+      <div className="flex flex-col lg:flex-row lg:items-end gap-3 justify-between">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3 w-full">
+          <div className="space-y-1">
+            <Label>Buscar</Label>
+            <Input placeholder="Nombre o slug..." value={search} onChange={(e) => setSearch(e.target.value)} />
+          </div>
+          <div className="space-y-1">
+            <Label>Categoría</Label>
+            <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todas</SelectItem>
+                <SelectItem value="none">Sin categoría</SelectItem>
+                {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>Estado</Label>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="all">Todos</SelectItem>
+                <SelectItem value="active">Activos</SelectItem>
+                <SelectItem value="inactive">Inactivos</SelectItem>
+                <SelectItem value="featured">Destacados</SelectItem>
+                <SelectItem value="lowStock">Stock bajo</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="space-y-1">
+            <Label>Orden</Label>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+              <SelectTrigger><SelectValue /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="newest">Más recientes</SelectItem>
+                <SelectItem value="name">Nombre</SelectItem>
+                <SelectItem value="price">Precio</SelectItem>
+                <SelectItem value="stock">Stock</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+        </div>
+
+        <div className="flex gap-2 justify-end">
+          <Button variant="secondary" onClick={exportCsv}><Download className="w-4 h-4" /> Exportar CSV</Button>
+          <Button onClick={openNew} variant="hero"><Plus className="w-4 h-4" /> Nuevo</Button>
+        </div>
       </div>
+
+      {selected.size > 0 && (
+        <div className="card-elevated p-4 flex flex-wrap items-center gap-2 justify-between">
+          <p className="text-sm text-muted-foreground">
+            <span className="font-semibold text-foreground">{selected.size}</span> seleccionados
+          </p>
+          <div className="flex flex-wrap gap-2">
+            <Button size="sm" variant="secondary" onClick={() => bulkPatch({ is_active: true })}>Activar</Button>
+            <Button size="sm" variant="secondary" onClick={() => bulkPatch({ is_active: false })}>Desactivar</Button>
+            <Button size="sm" variant="secondary" onClick={() => bulkPatch({ is_featured: true })}><Sparkles className="w-4 h-4" /> Destacar</Button>
+            <Button size="sm" variant="secondary" onClick={() => bulkPatch({ is_featured: false })}>Quitar destacado</Button>
+            <Select value={bulkCategoryId} onValueChange={setBulkCategoryId}>
+              <SelectTrigger className="h-9 w-56"><SelectValue placeholder="Mover a categoría" /></SelectTrigger>
+              <SelectContent>
+                <SelectItem value="none">Sin categoría</SelectItem>
+                {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
+              </SelectContent>
+            </Select>
+            <Button
+              size="sm"
+              variant="secondary"
+              onClick={() => bulkPatch({ category_id: bulkCategoryId === "none" ? null : bulkCategoryId })}
+            >
+              Mover
+            </Button>
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button size="sm" variant="destructive"><Trash2 className="w-4 h-4" /> Eliminar</Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>¿Eliminar {selected.size} productos?</AlertDialogTitle>
+                  <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction onClick={bulkDelete} className="bg-destructive">Eliminar</AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        </div>
+      )}
 
       <div className="card-elevated p-0 overflow-hidden">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead className="bg-muted/50">
               <tr className="text-left text-xs uppercase text-muted-foreground">
+                <th className="py-3 px-4 w-10">
+                  <button
+                    type="button"
+                    className="inline-flex items-center justify-center"
+                    onClick={() => toggleSelectAll(!allSelectedOnPage)}
+                    aria-label="Seleccionar todo"
+                  >
+                    {allSelectedOnPage ? <CheckSquare className="w-4 h-4" /> : <Square className="w-4 h-4" />}
+                  </button>
+                </th>
                 <th className="py-3 px-4">Producto</th>
                 <th className="py-3 px-4">Precio</th>
                 <th className="py-3 px-4">Stock</th>
@@ -155,9 +370,19 @@ export function AdminProducts() {
             <tbody>
               {filtered.map((p) => {
                 const img = p.images?.[p.main_image_index ?? 0];
-                const isLow = (p.stock ?? 0) <= (p.low_stock_threshold ?? 5);
+                const isLow = isLowStock(p);
                 return (
                   <tr key={p.id} className="border-t border-border">
+                    <td className="py-3 px-4">
+                      <button
+                        type="button"
+                        className="inline-flex items-center justify-center"
+                        onClick={() => toggleSelectOne(p.id, !selected.has(p.id))}
+                        aria-label="Seleccionar"
+                      >
+                        {selected.has(p.id) ? <CheckSquare className="w-4 h-4 text-primary" /> : <Square className="w-4 h-4" />}
+                      </button>
+                    </td>
                     <td className="py-3 px-4">
                       <div className="flex items-center gap-3">
                         <div className="w-12 h-12 rounded-lg bg-secondary overflow-hidden shrink-0">
@@ -171,16 +396,51 @@ export function AdminProducts() {
                     </td>
                     <td className="py-3 px-4 font-bold">{formatPrice(Number(p.price))} {p.currency}</td>
                     <td className="py-3 px-4">
-                      <span className={isLow ? "text-destructive font-semibold" : ""}>{p.stock}</span>
+                      <div className="flex items-center gap-2">
+                        <Input
+                          type="number"
+                          value={Number(p.stock ?? 0)}
+                          onChange={async (e) => {
+                            const v = Number(e.target.value);
+                            await patchOne(p.id, { stock: v });
+                            refresh();
+                          }}
+                          className={isLow ? "w-24 border-destructive" : "w-24"}
+                        />
+                        {isLow && <span className="text-xs text-destructive font-semibold">Bajo</span>}
+                      </div>
                     </td>
                     <td className="py-3 px-4">
-                      <div className="flex gap-1">
-                        {p.is_active ? <Badge variant="default" className="bg-success">Activo</Badge> : <Badge variant="secondary">Inactivo</Badge>}
-                        {p.is_featured && <Badge variant="default" className="bg-accent text-accent-foreground"><Star className="w-3 h-3" /></Badge>}
+                      <div className="flex flex-col gap-2">
+                        <label className="flex items-center gap-2 text-xs">
+                          <Switch
+                            checked={!!p.is_active}
+                            onCheckedChange={async (v) => {
+                              const ok = await patchOne(p.id, { is_active: v });
+                              if (ok) refresh();
+                            }}
+                          />
+                          <span className={p.is_active ? "text-success font-semibold" : "text-muted-foreground"}>Activo</span>
+                        </label>
+                        <label className="flex items-center gap-2 text-xs">
+                          <Switch
+                            checked={!!p.is_featured}
+                            onCheckedChange={async (v) => {
+                              const ok = await patchOne(p.id, { is_featured: v });
+                              if (ok) refresh();
+                            }}
+                          />
+                          <span className="inline-flex items-center gap-1">
+                            <Star className="w-3 h-3" /> Destacado
+                          </span>
+                        </label>
                       </div>
                     </td>
                     <td className="py-3 px-4 text-right">
                       <div className="inline-flex gap-1">
+                        <Button size="icon" variant="ghost" onClick={() => duplicateProduct(p)} title="Duplicar">
+                          <Copy className="w-4 h-4" />
+                        </Button>
                         <Button size="icon" variant="ghost" onClick={() => openEdit(p)}><Pencil className="w-4 h-4" /></Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
