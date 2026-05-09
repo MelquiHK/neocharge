@@ -57,7 +57,7 @@ export function Hero() {
                 </Link>
               </Button>
               <Button asChild variant="outline" size="lg" className="border-white/20 text-white hover:bg-white/10">
-                <Link to="/about">Conocer Más</Link>
+                <Link to="/sobre-nosotros">Conocer Más</Link>
               </Button>
             </div>
 

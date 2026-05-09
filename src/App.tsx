@@ -19,6 +19,9 @@ import Blog from "./pages/Blog.tsx";
 import BlogPost from "./pages/BlogPost.tsx";
 import Admin from "./pages/Admin.tsx";
 import Garantia from "./pages/Garantia.tsx";
+import FAQ from "./pages/FAQ.tsx";
+import LegalTerms from "./pages/LegalTerms.tsx";
+import LegalPrivacy from "./pages/LegalPrivacy.tsx";
 import NotFound from "./pages/NotFound.tsx";
 
 const queryClient = new QueryClient();
@@ -45,6 +48,10 @@ const App = () => (
                 <Route path="/blog/:slug" element={<BlogPost />} />
                 <Route path="/admin" element={<Admin />} />
                 <Route path="/garantia" element={<Garantia />} />
+                <Route path="/preguntas-frecuentes" element={<FAQ />} />
+                <Route path="/envios-y-garantia" element={<Garantia />} />
+                <Route path="/legales/terminos" element={<LegalTerms />} />
+                <Route path="/legales/privacidad" element={<LegalPrivacy />} />
                 {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                 <Route path="*" element={<NotFound />} />
               </Route>

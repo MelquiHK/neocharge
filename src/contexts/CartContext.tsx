@@ -134,8 +134,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const itemCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
 
     // Apply rounding for profit
-    let totalUSD = roundUpToNextWhole(initialTotalUSD);
-    let totalCUP = roundUpToNextWhole(initialTotalCUP);
+    const totalUSD = roundUpToNextWhole(initialTotalUSD);
+    const totalCUP = roundUpToNextWhole(initialTotalCUP);
 
     const total = paymentCurrency === "USD" ? totalUSD : totalCUP;
 
