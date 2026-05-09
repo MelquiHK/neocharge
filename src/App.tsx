@@ -6,6 +6,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SiteLayout } from "@/components/SiteLayout";
+import { ScrollToTop } from "@/components/ScrollToTop";
 
 import Index from "./pages/Index.tsx";
 import Shop from "./pages/Shop.tsx";
@@ -32,6 +33,7 @@ const App = () => (
       <Toaster />
       <Sonner position="top-center" />
       <BrowserRouter>
+        <ScrollToTop />
         <AuthProvider>
           <CartProvider>
             <Routes>
