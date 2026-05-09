@@ -56,7 +56,12 @@ export function Hero() {
                   <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
                 </Link>
               </Button>
-              <Button asChild variant="outline" size="lg" className="border-white/20 text-white hover:bg-white/10">
+              <Button
+                asChild
+                variant="outline"
+                size="lg"
+                className="border-white/25 bg-white/5 text-white backdrop-blur-md hover:bg-white/10 hover:border-white/40 shadow-soft hover:shadow-elevated"
+              >
                 <Link to="/sobre-nosotros">Conocer Más</Link>
               </Button>
             </div>
