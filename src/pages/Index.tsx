@@ -10,7 +10,7 @@ import { useEffect } from "react";
 
 const Index = () => {
   useEffect(() => {
-    document.title = "Neocharge — Tu tienda de electrónica en La Habana";
+    document.title = "Neocharge - Tienda de electrónica";
     const desc = document.querySelector('meta[name="description"]');
     if (desc) desc.setAttribute("content", "Cargadores, cables y baterías premium con entrega 24h en La Habana. Garantía 12 meses y soporte 24/7.");
   }, []);

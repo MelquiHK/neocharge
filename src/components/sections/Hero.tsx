@@ -37,9 +37,9 @@ export function Hero() {
             {/* Main Headline */}
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight leading-[1.1]">
-                <span className="block text-white">Tu tienda de</span>
+                <span className="block text-white">Tienda de</span>
                 <span className="block bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 text-transparent bg-clip-text">
-                  Electrónica Confiable
+                  Electrónica
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed font-light">
