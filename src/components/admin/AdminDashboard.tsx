@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
 import { useAuth } from "@/contexts/AuthContext";
-import { Package, ShoppingBag, Users, DollarSign, TrendingUp, AlertTriangle } from "lucide-react";
+import { Package, ShoppingBag, Users, DollarSign, TrendingUp, AlertTriangle, Eye } from "lucide-react";
 
 interface Stats {
   products: number;
@@ -12,6 +12,9 @@ interface Stats {
   revenueMonth: number;
   costsMonth: number;
   customers: number;
+  visitsToday: number;
+  unique7d: number;
+  visits7d: number;
 }
 
 export function AdminDashboard() {
@@ -19,6 +22,7 @@ export function AdminDashboard() {
   const [stats, setStats] = useState<Stats>({
     products: 0, lowStock: 0, ordersToday: 0, ordersPending: 0,
     revenueMonth: 0, costsMonth: 0, customers: 0,
+    visitsToday: 0, unique7d: 0, visits7d: 0,
   });
   const [recent, setRecent] = useState<any[]>([]);
 
@@ -28,7 +32,7 @@ export function AdminDashboard() {
       const startMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
       const startDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
 
-      const [{ count: pCount }, { data: products }, { data: ordersMonth }, { data: ordersToday }, { data: pendingOrders }, { count: cCount }, { data: recentOrders }] = await Promise.all([
+      const [{ count: pCount }, { data: products }, { data: ordersMonth }, { data: ordersToday }, { data: pendingOrders }, { count: cCount }, { data: recentOrders }, traffic] = await Promise.all([
         supabase.from("products").select("*", { count: "exact", head: true }),
         supabase.from("products").select("id,stock,low_stock_threshold,cost_price").eq("is_active", true),
         supabase.from("orders").select("total,items").gte("created_at", startMonth),
@@ -36,6 +40,7 @@ export function AdminDashboard() {
         supabase.from("orders").select("id").eq("status", "pending"),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
         supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(8),
+        supabase.rpc("traffic_stats", { days: 7 }),
       ]);
 
       const lowStock = (products ?? []).filter((p: any) => p.stock <= (p.low_stock_threshold ?? 5)).length;
@@ -59,6 +64,9 @@ export function AdminDashboard() {
         revenueMonth: revenue,
         costsMonth: costs,
         customers: cCount ?? 0,
+        visitsToday: Number(traffic.data?.visits_today ?? 0),
+        unique7d: Number(traffic.data?.unique_visitors ?? 0),
+        visits7d: Number(traffic.data?.visits_total ?? 0),
       });
       setRecent(recentOrders ?? []);
     };
@@ -74,11 +82,14 @@ export function AdminDashboard() {
     { icon: ShoppingBag, label: "Pedidos hoy", value: stats.ordersToday, color: "text-accent" },
     { icon: AlertTriangle, label: "Pedidos pendientes", value: stats.ordersPending, color: "text-destructive" },
     { icon: Users, label: "Clientes registrados", value: stats.customers, color: "text-primary" },
+    { icon: Eye, label: "Visitas hoy", value: stats.visitsToday, color: "text-accent" },
+    { icon: Eye, label: "Visitantes únicos (7d)", value: stats.unique7d, color: "text-primary" },
+    { icon: Eye, label: "Visitas (7d)", value: stats.visits7d, color: "text-muted-foreground" },
   ];
 
   return (
     <div className="space-y-8">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-5 gap-4">
+      <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
         {cards.map((c, i) => (
           <div key={i} className="card-elevated p-5">
             <c.icon className={`w-5 h-5 mb-3 ${c.color}`} />

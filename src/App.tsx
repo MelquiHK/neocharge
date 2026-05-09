@@ -7,6 +7,7 @@ import { CartProvider } from "@/contexts/CartContext";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { SiteLayout } from "@/components/SiteLayout";
 import { ScrollToTop } from "@/components/ScrollToTop";
+import { TrafficTracker } from "@/components/TrafficTracker";
 
 import Index from "./pages/Index.tsx";
 import Shop from "./pages/Shop.tsx";
@@ -34,6 +35,7 @@ const App = () => (
       <Sonner position="top-center" />
       <BrowserRouter>
         <ScrollToTop />
+        <TrafficTracker />
         <AuthProvider>
           <CartProvider>
             <Routes>
