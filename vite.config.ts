@@ -22,7 +22,7 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: 'NeoCharge Store',
         short_name: 'NeoCharge',
-        description: 'Tu tienda de electrónica de confianza',
+        description: 'Tienda de electrónica',
         theme_color: '#007bff',
         background_color: '#ffffff',
         display: 'standalone', // Obligatorio para que abra sin barra de navegador
