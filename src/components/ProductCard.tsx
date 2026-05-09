@@ -216,6 +216,3 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
     </Link>
   );
 }
-    </Link>
-  );
-}
