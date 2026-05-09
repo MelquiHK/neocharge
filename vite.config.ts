@@ -34,7 +34,7 @@ export default defineConfig(({ mode }) => ({
             type: 'image/x-icon'
           },
           {
-            src: 'apple-icon.png',
+            src: 'apple-icon-192.png',
             sizes: '192x192',
             type: 'image/png'
           },
