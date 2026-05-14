@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { useSEO } from "@/hooks/use-seo";
 
 interface Category {
   id: string;
@@ -32,9 +33,7 @@ const ShopPage = () => {
 
   const activeCat = searchParams.get("cat") ?? "all";
 
-  useEffect(() => {
-    document.title = "Tienda — Neocharge";
-  }, []);
+  useSEO("shop");
 
   useEffect(() => {
     const load = async () => {

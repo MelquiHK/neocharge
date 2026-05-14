@@ -1,7 +1,9 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { useSEO } from "@/hooks/use-seo";
+import { useEffect } from "react";
 
 interface Post {
   id: string;
@@ -17,8 +19,9 @@ const Blog = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
+  useSEO("blog");
+
   useEffect(() => {
-    document.title = "Blog — Neocharge";
     supabase
       .from("blog_posts")
       .select("id,title,slug,excerpt,image_url,images,created_at")

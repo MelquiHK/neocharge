@@ -1,12 +1,10 @@
-import { useEffect } from "react";
 import { Award, Heart, MapPin, Sparkles, Target, Users } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
+import { useSEO } from "@/hooks/use-seo";
 
 const About = () => {
-  useEffect(() => {
-    document.title = "Sobre nosotros — Neocharge";
-  }, []);
+  useSEO("about");
 
   return (
     <div>

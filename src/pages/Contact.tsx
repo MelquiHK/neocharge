@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import { Mail, MapPin, MessageCircle, Phone, Clock, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -6,15 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { getWhatsAppLink } from "@/lib/whatsapp";
+import { useSEO } from "@/hooks/use-seo";
 
 const Contact = () => {
+  useSEO("contact");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
-
-  useEffect(() => {
-    document.title = "Contacto — Neocharge";
-  }, []);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();

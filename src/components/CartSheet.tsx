@@ -74,8 +74,9 @@ export function CartSheet() {
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center border border-border rounded-full">
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity - 1)}
-                          className="w-7 h-7 flex items-center justify-center hover:bg-secondary rounded-l-full transition-colors"
+                          onClick={() => updateQuantity(item.id, Math.max(0, item.quantity - 1))}
+                          disabled={item.quantity <= 1}
+                          className="w-7 h-7 flex items-center justify-center hover:bg-secondary rounded-l-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           aria-label="Disminuir"
                         >
                           <Minus className="w-3 h-3" />
@@ -84,9 +85,17 @@ export function CartSheet() {
                           {item.quantity}
                         </span>
                         <button
-                          onClick={() => updateQuantity(item.id, item.quantity + 1)}
-                          className="w-7 h-7 flex items-center justify-center hover:bg-secondary rounded-r-full transition-colors"
+                          onClick={() => {
+                            const newQty = item.quantity + 1;
+                            const maxStock = item.stock || 999;
+                            if (newQty <= maxStock) {
+                              updateQuantity(item.id, newQty);
+                            }
+                          }}
+                          disabled={item.quantity >= (item.stock || 999)}
+                          className="w-7 h-7 flex items-center justify-center hover:bg-secondary rounded-r-full transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                           aria-label="Aumentar"
+                          title={item.quantity >= (item.stock || 999) ? "Stock máximo alcanzado" : ""}
                         >
                           <Plus className="w-3 h-3" />
                         </button>
