@@ -20,7 +20,7 @@ const Auth = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    document.title = mode === "login" ? "Iniciar sesión — Neocharge" : "Crear cuenta — Neocharge";
+    document.title = mode === "login" ? "Iniciar sesión — NeoCharge" : "Crear cuenta — NeoCharge";
   }, [mode]);
 
   useEffect(() => {
@@ -74,16 +74,18 @@ const Auth = () => {
           <ArrowLeft className="w-4 h-4" /> Volver al inicio
         </Link>
 
-        <div className="card-elevated p-8 space-y-6">
-          <div className="flex flex-col items-center gap-3">
-            <Logo showText={false} />
-            <h1 className="font-display text-2xl font-bold">
-              {mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+        <div className="card-elevated p-10 space-y-8 rounded-[2.5rem] shadow-2xl">
+          <div className="flex flex-col items-center gap-4">
+            <div className="p-4 rounded-3xl bg-primary/10 mb-2">
+              <Logo showText={false} />
+            </div>
+            <h1 className="font-display text-3xl font-bold tracking-tight">
+              {mode === "login" ? "¡Hola de nuevo!" : "Únete a NeoCharge"}
             </h1>
-            <p className="text-sm text-muted-foreground text-center">
+            <p className="text-base text-muted-foreground text-center font-light">
               {mode === "login"
-                ? "Accede a tus pedidos y datos"
-                : "Únete y compra más rápido la próxima vez"}
+                ? "Entra para gestionar tus compras y favoritos."
+                : "Crea tu cuenta y vive la experiencia premium."}
             </p>
           </div>
 

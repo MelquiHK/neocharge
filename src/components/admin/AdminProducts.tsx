@@ -526,6 +526,14 @@ export function AdminProducts() {
                   <Input type="number" step="0.01" value={editing.compare_price ?? ""} onChange={(e) => setEditing({ ...editing, compare_price: e.target.value ? Number(e.target.value) : null })} />
                 </div>
                 <div className="space-y-2">
+                  <Label>Precio fijo en CUP (opcional)</Label>
+                  <Input type="number" step="1" value={editing.price_cup ?? ""} onChange={(e) => setEditing({ ...editing, price_cup: e.target.value ? Number(e.target.value) : null })} />
+                </div>
+                <div className="space-y-2">
+                  <Label>Extra CUP por cada USD (opcional)</Label>
+                  <Input type="number" step="1" value={editing.extra_cup_per_usd ?? ""} onChange={(e) => setEditing({ ...editing, extra_cup_per_usd: e.target.value ? Number(e.target.value) : null })} />
+                </div>
+                <div className="space-y-2">
                   <Label>Stock total</Label>
                   <Input type="number" value={editing.stock ?? 0} onChange={(e) => setEditing({ ...editing, stock: Number(e.target.value) })} />
                 </div>

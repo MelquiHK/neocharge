@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatCUP } from "@/lib/format";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
@@ -45,14 +45,20 @@ export function AdminCustomers() {
   const openCustomer = async (c: Customer) => {
     setViewing(c);
     const [{ data: orders }, { data: p }] = await Promise.all([
-      supabase.from("orders").select("id,total,status,created_at,items").eq("user_id", c.id).order("created_at", { ascending: false }),
+      supabase.from("orders").select("id,total,status,created_at,items,payment_currency,exchange_rate").eq("user_id", c.id).order("created_at", { ascending: false }),
       supabase.from("admin_permissions").select("*").eq("user_id", c.id).maybeSingle(),
     ]);
     setHistory((orders ?? []) as any);
     setPerms(p);
   };
 
-  const totalSpent = history.reduce((s, o) => s + Number(o.total ?? 0), 0);
+  const totalSpentUSD = history.reduce((s, o: any) => {
+    if (o.payment_currency === "CUP") {
+      const rate = o.exchange_rate || 1;
+      return s + (Number(o.total ?? 0) / rate);
+    }
+    return s + Number(o.total ?? 0);
+  }, 0);
 
   const clearHistory = async () => {
     if (!viewing) return;
@@ -169,7 +175,7 @@ export function AdminCustomers() {
                 </div>
                 <div className="card-elevated p-4">
                   <p className="text-xs text-muted-foreground">Total gastado</p>
-                  <p className="font-display text-2xl font-bold text-primary">{formatPrice(totalSpent)}</p>
+                  <p className="font-display text-2xl font-bold text-primary">{formatPrice(totalSpentUSD)}</p>
                 </div>
               </div>
 
@@ -201,7 +207,9 @@ export function AdminCustomers() {
                     {history.map((o) => (
                       <div key={o.id} className="flex items-center justify-between text-sm bg-muted/30 rounded-xl p-3">
                         <div>
-                          <p className="font-semibold">{formatPrice(Number(o.total))}</p>
+                          <p className="font-semibold">
+                            {(o as any).payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
+                          </p>
                           <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("es-CU")}</p>
                         </div>
                         <span className="text-xs px-2 py-1 rounded-full bg-secondary capitalize">{o.status}</span>

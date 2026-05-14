@@ -3,11 +3,24 @@ import { Minus, Plus, ShoppingBag, Trash2, X, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatCUP } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
 export function CartSheet() {
-  const { items, isOpen, closeCart, updateQuantity, removeItem, total, itemCount, clearCart } = useCart();
+  const { 
+    items, 
+    isOpen, 
+    closeCart, 
+    updateQuantity, 
+    removeItem, 
+    total, 
+    itemCount, 
+    clearCart,
+    paymentCurrency,
+    setPaymentCurrency,
+    totalUSD,
+    totalCUP
+  } = useCart();
 
   return (
     <Sheet open={isOpen} onOpenChange={(o) => (o ? null : closeCart())}>
@@ -41,11 +54,11 @@ export function CartSheet() {
           </div>
         ) : (
           <>
-            <div className="flex-1 overflow-y-auto px-6 py-4 space-y-4">
+            <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
               {items.map((item) => (
                 <div
                   key={item.id}
-                  className="flex gap-4 p-3 rounded-2xl border border-border hover:border-primary/30 transition-colors group"
+                  className="flex gap-5 p-4 rounded-[1.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/20 transition-all duration-300 shadow-sm hover:shadow-md group"
                 >
                   <div className="w-20 h-20 rounded-xl overflow-hidden bg-secondary shrink-0">
                     {item.image ? (
@@ -69,7 +82,11 @@ export function CartSheet() {
                     >
                       {item.name}
                     </Link>
-                    <p className="text-sm font-bold text-primary mt-1">{formatPrice(item.price)}</p>
+                    <p className="text-base font-bold text-primary mt-1">
+                      {paymentCurrency === "USD" 
+                        ? formatPrice(item.displayPriceUSD || 0) 
+                        : formatCUP(item.displayPriceCUP || 0)}
+                    </p>
 
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center border border-border rounded-full">
@@ -120,19 +137,50 @@ export function CartSheet() {
               </button>
             </div>
 
-            <div className="border-t px-6 py-5 space-y-4 bg-secondary/30">
+            <div className="border-t border-border/50 px-6 py-8 space-y-6 bg-slate-50/80 dark:bg-slate-900/50 backdrop-blur-xl">
+              {/* Currency Selector */}
+              <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-1.5 rounded-2xl border border-border/50 shadow-inner">
+                <button
+                  onClick={() => setPaymentCurrency("USD")}
+                  className={cn(
+                    "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
+                    paymentCurrency === "USD" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Pagar en USD
+                </button>
+                <button
+                  onClick={() => setPaymentCurrency("CUP")}
+                  className={cn(
+                    "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
+                    paymentCurrency === "CUP" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Pagar en CUP
+                </button>
+              </div>
+
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>{formatPrice(total)}</span>
+                  <span>{paymentCurrency === "USD" ? formatPrice(totalUSD) : formatCUP(totalCUP)}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>Envío</span>
-                  <span>Calculado al confirmar</span>
+                  <span className="text-xs italic">Calculado al confirmar</span>
                 </div>
-                <div className="flex items-center justify-between text-base font-display font-bold pt-2 border-t border-border">
-                  <span>Total</span>
-                  <span className="text-primary text-xl">{formatPrice(total)}</span>
+                <div className="flex items-center justify-between text-lg font-display font-bold pt-4 border-t border-border/50">
+                  <span className="tracking-tight">Total estimado</span>
+                  <div className="text-right">
+                    <span className="text-primary text-3xl block tracking-tighter text-glow">
+                      {paymentCurrency === "USD" ? formatPrice(totalUSD) : formatCUP(totalCUP)}
+                    </span>
+                    {paymentCurrency === "USD" ? (
+                      <span className="text-xs text-muted-foreground block font-normal">≈ {formatCUP(totalCUP)}</span>
+                    ) : (
+                      <span className="text-xs text-muted-foreground block font-normal">≈ {formatPrice(totalUSD)}</span>
+                    )}
+                  </div>
                 </div>
               </div>
 

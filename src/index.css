@@ -54,7 +54,7 @@
 
     /* Gradientes */
     --gradient-primary: linear-gradient(135deg, hsl(222 89% 55%), hsl(222 100% 70%));
-    --gradient-accent: linear-gradient(135deg, hsl(152 76% 45%), hsl(180 86% 55%));
+    --gradient-accent: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%);
     --gradient-hero: radial-gradient(ellipse at top, hsl(222 100% 96%) 0%, hsl(40 33% 98%) 60%);
     --gradient-glow: radial-gradient(circle, hsl(222 100% 70% / 0.35) 0%, transparent 70%);
     --gradient-shine: linear-gradient(120deg, transparent 30%, hsl(0 0% 100% / 0.7) 50%, transparent 70%);
@@ -130,6 +130,7 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
+    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
   }
 
   .glow-primary {
@@ -186,6 +187,15 @@
   .reveal.is-visible {
     opacity: 1;
     transform: translateY(0);
+  }
+
+  .animate-glow-pulse {
+    animation: glow-pulse 3s infinite ease-in-out;
+  }
+
+  @keyframes glow-pulse {
+    0%, 100% { filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.4)); }
+    50% { filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)); }
   }
 
   /* Marquee */

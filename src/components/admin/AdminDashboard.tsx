@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatCUP } from "@/lib/format";
 import { useAuth } from "@/contexts/AuthContext";
 import { Package, ShoppingBag, Users, DollarSign, TrendingUp, AlertTriangle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,7 +42,7 @@ export function AdminDashboard() {
       const [{ count: pCount }, { data: products }, { data: ordersMonth }, { data: ordersToday }, { data: pendingOrders }, { count: cCount }, { data: recentOrders }, traffic, top, recentV, todayRate] = await Promise.all([
         supabase.from("products").select("*", { count: "exact", head: true }),
         supabase.from("products").select("id,stock,low_stock_threshold,cost_price").eq("is_active", true),
-        supabase.from("orders").select("total,items").gte("created_at", startMonth),
+        supabase.from("orders").select("total,items,payment_currency,exchange_rate").gte("created_at", startMonth),
         supabase.from("orders").select("id").gte("created_at", startDay),
         supabase.from("orders").select("id").eq("status", "pending"),
         supabase.from("profiles").select("*", { count: "exact", head: true }),
@@ -50,11 +50,18 @@ export function AdminDashboard() {
         supabase.rpc("traffic_stats", { days: 7 }),
         supabase.rpc("traffic_top_pages", { days: 7, limit_count: 8 }),
         supabase.rpc("traffic_recent_views", { limit_count: 12 }),
-        supabase.from("exchange_rates").select("id").eq("rate_date", new Date().toISOString().slice(0, 10)).maybeSingle(),
+        supabase.from("exchange_rates").select("id,usd_to_cup").eq("rate_date", new Date().toISOString().slice(0, 10)).maybeSingle(),
       ]);
 
       const lowStock = (products ?? []).filter((p: any) => p.stock <= (p.low_stock_threshold ?? 5)).length;
-      const revenue = (ordersMonth ?? []).reduce((s, o: any) => s + Number(o.total ?? 0), 0);
+      const revenue = (ordersMonth ?? []).reduce((s, o: any) => {
+        // Si el pedido fue en CUP, lo convertimos a USD para la analítica consolidada
+        if (o.payment_currency === "CUP") {
+          const rate = o.exchange_rate || todayRate.data?.usd_to_cup || 1;
+          return s + (Number(o.total ?? 0) / rate);
+        }
+        return s + Number(o.total ?? 0);
+      }, 0);
 
       // Calcular costos: sumar cost_price * cantidad por cada item
       const costs = (ordersMonth ?? []).reduce((s, o: any) => {
@@ -153,7 +160,9 @@ export function AdminDashboard() {
                   <tr key={o.id} className="border-b border-border last:border-0">
                     <td className="py-3 pr-4 font-medium">{o.customer_name}</td>
                     <td className="py-3 pr-4 text-muted-foreground">{o.customer_phone}</td>
-                    <td className="py-3 pr-4 font-bold text-primary">{formatPrice(Number(o.total))}</td>
+                    <td className="py-3 pr-4 font-bold text-primary">
+                      {o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
+                    </td>
                     <td className="py-3 pr-4">
                       <span className="px-2 py-0.5 rounded-full bg-secondary text-xs capitalize">{o.status}</span>
                     </td>

@@ -28,7 +28,7 @@ export function Hero() {
               <div className="relative flex items-center gap-2">
                 <Sparkles className="w-4 h-4 text-blue-400 animate-spin-slow" />
                 <span className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                  Bienvenido a Neocharge
+                  Bienvenido a NeoCharge
                 </span>
                 <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
               </div>
@@ -36,33 +36,33 @@ export function Hero() {
 
             {/* Main Headline */}
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight leading-[1.1]">
-                <span className="block text-white">Tienda de</span>
-                <span className="block bg-gradient-to-r from-blue-400 via-blue-300 to-cyan-400 text-transparent bg-clip-text">
-                  Electrónica
+              <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight leading-[1.05]">
+                <span className="block text-white">Electrónica de</span>
+                <span className="block text-gradient-accent animate-glow-pulse">
+                  Próxima Generación
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed font-light">
-                Descubre productos de electrónica de calidad certificada con entrega rápida en La Habana. 
-                Soporte 24/7 y garantía completa en cada compra.
+                Elevamos tu experiencia tecnológica con productos premium, garantía total y entrega relámpago en toda La Habana. 
+                NeoCharge: Energía y tecnología sin límites.
               </p>
             </div>
 
             {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-4 pt-4">
-              <Button asChild size="lg" className="group relative overflow-hidden bg-gradient-to-r from-blue-500 to-blue-600 hover:from-blue-600 hover:to-blue-700 text-white font-semibold rounded-lg">
-                <Link to="/tienda" className="flex items-center gap-2">
+            <div className="flex flex-col sm:flex-row gap-5 pt-4">
+              <Button asChild size="xl" className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white font-bold rounded-2xl shadow-glow transition-all duration-500 hover:scale-105">
+                <Link to="/tienda" className="flex items-center gap-3">
                   Explorar Tienda
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                  <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
                 </Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
-                size="lg"
-                className="border-white/25 bg-white/5 text-white backdrop-blur-md hover:bg-white/10 hover:border-white/40 shadow-soft hover:shadow-elevated"
+                size="xl"
+                className="border-white/20 bg-white/5 text-white backdrop-blur-xl hover:bg-white/10 hover:border-blue-400/40 rounded-2xl transition-all duration-500"
               >
-                <Link to="/sobre-nosotros">Conocer Más</Link>
+                <Link to="/sobre-nosotros">Nuestra Historia</Link>
               </Button>
             </div>
 

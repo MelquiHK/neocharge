@@ -26,14 +26,14 @@ const testimonials = [
 export function Testimonials() {
   const { ref, visible } = useReveal();
   return (
-    <section ref={ref} className={cn("py-24 bg-secondary/30 reveal", visible && "is-visible")}>
+    <section ref={ref} className={cn("py-32 bg-slate-50/50 dark:bg-slate-900/10 reveal", visible && "is-visible")}>
       <div className="container-page">
-        <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-          <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">
-            Testimonios
-          </span>
-          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight">
-            Lo que dicen nuestros clientes
+        <div className="text-center max-w-3xl mx-auto mb-20 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+            Comunidad NeoCharge
+          </div>
+          <h2 className="font-display text-5xl md:text-6xl font-bold leading-tight">
+            Experiencias <span className="text-gradient-accent">Reales</span>
           </h2>
         </div>
 

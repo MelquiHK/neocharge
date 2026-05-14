@@ -19,7 +19,7 @@ const Account = () => {
   const [orders, setOrders] = useState<Order[]>([]);
 
   useEffect(() => {
-    document.title = "Mi cuenta — Neocharge";
+    document.title = "Mi cuenta — NeoCharge";
   }, []);
 
   useEffect(() => {
@@ -49,10 +49,13 @@ const Account = () => {
 
   return (
     <div className="container-page py-12 space-y-8">
-      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
-        <div>
-          <h1 className="font-display text-4xl font-bold">Mi cuenta</h1>
-          <p className="text-muted-foreground mt-2">{user.email}</p>
+      <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-border pb-10">
+        <div className="space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+            Perfil de Cliente
+          </div>
+          <h1 className="font-display text-5xl font-bold tracking-tight">Mi cuenta</h1>
+          <p className="text-lg text-muted-foreground font-light">{user.email}</p>
         </div>
         <div className="flex gap-2">
           {isAdmin && (

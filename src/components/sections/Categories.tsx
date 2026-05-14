@@ -32,14 +32,14 @@ export function Categories() {
   }, []);
 
   return (
-    <section ref={ref} className={cn("py-24 reveal", visible && "is-visible")}>
+    <section ref={ref} className={cn("py-32 reveal", visible && "is-visible")}>
       <div className="container-page">
-        <div className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-          <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">
-            Categorías
-          </span>
-          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight">
-            Encuentra exactamente lo que buscas
+        <div className="text-center max-w-3xl mx-auto mb-16 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+            Explora por Categorías
+          </div>
+          <h2 className="font-display text-5xl md:text-6xl font-bold leading-tight">
+            Encuentra exactamente <br /><span className="text-gradient-accent">lo que necesitas</span>
           </h2>
         </div>
 

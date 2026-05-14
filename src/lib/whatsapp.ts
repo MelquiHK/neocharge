@@ -5,6 +5,7 @@ export const STORE_PHONE = "+5363180910";
 interface CheckoutPayload {
   items: CartItem[];
   total: number;
+  paymentCurrency: "USD" | "CUP";
   customerName: string;
   customerPhone: string;
   deliveryMethod: "pickup" | "delivery";
@@ -26,12 +27,16 @@ export function buildWhatsAppMessage(p: CheckoutPayload): string {
   lines.push("");
   lines.push("*PRODUCTOS:*");
   p.items.forEach((it, i) => {
+    const itemSubtotal = p.paymentCurrency === "USD" 
+      ? (it.displayPriceUSD || 0) * it.quantity 
+      : (it.displayPriceCUP || 0) * it.quantity;
+    
     lines.push(`${i + 1}. ${it.name}`);
     lines.push(`   • Cantidad: ${it.quantity}`);
-    lines.push(`   • Subtotal: $${(it.price * it.quantity).toFixed(2)} USD`);
+    lines.push(`   • Subtotal: ${p.paymentCurrency === "USD" ? `$${itemSubtotal.toFixed(2)} USD` : `${Math.round(itemSubtotal)} CUP`}`);
   });
   lines.push("");
-  lines.push(`💰 *TOTAL: $${p.total.toFixed(2)} USD*`);
+  lines.push(`💰 *TOTAL: ${p.paymentCurrency === "USD" ? `$${p.total.toFixed(2)} USD` : `${Math.round(p.total)} CUP`}*`);
   lines.push("");
   lines.push(`⏰ ${new Date().toLocaleString("es-CU")}`);
   lines.push("");

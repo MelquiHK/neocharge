@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 
 const items = [
   "Bache Cubano",
-  "Electronica Habana",
+  "Electrónica Habana",
   "Cuba Tech",
   "Elecpro Habana",
   "Milexa",
@@ -13,16 +13,17 @@ const items = [
 export function TrustStrip() {
   const { ref, visible } = useReveal();
   return (
-    <section ref={ref} className={cn("py-12 border-y border-border bg-secondary/40 reveal", visible && "is-visible")}>
-      <div className="container-page">
-        <p className="text-center text-xs font-semibold uppercase tracking-widest text-muted-foreground mb-6">
-          + de 1000 clientes confían en nosotros
+    <section ref={ref} className={cn("py-16 border-y border-border bg-white dark:bg-slate-950 reveal overflow-hidden", visible && "is-visible")}>
+      <div className="container-page relative">
+        <div className="absolute inset-0 bg-grid opacity-5" />
+        <p className="relative text-center text-sm font-bold uppercase tracking-[0.2em] text-primary/60 mb-10">
+          Líderes en tecnología para Cuba
         </p>
-        <div className="marquee">
+        <div className="relative marquee">
           <div className="marquee-track">
-            {[...items, ...items].map((it, i) => (
-              <div key={i} className="font-display text-xl md:text-2xl font-bold text-muted-foreground/60 whitespace-nowrap">
-                {it} <span className="text-primary mx-4">·</span>
+            {[...items, ...items, ...items].map((it, i) => (
+              <div key={i} className="font-display text-2xl md:text-4xl font-black text-slate-200 dark:text-slate-800 hover:text-primary transition-colors duration-500 whitespace-nowrap uppercase italic tracking-tighter">
+                {it} <span className="text-primary/20 not-italic mx-8">/</span>
               </div>
             ))}
           </div>

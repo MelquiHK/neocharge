@@ -8,7 +8,8 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatCUP } from "@/lib/format";
+import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -22,7 +23,7 @@ interface Loc {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, total, clearCart } = useCart();
+  const { items, total, clearCart, paymentCurrency, totalUSD, totalCUP } = useCart();
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
 
@@ -41,7 +42,7 @@ const Checkout = () => {
   const [geoError, setGeoError] = useState<string | null>(null);
 
   useEffect(() => {
-    document.title = "Finalizar pedido — Neocharge";
+    document.title = "Finalizar pedido — NeoCharge";
   }, []);
 
   useEffect(() => {
@@ -166,6 +167,7 @@ const Checkout = () => {
         longitude: coords?.lng ?? null,
         location_link: mapLink,
         payment_method: paymentMethod,
+        payment_currency: paymentCurrency,
       });
       if (error) {
         console.error("Order save error:", error);
@@ -173,6 +175,20 @@ const Checkout = () => {
         setSubmitting(false);
         return;
       }
+
+      // Enviar mensaje de WhatsApp
+      const waMessage = buildWhatsAppMessage({
+        items,
+        total,
+        paymentCurrency,
+        customerName: name.trim(),
+        customerPhone: phone.trim(),
+        deliveryMethod: delivery,
+        customerAddress: delivery === "delivery" ? address.trim() : undefined,
+        notes: notes.trim() || undefined,
+      });
+      window.open(getWhatsAppLink(waMessage), "_blank");
+
       toast.success("¡Pedido enviado! Te contactaremos pronto por WhatsApp para coordinar.");
     } catch (err) {
       console.error(err);
@@ -188,16 +204,18 @@ const Checkout = () => {
   };
 
   return (
-    <div className="container-page py-12">
-      <Link to="/tienda" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-6 transition-colors">
-        <ArrowLeft className="w-4 h-4" /> Seguir comprando
-      </Link>
-
-      <div className="grid lg:grid-cols-[1fr_420px] gap-10">
-        <form onSubmit={handleSubmit} className="space-y-8">
-          <header className="space-y-2">
-            <h1 className="font-display text-4xl font-bold">Finalizar pedido</h1>
-            <p className="text-muted-foreground">
+    <div className="container-page py-12 md:py-20">
+      <div className="grid lg:grid-cols-[1fr_420px] gap-12">
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <header className="space-y-4">
+            <Link to="/tienda" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-2">
+              <ArrowLeft className="w-4 h-4" /> Volver a la tienda
+            </Link>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+              Checkout Seguro
+            </div>
+            <h1 className="font-display text-5xl font-bold tracking-tight">Finalizar pedido</h1>
+            <p className="text-xl text-muted-foreground font-light max-w-2xl">
               Recibimos tu pedido directamente. Te contactaremos por WhatsApp para coordinar el envío y el pago.
             </p>
           </header>
@@ -373,7 +391,9 @@ const Checkout = () => {
                     <p className="text-xs text-muted-foreground">Cant: {it.quantity}</p>
                   </div>
                   <span className="text-sm font-bold whitespace-nowrap">
-                    {formatPrice(it.price * it.quantity)}
+                    {paymentCurrency === "USD" 
+                      ? formatPrice((it.displayPriceUSD || 0) * it.quantity) 
+                      : formatCUP((it.displayPriceCUP || 0) * it.quantity)}
                   </span>
                 </div>
               ))}
@@ -381,15 +401,24 @@ const Checkout = () => {
             <div className="border-t border-border pt-4 space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{formatPrice(total)}</span>
+                <span>{paymentCurrency === "USD" ? formatPrice(totalUSD) : formatCUP(totalCUP)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Envío</span>
-                <span className="text-xs">A coordinar</span>
+                <span className="text-xs italic">Calculado al confirmar</span>
               </div>
               <div className="flex items-center justify-between font-display font-bold text-base pt-2 border-t border-border">
-                <span>Total</span>
-                <span className="text-primary text-xl">{formatPrice(total)}</span>
+                <span>Total a pagar</span>
+                <div className="text-right">
+                  <span className="text-primary text-2xl block">
+                    {paymentCurrency === "USD" ? formatPrice(totalUSD) : formatCUP(totalCUP)}
+                  </span>
+                  {paymentCurrency === "USD" ? (
+                    <span className="text-[10px] text-muted-foreground block">≈ {formatCUP(totalCUP)}</span>
+                  ) : (
+                    <span className="text-[10px] text-muted-foreground block">≈ {formatPrice(totalUSD)}</span>
+                  )}
+                </div>
               </div>
             </div>
           </div>

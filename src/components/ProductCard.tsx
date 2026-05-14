@@ -34,6 +34,10 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
       name: product.name,
       slug: product.slug,
       price: product.price,
+      currency: product.currency,
+      price_cup: product.price_cup,
+      extra_cup_per_usd: product.extra_cup_per_usd,
+      warranty_type: product.warranty_type,
       image: mainImage,
       stock: product.stock,
     });
@@ -47,12 +51,12 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
     <Link
       to={`/producto/${product.slug}`}
       className={cn(
-        "group relative block rounded-2xl overflow-hidden transition-all duration-500",
-        "bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-800",
-        "border border-slate-200 dark:border-slate-700",
-        "hover:border-blue-400 dark:hover:border-blue-500",
-        "hover:shadow-lifted dark:hover:shadow-card-hover",
-        "hover:-translate-y-2",
+        "group relative block rounded-3xl overflow-hidden transition-all duration-700",
+        "bg-white dark:bg-slate-900",
+        "border border-slate-100 dark:border-slate-800",
+        "hover:border-primary/30 dark:hover:border-primary/30",
+        "hover:shadow-2xl dark:hover:shadow-primary/5",
+        "hover:-translate-y-3",
         variant === "featured" && "lg:col-span-2",
       )}
     >
@@ -132,16 +136,16 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
         )}
 
         {/* Quick Add Button */}
-        <div className="absolute bottom-0 left-0 right-0 p-3 translate-y-full group-hover:translate-y-0 transition-transform duration-500">
+        <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 z-30">
           <Button
             type="button"
             onClick={handleAdd}
             disabled={outOfStock}
             className={cn(
-              "w-full font-semibold rounded-lg shadow-lifted relative overflow-hidden",
+              "w-full font-bold rounded-2xl shadow-xl relative overflow-hidden h-12",
               added 
-                ? "bg-gradient-to-r from-green-500 to-emerald-600 text-white" 
-                : "bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white"
+                ? "bg-green-500 text-white" 
+                : "bg-primary text-white hover:bg-primary/90"
             )}
           >
             {added ? (
@@ -160,7 +164,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
       {/* Content Section */}
       <div className="p-4 space-y-3">
         {/* Product Name */}
-        <h3 className="font-display font-bold text-base leading-tight text-gray-900 dark:text-white group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-2">
+        <h3 className="font-display font-bold text-lg leading-tight text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">
           {product.name}
         </h3>
 

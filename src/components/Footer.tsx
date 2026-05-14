@@ -120,7 +120,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2">
                 <Mail className="w-4 h-4 shrink-0 text-primary" />
-                <a href="mailto:habanasound90@gmail,com" className="text-muted-foreground hover:text-primary transition-colors">habanasound90@gmail.com</a>
+                <a href="mailto:habanasound90@gmail.com" className="text-muted-foreground hover:text-primary transition-colors">habanasound90@gmail.com</a>
               </li>
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="w-4 h-4 shrink-0 text-primary" />
@@ -132,7 +132,7 @@ export function Footer() {
 
         <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
-            © {new Date().getFullYear()} Neocharge · Hecho con amor en La Habana 🇨🇺
+            © {new Date().getFullYear()} NeoCharge · Hecho con amor en La Habana 🇨🇺
           </p>
           <div className="flex gap-5 text-xs text-muted-foreground">
             <Link to="/legales/terminos" className="hover:text-primary transition-colors">Términos</Link>

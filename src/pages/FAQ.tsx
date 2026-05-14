@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 
 const FAQ = () => {
   useEffect(() => {
-    document.title = "Preguntas frecuentes — Neocharge";
+    document.title = "Preguntas frecuentes — NeoCharge";
   }, []);
 
   return (

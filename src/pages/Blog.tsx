@@ -35,10 +35,12 @@ const Blog = () => {
 
   return (
     <div className="container-page py-12 md:py-16">
-      <header className="max-w-2xl mb-12 space-y-3">
-        <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">Blog</span>
-        <h1 className="font-display text-5xl font-bold">Novedades, guías y soluciones</h1>
-        <p className="text-muted-foreground text-lg">Aprende a sacarle el máximo partido a tus dispositivos.</p>
+      <header className="max-w-3xl mb-16 space-y-5">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+          NeoCharge Blog
+        </div>
+        <h1 className="font-display text-6xl font-bold tracking-tight">Novedades, guías <br /><span className="text-gradient-accent">y soluciones</span></h1>
+        <p className="text-xl text-muted-foreground font-light">Aprende a sacarle el máximo partido a tus dispositivos con consejos de expertos.</p>
       </header>
 
       {loading ? (

@@ -54,8 +54,8 @@ const BlogPost = () => {
   }, [slug]);
 
   useEffect(() => {
-    if (post?.title) document.title = `${post.title} — Blog — Neocharge`;
-    else document.title = "Blog — Neocharge";
+    if (post?.title) document.title = `${post.title} — Blog — NeoCharge`;
+    else document.title = "Blog — NeoCharge";
   }, [post?.title]);
 
   if (loading) {

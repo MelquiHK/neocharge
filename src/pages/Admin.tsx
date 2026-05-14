@@ -15,7 +15,7 @@ import { AdminBlog } from "@/components/admin/AdminBlog";
 const Admin = () => {
   const { user, isAdmin, permissions, loading } = useAuth();
 
-  useEffect(() => { document.title = "Admin — Neocharge"; }, []);
+  useEffect(() => { document.title = "Admin — NeoCharge"; }, []);
 
   if (loading) return <div className="container-page py-20 text-center">Cargando...</div>;
   if (!user) return <Navigate to="/auth" replace />;

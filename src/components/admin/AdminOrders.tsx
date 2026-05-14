@@ -16,21 +16,25 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ExternalLink, MapPin, MessageCircle, Trash2, Eye, Send } from "lucide-react";
 import { toast } from "sonner";
-import { formatPrice } from "@/lib/format";
+import { formatPrice, formatCUP } from "@/lib/format";
 import { Order, OrderStatus, OrderItem } from "@/types";
 import { useAdminOrders } from "@/hooks/admin/use-admin-orders";
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
 
-const parseOrderItems = (items: Order["items"]): OrderItem[] => {
+const parseOrderItems = (items: Order["items"]): (OrderItem & { currency?: string; displayPriceUSD?: number; displayPriceCUP?: number })[] => {
   if (!Array.isArray(items)) return [];
   return items.flatMap((it) => {
     if (!isRecord(it)) return [];
     const name = typeof it.name === "string" ? it.name : "";
     const quantity = Number(it.quantity);
     const price = Number(it.price);
+    const currency = typeof it.currency === "string" ? it.currency : undefined;
+    const displayPriceUSD = typeof it.displayPriceUSD === "number" ? it.displayPriceUSD : undefined;
+    const displayPriceCUP = typeof it.displayPriceCUP === "number" ? it.displayPriceCUP : undefined;
+    
     if (!name || !Number.isFinite(quantity) || !Number.isFinite(price)) return [];
-    return [{ name, quantity, price }];
+    return [{ name, quantity, price, currency, displayPriceUSD, displayPriceCUP }];
   });
 };
 
@@ -44,7 +48,7 @@ const STATUSES = [
 ] satisfies Array<{ v: OrderStatus; l: string; c: string }>;
 
 export function AdminOrders() {
-  const { orders, loading, updateStatus, deleteOrder, deleteManyOrders } = useAdminOrders();
+  const { orders, loading, updateStatus, deleteOrder, deleteManyOrders, refresh: load } = useAdminOrders();
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [viewing, setViewing] = useState<Order | null>(null);
@@ -88,15 +92,26 @@ export function AdminOrders() {
 
   const sendReceipt = async () => {
     if (!viewing) return;
+    const currency = (viewing as any).payment_currency || "USD";
     const items = parseOrderItems(viewing.items)
-      .map((it) => `• ${it.name} x${it.quantity} — ${formatPrice(Number(it.price) * Number(it.quantity))}`)
+      .map((it) => {
+        const itemPrice = currency === "USD" ? (it.displayPriceUSD || it.price) : (it.displayPriceCUP || it.price);
+        return `• ${it.name} x${it.quantity} — ${currency === "USD" ? formatPrice(itemPrice * it.quantity) : formatCUP(itemPrice * it.quantity)}`;
+      })
       .join("\n");
-    const msg = `🛍️ *VALE DE PEDIDO — Neocharge*\n\n` +
+    
+    const subtotalFormatted = currency === "USD" ? formatPrice(Number(viewing.subtotal)) : formatCUP(Number(viewing.subtotal));
+    const deliveryFormatted = currency === "USD" ? formatPrice(Number(deliveryFee)) : formatCUP(Number(deliveryFee));
+    const totalFormatted = currency === "USD" 
+      ? formatPrice(Number(viewing.subtotal) + Number(deliveryFee)) 
+      : formatCUP(Number(viewing.subtotal) + Number(deliveryFee));
+
+    const msg = `🛍️ *VALE DE PEDIDO — NeoCharge*\n\n` +
       `Hola ${viewing.customer_name}, te confirmamos tu pedido:\n\n` +
       `${items}\n\n` +
-      `Subtotal: ${formatPrice(viewing.subtotal)}\n` +
-      `Envío: ${formatPrice(deliveryFee)}\n` +
-      `*TOTAL: ${formatPrice(Number(viewing.subtotal) + Number(deliveryFee))}*\n\n` +
+      `Subtotal: ${subtotalFormatted}\n` +
+      `Envío: ${deliveryFormatted}\n` +
+      `*TOTAL: ${totalFormatted}*\n\n` +
       (viewing.delivery_method === "delivery" ? `📍 Entrega: ${viewing.customer_address}\n` : `🏪 Recoger en: ${viewing.pickup_location}\n`) +
       (courier ? `🛵 Mensajero: ${courier}\n` : "") +
       `\nGracias por tu compra. ¡Te avisamos cuando salga en camino!`;
@@ -188,7 +203,9 @@ export function AdminOrders() {
                       {o.location_link && <a href={o.location_link} target="_blank" rel="noreferrer" className="text-primary"><MapPin className="w-3 h-3" /></a>}
                     </div>
                   </td>
-                  <td className="py-3 px-4 font-bold text-primary">{formatPrice(Number(o.total))}</td>
+                  <td className="py-3 px-4 font-bold text-primary">
+                    {(o as any).payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
+                  </td>
                   <td className="py-3 px-4">{statusBadge(o.status)}</td>
                   <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("es-CU")}</td>
                   <td className="py-3 px-4 text-right">
@@ -241,17 +258,23 @@ export function AdminOrders() {
                 </a>
               )}
 
-              <div className="space-y-2">
-                <p className="text-xs text-muted-foreground uppercase">Productos</p>
                 <div className="space-y-2">
-                  {parseOrderItems(viewing.items).map((it, i) => (
-                    <div key={i} className="flex items-center justify-between bg-muted/30 rounded-xl p-3 text-sm">
-                      <span>{it.name} <span className="text-muted-foreground">×{it.quantity}</span></span>
-                      <span className="font-bold">{formatPrice(Number(it.price) * Number(it.quantity))}</span>
-                    </div>
-                  ))}
+                  <p className="text-xs text-muted-foreground uppercase">Productos</p>
+                  <div className="space-y-2">
+                    {parseOrderItems(viewing.items).map((it, i) => {
+                      const currency = (viewing as any).payment_currency || "USD";
+                      const itemPrice = currency === "USD" ? (it.displayPriceUSD || it.price) : (it.displayPriceCUP || it.price);
+                      return (
+                        <div key={i} className="flex items-center justify-between bg-muted/30 rounded-xl p-3 text-sm">
+                          <span>{it.name} <span className="text-muted-foreground">×{it.quantity}</span></span>
+                          <span className="font-bold">
+                            {currency === "USD" ? formatPrice(itemPrice * it.quantity) : formatCUP(itemPrice * it.quantity)}
+                          </span>
+                        </div>
+                      );
+                    })}
+                  </div>
                 </div>
-              </div>
 
               <div className="grid sm:grid-cols-2 gap-3">
                 <div className="space-y-2">
@@ -270,11 +293,29 @@ export function AdminOrders() {
               </div>
 
               <div className="rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 p-4 space-y-1">
-                <div className="flex justify-between text-sm"><span>Subtotal</span><span>{formatPrice(viewing.subtotal)}</span></div>
-                <div className="flex justify-between text-sm"><span>Envío</span><span>{formatPrice(deliveryFee)}</span></div>
-                <div className="flex justify-between font-display font-bold text-lg pt-2 border-t border-border">
-                  <span>TOTAL</span><span className="text-primary">{formatPrice(Number(viewing.subtotal) + Number(deliveryFee))}</span>
-                </div>
+                {(() => {
+                  const currency = (viewing as any).payment_currency || "USD";
+                  return (
+                    <>
+                      <div className="flex justify-between text-sm">
+                        <span>Subtotal</span>
+                        <span>{currency === "USD" ? formatPrice(Number(viewing.subtotal)) : formatCUP(Number(viewing.subtotal))}</span>
+                      </div>
+                      <div className="flex justify-between text-sm">
+                        <span>Envío</span>
+                        <span>{currency === "USD" ? formatPrice(Number(deliveryFee)) : formatCUP(Number(deliveryFee))}</span>
+                      </div>
+                      <div className="flex justify-between font-display font-bold text-lg pt-2 border-t border-border">
+                        <span>TOTAL</span>
+                        <span className="text-primary">
+                          {currency === "USD" 
+                            ? formatPrice(Number(viewing.subtotal) + Number(deliveryFee)) 
+                            : formatCUP(Number(viewing.subtotal) + Number(deliveryFee))}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
 
               {viewing.receipt_sent_at && (

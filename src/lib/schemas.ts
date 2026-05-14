@@ -10,6 +10,7 @@ export const productSchema = z.object({
   compare_price: z.number().min(0).nullable(),
   currency: z.string().default("USD"),
   price_cup: z.number().min(0).nullable(),
+  extra_cup_per_usd: z.number().min(0).nullable(),
   category_id: z.string().uuid().nullable(),
   images: z.array(z.string()).default([]),
   main_image_index: z.number().int().min(0).default(0),

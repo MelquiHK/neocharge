@@ -58,7 +58,7 @@ const ProductDetail = () => {
           const productData = data as Product;
           setProduct(productData);
           setActiveImage(productData.main_image_index ?? 0);
-          document.title = `${productData.name} — Neocharge`;
+          document.title = `${productData.name} — NeoCharge`;
 
           // Stock por local
           const { data: ls, error: locError } = await supabase
@@ -211,7 +211,7 @@ const ProductDetail = () => {
               return (
                 <div className="space-y-1">
                   <div className="flex items-baseline gap-3 flex-wrap">
-                    <span className="text-4xl font-display font-bold text-primary">
+                    <span className="text-5xl font-display font-bold text-primary text-glow">
                       {display.primary === "USD" ? formatPrice(display.usd!) : formatCUP(display.cup!)}
                     </span>
                     {product.compare_price && product.compare_price > product.price && (
@@ -274,10 +274,10 @@ const ProductDetail = () => {
                   <Plus className="w-4 h-4" />
                 </button>
               </div>
-              <Button onClick={handleAddToCart} variant={added ? "electric" : "default"} size="lg" className="flex-1">
-                {added ? <><Check className="w-4 h-4" /> Añadido</> : <><ShoppingBag className="w-4 h-4" /> Añadir al carrito</>}
+              <Button onClick={handleAddToCart} variant={added ? "secondary" : "default"} size="lg" className="flex-1 rounded-2xl shadow-soft hover:shadow-elevated transition-all">
+                {added ? <><Check className="w-5 h-5" /> ¡Añadido!</> : <><ShoppingBag className="w-5 h-5" /> Añadir al carrito</>}
               </Button>
-              <Button onClick={handleBuyNow} variant="hero" size="lg" className="flex-1">
+              <Button onClick={handleBuyNow} variant="hero" size="lg" className="flex-1 rounded-2xl shadow-glow hover:scale-105 transition-all">
                 Comprar ahora
               </Button>
             </div>

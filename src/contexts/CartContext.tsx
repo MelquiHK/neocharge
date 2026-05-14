@@ -109,16 +109,20 @@ export function CartProvider({ children }: { children: ReactNode }) {
       let itemPriceUSD = 0;
       let itemPriceCUP = 0;
 
-      if (item.currency === "USD") {
+      const currency = (item.currency || "USD").toUpperCase();
+      
+      if (currency === "USD") {
         itemPriceUSD = Number(item.price || 0);
-        itemPriceCUP = Number(item.price || 0) * currentExchangeRate + Number(item.extra_cup_per_usd || 0);
-      } else if (item.currency === "CUP") {
-        itemPriceCUP = Number(item.price_cup || 0);
-        itemPriceUSD = Number(itemPriceCUP) / currentExchangeRate;
-      } else {
-        // Default to USD if currency is not specified
-        itemPriceUSD = Number(item.price || 0);
-        itemPriceCUP = Number(item.price || 0) * currentExchangeRate;
+        // Regla: Si es cargador o tiene extra_cup_per_usd, se aplica (tasa + extra)
+        const extra = Number(item.extra_cup_per_usd || 0);
+        const isCharger = item.warranty_type === "charger";
+        const extraRate = isCharger ? (exchangeRate?.extra_cup_chargers || 0) : 0;
+        const finalExtra = extra || extraRate;
+        
+        itemPriceCUP = itemPriceUSD * (currentExchangeRate + finalExtra);
+      } else if (currency === "CUP") {
+        itemPriceCUP = Number(item.price_cup || item.price || 0);
+        itemPriceUSD = itemPriceCUP / currentExchangeRate;
       }
 
       return {
@@ -133,9 +137,9 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
     const itemCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
 
-    // Apply rounding for profit
-    const totalUSD = roundUpToNextWhole(initialTotalUSD);
-    const totalCUP = roundUpToNextWhole(initialTotalCUP);
+    // No redondeamos hacia arriba forzosamente, usamos redondeo normal a 2 decimales para USD y entero para CUP
+    const totalUSD = Math.round(initialTotalUSD * 100) / 100;
+    const totalCUP = Math.round(initialTotalCUP);
 
     const total = paymentCurrency === "USD" ? totalUSD : totalCUP;
 

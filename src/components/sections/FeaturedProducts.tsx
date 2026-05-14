@@ -27,15 +27,16 @@ export function FeaturedProducts() {
   }, []);
 
   return (
-    <section ref={ref} className={cn("py-24 bg-secondary/30 reveal", visible && "is-visible")}>
+    <section ref={ref} className={cn("py-32 bg-gradient-to-b from-white to-slate-50 dark:from-slate-900 dark:to-slate-950 reveal", visible && "is-visible")}>
       <div className="container-page">
-        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-12">
-          <div className="space-y-3 max-w-xl">
-            <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">
+        <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-8 mb-16">
+          <div className="space-y-4 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
               Bestsellers
-            </span>
-            <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight">
-              Lo más comprado <span className="text-gradient">este mes</span>
+            </div>
+            <h2 className="font-display text-5xl md:text-6xl font-bold leading-tight">
+              Lo más comprado <br /><span className="text-gradient-accent">este mes</span>
             </h2>
           </div>
           <Button asChild variant="outline" className="self-start md:self-end">

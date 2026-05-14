@@ -5,21 +5,21 @@ import { Button } from "@/components/ui/button";
 
 const Garantia = () => {
   useEffect(() => {
-    document.title = "Garantía — Neocharge";
+    document.title = "Garantía — NeoCharge";
   }, []);
 
   return (
-    <div className="container-page py-16 max-w-4xl space-y-16">
-      <header className="text-center space-y-4">
-        <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">
-          Compra con confianza
-        </span>
-        <h1 className="font-display text-4xl md:text-5xl font-bold leading-tight">
-          Garantía Neocharge
+    <div className="container-page py-24 max-w-5xl space-y-24">
+      <header className="text-center space-y-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+          Transparencia Total
+        </div>
+        <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight">
+          Garantía <span className="text-gradient-accent">NeoCharge</span>
         </h1>
-        <p className="text-muted-foreground max-w-2xl mx-auto">
-          Cada producto que sale de nuestros locales se prueba antes de entregarse. Esta es nuestra política
-          clara y honesta para que sepas exactamente con qué cuentas.
+        <p className="text-xl text-muted-foreground max-w-3xl mx-auto font-light leading-relaxed">
+          Cada producto que sale de nuestros locales se prueba antes de entregarse. <br className="hidden md:block" />
+          Esta es nuestra política clara y honesta para que compres con total tranquilidad.
         </p>
       </header>
 
@@ -76,7 +76,7 @@ const Garantia = () => {
             <p className="text-sm text-muted-foreground leading-relaxed">
               No se aceptan devoluciones ni cambios si el cargador presenta daños físicos como partiduras,
               rajaduras en el plástico, señales de golpes, o si se determina que no es uno de los cargadores
-              vendidos por Neocharge. El cargador debe estar en las mismas condiciones en que fue entregado.
+              vendidos por NeoCharge. El cargador debe estar en las mismas condiciones en que fue entregado.
             </p>
           </div>
         </div>

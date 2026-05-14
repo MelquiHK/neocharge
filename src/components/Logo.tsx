@@ -18,7 +18,7 @@ export function Logo({ className, showText = true }: LogoProps) {
       </div>
       {showText && (
         <div className="flex flex-col leading-none">
-          <span className="font-display font-bold text-lg tracking-tight text-foreground">Neocharge</span>
+          <span className="font-display font-bold text-lg tracking-tight text-foreground">NeoCharge</span>
           <span className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">Habana · 24h</span>
         </div>
       )}

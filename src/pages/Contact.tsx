@@ -23,11 +23,16 @@ const Contact = () => {
   };
 
   return (
-    <div className="container-page py-12 md:py-20">
-      <header className="text-center max-w-2xl mx-auto mb-12 space-y-3">
-        <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">Contacto</span>
-        <h1 className="font-display text-5xl font-bold">Hablemos</h1>
-        <p className="text-muted-foreground text-lg">Estamos disponibles las 24 horas. Elige el canal que prefieras.</p>
+    <div className="container-page py-12 md:py-24">
+      <header className="text-center max-w-3xl mx-auto mb-20 space-y-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+          Contacto Directo
+        </div>
+        <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight">Hablemos</h1>
+        <p className="text-xl text-muted-foreground font-light leading-relaxed">
+          Estamos disponibles las 24 horas para resolver tus dudas. <br className="hidden md:block" />
+          Elige el canal que prefieras y te responderemos al instante.
+        </p>
       </header>
 
       <div className="grid lg:grid-cols-[1fr_1.2fr] gap-10">

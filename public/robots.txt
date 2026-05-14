@@ -1,4 +1,4 @@
-# robots.txt for NeoCargador
+# robots.txt for NeoCharge
 # Indicates which URLs and resources should be crawled by search engine bots
 
 User-agent: *

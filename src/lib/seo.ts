@@ -16,68 +16,68 @@ export interface MetaTags {
 // SEO configurations for each page
 export const seoConfig: Record<string, MetaTags> = {
   home: {
-    title: "NeoCargador - Cargadores USB C rápidos y seguros",
+    title: "NeoCharge - Tienda de Electrónica de Calidad en La Habana",
     description:
-      "Tienda online de cargadores USB C de alta velocidad. Cargadores seguros, confiables y certificados para todos tus dispositivos.",
+      "Tu tienda de electrónica de confianza en La Habana. Cargadores rápidos, cables, baterías y accesorios con garantía certificada y entrega en 24h.",
     keywords:
-      "cargador USB C, cargador rápido, cargador seguro, cargadores USB tipo C",
+      "electrónica La Habana, cargador USB C, NeoCharge, tecnología Cuba, cargador rápido",
     ogImage: "/images/og-home.jpg",
   },
   shop: {
-    title: "Tienda - NeoCargador | Compra cargadores USB C",
+    title: "Tienda | NeoCharge - Catálogo de Electrónica",
     description:
-      "Explora nuestra amplia selección de cargadores USB C. Todos certificados y con garantía de calidad.",
-    keywords: "comprar cargador, cargadores baratos, cargador USB C barato",
+      "Explora nuestro catálogo de productos electrónicos. Cargadores, cables y accesorios de alta calidad con garantía completa.",
+    keywords: "comprar cargador Cuba, accesorios iPhone Habana, cargadores certificados",
     ogImage: "/images/og-shop.jpg",
   },
   productDetail: {
-    title: "Producto - NeoCargador",
+    title: "Producto - NeoCharge",
     description:
       "Descubre los detalles del cargador. Especificaciones técnicas, garantía y envíos.",
   },
   checkout: {
-    title: "Carrito de Compras - NeoCargador",
-    description: "Completa tu compra de forma segura en NeoCargador.",
+    title: "Carrito de Compras - NeoCharge",
+    description: "Completa tu compra de forma segura en NeoCharge.",
   },
   auth: {
-    title: "Iniciar Sesión - NeoCargador",
-    description: "Accede a tu cuenta de NeoCargador para gestionar tus pedidos.",
+    title: "Iniciar Sesión - NeoCharge",
+    description: "Accede a tu cuenta de NeoCharge para gestionar tus pedidos.",
   },
   account: {
-    title: "Mi Cuenta - NeoCargador",
-    description: "Gestiona tu perfil, pedidos y preferencias en NeoCargador.",
+    title: "Mi Cuenta - NeoCharge",
+    description: "Gestiona tu perfil, pedidos y preferencias en NeoCharge.",
   },
   about: {
-    title: "Sobre Nosotros - NeoCargador",
+    title: "Sobre Nosotros - NeoCharge",
     description:
-      "Conoce la historia de NeoCargador, nuestra misión y compromiso con la calidad.",
+      "Conoce la historia de NeoCharge, nuestra misión y compromiso con la calidad.",
     ogImage: "/images/og-about.jpg",
   },
   contact: {
-    title: "Contacto - NeoCargador",
+    title: "Contacto - NeoCharge",
     description: "Ponte en contacto con nosotros. Estamos aquí para ayudarte.",
   },
   blog: {
-    title: "Blog - NeoCargador | Consejos y noticias",
+    title: "Blog - NeoCharge | Consejos y noticias",
     description:
       "Lee nuestros artículos sobre cargadores, tecnología y consejos de uso.",
   },
   blogPost: {
-    title: "Artículo - NeoCargador Blog",
-    description: "Descubre los últimos artículos del blog de NeoCargador.",
+    title: "Artículo - NeoCharge Blog",
+    description: "Descubre los últimos artículos del blog de NeoCharge.",
   },
   garantia: {
-    title: "Garantía y Envíos - NeoCargador",
+    title: "Garantía y Envíos - NeoCharge",
     description:
-      "Información sobre garantía, envíos y política de devoluciones en NeoCargador.",
+      "Información sobre garantía, envíos y política de devoluciones en NeoCharge.",
   },
   faq: {
-    title: "Preguntas Frecuentes - NeoCargador",
+    title: "Preguntas Frecuentes - NeoCharge",
     description:
       "Respuestas a las preguntas más comunes sobre nuestros productos y servicios.",
   },
   legal: {
-    title: "Términos y Condiciones - NeoCargador",
+    title: "Términos y Condiciones - NeoCharge",
     description: "Lee nuestros términos de uso y política de privacidad.",
   },
 };

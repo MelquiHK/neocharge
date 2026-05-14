@@ -87,16 +87,17 @@ const ShopPage = () => {
   };
 
   return (
-    <div className="container-page py-12">
-      <header className="mb-10 space-y-4">
-        <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">
-          Catálogo
-        </span>
-        <h1 className="font-display text-4xl md:text-5xl font-bold leading-tight">
-          Toda nuestra <span className="text-gradient">electrónica</span>
+    <div className="container-page py-12 md:py-20">
+      <header className="mb-16 space-y-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+          Catálogo Premium
+        </div>
+        <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight">
+          Toda nuestra <br /><span className="text-gradient-accent">electrónica</span>
         </h1>
-        <p className="text-muted-foreground text-lg max-w-2xl">
-          Productos seleccionados con criterio. Calidad real, precios justos.
+        <p className="text-xl text-muted-foreground font-light max-w-3xl leading-relaxed">
+          Selección exclusiva de productos con garantía certificada y entrega inmediata en toda La Habana. <br className="hidden md:block" />
+          Encuentra la energía y tecnología que tu dispositivo necesita.
         </p>
       </header>
 

@@ -23,7 +23,7 @@ const links = [
   { to: "/contacto", label: "Contacto" },
 ];
 
-export function Header() {
+export function Header({ className }: { className?: string }) {
   const [scrolled, setScrolled] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
   const { itemCount, openCart } = useCart();
@@ -56,8 +56,9 @@ export function Header() {
   return (
     <header
       className={cn(
-        "fixed top-0 left-0 right-0 z-50 transition-all duration-500",
+        "fixed left-0 right-0 z-50 transition-all duration-500",
         scrolled ? "py-2" : "py-4",
+        className || "top-0",
       )}
     >
       <div className="container-page">
@@ -65,8 +66,8 @@ export function Header() {
           className={cn(
             "flex items-center justify-between rounded-full transition-all duration-500 px-4 sm:px-6",
             scrolled
-              ? "glass shadow-elevated h-14"
-              : "bg-transparent h-16",
+              ? "glass shadow-xl h-16 border-white/20"
+              : "bg-white/5 backdrop-blur-md border border-white/10 h-20",
           )}
         >
           <Logo />
