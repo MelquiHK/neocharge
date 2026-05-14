@@ -16,9 +16,9 @@ export interface MetaTags {
 // SEO configurations for each page
 export const seoConfig: Record<string, MetaTags> = {
   home: {
-    title: "NeoCharge - Tienda de Electrónica de Calidad en La Habana",
+    title: "NeoCharge - Electrónica de Próxima Generación",
     description:
-      "Tu tienda de electrónica de confianza en La Habana. Cargadores rápidos, cables, baterías y accesorios con garantía certificada y entrega en 24h.",
+      "Tu tienda de electrónica de confianza en La Habana. Calidad premium, garantía certificada y entrega en 24h.",
     keywords:
       "electrónica La Habana, cargador USB C, NeoCharge, tecnología Cuba, cargador rápido",
     ogImage: "/images/og-home.jpg",

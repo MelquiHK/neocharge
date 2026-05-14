@@ -18,8 +18,8 @@ export function SiteLayout() {
         </div>
       </div>
       
-      <Header className="top-0 md:top-8" />
-      <main className="flex-1 pt-24 md:pt-32">
+      <Header className="top-0 md:top-10" />
+      <main className="flex-1 pt-24 md:pt-36">
         <Outlet />
       </main>
       <Footer />

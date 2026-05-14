@@ -21,11 +21,11 @@ export default defineConfig(({ mode }) => ({
       registerType: 'autoUpdate',
       includeAssets: ['favicon.ico', 'apple-icon.png', 'icon.svg', 'robots.txt'],
       manifest: {
-        name: 'NeoCharge Store',
+        name: 'NeoCharge - Electrónica de Próxima Generación',
         short_name: 'NeoCharge',
-        description: 'Tienda de electrónica',
-        theme_color: '#007bff',
-        background_color: '#ffffff',
+        description: 'Tu tienda de electrónica de confianza en La Habana. Calidad premium, garantía y entrega 24h.',
+        theme_color: '#3b82f6',
+        background_color: '#0f172a',
         display: 'standalone', // Obligatorio para que abra sin barra de navegador
         start_url: '/',        // Obligatorio para definir dónde empieza la app
         icons: [
