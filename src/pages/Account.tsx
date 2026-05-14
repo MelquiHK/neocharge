@@ -32,7 +32,19 @@ const Account = () => {
       .then(({ data }) => data && setOrders(data as Order[]));
   }, [user]);
 
-  if (loading) return <div className="container-page py-20 text-center">Cargando...</div>;
+  if (loading) {
+    return (
+      <div className="container-page py-20 space-y-4">
+        <div className="h-8 bg-muted rounded animate-pulse w-1/3" />
+        <div className="h-4 bg-muted rounded animate-pulse w-1/2" />
+        <div className="space-y-3 mt-8">
+          {Array.from({ length: 3 }).map((_, i) => (
+            <div key={i} className="h-20 bg-muted rounded animate-pulse" />
+          ))}
+        </div>
+      </div>
+    );
+  }
   if (!user) return <Navigate to="/auth" replace />;
 
   return (

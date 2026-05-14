@@ -39,38 +39,56 @@ const ProductDetail = () => {
     if (!slug) return;
     setLoading(true);
     const load = async () => {
-      const { data } = await supabase
-        .from("products")
-        .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,currency,price_cup,extra_cup_per_usd,warranty_type,description,specifications,category_id,cost_price,low_stock_threshold")
-        .eq("slug", slug)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (data) {
-        const productData = data as Product;
-        setProduct(productData);
-        setActiveImage(productData.main_image_index ?? 0);
-        document.title = `${productData.name} — Neocharge`;
-
-        // Stock por local
-        const { data: ls } = await supabase
-          .from("product_locations")
-          .select("stock, store_locations(id,name,address,location_type,map_link,hours)")
-          .eq("product_id", data.id);
-        if (ls) setLocStock(ls as any);
-
-        // Related
-        if (data.category_id) {
-          const { data: rel } = await supabase
-            .from("products")
-            .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,category_id,description,specifications,currency,price_cup,extra_cup_per_usd,warranty_type")
-            .eq("is_active", true)
-            .eq("category_id", data.category_id)
-            .neq("id", data.id)
-            .limit(4);
-          if (rel) setRelated(rel as Product[]);
+      try {
+        const { data, error } = await supabase
+          .from("products")
+          .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,currency,price_cup,extra_cup_per_usd,warranty_type,description,specifications,category_id,cost_price,low_stock_threshold")
+          .eq("slug", slug)
+          .eq("is_active", true)
+          .maybeSingle();
+        
+        if (error && error.code !== "PGRST116") {
+          console.error("Error loading product:", error);
+          setProduct(null);
+          setLoading(false);
+          return;
         }
+        
+        if (data) {
+          const productData = data as Product;
+          setProduct(productData);
+          setActiveImage(productData.main_image_index ?? 0);
+          document.title = `${productData.name} — Neocharge`;
+
+          // Stock por local
+          const { data: ls, error: locError } = await supabase
+            .from("product_locations")
+            .select("stock, store_locations(id,name,address,location_type,map_link,hours)")
+            .eq("product_id", data.id);
+          if (locError) console.error("Location stock error:", locError);
+          if (ls) setLocStock(ls as any);
+
+          // Related
+          if (data.category_id) {
+            const { data: rel, error: relError } = await supabase
+              .from("products")
+              .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,category_id,description,specifications,currency,price_cup,extra_cup_per_usd,warranty_type")
+              .eq("is_active", true)
+              .eq("category_id", data.category_id)
+              .neq("id", data.id)
+              .limit(4);
+            if (relError) console.error("Related products error:", relError);
+            if (rel) setRelated(rel as Product[]);
+          }
+        } else {
+          setProduct(null);
+        }
+      } catch (err) {
+        console.error("ProductDetail error:", err);
+        setProduct(null);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
     load();
     window.scrollTo({ top: 0, behavior: "smooth" });

@@ -45,12 +45,13 @@ const Blog = () => {
           ))}
         </div>
       ) : posts.length === 0 ? (
-        <div className="text-center py-20 space-y-3">
-          <p className="font-display text-2xl font-bold">Pronto publicaremos contenido</p>
-          <p className="text-muted-foreground">Mientras tanto, explora nuestra tienda.</p>
-          <Link to="/tienda" className="inline-flex items-center gap-1 text-primary font-semibold mt-2">
-            Ver productos <ArrowRight className="w-4 h-4" />
-          </Link>
+        <div className="text-center py-32 space-y-6 max-w-lg mx-auto">
+          <div className="text-6xl">📝</div>
+          <div className="space-y-2">
+            <p className="font-display text-3xl font-bold">Blog en construcción</p>
+            <p className="text-muted-foreground">Pronto compartiremos guías, noticias y consejos sobre electrónica.</p>
+          </div>
+          <a href="/tienda" className="inline-block mt-4 text-primary hover:underline font-semibold">Ver tienda →</a>
         </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-6">

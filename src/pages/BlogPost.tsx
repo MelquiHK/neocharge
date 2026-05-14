@@ -37,11 +37,18 @@ const BlogPost = () => {
       .maybeSingle()
       .then(({ data, error }) => {
         if (error) {
-          console.error(error);
-          setPost(null);
+          console.error("BlogPost error:", error);
+          if (error.code !== "PGRST116") {
+            setPost(null);
+          }
         } else {
           setPost((data as Post | null) ?? null);
         }
+        setLoading(false);
+      })
+      .catch((err) => {
+        console.error("BlogPost catch:", err);
+        setPost(null);
         setLoading(false);
       });
   }, [slug]);

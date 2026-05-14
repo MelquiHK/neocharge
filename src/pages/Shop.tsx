@@ -62,17 +62,17 @@ const ShopPage = () => {
     }
     if (search.trim()) {
       const q = search.trim().toLowerCase();
-      list = list.filter((p) => p.name.toLowerCase().includes(q));
+      list = list.filter((p) => (p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)) ?? false);
     }
     switch (sort) {
       case "price-asc":
-        list.sort((a, b) => a.price - b.price);
+        list.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
         break;
       case "price-desc":
-        list.sort((a, b) => b.price - a.price);
+        list.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
         break;
       case "name":
-        list.sort((a, b) => a.name.localeCompare(b.name));
+        list.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
         break;
     }
     return list;

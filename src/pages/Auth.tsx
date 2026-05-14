@@ -51,7 +51,17 @@ const Auth = () => {
         setMode("login");
       }
     } catch (err: any) {
-      toast.error(err.message ?? "Error al procesar la solicitud");
+      console.error("Auth error:", err);
+      const message = err.message ?? "Error al procesar la solicitud";
+      if (message.includes("already")) {
+        toast.error("Este correo ya está registrado. Intenta iniciar sesión.");
+      } else if (message.includes("password")) {
+        toast.error("La contraseña debe tener al menos 6 caracteres.");
+      } else if (message.includes("email")) {
+        toast.error("El correo no es válido.");
+      } else {
+        toast.error(message);
+      }
     } finally {
       setLoading(false);
     }

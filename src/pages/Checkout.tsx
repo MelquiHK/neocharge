@@ -45,16 +45,30 @@ const Checkout = () => {
   }, []);
 
   useEffect(() => {
+    setGeoLoading(true);
+    setGeoError(null);
     supabase
       .from("store_locations")
       .select("id,name,address,location_type,hours")
       .eq("is_active", true)
       .order("sort_order")
-      .then(({ data }) => {
+      .then(({ data, error }) => {
+        if (error) {
+          console.error("Error loading locations:", error);
+          setGeoError("No pudimos cargar los locales. Intenta de nuevo.");
+          setGeoLoading(false);
+          return;
+        }
         if (data) {
           setLocations(data);
           if (data.length > 0) setPickupLocId(data[0].id);
         }
+        setGeoLoading(false);
+      })
+      .catch((err) => {
+        console.error("Checkout locations error:", err);
+        setGeoError("Error conectando con el servidor.");
+        setGeoLoading(false);
       });
   }, []);
 
