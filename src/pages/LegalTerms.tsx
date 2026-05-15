@@ -20,7 +20,6 @@ const LegalTerms = () => {
         <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">Legales</span>
         <h1 className="font-display text-5xl font-bold">Términos y condiciones</h1>
         <p className="text-muted-foreground">
-          Este texto es un borrador. Puedes personalizarlo según tus políticas reales.
         </p>
       </header>
 
