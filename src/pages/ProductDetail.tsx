@@ -31,6 +31,7 @@ const ProductDetail = () => {
   const [related, setRelated] = useState<Product[]>([]);
   const [locStock, setLocStock] = useState<LocStock[]>([]);
   const [loading, setLoading] = useState(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [added, setAdded] = useState(false);
@@ -38,6 +39,8 @@ const ProductDetail = () => {
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
+    setLoadError(null);
+
     const load = async () => {
       try {
         const { data, error } = await supabase
@@ -46,50 +49,58 @@ const ProductDetail = () => {
           .eq("slug", slug)
           .eq("is_active", true)
           .maybeSingle();
-        
+
         if (error && error.code !== "PGRST116") {
           console.error("Error loading product:", error);
+          setLoadError("No pudimos cargar el producto. Intenta de nuevo más tarde.");
           setProduct(null);
-          setLoading(false);
+          setRelated([]);
+          setLocStock([]);
           return;
         }
-        
-        if (data) {
-          const productData = data as Product;
-          setProduct(productData);
-          setActiveImage(productData.main_image_index ?? 0);
-          document.title = `${productData.name} — NeoCharge`;
 
-          // Stock por local
-          const { data: ls, error: locError } = await supabase
-            .from("product_locations")
-            .select("stock, store_locations(id,name,address,location_type,map_link,hours)")
-            .eq("product_id", data.id);
-          if (locError) console.error("Location stock error:", locError);
-          if (ls) setLocStock(ls as any);
-
-          // Related
-          if (data.category_id) {
-            const { data: rel, error: relError } = await supabase
-              .from("products")
-              .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,category_id,description,specifications,currency,price_cup,extra_cup_per_usd,warranty_type")
-              .eq("is_active", true)
-              .eq("category_id", data.category_id)
-              .neq("id", data.id)
-              .limit(4);
-            if (relError) console.error("Related products error:", relError);
-            if (rel) setRelated(rel as Product[]);
-          }
-        } else {
+        if (!data) {
+          setLoadError("Producto no encontrado.");
           setProduct(null);
+          setRelated([]);
+          setLocStock([]);
+          return;
+        }
+
+        const productData = data as Product;
+        setProduct(productData);
+        setActiveImage(productData.main_image_index ?? 0);
+        document.title = `${productData.name} — NeoCharge`;
+
+        const { data: ls, error: locError } = await supabase
+          .from("product_locations")
+          .select("stock, store_locations(id,name,address,location_type,map_link,hours)")
+          .eq("product_id", data.id);
+        if (locError) console.error("Location stock error:", locError);
+        if (ls) setLocStock(ls as any);
+
+        if (data.category_id) {
+          const { data: rel, error: relError } = await supabase
+            .from("products")
+            .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,category_id,description,specifications,currency,price_cup,extra_cup_per_usd,warranty_type")
+            .eq("is_active", true)
+            .eq("category_id", data.category_id)
+            .neq("id", data.id)
+            .limit(4);
+          if (relError) console.error("Related products error:", relError);
+          if (rel) setRelated(rel as Product[]);
         }
       } catch (err) {
         console.error("ProductDetail error:", err);
+        setLoadError("Ocurrió un error al cargar el producto. Intenta de nuevo.");
         setProduct(null);
+        setRelated([]);
+        setLocStock([]);
       } finally {
         setLoading(false);
       }
     };
+
     load();
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
@@ -105,6 +116,18 @@ const ProductDetail = () => {
             <div className="h-32 bg-muted rounded animate-pulse" />
           </div>
         </div>
+      </div>
+    );
+  }
+
+  if (loadError) {
+    return (
+      <div className="container-page py-20 text-center space-y-4">
+        <h1 className="font-display text-3xl font-bold">Ocurrió un problema</h1>
+        <p className="text-muted-foreground">{loadError}</p>
+        <Button asChild>
+          <Link to="/tienda"><ArrowLeft className="w-4 h-4" /> Volver a la tienda</Link>
+        </Button>
       </div>
     );
   }
@@ -126,8 +149,15 @@ const ProductDetail = () => {
       ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
       : null;
   const outOfStock = product.stock <= 0;
-  const images = product.images ?? [];
-  const display = useMemo(() => computeDisplayPrice(product, rate), [product, rate]);
+  const images = Array.isArray(product.images) ? product.images : [];
+  const display = useMemo(() => {
+    try {
+      return computeDisplayPrice(product, rate);
+    } catch (formatError) {
+      console.error("ComputeDisplayPrice error:", formatError);
+      return { usd: 0, cup: 0, primary: "USD" as const };
+    }
+  }, [product, rate]);
   const mainImage = images[product.main_image_index ?? 0];
 
   const handleAddToCart = () => {

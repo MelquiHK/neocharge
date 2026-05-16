@@ -47,10 +47,11 @@ function ProductCardComponent({ product, variant = "default" }: ProductCardProps
   };
 
   const outOfStock = product.stock <= 0;
+  const productLink = `/producto/${encodeURIComponent(product.slug)}`;
 
   return (
     <Link
-      to={`/producto/${product.slug}`}
+      to={productLink}
       className={cn(
         "group relative block rounded-3xl overflow-hidden transition-all duration-700",
         "bg-white dark:bg-slate-900",
