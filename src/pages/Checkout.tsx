@@ -32,7 +32,6 @@ const Checkout = () => {
   const [delivery, setDelivery] = useState<"pickup" | "delivery">("delivery");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
-  const [paymentMethod, setPaymentMethod] = useState("cash_usd");
 
   const [locations, setLocations] = useState<Loc[]>([]);
   const [pickupLocId, setPickupLocId] = useState<string>("");
@@ -166,7 +165,7 @@ const Checkout = () => {
         latitude: coords?.lat ?? null,
         longitude: coords?.lng ?? null,
         location_link: mapLink,
-        payment_method: paymentMethod,
+        payment_method: paymentCurrency === "USD" ? "cash_usd" : "cash_cup",
         payment_currency: paymentCurrency,
       });
       if (error) {
@@ -331,30 +330,6 @@ const Checkout = () => {
                 </div>
               </div>
             )}
-          </section>
-
-          <section className="card-elevated p-6 space-y-4">
-            <h2 className="font-display text-lg font-bold">Forma de pago preferida</h2>
-            <div className="grid sm:grid-cols-2 gap-2">
-              {[
-                { v: "cash_usd", l: "Efectivo USD" },
-                { v: "cash_cup", l: "Efectivo CUP" },
-                { v: "transfer", l: "Transferencia bancaria" },
-                { v: "mlc", l: "MLC" },
-              ].map((p) => (
-                <button
-                  key={p.v}
-                  type="button"
-                  onClick={() => setPaymentMethod(p.v)}
-                  className={cn(
-                    "p-3 rounded-xl border-2 text-sm font-medium transition-all",
-                    paymentMethod === p.v ? "border-primary bg-primary/5 text-primary" : "border-border hover:border-primary/30",
-                  )}
-                >
-                  {p.l}
-                </button>
-              ))}
-            </div>
           </section>
 
           <section className="card-elevated p-6 space-y-3">
