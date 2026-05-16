@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, Navigate, useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MessageCircle, MapPin, Store, Truck, Loader2, Navigation } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -209,13 +209,13 @@ const Checkout = () => {
 
     setSubmitting(true);
 
-    const pickupLoc = locations.find((l) => l.id === pickupLocId);
-    const mapLink = coords
-      ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
-      : null;
-
     try {
-      const { error } = await supabase.from("orders").insert({
+      const pickupLoc = locations.find((l) => l.id === pickupLocId);
+      const mapLink = coords
+        ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
+        : null;
+
+      const orderPayload = {
         user_id: user?.id ?? null,
         customer_name: name.trim(),
         customer_phone: phone.trim(),
@@ -236,15 +236,15 @@ const Checkout = () => {
         location_link: mapLink,
         payment_method: paymentCurrency === "USD" ? "cash_usd" : "cash_cup",
         payment_currency: paymentCurrency,
-      });
+      };
+
+      const { error } = await supabase.from("orders").insert(orderPayload);
       if (error) {
         console.error("Order save error:", error);
         toast.error(error.message || "No se pudo guardar el pedido. Intenta de nuevo.");
-        setSubmitting(false);
         return;
       }
 
-      // Enviar mensaje de WhatsApp
       const waMessage = buildWhatsAppMessage({
         items,
         total,
@@ -255,20 +255,25 @@ const Checkout = () => {
         customerAddress: delivery === "delivery" ? address.trim() : undefined,
         notes: notes.trim() || undefined,
       });
-      window.open(getWhatsAppLink(waMessage), "_blank");
 
-      toast.success("¡Pedido enviado! Te contactaremos pronto por WhatsApp para coordinar.");
-    } catch (err) {
-      console.error(err);
-      toast.error("Error inesperado al enviar el pedido");
+      try {
+        window.open(getWhatsAppLink(waMessage), "_blank");
+      } catch (openError) {
+        console.error("WhatsApp open error:", openError);
+        toast.error("Pedido guardado, pero no pudimos abrir WhatsApp automáticamente.");
+      }
+
+      toast.success("¡Pedido enviado! Te contactaremos pronto por WhatsApp para coordinar el pago.");
+      setTimeout(() => {
+        clearCart();
+        navigate("/");
+      }, 1500);
+    } catch (submitError) {
+      console.error("Checkout submit error:", submitError);
+      toast.error("Error inesperado al enviar el pedido. Por favor intenta de nuevo.");
+    } finally {
       setSubmitting(false);
-      return;
     }
-
-    setTimeout(() => {
-      clearCart();
-      navigate("/");
-    }, 1500);
   };
 
   return (
