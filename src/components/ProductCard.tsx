@@ -18,9 +18,10 @@ function ProductCardComponent({ product, variant = "default" }: ProductCardProps
   const { rate } = useExchangeRate();
   const [added, setAdded] = useState(false);
   const [liked, setLiked] = useState(false);
+  const images = product.images ?? [];
   const display = computeDisplayPrice(product, rate);
-  const mainImage = product.images?.[product.main_image_index || 0];
-  const hoverImage = product.images?.[product.main_image_index === 0 ? 1 : 0];
+  const mainImage = images[product.main_image_index ?? 0];
+  const hoverImage = images[product.main_image_index === 0 ? 1 : 0];
   const discount =
     product.compare_price && product.compare_price > product.price
       ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)

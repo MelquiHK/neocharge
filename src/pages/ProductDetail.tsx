@@ -126,7 +126,9 @@ const ProductDetail = () => {
       ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
       : null;
   const outOfStock = product.stock <= 0;
+  const images = product.images ?? [];
   const display = useMemo(() => computeDisplayPrice(product, rate), [product, rate]);
+  const mainImage = images[product.main_image_index ?? 0];
 
   const handleAddToCart = () => {
     addItem({
@@ -138,7 +140,7 @@ const ProductDetail = () => {
       price_cup: product.price_cup,
       extra_cup_per_usd: product.extra_cup_per_usd,
       warranty_type: product.warranty_type,
-      image: product.images?.[product.main_image_index || 0],
+      image: mainImage,
       stock: product.stock,
       quantity,
     });
@@ -167,9 +169,9 @@ const ProductDetail = () => {
         <div className="space-y-4">
           <div className="relative aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-secondary/60 to-secondary border border-border">
             <div className="absolute inset-0 bg-radial-glow" />
-            {product.images[activeImage] && (
+            {images[activeImage] && (
               <img
-                src={product.images[activeImage]}
+                src={images[activeImage]}
                 alt={product.name}
                 loading="eager"
                 decoding="async"
@@ -183,9 +185,9 @@ const ProductDetail = () => {
               </span>
             )}
           </div>
-          {product.images.length > 1 && (
+          {images.length > 1 && (
             <div className="grid grid-cols-5 gap-2">
-              {product.images.map((img, i) => (
+              {images.map((img, i) => (
                 <button
                   key={i}
                   onClick={() => setActiveImage(i)}
