@@ -35,6 +35,9 @@ const Checkout = () => {
 
   const [locations, setLocations] = useState<Loc[]>([]);
   const [pickupLocId, setPickupLocId] = useState<string>("");
+  const [locationProducts, setLocationProducts] = useState<Record<string, string[]>>({});
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
 
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
@@ -45,32 +48,63 @@ const Checkout = () => {
   }, []);
 
   useEffect(() => {
-    setGeoLoading(true);
-    setGeoError(null);
+    if (items.length === 0) {
+      setLocations([]);
+      setLocationProducts({});
+      setPickupLocId("");
+      return;
+    }
+
+    setLocationLoading(true);
+    setLocationError(null);
+
+    const itemIds = items.map((item) => item.id);
+
     supabase
-      .from("store_locations")
-      .select("id,name,address,location_type,hours")
-      .eq("is_active", true)
-      .order("sort_order")
+      .from("product_locations")
+      .select("product_id,stock,store_locations(id,name,address,location_type,map_link,hours)")
+      .in("product_id", itemIds)
+      .gt("stock", 0)
       .then(({ data, error }) => {
         if (error) {
-          console.error("Error loading locations:", error);
-          setGeoError("No pudimos cargar los locales. Intenta de nuevo.");
-          setGeoLoading(false);
+          console.error("Error loading product locations:", error);
+          setLocationError("No pudimos cargar los locales disponibles. Intenta de nuevo.");
+          setLocationLoading(false);
           return;
         }
-        if (data) {
-          setLocations(data);
-          if (data.length > 0) setPickupLocId(data[0].id);
+
+        const map: Record<string, Loc> = {};
+        const productsByLocation: Record<string, string[]> = {};
+
+        (data ?? []).forEach((row: any) => {
+          const loc = row.store_locations;
+          if (!loc) return;
+          const product = items.find((it) => it.id === row.product_id);
+          if (!product) return;
+
+          map[loc.id] = loc;
+          productsByLocation[loc.id] = productsByLocation[loc.id] ?? [];
+          if (!productsByLocation[loc.id].includes(product.name)) {
+            productsByLocation[loc.id].push(product.name);
+          }
+        });
+
+        const available = Object.values(map);
+        setLocations(available);
+        setLocationProducts(productsByLocation);
+
+        if (available.length > 0 && !available.some((loc) => loc.id === pickupLocId)) {
+          setPickupLocId(available[0].id);
         }
-        setGeoLoading(false);
+
+        setLocationLoading(false);
       })
       .catch((err) => {
-        console.error("Checkout locations error:", err);
-        setGeoError("Error conectando con el servidor.");
-        setGeoLoading(false);
+        console.error("Checkout product locations error:", err);
+        setLocationError("Error conectando con el servidor.");
+        setLocationLoading(false);
       });
-  }, []);
+  }, [items, pickupLocId]);
 
   useEffect(() => {
     if (!user) return;
@@ -303,31 +337,54 @@ const Checkout = () => {
               </div>
             )}
 
-            {delivery === "pickup" && locations.length > 0 && (
+            {delivery === "pickup" && (
               <div className="space-y-2 animate-fade-in">
                 <Label>Elige el local *</Label>
-                <div className="grid gap-2">
-                  {locations.map((loc) => (
-                    <button
-                      type="button"
-                      key={loc.id}
-                      onClick={() => setPickupLocId(loc.id)}
-                      className={cn(
-                        "p-3 rounded-xl border-2 text-left transition-all",
-                        pickupLocId === loc.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30",
-                      )}
-                    >
-                      <div className="flex items-start gap-2">
-                        <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                        <div className="flex-1">
-                          <p className="font-semibold text-sm">{loc.name}</p>
-                          <p className="text-xs text-muted-foreground">{loc.address}</p>
-                          {loc.hours && <p className="text-xs text-muted-foreground mt-1">🕐 {loc.hours}</p>}
-                        </div>
+                {locationLoading ? (
+                  <p className="text-sm text-muted-foreground">Cargando locales disponibles...</p>
+                ) : locationError ? (
+                  <p className="text-sm text-destructive">{locationError}</p>
+                ) : locations.length === 0 ? (
+                  <div className="rounded-2xl bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-900">
+                    No hay locales con stock para los productos del carrito. Elige uno y te contactaremos para coordinar la disponibilidad.
+                  </div>
+                ) : (
+                  <>
+                    {locations.length > 1 && (
+                      <div className="rounded-2xl bg-blue-50 border border-blue-200 p-4 text-sm text-blue-900">
+                        Tu pedido incluye productos disponibles en varios locales. Elige uno para coordinar la retirada y le avisaremos al dueño para ver qué se puede hacer.
                       </div>
-                    </button>
-                  ))}
-                </div>
+                    )}
+                    <div className="grid gap-2">
+                      {locations.map((loc) => (
+                        <button
+                          type="button"
+                          key={loc.id}
+                          onClick={() => setPickupLocId(loc.id)}
+                          className={cn(
+                            "p-3 rounded-xl border-2 text-left transition-all",
+                            pickupLocId === loc.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30",
+                          )}
+                        >
+                          <div className="flex items-start gap-2">
+                            <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                            <div className="flex-1">
+                              <p className="font-semibold text-sm">{loc.name}</p>
+                              <p className="text-xs text-muted-foreground">{loc.address}</p>
+                              {loc.hours && <p className="text-xs text-muted-foreground mt-1">🕐 {loc.hours}</p>}
+                              {locationProducts[loc.id] && (
+                                <p className="text-xs text-muted-foreground mt-2">
+                                  Productos en este local: {locationProducts[loc.id].slice(0, 3).join(", ")}
+                                  {locationProducts[loc.id].length > 3 ? `, y ${locationProducts[loc.id].length - 3} más` : ""}
+                                </p>
+                              )}
+                            </div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </>
+                )}
               </div>
             )}
           </section>
