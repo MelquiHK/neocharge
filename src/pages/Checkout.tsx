@@ -7,6 +7,7 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
+import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
@@ -25,6 +26,7 @@ const Checkout = () => {
   const navigate = useNavigate();
   const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP } = useCart();
   const { user } = useAuth();
+  const { rate } = useExchangeRate();
   const [submitting, setSubmitting] = useState(false);
 
   const [name, setName] = useState("");
@@ -64,8 +66,7 @@ const Checkout = () => {
       .from("product_locations")
       .select("product_id,stock,store_locations(id,name,address,location_type,map_link,hours)")
       .in("product_id", itemIds)
-      .gt("stock", 0)
-      .then(({ data, error }) => {
+      .then(async ({ data, error }) => {
         if (error) {
           console.error("Error loading product locations:", error);
           setLocationError("No pudimos cargar los locales disponibles. Intenta de nuevo.");
@@ -73,10 +74,12 @@ const Checkout = () => {
           return;
         }
 
+        const rows = (data ?? []) as any[];
+        const availableRows = rows.filter((row) => row.stock > 0 && row.store_locations);
         const map: Record<string, Loc> = {};
         const productsByLocation: Record<string, string[]> = {};
 
-        (data ?? []).forEach((row: any) => {
+        availableRows.forEach((row) => {
           const loc = row.store_locations;
           if (!loc) return;
           const product = items.find((it) => it.id === row.product_id);
@@ -90,13 +93,43 @@ const Checkout = () => {
         });
 
         const available = Object.values(map);
-        setLocations(available);
-        setLocationProducts(productsByLocation);
 
-        if (available.length > 0 && !available.some((loc) => loc.id === pickupLocId)) {
-          setPickupLocId(available[0].id);
+        if (available.length > 0) {
+          setLocations(available);
+          setLocationProducts(productsByLocation);
+          if (!available.some((loc) => loc.id === pickupLocId)) {
+            setPickupLocId(available[0].id);
+          }
+          setLocationLoading(false);
+          return;
         }
 
+        if (rows.length === 0) {
+          const { data: allLocs, error: locsError } = await supabase
+            .from("store_locations")
+            .select("id,name,address,location_type,map_link,hours")
+            .eq("is_active", true)
+            .order("sort_order");
+
+          if (locsError) {
+            console.error("Error loading store locations fallback:", locsError);
+            setLocationError("No pudimos cargar los locales disponibles. Intenta de nuevo.");
+            setLocationLoading(false);
+            return;
+          }
+
+          const fallbackLocations = allLocs ?? [];
+          setLocations(fallbackLocations);
+          setLocationProducts({});
+          if (fallbackLocations.length > 0 && !fallbackLocations.some((loc) => loc.id === pickupLocId)) {
+            setPickupLocId(fallbackLocations[0].id);
+          }
+          setLocationLoading(false);
+          return;
+        }
+
+        setLocations([]);
+        setLocationProducts({});
         setLocationLoading(false);
       })
       .catch((err) => {
@@ -194,6 +227,8 @@ const Checkout = () => {
         subtotal: total,
         delivery_fee: 0,
         total,
+        total_cup: totalCUP,
+        exchange_rate: rate ?? null,
         admin_notes: notes.trim() || null,
         status: "pending",
         latitude: coords?.lat ?? null,
