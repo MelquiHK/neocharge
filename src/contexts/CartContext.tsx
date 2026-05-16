@@ -1,5 +1,6 @@
 import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
+import { computeDisplayPrice } from "@/lib/format";
 
 export interface CartItem {
   id: string;
@@ -94,53 +95,25 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const { rate: exchangeRate } = useExchangeRate();
 
   const roundUpToNextWhole = useCallback((num: number) => {
-    const decimalPart = num - Math.floor(num);
-    if (decimalPart === 0) {
-      return num;
-    }
     return Math.ceil(num);
   }, []);
 
   const value = useMemo<CartContextValue>(() => {
-    const currentExchangeRate = exchangeRate?.usd_to_cup ?? 1;
-    let initialTotalUSD = 0;
-    let initialTotalCUP = 0;
     const updatedItems = items.map(item => {
-      let itemPriceUSD = 0;
-      let itemPriceCUP = 0;
-
-      const currency = (item.currency || "USD").toUpperCase();
-      
-      if (currency === "USD") {
-        itemPriceUSD = Number(item.price || 0);
-        // Regla: Si es cargador o tiene extra_cup_per_usd, se aplica (tasa + extra)
-        const extra = Number(item.extra_cup_per_usd || 0);
-        const isCharger = item.warranty_type === "charger";
-        const extraRate = isCharger ? (exchangeRate?.extra_cup_chargers || 0) : 0;
-        const finalExtra = extra || extraRate;
-        
-        itemPriceCUP = itemPriceUSD * (currentExchangeRate + finalExtra);
-      } else if (currency === "CUP") {
-        itemPriceCUP = Number(item.price_cup || item.price || 0);
-        itemPriceUSD = itemPriceCUP / currentExchangeRate;
-      }
-
+      const { usd, cup } = computeDisplayPrice(item, exchangeRate);
       return {
         ...item,
-        displayPriceUSD: itemPriceUSD,
-        displayPriceCUP: itemPriceCUP,
+        displayPriceUSD: usd,
+        displayPriceCUP: cup,
       };
     });
 
-    initialTotalUSD = updatedItems.reduce((sum, i) => sum + (i.displayPriceUSD || 0) * i.quantity, 0);
-    initialTotalCUP = updatedItems.reduce((sum, i) => sum + (i.displayPriceCUP || 0) * i.quantity, 0);
-
+    const initialTotalUSD = updatedItems.reduce((sum, i) => sum + (i.displayPriceUSD || 0) * i.quantity, 0);
+    const initialTotalCUP = updatedItems.reduce((sum, i) => sum + (i.displayPriceCUP || 0) * i.quantity, 0);
     const itemCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
 
-    // No redondeamos hacia arriba forzosamente, usamos redondeo normal a 2 decimales para USD y entero para CUP
-    const totalUSD = Math.round(initialTotalUSD * 100) / 100;
-    const totalCUP = Math.round(initialTotalCUP);
-
+    const totalUSD = roundUpToNextWhole(initialTotalUSD);
+    const totalCUP = roundUpToNextWhole(initialTotalCUP);
     const total = paymentCurrency === "USD" ? totalUSD : totalCUP;
 
     return {

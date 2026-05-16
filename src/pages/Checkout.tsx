@@ -23,7 +23,7 @@ interface Loc {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, total, clearCart, paymentCurrency, totalUSD, totalCUP } = useCart();
+  const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP } = useCart();
   const { user } = useAuth();
   const [submitting, setSubmitting] = useState(false);
 
@@ -380,6 +380,30 @@ const Checkout = () => {
         <aside className="lg:sticky lg:top-28 lg:self-start">
           <div className="card-elevated p-6 space-y-4">
             <h2 className="font-display text-lg font-bold">Resumen del pedido</h2>
+
+            <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-1.5 rounded-2xl border border-border/50 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setPaymentCurrency("USD")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
+                  paymentCurrency === "USD" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Pagar en USD
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentCurrency("CUP")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
+                  paymentCurrency === "CUP" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Pagar en CUP
+              </button>
+            </div>
+
             <div className="space-y-3 max-h-80 overflow-y-auto">
               {items.map((it) => (
                 <div key={it.id} className="flex gap-3">
