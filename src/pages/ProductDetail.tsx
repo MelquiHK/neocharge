@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, ShoppingBag, Check, Truck, ShieldCheck, Minus, Plus, MessageCircle, MapPin } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -126,6 +126,7 @@ const ProductDetail = () => {
       ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
       : null;
   const outOfStock = product.stock <= 0;
+  const display = useMemo(() => computeDisplayPrice(product, rate), [product, rate]);
 
   const handleAddToCart = () => {
     addItem({
@@ -170,6 +171,8 @@ const ProductDetail = () => {
               <img
                 src={product.images[activeImage]}
                 alt={product.name}
+                loading="eager"
+                decoding="async"
                 className="absolute inset-0 w-full h-full object-cover animate-scale-in"
                 key={activeImage}
               />
@@ -193,7 +196,7 @@ const ProductDetail = () => {
                       : "border-border hover:border-primary/40",
                   )}
                 >
-                  <img src={img} alt="" className="w-full h-full object-cover bg-secondary/40" />
+                  <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-secondary/40" />
                 </button>
               ))}
             </div>
@@ -206,29 +209,24 @@ const ProductDetail = () => {
             <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight mb-3">
               {product.name}
             </h1>
-            {(() => {
-              const display = computeDisplayPrice(product, rate);
-              return (
-                <div className="space-y-1">
-                  <div className="flex items-baseline gap-3 flex-wrap">
-                    <span className="text-5xl font-display font-bold text-primary text-glow">
-                      {display.primary === "USD" ? formatPrice(display.usd!) : formatCUP(display.cup!)}
-                    </span>
-                    {product.compare_price && product.compare_price > product.price && (
-                      <span className="text-xl text-muted-foreground line-through">
-                        {formatPrice(product.compare_price)}
-                      </span>
-                    )}
-                  </div>
-                  {display.primary === "USD" && display.cup != null && (
-                    <p className="text-sm text-muted-foreground">
-                      ≈ <span className="font-semibold text-foreground">{formatCUP(display.cup)}</span>
-                      {rate && <span className="ml-1 text-xs">(tasa hoy: 1 USD = {rate.usd_to_cup} CUP{product.warranty_type === "charger" ? ` + ${rate.extra_cup_chargers}` : ""})</span>}
-                    </p>
-                  )}
-                </div>
-              );
-            })()}
+            <div className="space-y-1">
+              <div className="flex items-baseline gap-3 flex-wrap">
+                <span className="text-5xl font-display font-bold text-primary text-glow">
+                  {display.primary === "USD" ? formatPrice(display.usd!) : formatCUP(display.cup!)}
+                </span>
+                {product.compare_price && product.compare_price > product.price && (
+                  <span className="text-xl text-muted-foreground line-through">
+                    {formatPrice(product.compare_price)}
+                  </span>
+                )}
+              </div>
+              {display.primary === "USD" && display.cup != null && (
+                <p className="text-sm text-muted-foreground">
+                  ≈ <span className="font-semibold text-foreground">{formatCUP(display.cup)}</span>
+                  {rate && <span className="ml-1 text-xs">(tasa hoy: 1 USD = {rate.usd_to_cup} CUP{product.warranty_type === "charger" ? ` + ${rate.extra_cup_chargers}` : ""})</span>}
+                </p>
+              )}
+            </div>
           </div>
 
           {product.description && (

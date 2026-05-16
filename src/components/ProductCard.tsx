@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ShoppingBag, Check, Heart } from "lucide-react";
-import { useState } from "react";
+import { memo, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { formatPrice, formatCUP, computeDisplayPrice } from "@/lib/format";
@@ -13,7 +13,7 @@ interface ProductCardProps {
   variant?: "default" | "featured";
 }
 
-export function ProductCard({ product, variant = "default" }: ProductCardProps) {
+function ProductCardComponent({ product, variant = "default" }: ProductCardProps) {
   const { addItem, openCart } = useCart();
   const { rate } = useExchangeRate();
   const [added, setAdded] = useState(false);
@@ -73,6 +73,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
             src={mainImage}
             alt={product.name}
             loading="lazy"
+            decoding="async"
             className={cn(
               "absolute inset-0 w-full h-full object-cover transition-all duration-700",
               "group-hover:scale-120",
@@ -88,6 +89,7 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
             alt=""
             aria-hidden
             loading="lazy"
+            decoding="async"
             className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-110"
           />
         )}
@@ -220,3 +222,5 @@ export function ProductCard({ product, variant = "default" }: ProductCardProps) 
     </Link>
   );
 }
+
+export const ProductCard = memo(ProductCardComponent);

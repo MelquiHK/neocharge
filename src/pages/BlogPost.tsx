@@ -90,13 +90,13 @@ const BlogPost = () => {
       {images.length > 0 && (
         <div className="mt-10 space-y-4">
           <div className="aspect-[16/9] rounded-3xl overflow-hidden bg-secondary">
-            <img src={images[0]} alt={post.title} className="w-full h-full object-cover" />
+            <img src={images[0]} alt={post.title} loading="lazy" decoding="async" className="w-full h-full object-cover" />
           </div>
           {images.length > 1 && (
             <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
               {images.slice(1).map((src) => (
                 <div key={src} className="aspect-square rounded-2xl overflow-hidden bg-secondary">
-                  <img src={src} alt="" className="w-full h-full object-cover" />
+                  <img src={src} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />
                 </div>
               ))}
             </div>

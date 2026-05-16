@@ -440,7 +440,7 @@ const Checkout = () => {
               {items.map((it) => (
                 <div key={it.id} className="flex gap-3">
                   <div className="w-14 h-14 rounded-xl bg-secondary overflow-hidden shrink-0">
-                    {it.image && <img src={it.image} alt="" className="w-full h-full object-cover" />}
+                    {it.image && <img src={it.image} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />}
                   </div>
                   <div className="flex-1 min-w-0">
                     <p className="text-sm font-semibold line-clamp-1">{it.name}</p>
