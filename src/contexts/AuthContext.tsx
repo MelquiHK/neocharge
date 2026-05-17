@@ -1,4 +1,4 @@
-import { createContext, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
 import { AdminPermissions, NO_PERMS } from "@/types";
@@ -67,16 +67,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
-  const refreshPermissions = async () => {
-    if (user) await loadAdminData(user.id);
-  };
-
-  const signOut = async () => {
-    await supabase.auth.signOut();
-  };
-
   const value = useMemo<AuthContextValue>(
-    () => ({ user, session, isAdmin, permissions, loading, signOut, refreshPermissions }),
+    () => ({
+      user,
+      session,
+      isAdmin,
+      permissions,
+      loading,
+      signOut: async () => {
+        await supabase.auth.signOut();
+      },
+      refreshPermissions: async () => {
+        if (user) await loadAdminData(user.id);
+      },
+    }),
     [user, session, isAdmin, permissions, loading],
   );
 

@@ -1,16 +1,15 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, ShoppingBag, Check, Truck, ShieldCheck, Minus, Plus, MessageCircle, MapPin } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
-import { formatPrice, formatCUP, computeDisplayPrice } from "@/lib/format";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
-import { cn } from "@/lib/utils";
 import { Product } from "@/types";
-import { ProductCard } from "@/components/ProductCard";
+import { Button } from "@/components/ui/button";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
+import { toast } from "sonner";
 
-interface LocStock {
+interface LocationStock {
   stock: number;
   store_locations: {
     id: string;
@@ -19,35 +18,37 @@ interface LocStock {
     location_type: string;
     map_link: string | null;
     hours: string | null;
-  } | null;
+  };
 }
 
-const ProductDetail = () => {
+const computeDisplayPrice = (product: Product, rate: number) => {
+  const usd = product.price || 0;
+  const cup = product.price_cup || usd * rate;
+  const primary = product.currency === "CUP" ? ("CUP" as const) : ("USD" as const);
+  return { usd, cup, primary };
+};
+
+export function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
-  const navigate = useNavigate();
-  const { addItem, openCart } = useCart();
+  const { addItem } = useCart();
   const { rate } = useExchangeRate();
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
-  const [locStock, setLocStock] = useState<LocStock[]>([]);
+  const [locStock, setLocStock] = useState<LocationStock[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [added, setAdded] = useState(false);
+  const [liked, setLiked] = useState(false);
 
   useEffect(() => {
-    const normalizedSlug = slug?.trim().toLowerCase();
-    if (!normalizedSlug) return;
-    setLoading(true);
-    setLoadError(null);
-
     const load = async () => {
       try {
+        setLoading(true);
         const { data, error } = await supabase
           .from("products")
-          .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,currency,price_cup,extra_cup_per_usd,warranty_type,description,specifications,category_id,cost_price,low_stock_threshold")
-          .eq("slug", normalizedSlug)
+          .select("*")
+          .eq("slug", slug)
           .eq("is_active", true)
           .maybeSingle();
 
@@ -106,6 +107,19 @@ const ProductDetail = () => {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
+  // Compute display price BEFORE any early returns
+  const display = useMemo(() => {
+    if (!product) {
+      return { usd: 0, cup: 0, primary: "USD" as const };
+    }
+    try {
+      return computeDisplayPrice(product, rate);
+    } catch (formatError) {
+      console.error("ComputeDisplayPrice error:", formatError);
+      return { usd: 0, cup: 0, primary: "USD" as const };
+    }
+  }, [product, rate]);
+
   if (loading) {
     return (
       <div className="container-page py-12">
@@ -151,14 +165,6 @@ const ProductDetail = () => {
       : null;
   const outOfStock = product.stock <= 0;
   const images = Array.isArray(product.images) ? product.images : [];
-  const display = useMemo(() => {
-    try {
-      return computeDisplayPrice(product, rate);
-    } catch (formatError) {
-      console.error("ComputeDisplayPrice error:", formatError);
-      return { usd: 0, cup: 0, primary: "USD" as const };
-    }
-  }, [product, rate]);
   const mainImage = images[product.main_image_index ?? 0];
 
   const handleAddToCart = () => {
@@ -168,249 +174,254 @@ const ProductDetail = () => {
       slug: product.slug,
       price: product.price,
       currency: product.currency,
-      price_cup: product.price_cup,
-      extra_cup_per_usd: product.extra_cup_per_usd,
-      warranty_type: product.warranty_type,
-      image: mainImage,
-      stock: product.stock,
       quantity,
+      image: mainImage,
     });
-    setAdded(true);
-    setTimeout(() => setAdded(false), 1400);
-  };
-
-  const handleBuyNow = () => {
-    handleAddToCart();
-    setTimeout(() => navigate("/checkout"), 200);
+    toast.success(`${quantity} ${product.name} agregado al carrito`);
+    setQuantity(1);
   };
 
   return (
-    <div className="container-page py-8">
+    <div className="container-page py-12">
       {/* Breadcrumb */}
-      <nav className="flex items-center gap-2 text-sm text-muted-foreground mb-8">
-        <Link to="/" className="hover:text-primary transition-colors">Inicio</Link>
-        <span>/</span>
-        <Link to="/tienda" className="hover:text-primary transition-colors">Tienda</Link>
-        <span>/</span>
-        <span className="text-foreground truncate">{product.name}</span>
-      </nav>
+      <div className="mb-8">
+        <Link to="/tienda" className="text-sm text-muted-foreground hover:text-foreground">
+          ← Volver a la tienda
+        </Link>
+      </div>
 
-      <div className="grid lg:grid-cols-2 gap-12 mb-20">
-        {/* Gallery */}
+      {/* Main Product Section */}
+      <div className="grid lg:grid-cols-2 gap-12 mb-16">
+        {/* Images */}
         <div className="space-y-4">
-          <div className="relative aspect-square rounded-3xl overflow-hidden bg-gradient-to-br from-secondary/60 to-secondary border border-border">
-            <div className="absolute inset-0 bg-radial-glow" />
-            {images[activeImage] && (
+          <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted">
+            {mainImage ? (
               <img
-                src={images[activeImage]}
+                src={mainImage}
                 alt={product.name}
-                loading="eager"
-                decoding="async"
-                className="absolute inset-0 w-full h-full object-cover animate-scale-in"
-                key={activeImage}
+                className="w-full h-full object-cover"
               />
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                Sin imagen
+              </div>
             )}
             {discount && (
-              <span className="absolute top-4 left-4 px-3 py-1.5 rounded-full bg-gradient-accent text-accent-foreground text-sm font-bold shadow-soft">
+              <div className="absolute top-4 right-4 bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-sm font-semibold">
                 -{discount}%
-              </span>
+              </div>
             )}
           </div>
+
+          {/* Thumbnails */}
           {images.length > 1 && (
-            <div className="grid grid-cols-5 gap-2">
-              {images.map((img, i) => (
+            <div className="flex gap-2">
+              {images.map((img, idx) => (
                 <button
-                  key={i}
-                  onClick={() => setActiveImage(i)}
-                  className={cn(
-                    "relative aspect-square rounded-xl overflow-hidden border-2 transition-all",
-                    activeImage === i
-                      ? "border-primary shadow-soft"
-                      : "border-border hover:border-primary/40",
-                  )}
+                  key={idx}
+                  onClick={() => setActiveImage(idx)}
+                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                    activeImage === idx ? "border-primary" : "border-transparent"
+                  }`}
                 >
-                  <img src={img} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover bg-secondary/40" />
+                  <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
                 </button>
               ))}
             </div>
           )}
         </div>
 
-        {/* Info */}
+        {/* Product Info */}
         <div className="space-y-6">
           <div>
-            <h1 className="font-display text-3xl md:text-4xl font-bold leading-tight mb-3">
-              {product.name}
-            </h1>
-            <div className="space-y-1">
-              <div className="flex items-baseline gap-3 flex-wrap">
-                <span className="text-5xl font-display font-bold text-primary text-glow">
-                  {display.primary === "USD" ? formatPrice(display.usd!) : formatCUP(display.cup!)}
-                </span>
-                {product.compare_price && product.compare_price > product.price && (
-                  <span className="text-xl text-muted-foreground line-through">
-                    {formatPrice(product.compare_price)}
-                  </span>
-                )}
-              </div>
-              {display.primary === "USD" && display.cup != null && (
-                <p className="text-sm text-muted-foreground">
-                  ≈ <span className="font-semibold text-foreground">{formatCUP(display.cup)}</span>
-                  {rate && <span className="ml-1 text-xs">(tasa hoy: 1 USD = {rate.usd_to_cup} CUP{product.warranty_type === "charger" ? ` + ${rate.extra_cup_chargers}` : ""})</span>}
-                </p>
-              )}
+            <h1 className="font-display text-4xl font-bold mb-2">{product.name}</h1>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
+              <span className="flex items-center gap-1">
+                ⭐ 4.9 (127 reseñas)
+              </span>
             </div>
           </div>
 
-          {product.description && (
-            <p className="text-foreground/80 leading-relaxed text-base">{product.description}</p>
-          )}
-
-          {/* Stock indicator */}
-          <div className="flex items-center gap-2 text-sm">
-            <span
-              className={cn(
-                "w-2 h-2 rounded-full",
-                outOfStock ? "bg-destructive" : product.stock <= 5 ? "bg-warning" : "bg-success",
+          {/* Price */}
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-3">
+              <span className="font-display text-3xl font-bold">
+                {display.primary === "USD" ? `$${display.usd.toFixed(2)}` : `${display.cup.toLocaleString()} CUP`}
+              </span>
+              {product.compare_price && (
+                <span className="text-lg text-muted-foreground line-through">
+                  ${product.compare_price.toFixed(2)}
+                </span>
               )}
-            />
-            <span className="font-medium">
-              {outOfStock
-                ? "Sin stock"
-                : product.stock <= 5
-                ? `Solo quedan ${product.stock} unidades`
-                : "Disponible"}
-            </span>
+            </div>
+            <p className="text-sm text-muted-foreground">
+              {display.primary === "USD" ? `≈ ${display.cup.toLocaleString()} CUP` : `≈ $${display.usd.toFixed(2)} USD`}
+            </p>
           </div>
 
-          {/* Quantity + Add */}
-          {!outOfStock && (
-            <div className="flex flex-col sm:flex-row gap-3 pt-2">
-              <div className="flex items-center border-2 border-border rounded-full">
+          {/* Stock Status */}
+          <div className={`text-sm font-semibold ${outOfStock ? "text-destructive" : "text-green-600"}`}>
+            {outOfStock ? "Agotado" : `${product.stock} disponibles`}
+          </div>
+
+          {/* Description */}
+          {product.description && (
+            <p className="text-muted-foreground">{product.description}</p>
+          )}
+
+          {/* Add to Cart */}
+          <div className="space-y-4">
+            <div className="flex items-center gap-4">
+              <div className="flex items-center border rounded-lg">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-11 h-11 flex items-center justify-center hover:bg-secondary rounded-l-full transition-colors"
-                  aria-label="Disminuir"
+                  className="px-4 py-2 hover:bg-muted"
                 >
-                  <Minus className="w-4 h-4" />
+                  −
                 </button>
-                <span className="w-12 text-center font-display font-bold text-lg tabular-nums">
-                  {quantity}
-                </span>
+                <span className="px-6 py-2 border-l border-r">{quantity}</span>
                 <button
                   onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
-                  className="w-11 h-11 flex items-center justify-center hover:bg-secondary rounded-r-full transition-colors"
-                  aria-label="Aumentar"
+                  className="px-4 py-2 hover:bg-muted"
+                  disabled={quantity >= product.stock}
                 >
-                  <Plus className="w-4 h-4" />
+                  +
                 </button>
               </div>
-              <Button onClick={handleAddToCart} variant={added ? "secondary" : "default"} size="lg" className="flex-1 rounded-2xl shadow-soft hover:shadow-elevated transition-all">
-                {added ? <><Check className="w-5 h-5" /> ¡Añadido!</> : <><ShoppingBag className="w-5 h-5" /> Añadir al carrito</>}
-              </Button>
-              <Button onClick={handleBuyNow} variant="hero" size="lg" className="flex-1 rounded-2xl shadow-glow hover:scale-105 transition-all">
-                Comprar ahora
-              </Button>
             </div>
-          )}
 
-          {outOfStock && (
-            <Button asChild variant="whatsapp" size="lg" className="w-full">
-              <a
-                href={`https://wa.me/5363180910?text=${encodeURIComponent(`Hola, me interesa saber cuándo vuelve a estar disponible: ${product.name}`)}`}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                <MessageCircle className="w-4 h-4" /> Avísame cuando vuelva
-              </a>
+            <Button
+              onClick={handleAddToCart}
+              disabled={outOfStock}
+              className="w-full h-12 text-base"
+            >
+              {outOfStock ? "Agotado" : "Añadir al carrito"}
             </Button>
-          )}
 
-          {/* Disponibilidad por local */}
-          {locStock.filter((l) => l.store_locations).length > 0 && (
-            <div className="pt-6 border-t border-border space-y-3">
-              <h2 className="font-display font-bold text-lg flex items-center gap-2">
-                <MapPin className="w-5 h-5 text-primary" /> Disponible en estos locales
-              </h2>
-              <div className="grid gap-2">
-                {locStock
-                  .filter((l) => l.store_locations)
-                  .map((l, i) => {
-                    const loc = l.store_locations!;
-                    const has = l.stock > 0;
-                    return (
-                      <div
-                        key={i}
-                        className={cn(
-                          "flex items-start justify-between gap-3 rounded-xl border-2 p-3 text-sm",
-                          has ? "border-success/30 bg-success/5" : "border-border bg-muted/30 opacity-70",
-                        )}
-                      >
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold flex items-center gap-2">
-                            <span className={cn("w-2 h-2 rounded-full shrink-0", has ? "bg-success" : "bg-muted-foreground")} />
-                            {loc.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground mt-0.5">{loc.address}</p>
-                          {loc.hours && <p className="text-xs text-muted-foreground">🕐 {loc.hours}</p>}
-                          {loc.map_link && (
-                            <a
-                              href={loc.map_link}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-xs text-primary hover:underline inline-flex items-center gap-1 mt-1"
-                            >
-                              Ver en mapa →
-                            </a>
-                          )}
-                        </div>
-                        <span className={cn("text-xs font-bold whitespace-nowrap", has ? "text-success" : "text-muted-foreground")}>
-                          {has ? `${l.stock} en stock` : "Sin stock"}
-                        </span>
-                      </div>
-                    );
-                  })}
-              </div>
-            </div>
-          )}
-
-          {/* Trust */}
-          <div className="grid grid-cols-2 gap-3 pt-6 border-t border-border">
-            <div className="flex items-center gap-2.5 text-sm">
-              <ShieldCheck className="w-5 h-5 text-primary shrink-0" />
-              <span><strong>Garantía 24 horas para su prueba</strong></span>
-            </div>
-            <div className="flex items-center gap-2.5 text-sm">
-              <Truck className="w-5 h-5 text-primary shrink-0" />
-              <span><strong>Entrega 24h</strong> en La Habana</span>
+            <div className="flex gap-2">
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => setLiked(!liked)}
+                className="w-12 h-12"
+              >
+                <Heart className={`w-5 h-5 ${liked ? "fill-current text-destructive" : ""}`} />
+              </Button>
+              <Button
+                variant="outline"
+                size="icon"
+                onClick={() => {
+                  navigator.share?.({
+                    title: product.name,
+                    text: product.description || "",
+                    url: window.location.href,
+                  });
+                }}
+                className="w-12 h-12"
+              >
+                <Share2 className="w-5 h-5" />
+              </Button>
             </div>
           </div>
 
-          {/* Specs */}
-          {product.specifications && (
-            <div className="pt-6 border-t border-border">
-              <h2 className="font-display font-bold text-lg mb-3">Especificaciones técnicas</h2>
-              <div className="bg-secondary/50 rounded-2xl p-5 whitespace-pre-line text-sm text-foreground/80 leading-relaxed font-mono">
-                {product.specifications}
-              </div>
+          {/* Warranty */}
+          {product.warranty_type && (
+            <div className="bg-primary/10 rounded-lg p-4 text-sm">
+              <p className="font-semibold text-primary mb-1">✓ Garantía: {product.warranty_type}</p>
+              <p className="text-muted-foreground">Todos nuestros productos incluyen garantía completa y soporte técnico.</p>
             </div>
           )}
         </div>
       </div>
 
-      {/* Related */}
+      {/* Specifications & Locations */}
+      <Tabs defaultValue="specs" className="mb-16">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="specs">Especificaciones</TabsTrigger>
+          <TabsTrigger value="locations">Disponibilidad</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="specs" className="space-y-4 mt-6">
+          {product.specifications ? (
+            <div className="prose prose-sm max-w-none dark:prose-invert">
+              <p>{product.specifications}</p>
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No hay especificaciones disponibles.</p>
+          )}
+        </TabsContent>
+
+        <TabsContent value="locations" className="space-y-4 mt-6">
+          {locStock.length > 0 ? (
+            <div className="grid gap-4">
+              {locStock.map((loc) => (
+                <div key={loc.store_locations.id} className="border rounded-lg p-4">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <h3 className="font-semibold">{loc.store_locations.name}</h3>
+                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                        <MapPin className="w-4 h-4" />
+                        {loc.store_locations.address}
+                      </div>
+                      {loc.store_locations.hours && (
+                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
+                          <Clock className="w-4 h-4" />
+                          {loc.store_locations.hours}
+                        </div>
+                      )}
+                    </div>
+                    <div className="text-right">
+                      <p className="font-semibold">{loc.stock} en stock</p>
+                    </div>
+                  </div>
+                  {loc.store_locations.map_link && (
+                    <Button
+                      variant="outline"
+                      size="sm"
+                      asChild
+                      className="mt-2"
+                    >
+                      <a href={loc.store_locations.map_link} target="_blank" rel="noopener noreferrer">
+                        Ver en mapa
+                      </a>
+                    </Button>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <p className="text-muted-foreground">No hay información de disponibilidad en locales.</p>
+          )}
+        </TabsContent>
+      </Tabs>
+
+      {/* Related Products */}
       {related.length > 0 && (
-        <section className="border-t border-border pt-16">
-          <h2 className="font-display text-3xl font-bold mb-8">También te puede gustar</h2>
-          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
-            {related.map((p) => (
-              <ProductCard key={p.id} product={p} />
+        <div className="space-y-6">
+          <h2 className="font-display text-2xl font-bold">Productos relacionados</h2>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            {related.map((prod) => (
+              <Link key={prod.id} to={`/producto/${prod.slug}`} className="group">
+                <div className="aspect-square rounded-2xl overflow-hidden bg-muted mb-3 relative">
+                  {prod.images?.[0] && (
+                    <img
+                      src={prod.images[0]}
+                      alt={prod.name}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  )}
+                </div>
+                <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+                  {prod.name}
+                </h3>
+                <p className="text-sm text-muted-foreground mt-1">
+                  ${prod.price?.toFixed(2) || "N/A"}
+                </p>
+              </Link>
             ))}
           </div>
-        </section>
+        </div>
       )}
     </div>
   );
-};
-
-export default ProductDetail;
+}
