@@ -37,7 +37,8 @@ const ProductDetail = () => {
   const [added, setAdded] = useState(false);
 
   useEffect(() => {
-    if (!slug) return;
+    const normalizedSlug = slug?.trim().toLowerCase();
+    if (!normalizedSlug) return;
     setLoading(true);
     setLoadError(null);
 
@@ -46,7 +47,7 @@ const ProductDetail = () => {
         const { data, error } = await supabase
           .from("products")
           .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,currency,price_cup,extra_cup_per_usd,warranty_type,description,specifications,category_id,cost_price,low_stock_threshold")
-          .eq("slug", slug)
+          .eq("slug", normalizedSlug)
           .eq("is_active", true)
           .maybeSingle();
 

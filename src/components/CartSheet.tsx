@@ -76,7 +76,7 @@ export function CartSheet() {
                   </div>
                   <div className="flex-1 min-w-0">
                     <Link
-                      to={`/producto/${item.slug}`}
+                      to={`/producto/${encodeURIComponent(item.slug)}`}
                       onClick={closeCart}
                       className="text-sm font-semibold text-foreground hover:text-primary line-clamp-2"
                     >
