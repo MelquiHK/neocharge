@@ -1,4 +1,4 @@
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { ShoppingBag, Check, Heart } from "lucide-react";
 import { memo, useState } from "react";
 import { Button } from "@/components/ui/button";
@@ -14,11 +14,12 @@ interface ProductCardProps {
 }
 
 function ProductCardComponent({ product, variant = "default" }: ProductCardProps) {
-  const { addItem, openCart } = useCart();
+  const navigate = useNavigate();
+  const { addItem } = useCart();
   const { rate } = useExchangeRate();
   const [added, setAdded] = useState(false);
   const [liked, setLiked] = useState(false);
-  const images = product.images ?? [];
+  const images = Array.isArray(product.images) ? product.images : [];
   const display = computeDisplayPrice(product, rate);
   const mainImage = images[product.main_image_index ?? 0];
   const hoverImage = images[product.main_image_index === 0 ? 1 : 0];
@@ -47,13 +48,21 @@ function ProductCardComponent({ product, variant = "default" }: ProductCardProps
   };
 
   const outOfStock = product.stock <= 0;
-  const productLink = `/producto/${encodeURIComponent(product.slug)}`;
+  const productLink = `/producto/${product.slug}`;
 
   return (
-    <Link
-      to={productLink}
+    <div
+      role="link"
+      tabIndex={0}
+      onClick={() => navigate(productLink)}
+      onKeyDown={(event) => {
+        if (event.key === "Enter" || event.key === " ") {
+          event.preventDefault();
+          navigate(productLink);
+        }
+      }}
       className={cn(
-        "group relative block rounded-3xl overflow-hidden transition-all duration-700",
+        "group relative block rounded-3xl overflow-hidden transition-all duration-700 cursor-pointer",
         "bg-white dark:bg-slate-900",
         "border border-slate-100 dark:border-slate-800",
         "hover:border-primary/30 dark:hover:border-primary/30",
@@ -221,7 +230,7 @@ function ProductCardComponent({ product, variant = "default" }: ProductCardProps
           </div>
         )}
       </div>
-    </Link>
+    </div>
   );
 }
 
