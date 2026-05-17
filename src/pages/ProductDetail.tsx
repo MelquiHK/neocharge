@@ -147,6 +147,25 @@ export function ProductDetail() {
     );
   }
 
+  const images = Array.isArray(product?.images) ? product.images : [];
+  const display = useMemo(() => {
+    if (!product) {
+      return { usd: 0, cup: 0, primary: "USD" as const };
+    }
+    try {
+      return computeDisplayPrice(product, rate);
+    } catch (formatError) {
+      console.error("ComputeDisplayPrice error:", formatError);
+      return { usd: 0, cup: 0, primary: "USD" as const };
+    }
+  }, [product, rate]);
+  const mainImage = images[product?.main_image_index ?? 0];
+  const discount =
+    product?.compare_price && product.compare_price > product.price
+      ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
+      : null;
+  const outOfStock = (product?.stock ?? 0) <= 0;
+
   if (!product) {
     return (
       <div className="container-page py-20 text-center space-y-4">
@@ -158,15 +177,6 @@ export function ProductDetail() {
       </div>
     );
   }
-
-  const discount =
-    product.compare_price && product.compare_price > product.price
-      ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
-      : null;
-  const outOfStock = product.stock <= 0;
-  const images = Array.isArray(product.images) ? product.images : [];
-  const mainImage = images[product.main_image_index ?? 0];
-
   const handleAddToCart = () => {
     addItem({
       id: product.id,

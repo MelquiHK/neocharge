@@ -67,21 +67,17 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => subscription.unsubscribe();
   }, []);
 
+  const refreshPermissions = async () => {
+    if (user) await loadAdminData(user.id);
+  };
+
+  const signOut = async () => {
+    await supabase.auth.signOut();
+  };
+
   const value = useMemo<AuthContextValue>(
-    () => ({
-      user,
-      session,
-      isAdmin,
-      permissions,
-      loading,
-      signOut: async () => {
-        await supabase.auth.signOut();
-      },
-      refreshPermissions: async () => {
-        if (user) await loadAdminData(user.id);
-      },
-    }),
-    [user, session, isAdmin, permissions, loading],
+    () => ({ user, session, isAdmin, permissions, loading, signOut, refreshPermissions }),
+    [user, session, isAdmin, permissions, loading, signOut, refreshPermissions],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
