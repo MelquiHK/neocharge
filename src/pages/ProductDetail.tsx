@@ -20,7 +20,6 @@ interface LocationStock {
     hours: string | null;
   };
 }
-
 const computeDisplayPrice = (product: Product, rate: number) => {
   const usd = product.price || 0;
   const cup = product.price_cup || usd * rate;
@@ -28,7 +27,7 @@ const computeDisplayPrice = (product: Product, rate: number) => {
   return { usd, cup, primary };
 };
 
-export function ProductDetail() {
+export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { addItem } = useCart();
   const { rate } = useExchangeRate();
@@ -40,6 +39,7 @@ export function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [liked, setLiked] = useState(false);
+
 
   useEffect(() => {
     const load = async () => {
@@ -107,18 +107,6 @@ export function ProductDetail() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
-  // Compute display price BEFORE any early returns
-  const display = useMemo(() => {
-    if (!product) {
-      return { usd: 0, cup: 0, primary: "USD" as const };
-    }
-    try {
-      return computeDisplayPrice(product, rate);
-    } catch (formatError) {
-      console.error("ComputeDisplayPrice error:", formatError);
-      return { usd: 0, cup: 0, primary: "USD" as const };
-    }
-  }, [product, rate]);
 
   if (loading) {
     return (
