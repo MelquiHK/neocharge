@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { Product } from "@/types";
+import { computeDisplayPrice } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
@@ -20,17 +21,11 @@ interface LocationStock {
     hours: string | null;
   };
 }
-const computeDisplayPrice = (product: Product, rate: number) => {
-  const usd = product.price || 0;
-  const cup = product.price_cup || usd * rate;
-  const primary = product.currency === "CUP" ? ("CUP" as const) : ("USD" as const);
-  return { usd, cup, primary };
-};
 
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();
   const { addItem } = useCart();
-  const { rate } = useExchangeRate();
+  const { rate: exchangeRate } = useExchangeRate();
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [locStock, setLocStock] = useState<LocationStock[]>([]);
@@ -44,7 +39,14 @@ export default function ProductDetail() {
   useEffect(() => {
     const load = async () => {
       try {
+        if (!slug) {
+          setLoadError("Producto no encontrado.");
+          setLoading(false);
+          return;
+        }
+
         setLoading(true);
+        setLoadError(null);
         const { data, error } = await supabase
           .from("products")
           .select("*")
@@ -141,12 +143,12 @@ export default function ProductDetail() {
       return { usd: 0, cup: 0, primary: "USD" as const };
     }
     try {
-      return computeDisplayPrice(product, rate);
+      return computeDisplayPrice(product, exchangeRate);
     } catch (formatError) {
       console.error("ComputeDisplayPrice error:", formatError);
       return { usd: 0, cup: 0, primary: "USD" as const };
     }
-  }, [product, rate]);
+  }, [product, exchangeRate]);
   const mainImage = images[product?.main_image_index ?? 0];
   const discount =
     product?.compare_price && product.compare_price > product.price
@@ -399,7 +401,7 @@ export default function ProductDetail() {
           <h2 className="font-display text-2xl font-bold">Productos relacionados</h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
             {related.map((prod) => (
-              <Link key={prod.id} to={`/producto/${prod.slug}`} className="group">
+              <Link key={prod.id} to={`/producto/${encodeURIComponent(prod.slug)}`} className="group">
                 <div className="aspect-square rounded-2xl overflow-hidden bg-muted mb-3 relative">
                   {prod.images?.[0] && (
                     <img

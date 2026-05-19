@@ -56,91 +56,75 @@ function ProductCardComponent({ product, variant = "default" }: ProductCardProps
         variant === "featured" && "lg:col-span-2",
       )}
     >
-      <Link to={productLink} className="block h-full">
-        {/* Image Container */}
-        <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
-          {/* Animated background glow */}
-          <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-            <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10"></div>
-          </div>
-
-          {/* Main Image */}
-          {mainImage && (
-            <img
-              src={mainImage}
-              alt={product.name}
-              loading="lazy"
-              decoding="async"
-              className={cn(
-                "absolute inset-0 w-full h-full object-cover transition-all duration-700",
-                "group-hover:scale-120",
-                hoverImage && "group-hover:opacity-0",
-              )}
-            />
-          )}
-
-          {/* Hover Image */}
-          {hoverImage && (
-            <img
-              src={hoverImage}
-              alt=""
-              aria-hidden
-              loading="lazy"
-              decoding="async"
-              className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-110"
-            />
-          )}
-
-          {/* Top Badges */}
-          <div className="absolute top-3 left-3 right-3 flex items-start justify-between z-10">
-            <div className="flex flex-col gap-2">
-              {discount && (
-                <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold shadow-lifted animate-bounce-in">
-                  -{discount}%
-                </div>
-              )}
-              {product.is_featured && !discount && (
-                <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold shadow-lifted animate-bounce-in">
-                  ⭐ Destacado
-                </div>
-              )}
+      <div className="relative">
+        <Link to={productLink} className="block h-full">
+          {/* Image Container */}
+          <div className="relative aspect-square overflow-hidden bg-gradient-to-br from-slate-100 to-slate-200 dark:from-slate-800 dark:to-slate-700">
+            {/* Animated background glow */}
+            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+              <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10"></div>
             </div>
 
-            {/* Like Button */}
-            <button
-              onClick={(e) => {
-                e.preventDefault();
-                e.stopPropagation();
-                setLiked(!liked);
-              }}
-              className="p-2 rounded-lg backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border border-white/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-300 hover:scale-110"
-            >
-              <Heart
+            {/* Main Image */}
+            {mainImage && (
+              <img
+                src={mainImage}
+                alt={product.name}
+                loading="lazy"
+                decoding="async"
                 className={cn(
-                  "w-5 h-5 transition-colors duration-300",
-                  liked ? "fill-red-500 text-red-500" : "text-slate-400 dark:text-slate-300"
+                  "absolute inset-0 w-full h-full object-cover transition-all duration-700",
+                  "group-hover:scale-120",
+                  hoverImage && "group-hover:opacity-0",
                 )}
               />
-            </button>
-          </div>
+            )}
 
-          {/* Out of Stock Overlay */}
-          {outOfStock && (
-            <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent backdrop-blur-sm flex items-center justify-center z-20">
-              <div className="text-center space-y-2">
-                <p className="text-white font-display font-bold text-xl">Agotado</p>
-                <p className="text-white/80 text-sm">Próximamente disponible</p>
+            {/* Hover Image */}
+            {hoverImage && (
+              <img
+                src={hoverImage}
+                alt=""
+                aria-hidden
+                loading="lazy"
+                decoding="async"
+                className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-110"
+              />
+            )}
+
+            {/* Top Badges */}
+            <div className="absolute top-3 left-3 right-3 flex items-start justify-between z-10">
+              <div className="flex flex-col gap-2">
+                {discount && (
+                  <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold shadow-lifted animate-bounce-in">
+                    -{discount}%
+                  </div>
+                )}
+                {product.is_featured && !discount && (
+                  <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold shadow-lifted animate-bounce-in">
+                    ⭐ Destacado
+                  </div>
+                )}
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Content Section */}
-        <div className="p-4 space-y-3">
-          {/* Product Name */}
-          <h3 className="font-display font-bold text-lg leading-tight text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">
-            {product.name}
-          </h3>
+            {/* Out of Stock Overlay */}
+            {outOfStock && (
+              <div className="absolute inset-0 bg-gradient-to-t from-black/60 via-black/30 to-transparent backdrop-blur-sm flex items-center justify-center z-20">
+                <div className="text-center space-y-2">
+                  <p className="text-white font-display font-bold text-xl">Agotado</p>
+                  <p className="text-white/80 text-sm">Próximamente disponible</p>
+                </div>
+              </div>
+            )}
+          </div>
+
+          {/* Content Section */}
+          <div className="p-4 space-y-3">
+            {/* Product Name */}
+            <h3 className="font-display font-bold text-lg leading-tight text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">
+              {product.name}
+            </h3>
 
         {/* Price Section */}
         <div className="space-y-1.5">
@@ -191,7 +175,24 @@ function ProductCardComponent({ product, variant = "default" }: ProductCardProps
           </div>
         )}
       </div>
-      </Link>
+        </Link>
+
+      <button
+        type="button"
+        onClick={(e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          setLiked(!liked);
+        }}
+        className="absolute top-3 right-3 z-30 p-2 rounded-lg backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border border-white/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-300 hover:scale-110"
+      >
+        <Heart
+          className={cn(
+            "w-5 h-5 transition-colors duration-300",
+            liked ? "fill-red-500 text-red-500" : "text-slate-400 dark:text-slate-300"
+          )}
+        />
+      </button>
 
       {/* Quick Add Button */}
       <div className="absolute bottom-0 left-0 right-0 p-4 translate-y-full group-hover:translate-y-0 transition-transform duration-500 z-30 pointer-events-auto">
@@ -218,6 +219,7 @@ function ProductCardComponent({ product, variant = "default" }: ProductCardProps
         </Button>
       </div>
     </div>
+  </div>
   );
 }
 
