@@ -45,10 +45,19 @@ export class ErrorBoundary extends React.Component<Props, State> {
               <p className="text-muted-foreground">
                 Encontramos un error inesperado. Por favor, intenta de nuevo.
               </p>
-              {process.env.NODE_ENV === "development" && this.state.error && (
+              {this.state.error && (
                 <details className="mt-4 p-3 bg-muted rounded text-left text-xs text-muted-foreground">
-                  <summary className="cursor-pointer font-mono font-semibold">Details</summary>
-                  <pre className="mt-2 overflow-auto">{this.state.error.message}</pre>
+                  <summary className="cursor-pointer font-mono font-semibold">Ver detalles del error</summary>
+                  <div className="mt-2 space-y-2">
+                    <p className="font-semibold">Mensaje:</p>
+                    <pre className="overflow-auto">{this.state.error.message}</pre>
+                    {this.state.error.stack && (
+                      <>
+                        <p className="font-semibold">Stack:</p>
+                        <pre className="overflow-auto">{this.state.error.stack}</pre>
+                      </>
+                    )}
+                  </div>
                 </details>
               )}
             </div>

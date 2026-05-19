@@ -4,7 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { Product } from "@/types";
-import { computeDisplayPrice } from "@/lib/format";
+import { computeDisplayPrice, formatPrice, formatCUP } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
@@ -149,12 +149,12 @@ export default function ProductDetail() {
       return { usd: 0, cup: 0, primary: "USD" as const };
     }
   }, [product, exchangeRate]);
-  const mainImage = images[product?.main_image_index ?? 0];
+  const mainImage = images[Number(product?.main_image_index ?? 0)];
   const discount =
-    product?.compare_price && product.compare_price > product.price
-      ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
+    Number(product?.compare_price ?? 0) > Number(product?.price ?? 0)
+      ? Math.round(((Number(product.compare_price ?? 0) - Number(product.price ?? 0)) / Number(product.compare_price ?? 0)) * 100)
       : null;
-  const outOfStock = (product?.stock ?? 0) <= 0;
+  const outOfStock = Number(product?.stock ?? 0) <= 0;
 
   if (!product) {
     return (
@@ -172,10 +172,14 @@ export default function ProductDetail() {
       id: product.id,
       name: product.name,
       slug: product.slug,
-      price: product.price,
+      price: Number(product.price),
       currency: product.currency,
-      quantity,
+      price_cup: product.price_cup ? Number(product.price_cup) : undefined,
+      extra_cup_per_usd: product.extra_cup_per_usd ? Number(product.extra_cup_per_usd) : undefined,
+      warranty_type: product.warranty_type,
       image: mainImage,
+      quantity,
+      stock: Number(product.stock ?? 0),
     });
     toast.success(`${quantity} ${product.name} agregado al carrito`);
     setQuantity(1);
@@ -246,16 +250,16 @@ export default function ProductDetail() {
           <div className="space-y-2">
             <div className="flex items-baseline gap-3">
               <span className="font-display text-3xl font-bold">
-                {display.primary === "USD" ? `$${display.usd.toFixed(2)}` : `${display.cup.toLocaleString()} CUP`}
+                {display.primary === "USD" ? formatPrice(display.usd) : formatCUP(display.cup)}
               </span>
               {product.compare_price && (
                 <span className="text-lg text-muted-foreground line-through">
-                  ${product.compare_price.toFixed(2)}
+                  {formatPrice(Number(product.compare_price))}
                 </span>
               )}
             </div>
             <p className="text-sm text-muted-foreground">
-              {display.primary === "USD" ? `≈ ${display.cup.toLocaleString()} CUP` : `≈ $${display.usd.toFixed(2)} USD`}
+              {display.primary === "USD" ? `≈ ${formatCUP(display.cup)}` : `≈ ${formatPrice(display.usd)} USD`}
             </p>
           </div>
 
@@ -415,7 +419,7 @@ export default function ProductDetail() {
                   {prod.name}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  ${prod.price?.toFixed(2) || "N/A"}
+                  {prod.price ? formatPrice(Number(prod.price)) : "N/A"}
                 </p>
               </Link>
             ))}

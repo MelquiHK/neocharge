@@ -33,7 +33,12 @@ const Auth = () => {
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
-        if (error) throw error;
+        if (error) {
+          const message = error.message ?? "No se pudo iniciar sesión.";
+          console.error("Login failed:", message);
+          toast.error(message);
+          return;
+        }
         toast.success("¡Bienvenido de nuevo!");
         navigate("/cuenta");
       } else {
@@ -46,7 +51,12 @@ const Auth = () => {
             data: { full_name: name, username: email.split("@")[0] },
           },
         });
-        if (error) throw error;
+        if (error) {
+          const message = error.message ?? "No se pudo crear la cuenta.";
+          console.error("Signup failed:", message);
+          toast.error(message);
+          return;
+        }
         toast.success("¡Cuenta creada! Revisa tu correo para confirmar.");
         setMode("login");
       }
