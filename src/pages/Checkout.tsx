@@ -37,9 +37,17 @@ const Checkout = () => {
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
 
+  interface LocationProductStatus {
+    productId: string;
+    name: string;
+    quantity: number;
+    stock: number;
+    available: boolean;
+  }
+
   const [locations, setLocations] = useState<Loc[]>([]);
   const [pickupLocId, setPickupLocId] = useState<string>("");
-  const [locationProducts, setLocationProducts] = useState<Record<string, string[]>>({});
+  const [locationProducts, setLocationProducts] = useState<Record<string, LocationProductStatus[]>>({});
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
   const [locationFilter, setLocationFilter] = useState<"all" | "electronics" | "chargers" | "both">("all");
@@ -48,7 +56,15 @@ const Checkout = () => {
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
 
-  const filteredLocations = locations.filter((loc) => locationFilter === "all" || loc.location_type === locationFilter);
+  const locationTypeMatchesFilter = (locType: string, filter: typeof locationFilter) => {
+    if (filter === "all") return true;
+    if (filter === "both") return locType === "both";
+    if (filter === "chargers") return locType === "chargers" || locType === "both";
+    if (filter === "electronics") return locType === "electronics" || locType === "both";
+    return false;
+  };
+
+  const filteredLocations = locations.filter((loc) => locationTypeMatchesFilter(loc.location_type, locationFilter));
 
   useEffect(() => {
     document.title = "Finalizar pedido — NeoCharge";
@@ -67,39 +83,18 @@ const Checkout = () => {
 
     const itemIds = items.map((item) => item.id).filter(Boolean) as string[];
 
-    const loadFallbackLocations = async () => {
-      const { data: allLocs, error: locsError } = await supabase
-        .from("store_locations")
-        .select("id,name,address,location_type,map_link,hours")
-        .eq("is_active", true)
-        .order("sort_order");
-
-      if (locsError) {
-        console.error("Error loading store locations fallback:", locsError);
-        return null;
-      }
-
-      return allLocs ?? [];
-    };
-
-    const handleFallback = async () => {
-      const fallbackLocations = await loadFallbackLocations();
-      if (!fallbackLocations) {
-        setLocationError("No pudimos cargar los locales disponibles. Intenta de nuevo.");
-        setLocationLoading(false);
-        return;
-      }
-      setLocations(fallbackLocations);
+    const handleQueryError = () => {
+      setLocations([]);
       setLocationProducts({});
-      if (fallbackLocations.length > 0 && !fallbackLocations.some((loc) => loc.id === pickupLocId)) {
-        setPickupLocId(fallbackLocations[0].id);
-      }
+      setLocationError("No pudimos cargar la disponibilidad de locales. Intenta de nuevo más tarde.");
       setLocationLoading(false);
     };
 
     void (async () => {
       if (itemIds.length === 0) {
-        await handleFallback();
+        setLocations([]);
+        setLocationProducts({});
+        setLocationLoading(false);
         return;
       }
 
@@ -110,41 +105,53 @@ const Checkout = () => {
 
       if (error) {
         console.error("Error loading product locations:", error);
-        await handleFallback();
+        handleQueryError();
         return;
       }
 
       const rows = (data ?? []) as any[];
-      const availableRows = rows.filter((row) => row.stock > 0 && row.store_locations);
-      const map: Record<string, Loc> = {};
-      const productsByLocation: Record<string, string[]> = {};
+      const locationsMap: Record<string, Loc> = {};
+      const productStatusByLocation: Record<string, LocationProductStatus[]> = {};
 
-      availableRows.forEach((row) => {
+      rows.forEach((row) => {
         const loc = row.store_locations;
         if (!loc) return;
         const product = items.find((it) => it.id === row.product_id);
         if (!product) return;
 
-        map[loc.id] = loc;
-        productsByLocation[loc.id] = productsByLocation[loc.id] ?? [];
-        if (!productsByLocation[loc.id].includes(product.name)) {
-          productsByLocation[loc.id].push(product.name);
-        }
+        locationsMap[loc.id] = loc;
+        productStatusByLocation[loc.id] = productStatusByLocation[loc.id] ?? [];
+        productStatusByLocation[loc.id].push({
+          productId: row.product_id,
+          name: product.name,
+          quantity: product.quantity,
+          stock: Number(row.stock ?? 0),
+          available: Number(row.stock ?? 0) >= product.quantity,
+        });
       });
 
-      const available = Object.values(map);
+      const validLocations = Object.entries(productStatusByLocation)
+        .filter(([, statuses]) => {
+          const hasAllItems = statuses.length === itemIds.length;
+          const hasEnoughStock = statuses.every((status) => status.available);
+          return hasAllItems && hasEnoughStock;
+        })
+        .map(([locId]) => locationsMap[locId]);
 
-      if (available.length > 0) {
-        setLocations(available);
-        setLocationProducts(productsByLocation);
-        if (!available.some((loc) => loc.id === pickupLocId)) {
-          setPickupLocId(available[0].id);
+      if (validLocations.length > 0) {
+        setLocations(validLocations);
+        setLocationProducts(productStatusByLocation);
+        if (!validLocations.some((loc) => loc.id === pickupLocId)) {
+          setPickupLocId(validLocations[0].id);
         }
         setLocationLoading(false);
         return;
       }
 
-      await handleFallback();
+      setLocations([]);
+      setLocationProducts({});
+      setLocationError("No hay locales con stock suficiente para los productos del carrito.");
+      setLocationLoading(false);
     })();
   }, [items, pickupLocId]);
 
@@ -437,34 +444,49 @@ const Checkout = () => {
                       </div>
                     ) : (
                       <div className="grid gap-2">
-                        {filteredLocations.map((loc) => (
-                          <button
-                            type="button"
-                            key={loc.id}
-                            onClick={() => setPickupLocId(loc.id)}
-                            className={cn(
-                              "p-3 rounded-xl border-2 text-left transition-all",
-                              pickupLocId === loc.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30",
-                            )}
-                          >
-                            <div className="flex items-start gap-2">
-                              <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                              <div className="flex-1">
-                                <p className="font-semibold text-sm">{loc.name}</p>
-                                <p className="text-xs text-muted-foreground">{loc.address}</p>
-                                {loc.hours && <p className="text-xs text-muted-foreground mt-1">🕐 {loc.hours}</p>}
-                                {locationProducts[loc.id] ? (
-                                  <p className="text-xs text-muted-foreground mt-2">
-                                    Productos en este local: {locationProducts[loc.id].slice(0, 3).join(", ")}
-                                    {locationProducts[loc.id].length > 3 ? `, y ${locationProducts[loc.id].length - 3} más` : ""}
-                                  </p>
-                                ) : (
-                                  <p className="text-xs text-muted-foreground mt-2">No hay información de stock detallada para este local.</p>
-                                )}
+                        {filteredLocations.map((loc) => {
+                          const products = locationProducts[loc.id] ?? [];
+                          const insufficient = products.some((item) => !item.available);
+                          return (
+                            <button
+                              type="button"
+                              key={loc.id}
+                              onClick={() => !insufficient && setPickupLocId(loc.id)}
+                              className={cn(
+                                "p-3 rounded-xl border-2 text-left transition-all",
+                                pickupLocId === loc.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30",
+                                insufficient && "opacity-80 cursor-not-allowed",
+                              )}
+                              disabled={insufficient}
+                            >
+                              <div className="flex items-start gap-2">
+                                <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                                <div className="flex-1">
+                                  <p className="font-semibold text-sm">{loc.name}</p>
+                                  <p className="text-xs text-muted-foreground">{loc.address}</p>
+                                  {loc.hours && <p className="text-xs text-muted-foreground mt-1">🕐 {loc.hours}</p>}
+                                  {products.length > 0 ? (
+                                    <div className="mt-3 space-y-2">
+                                      {products.map((product) => (
+                                        <div key={product.productId} className="rounded-2xl bg-slate-50 border border-slate-200 p-3 text-xs">
+                                          <p className="font-medium">{product.name}</p>
+                                          <p>
+                                            Solicitado: <span className="font-semibold">{product.quantity}</span> · Disponible: <span className="font-semibold">{product.stock}</span>
+                                          </p>
+                                          {!product.available && (
+                                            <p className="text-destructive">Stock insuficiente en este local</p>
+                                          )}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <p className="text-xs text-muted-foreground mt-2">No hay información de stock detallada para este local.</p>
+                                  )}
+                                </div>
                               </div>
-                            </div>
-                          </button>
-                        ))}
+                            </button>
+                          );
+                        })}
                       </div>
                     )}
                   </>
