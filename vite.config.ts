@@ -49,7 +49,8 @@ export default defineConfig(({ mode }) => ({
       },
       // Esto genera el Service Worker automáticamente en el build
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        cleanupOutdatedCaches: true,
       }
     })
   ].filter(Boolean),
