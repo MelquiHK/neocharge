@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -7,52 +6,45 @@ import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
-  AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
+  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter,
+  AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 import { Plus, Pencil, Trash2, MapPin, Navigation } from "lucide-react";
 import { toast } from "sonner";
+import { useAdminLocations, StoreLocationInput } from "@/hooks/admin/use-admin-locations";
 
-interface Loc {
-  id?: string;
-  name: string;
-  address: string;
-  phone?: string | null;
-  location_type: string;
-  latitude?: number | null;
-  longitude?: number | null;
-  map_link?: string | null;
-  hours?: string | null;
-  notes?: string | null;
-  is_active: boolean;
-  sort_order: number;
-}
-
-const empty: Loc = {
-  name: "", address: "", phone: "", location_type: "both", latitude: null, longitude: null,
-  map_link: "", hours: "", notes: "", is_active: true, sort_order: 0,
+const emptyLocation: StoreLocationInput = {
+  name: "",
+  address: "",
+  phone: null,
+  location_type: "both",
+  latitude: null,
+  longitude: null,
+  map_link: null,
+  hours: null,
+  notes: null,
+  is_active: true,
+  sort_order: 0,
 };
 
 export function AdminLocations() {
-  const [locs, setLocs] = useState<Loc[]>([]);
-  const [editing, setEditing] = useState<Loc | null>(null);
+  const { locations, loading, refresh, saveLocation, deleteLocation } = useAdminLocations();
+  const [editing, setEditing] = useState<StoreLocationInput | null>(null);
   const [open, setOpen] = useState(false);
-
-  const load = async () => {
-    const { data } = await supabase.from("store_locations").select("*").order("sort_order");
-    setLocs((data ?? []) as any);
-  };
-
-  useEffect(() => { load(); }, []);
 
   const captureCurrentLocation = () => {
     if (!navigator.geolocation || !editing) return;
     navigator.geolocation.getCurrentPosition(
       (pos) => {
-        setEditing({ ...editing, latitude: pos.coords.latitude, longitude: pos.coords.longitude, map_link: `https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}` });
+        setEditing({
+          ...editing,
+          latitude: pos.coords.latitude,
+          longitude: pos.coords.longitude,
+          map_link: `https://www.google.com/maps/search/?api=1&query=${pos.coords.latitude},${pos.coords.longitude}`,
+        });
         toast.success("Ubicación del local capturada");
       },
       () => toast.error("No se pudo obtener la ubicación"),
@@ -64,37 +56,25 @@ export function AdminLocations() {
       toast.error("Nombre y dirección son obligatorios");
       return;
     }
-    const payload = {
+
+    await saveLocation({
+      ...editing,
       name: editing.name.trim(),
       address: editing.address.trim(),
       phone: editing.phone?.trim() || null,
-      location_type: editing.location_type as any,
-      latitude: editing.latitude,
-      longitude: editing.longitude,
       map_link: editing.map_link?.trim() || null,
       hours: editing.hours?.trim() || null,
       notes: editing.notes?.trim() || null,
-      is_active: editing.is_active,
-      sort_order: editing.sort_order,
-    };
-
-    if (editing.id) {
-      const { error } = await supabase.from("store_locations").update(payload).eq("id", editing.id);
-      if (error) { toast.error(error.message); return; }
-    } else {
-      const { error } = await supabase.from("store_locations").insert(payload);
-      if (error) { toast.error(error.message); return; }
-    }
-    toast.success("Local guardado");
+      location_type: editing.location_type || "both",
+    });
     setOpen(false);
-    load();
+    refresh();
   };
 
-  const remove = async (id: string) => {
-    const { error } = await supabase.from("store_locations").delete().eq("id", id);
-    if (error) { toast.error(error.message); return; }
-    toast.success("Local eliminado");
-    load();
+  const remove = async (id?: string) => {
+    if (!id) return;
+    await deleteLocation(id);
+    refresh();
   };
 
   const typeLabel = (t: string) => ({ electronics: "Electrónica", chargers: "Cargadores", both: "Mixto" }[t] ?? t);
@@ -102,14 +82,14 @@ export function AdminLocations() {
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{locs.length} locales registrados</p>
-        <Button variant="hero" onClick={() => { setEditing({ ...empty, sort_order: locs.length }); setOpen(true); }}>
+        <p className="text-sm text-muted-foreground">{locations.length} locales registrados</p>
+        <Button variant="hero" onClick={() => { setEditing({ ...emptyLocation, sort_order: locations.length }); setOpen(true); }}>
           <Plus className="w-4 h-4" /> Nuevo local
         </Button>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4">
-        {locs.map((l) => (
+        {locations.map((l) => (
           <div key={l.id} className="card-elevated p-5 space-y-3">
             <div className="flex items-start justify-between gap-2">
               <div>
@@ -125,11 +105,11 @@ export function AdminLocations() {
                   <AlertDialogContent>
                     <AlertDialogHeader>
                       <AlertDialogTitle>¿Eliminar local?</AlertDialogTitle>
-                      <AlertDialogDescription>Se eliminará "{l.name}".</AlertDialogDescription>
+                      <p className="text-sm text-muted-foreground">Se eliminará "{l.name}".</p>
                     </AlertDialogHeader>
                     <AlertDialogFooter>
                       <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => l.id && remove(l.id)} className="bg-destructive">Eliminar</AlertDialogAction>
+                      <AlertDialogAction onClick={() => remove(l.id)} className="bg-destructive">Eliminar</AlertDialogAction>
                     </AlertDialogFooter>
                   </AlertDialogContent>
                 </AlertDialog>
@@ -143,7 +123,7 @@ export function AdminLocations() {
             </div>
           </div>
         ))}
-        {locs.length === 0 && (
+        {locations.length === 0 && (
           <div className="md:col-span-2 card-elevated p-10 text-center text-muted-foreground">
             No hay locales todavía. Crea el primero con "Nuevo local".
           </div>
@@ -154,7 +134,6 @@ export function AdminLocations() {
         <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing?.id ? "Editar local" : "Nuevo local"}</DialogTitle>
-            <DialogDescription>Información del punto de venta.</DialogDescription>
           </DialogHeader>
           {editing && (
             <div className="space-y-4">

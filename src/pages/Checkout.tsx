@@ -8,6 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useCart } from "@/contexts/CartContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
@@ -27,6 +28,7 @@ const Checkout = () => {
   const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP } = useCart();
   const { user } = useAuth();
   const { rate } = useExchangeRate();
+  const { settings } = useSiteSettings();
   const [submitting, setSubmitting] = useState(false);
 
   const [name, setName] = useState("");
@@ -379,6 +381,9 @@ const Checkout = () => {
 
             {delivery === "pickup" && (
               <div className="space-y-2 animate-fade-in">
+                {settings?.locations_intro && (
+                  <p className="text-sm text-muted-foreground">{settings.locations_intro}</p>
+                )}
                 <Label>Elige el local *</Label>
                 {locationLoading ? (
                   <p className="text-sm text-muted-foreground">Cargando locales disponibles...</p>

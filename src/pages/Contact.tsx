@@ -7,9 +7,11 @@ import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 import { useSEO } from "@/hooks/use-seo";
+import { useSiteSettings } from "@/hooks/use-site-settings";
 
 const Contact = () => {
   useSEO("contact");
+  const { settings } = useSiteSettings();
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
   const [message, setMessage] = useState("");
@@ -38,11 +40,11 @@ const Contact = () => {
       <div className="grid lg:grid-cols-[1fr_1.2fr] gap-10">
         <div className="space-y-4">
           {[
-            { icon: MessageCircle, title: "WhatsApp", value: "+53 6318-0910", href: "https://wa.me/5363180910", accent: true },
-            { icon: Phone, title: "Teléfono", value: "+53 6318-0910", href: "tel:+5363180910" },
-            { icon: Mail, title: "Correo", value: "habanasound90@gmail.com", href: "mailto:habanasound90@gmail.com" },
-            { icon: MapPin, title: "Local", value: "D entre 21 y 23, Vedado, La Habana" },
-            { icon: Clock, title: "Horario", value: "Atención 24 horas, todos los días" },
+            { icon: MessageCircle, title: "WhatsApp", value: settings.support_phone ?? "+53 6318-0910", href: settings.whatsapp_url ?? "https://wa.me/5363180910", accent: true },
+            { icon: Phone, title: "Teléfono", value: settings.support_phone ?? "+53 6318-0910", href: `tel:${settings.support_phone?.replace(/\s+/g, "") ?? "+5363180910"}` },
+            { icon: Mail, title: "Correo", value: settings.support_email ?? "habanasound90@gmail.com", href: `mailto:${settings.support_email ?? "habanasound90@gmail.com"}` },
+            { icon: MapPin, title: "Local", value: settings.support_address ?? "D entre 21 y 23, Vedado, La Habana" },
+            { icon: Clock, title: "Horario", value: settings.support_hours ?? "Atención 24 horas, todos los días" },
           ].map((c, i) => (
             <a
               key={i}

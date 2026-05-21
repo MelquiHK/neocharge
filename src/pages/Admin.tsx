@@ -2,7 +2,7 @@ import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { LayoutDashboard, Package, FolderTree, MapPin, ShoppingBag, Users, TrendingUp, BookOpen } from "lucide-react";
+import { LayoutDashboard, Package, FolderTree, MapPin, ShoppingBag, Users, TrendingUp, BookOpen, Settings } from "lucide-react";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminCategories } from "@/components/admin/AdminCategories";
@@ -11,6 +11,7 @@ import { AdminOrders } from "@/components/admin/AdminOrders";
 import { AdminCustomers } from "@/components/admin/AdminCustomers";
 import { AdminRates } from "@/components/admin/AdminRates";
 import { AdminBlog } from "@/components/admin/AdminBlog";
+import { AdminSettings } from "@/components/admin/AdminSettings";
 
 const Admin = () => {
   const { user, isAdmin, permissions, loading } = useAuth();
@@ -35,6 +36,7 @@ const Admin = () => {
     { v: "locations", l: "Locales", icon: MapPin, show: isOwner || permissions.can_manage_locations },
     { v: "customers", l: "Clientes", icon: Users, show: isOwner || permissions.can_manage_customers },
     { v: "rates", l: "Tasa USD", icon: TrendingUp, show: isOwner || permissions.can_manage_rates },
+    { v: "settings", l: "Configuración", icon: Settings, show: isOwner || !!Object.values(permissions).some(Boolean) },
     { v: "blog", l: "Blog", icon: BookOpen, show: isOwner || permissions.can_manage_blog },
   ].filter((t) => t.show);
 
@@ -63,6 +65,7 @@ const Admin = () => {
         <TabsContent value="locations" className="mt-6"><AdminLocations /></TabsContent>
         <TabsContent value="customers" className="mt-6"><AdminCustomers /></TabsContent>
         <TabsContent value="rates" className="mt-6"><AdminRates /></TabsContent>
+        <TabsContent value="settings" className="mt-6"><AdminSettings /></TabsContent>
         <TabsContent value="blog" className="mt-6"><AdminBlog /></TabsContent>
       </Tabs>
     </div>

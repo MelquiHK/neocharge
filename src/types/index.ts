@@ -15,6 +15,27 @@ export type BlogPost = Tables<"blog_posts">;
 export type BlogCategory = Tables<"blog_categories">;
 export type ExchangeRate = Tables<"exchange_rates">;
 
+export interface SiteSettings {
+  id?: string;
+  setting_key: string;
+  warranty_intro?: string | null;
+  warranty_chargers_title?: string | null;
+  warranty_chargers_text?: string | null;
+  warranty_electronics_title?: string | null;
+  warranty_electronics_text?: string | null;
+  warranty_important_title?: string | null;
+  warranty_important_text?: string | null;
+  warranty_support_title?: string | null;
+  warranty_support_text?: string | null;
+  whatsapp_url?: string | null;
+  contact_url?: string | null;
+  support_phone?: string | null;
+  support_email?: string | null;
+  support_address?: string | null;
+  support_hours?: string | null;
+  locations_intro?: string | null;
+}
+
 export type OrderStatus = Enums<"order_status">;
 
 export interface AdminPermissions {
