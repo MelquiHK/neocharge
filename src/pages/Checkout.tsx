@@ -106,7 +106,7 @@ const Checkout = () => {
           return;
         }
 
-        if (rows.length === 0) {
+        if (available.length === 0) {
           const { data: allLocs, error: locsError } = await supabase
             .from("store_locations")
             .select("id,name,address,location_type,map_link,hours")

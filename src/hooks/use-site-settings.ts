@@ -38,6 +38,12 @@ export function useSiteSettings() {
         if (error) throw error;
         setSettings({ ...DEFAULT_SETTINGS, ...(data ?? {}) });
       } catch {
+        // If the DB schema is missing the `setting_key` column (migration not applied),
+        // fall back to default settings so the site keeps working, and log for debugging.
+        // Admin UI will show a clearer toast when trying to save.
+        // Example error message: "column site_settings.setting_key does not exist"
+        // We intentionally do not surface the DB error here to end users.
+        console.warn("useSiteSettings: falling back to DEFAULT_SETTINGS (site_settings may not exist or migration not applied)");
         setSettings(DEFAULT_SETTINGS);
       } finally {
         setLoading(false);
