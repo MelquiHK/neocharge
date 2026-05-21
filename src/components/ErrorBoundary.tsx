@@ -27,11 +27,16 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   private handleReset = () => {
     this.setState({ hasError: false, error: null });
-    window.location.href = "/";
+    window.location.reload();
   };
+
+  private isChunkLoadError(error: Error) {
+    return /failed to fetch dynamically imported module|loading chunk|chunk failed|ChunkLoadError/i.test(error.message);
+  }
 
   public render() {
     if (this.state.hasError) {
+      const isChunkError = this.state.error ? this.isChunkLoadError(this.state.error) : false;
       return (
         <div className="min-h-screen flex items-center justify-center bg-background">
           <div className="container-page max-w-md text-center space-y-6">
@@ -43,8 +48,15 @@ export class ErrorBoundary extends React.Component<Props, State> {
             <div className="space-y-2">
               <h1 className="font-display text-2xl font-bold">Algo salió mal</h1>
               <p className="text-muted-foreground">
-                Encontramos un error inesperado. Por favor, intenta de nuevo.
+                {isChunkError
+                  ? "Se detectó una versión antigua en caché. Recarga la página para obtener la última versión del sitio."
+                  : "Encontramos un error inesperado. Por favor, intenta de nuevo."}
               </p>
+              {isChunkError && (
+                <p className="text-sm text-muted-foreground">
+                  Si el problema persiste, intenta una recarga completa del navegador (Ctrl+F5 / Cmd+Shift+R).
+                </p>
+              )}
               {this.state.error && (
                 <details className="mt-4 p-3 bg-muted rounded text-left text-xs text-muted-foreground">
                   <summary className="cursor-pointer font-mono font-semibold">Ver detalles del error</summary>

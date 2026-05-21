@@ -1,7 +1,7 @@
 -- =========================================
--- 7. SITE_SETTINGS (Contenido editable desde Admin)
+-- 7. SITE_CONTENT_SETTINGS (Contenido editable desde Admin)
 -- =========================================
-CREATE TABLE public.site_settings (
+CREATE TABLE IF NOT EXISTS public.site_content_settings (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
   setting_key text NOT NULL UNIQUE DEFAULT 'default',
   warranty_intro text,
@@ -24,20 +24,21 @@ CREATE TABLE public.site_settings (
   updated_at timestamptz NOT NULL DEFAULT now()
 );
 
-ALTER TABLE public.site_settings ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.site_content_settings ENABLE ROW LEVEL SECURITY;
 
 CREATE POLICY "Site settings viewable by everyone"
-  ON public.site_settings FOR SELECT USING (true);
+  ON public.site_content_settings FOR SELECT USING (true);
 CREATE POLICY "Admins manage site settings"
-  ON public.site_settings FOR ALL
+  ON public.site_content_settings FOR ALL
   USING (public.has_role(auth.uid(), 'admin'))
   WITH CHECK (public.has_role(auth.uid(), 'admin'));
 
-CREATE TRIGGER update_site_settings_updated_at
-  BEFORE UPDATE ON public.site_settings
+DROP TRIGGER IF EXISTS update_site_content_settings_updated_at ON public.site_content_settings;
+CREATE TRIGGER update_site_content_settings_updated_at
+  BEFORE UPDATE ON public.site_content_settings
   FOR EACH ROW EXECUTE FUNCTION public.update_updated_at_column();
 
-INSERT INTO public.site_settings (
+INSERT INTO public.site_content_settings (
   setting_key,
   warranty_intro,
   warranty_chargers_title,

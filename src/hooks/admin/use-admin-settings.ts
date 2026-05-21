@@ -31,7 +31,7 @@ export function useAdminSettings() {
     setLoading(true);
     try {
       const { data, error } = await supabase
-        .from("site_settings")
+        .from("site_content_settings")
         .select("*")
         .eq("setting_key", "default")
         .maybeSingle();
@@ -40,7 +40,7 @@ export function useAdminSettings() {
     } catch (error: any) {
       // If migration wasn't applied and the column/table is missing, show a clearer message
       if (error && typeof error.message === "string" && error.message.includes("setting_key")) {
-        toast.error("No se pudo cargar la configuración del sitio: falta la columna site_settings.setting_key. Ejecuta la migración SQL 'supabase/migrations/20260521000100_12d3a4b5_add_site_settings.sql'.");
+        toast.error("No se pudo cargar la configuración del sitio: falta la columna site_content_settings.setting_key. Ejecuta la migración SQL 'supabase/migrations/20260521000100_12d3a4b5_add_site_settings.sql'.");
       } else {
         toast.error("No se pudo cargar la configuración del sitio: " + (error?.message ?? String(error)));
       }
@@ -57,7 +57,7 @@ export function useAdminSettings() {
     try {
       const payload = { ...newSettings, setting_key: "default" };
       const { error } = await supabase
-        .from("site_settings")
+        .from("site_content_settings")
         .upsert(payload, { onConflict: "setting_key" });
       if (error) throw error;
       toast.success("Configuración guardada");
@@ -65,7 +65,7 @@ export function useAdminSettings() {
       return true;
     } catch (error: any) {
       if (error && typeof error.message === "string" && error.message.includes("setting_key")) {
-        toast.error("Error al guardar: falta la columna site_settings.setting_key. Ejecuta la migración SQL en 'supabase/migrations/20260521000100_12d3a4b5_add_site_settings.sql'.");
+        toast.error("Error al guardar: falta la columna site_content_settings.setting_key. Ejecuta la migración SQL en 'supabase/migrations/20260521000100_12d3a4b5_add_site_settings.sql'.");
       } else {
         toast.error("Error al guardar configuración: " + (error?.message ?? String(error)));
       }
