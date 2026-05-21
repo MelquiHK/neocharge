@@ -19,9 +19,6 @@ const LegalPrivacy = () => {
       <header className="space-y-3">
         <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">Legales</span>
         <h1 className="font-display text-5xl font-bold">Política de privacidad</h1>
-        <p className="text-muted-foreground">
-          Este texto es un borrador. Puedes personalizarlo según tus prácticas reales.
-        </p>
       </header>
 
       <div className="prose prose-neutral dark:prose-invert">
@@ -42,7 +39,7 @@ const LegalPrivacy = () => {
 
         <h2>Contacto</h2>
         <p>
-          Si quieres modificar o eliminar tu información, contáctanos.
+          Si quieres modificar o eliminar tu información, contáctanos sin ningun tipo de problema.
         </p>
       </div>
     </div>
