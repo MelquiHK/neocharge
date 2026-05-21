@@ -42,10 +42,13 @@ const Checkout = () => {
   const [locationProducts, setLocationProducts] = useState<Record<string, string[]>>({});
   const [locationLoading, setLocationLoading] = useState(false);
   const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationFilter, setLocationFilter] = useState<"all" | "electronics" | "chargers" | "both">("all");
 
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+
+  const filteredLocations = locations.filter((loc) => locationFilter === "all" || loc.location_type === locationFilter);
 
   useEffect(() => {
     document.title = "Finalizar pedido — NeoCharge";
@@ -62,83 +65,87 @@ const Checkout = () => {
     setLocationLoading(true);
     setLocationError(null);
 
-    const itemIds = items.map((item) => item.id);
+    const itemIds = items.map((item) => item.id).filter(Boolean) as string[];
 
-    supabase
-      .from("product_locations")
-      .select("product_id,stock,store_locations(id,name,address,location_type,map_link,hours)")
-      .in("product_id", itemIds)
-      .then(async ({ data, error }) => {
-        if (error) {
-          console.error("Error loading product locations:", error);
-          setLocationError("No pudimos cargar los locales disponibles. Intenta de nuevo.");
-          setLocationLoading(false);
-          return;
-        }
+    const loadFallbackLocations = async () => {
+      const { data: allLocs, error: locsError } = await supabase
+        .from("store_locations")
+        .select("id,name,address,location_type,map_link,hours")
+        .eq("is_active", true)
+        .order("sort_order");
 
-        const rows = (data ?? []) as any[];
-        const availableRows = rows.filter((row) => row.stock > 0 && row.store_locations);
-        const map: Record<string, Loc> = {};
-        const productsByLocation: Record<string, string[]> = {};
+      if (locsError) {
+        console.error("Error loading store locations fallback:", locsError);
+        return null;
+      }
 
-        availableRows.forEach((row) => {
-          const loc = row.store_locations;
-          if (!loc) return;
-          const product = items.find((it) => it.id === row.product_id);
-          if (!product) return;
+      return allLocs ?? [];
+    };
 
-          map[loc.id] = loc;
-          productsByLocation[loc.id] = productsByLocation[loc.id] ?? [];
-          if (!productsByLocation[loc.id].includes(product.name)) {
-            productsByLocation[loc.id].push(product.name);
-          }
-        });
-
-        const available = Object.values(map);
-
-        if (available.length > 0) {
-          setLocations(available);
-          setLocationProducts(productsByLocation);
-          if (!available.some((loc) => loc.id === pickupLocId)) {
-            setPickupLocId(available[0].id);
-          }
-          setLocationLoading(false);
-          return;
-        }
-
-        if (available.length === 0) {
-          const { data: allLocs, error: locsError } = await supabase
-            .from("store_locations")
-            .select("id,name,address,location_type,map_link,hours")
-            .eq("is_active", true)
-            .order("sort_order");
-
-          if (locsError) {
-            console.error("Error loading store locations fallback:", locsError);
-            setLocationError("No pudimos cargar los locales disponibles. Intenta de nuevo.");
-            setLocationLoading(false);
-            return;
-          }
-
-          const fallbackLocations = allLocs ?? [];
-          setLocations(fallbackLocations);
-          setLocationProducts({});
-          if (fallbackLocations.length > 0 && !fallbackLocations.some((loc) => loc.id === pickupLocId)) {
-            setPickupLocId(fallbackLocations[0].id);
-          }
-          setLocationLoading(false);
-          return;
-        }
-
-        setLocations([]);
-        setLocationProducts({});
+    const handleFallback = async () => {
+      const fallbackLocations = await loadFallbackLocations();
+      if (!fallbackLocations) {
+        setLocationError("No pudimos cargar los locales disponibles. Intenta de nuevo.");
         setLocationLoading(false);
-      })
-      .catch((err) => {
-        console.error("Checkout product locations error:", err);
-        setLocationError("Error conectando con el servidor.");
-        setLocationLoading(false);
+        return;
+      }
+      setLocations(fallbackLocations);
+      setLocationProducts({});
+      if (fallbackLocations.length > 0 && !fallbackLocations.some((loc) => loc.id === pickupLocId)) {
+        setPickupLocId(fallbackLocations[0].id);
+      }
+      setLocationLoading(false);
+    };
+
+    void (async () => {
+      if (itemIds.length === 0) {
+        await handleFallback();
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("product_locations")
+        .select("product_id,stock,store_locations(id,name,address,location_type,map_link,hours)")
+        .in("product_id", itemIds);
+
+      if (error) {
+        console.error("Error loading product locations:", error);
+        await handleFallback();
+        return;
+      }
+
+      const rows = (data ?? []) as any[];
+      const availableRows = rows.filter((row) => row.stock > 0 && row.store_locations);
+      const map: Record<string, Loc> = {};
+      const productsByLocation: Record<string, string[]> = {};
+
+      availableRows.forEach((row) => {
+        const loc = row.store_locations;
+        if (!loc) return;
+        const product = items.find((it) => it.id === row.product_id);
+        if (!product) return;
+
+        map[loc.id] = loc;
+        productsByLocation[loc.id] = productsByLocation[loc.id] ?? [];
+        if (!productsByLocation[loc.id].includes(product.name)) {
+          productsByLocation[loc.id].push(product.name);
+        }
       });
+
+      const available = Object.values(map);
+
+      if (available.length > 0) {
+        setLocations(available);
+        setLocationProducts(productsByLocation);
+        if (!available.some((loc) => loc.id === pickupLocId)) {
+          setPickupLocId(available[0].id);
+        }
+        setLocationLoading(false);
+        return;
+      }
+
+      await handleFallback();
+    })();
   }, [items, pickupLocId]);
 
   useEffect(() => {
@@ -397,37 +404,69 @@ const Checkout = () => {
                   <>
                     {locations.length > 1 && (
                       <div className="rounded-2xl bg-blue-50 border border-blue-200 p-4 text-sm text-blue-900">
-                        Tu pedido incluye productos disponibles en varios locales. Elige uno para coordinar la retirada y le avisaremos al dueño para ver qué se puede hacer.
+                        Tu pedido incluye productos disponibles en varios locales. Usa el filtro para ver sólo locales de cargadores, electrónica o mixtos.
                       </div>
                     )}
-                    <div className="grid gap-2">
-                      {locations.map((loc) => (
-                        <button
-                          type="button"
-                          key={loc.id}
-                          onClick={() => setPickupLocId(loc.id)}
-                          className={cn(
-                            "p-3 rounded-xl border-2 text-left transition-all",
-                            pickupLocId === loc.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30",
-                          )}
-                        >
-                          <div className="flex items-start gap-2">
-                            <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                            <div className="flex-1">
-                              <p className="font-semibold text-sm">{loc.name}</p>
-                              <p className="text-xs text-muted-foreground">{loc.address}</p>
-                              {loc.hours && <p className="text-xs text-muted-foreground mt-1">🕐 {loc.hours}</p>}
-                              {locationProducts[loc.id] && (
-                                <p className="text-xs text-muted-foreground mt-2">
-                                  Productos en este local: {locationProducts[loc.id].slice(0, 3).join(", ")}
-                                  {locationProducts[loc.id].length > 3 ? `, y ${locationProducts[loc.id].length - 3} más` : ""}
-                                </p>
-                              )}
+                    {locations.length > 1 && (
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { value: "all", label: "Todos" },
+                          { value: "electronics", label: "Electrónica" },
+                          { value: "chargers", label: "Cargadores" },
+                          { value: "both", label: "Mixto" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setLocationFilter(option.value as typeof locationFilter)}
+                            className={cn(
+                              "rounded-full px-3 py-2 text-xs font-semibold transition-all",
+                              locationFilter === option.value
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            )}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {filteredLocations.length === 0 ? (
+                      <div className="rounded-2xl bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-900">
+                        No hay locales que coincidan con el filtro seleccionado. Cambia el filtro para ver más opciones.
+                      </div>
+                    ) : (
+                      <div className="grid gap-2">
+                        {filteredLocations.map((loc) => (
+                          <button
+                            type="button"
+                            key={loc.id}
+                            onClick={() => setPickupLocId(loc.id)}
+                            className={cn(
+                              "p-3 rounded-xl border-2 text-left transition-all",
+                              pickupLocId === loc.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30",
+                            )}
+                          >
+                            <div className="flex items-start gap-2">
+                              <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                              <div className="flex-1">
+                                <p className="font-semibold text-sm">{loc.name}</p>
+                                <p className="text-xs text-muted-foreground">{loc.address}</p>
+                                {loc.hours && <p className="text-xs text-muted-foreground mt-1">🕐 {loc.hours}</p>}
+                                {locationProducts[loc.id] ? (
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    Productos en este local: {locationProducts[loc.id].slice(0, 3).join(", ")}
+                                    {locationProducts[loc.id].length > 3 ? `, y ${locationProducts[loc.id].length - 3} más` : ""}
+                                  </p>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground mt-2">No hay información de stock detallada para este local.</p>
+                                )}
+                              </div>
                             </div>
-                          </div>
-                        </button>
-                      ))}
-                    </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </>
                 )}
               </div>
