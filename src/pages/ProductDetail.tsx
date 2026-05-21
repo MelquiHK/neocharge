@@ -109,6 +109,24 @@ export default function ProductDetail() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   }, [slug]);
 
+  const images = Array.isArray(product?.images) ? product.images : [];
+  const display = useMemo(() => {
+    if (!product) {
+      return { usd: 0, cup: 0, primary: "USD" as const };
+    }
+    try {
+      return computeDisplayPrice(product, exchangeRate);
+    } catch (formatError) {
+      console.error("ComputeDisplayPrice error:", formatError);
+      return { usd: 0, cup: 0, primary: "USD" as const };
+    }
+  }, [product, exchangeRate]);
+  const mainImage = images[Number(product?.main_image_index ?? 0)];
+  const discount =
+    Number(product?.compare_price ?? 0) > Number(product?.price ?? 0)
+      ? Math.round(((Number(product.compare_price ?? 0) - Number(product.price ?? 0)) / Number(product.compare_price ?? 0)) * 100)
+      : null;
+  const outOfStock = Number(product?.stock ?? 0) <= 0;
 
   if (loading) {
     return (
@@ -136,25 +154,6 @@ export default function ProductDetail() {
       </div>
     );
   }
-
-  const images = Array.isArray(product?.images) ? product.images : [];
-  const display = useMemo(() => {
-    if (!product) {
-      return { usd: 0, cup: 0, primary: "USD" as const };
-    }
-    try {
-      return computeDisplayPrice(product, exchangeRate);
-    } catch (formatError) {
-      console.error("ComputeDisplayPrice error:", formatError);
-      return { usd: 0, cup: 0, primary: "USD" as const };
-    }
-  }, [product, exchangeRate]);
-  const mainImage = images[Number(product?.main_image_index ?? 0)];
-  const discount =
-    Number(product?.compare_price ?? 0) > Number(product?.price ?? 0)
-      ? Math.round(((Number(product.compare_price ?? 0) - Number(product.price ?? 0)) / Number(product.compare_price ?? 0)) * 100)
-      : null;
-  const outOfStock = Number(product?.stock ?? 0) <= 0;
 
   if (!product) {
     return (
