@@ -2,11 +2,10 @@
   "framework": "vite",
   "regions": ["iad1"],
   "buildCommand": "npm run build",
-  "outputDirectory": "dist"
-,
+  "outputDirectory": "dist",
   "rewrites": [
     {
-      "source": "/(.*)",
+      "source": "/((?!assets/|favicon\.ico|robots\.txt|manifest\.webmanifest|registerSW\.js|sw\.js).*)",
       "destination": "/index.html"
     }
   ]
