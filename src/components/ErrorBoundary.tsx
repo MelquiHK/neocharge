@@ -9,12 +9,13 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  reloadAttempted: boolean;
 }
 
 export class ErrorBoundary extends React.Component<Props, State> {
   public constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, reloadAttempted: false };
   }
 
   public static getDerivedStateFromError(error: Error): State {
@@ -23,15 +24,35 @@ export class ErrorBoundary extends React.Component<Props, State> {
 
   public componentDidCatch(error: Error) {
     console.error("ErrorBoundary caught:", error);
+    if (this.isChunkLoadError(error) && !this.state.reloadAttempted) {
+      this.setState({ reloadAttempted: true });
+      this.clearOldServiceWorkerCacheAndReload();
+    }
   }
 
   private handleReset = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, reloadAttempted: false });
     window.location.reload();
   };
 
   private isChunkLoadError(error: Error) {
     return /failed to fetch dynamically imported module|loading chunk|chunk failed|ChunkLoadError/i.test(error.message);
+  }
+
+  private async clearOldServiceWorkerCacheAndReload() {
+    try {
+      if ('serviceWorker' in navigator) {
+        const registrations = await navigator.serviceWorker.getRegistrations();
+        await Promise.all(registrations.map((reg) => reg.unregister()));
+      }
+      if ('caches' in window) {
+        const cacheKeys = await caches.keys();
+        await Promise.all(cacheKeys.map((key) => caches.delete(key)));
+      }
+    } catch (cleanupError) {
+      console.warn('Error clearing service worker caches:', cleanupError);
+    }
+    window.location.reload();
   }
 
   public render() {
@@ -53,9 +74,14 @@ export class ErrorBoundary extends React.Component<Props, State> {
                   : "Encontramos un error inesperado. Por favor, intenta de nuevo."}
               </p>
               {isChunkError && (
-                <p className="text-sm text-muted-foreground">
-                  Si el problema persiste, intenta una recarga completa del navegador (Ctrl+F5 / Cmd+Shift+R).
-                </p>
+                <>
+                  <p className="text-sm text-muted-foreground">
+                    Si el problema persiste, intenta una recarga completa del navegador (Ctrl+F5 / Cmd+Shift+R).
+                  </p>
+                  {this.state.reloadAttempted && (
+                    <p className="text-sm text-muted-foreground font-semibold">Intentando recargar automáticamente...</p>
+                  )}
+                </>
               )}
               {this.state.error && (
                 <details className="mt-4 p-3 bg-muted rounded text-left text-xs text-muted-foreground">
