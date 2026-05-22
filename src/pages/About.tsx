@@ -14,10 +14,10 @@ const About = () => {
             Sobre NeoCharge
           </div>
           <h1 className="font-display text-6xl md:text-8xl font-bold leading-[1.05] tracking-tighter">
-            Energía que <br /><span className="text-gradient-accent">mueve a Cuba</span>
+            Tienda <br /><span className="text-gradient-accent">de electronica</span>
           </h1>
           <p className="text-xl md:text-2xl text-muted-foreground leading-relaxed font-light max-w-2xl">
-            No solo vendemos electrónica; construimos confianza a través de la calidad certificada y el soporte técnico real que nuestra comunidad merece.
+            No solo vendemos electrónica; construimos confianza a través de la calidad y el soporte técnico real que nuestra comunidad merece.
           </p>
         </div>
       </section>
