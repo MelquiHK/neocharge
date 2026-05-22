@@ -16,7 +16,7 @@ export interface MetaTags {
 // SEO configurations for each page
 export const seoConfig: Record<string, MetaTags> = {
   home: {
-    title: "NeoCharge - Electrónica de Próxima Generación",
+    title: "NeoCharge",
     description:
       "Tu tienda de electrónica de confianza en La Habana. Calidad premium, garantía certificada y entrega en 24h.",
     keywords:
