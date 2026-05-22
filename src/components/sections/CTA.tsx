@@ -16,14 +16,14 @@ export function CTA() {
 
           <div className="relative max-w-3xl mx-auto space-y-8">
             <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-500/20 text-blue-300 text-sm font-bold uppercase tracking-widest">
-              Únete a la revolución tecnológica
+              Únete a nuestra tecnología
             </div>
             <h2 className="font-display text-5xl md:text-7xl font-bold leading-tight tracking-tighter">
                 ¿Listo para elevar <br /><span className="text-gradient-accent">tu tecnología?</span>
             </h2>
             <p className="text-xl md:text-2xl text-slate-300 font-light leading-relaxed">
               Descubre por qué cientos de clientes confían en NeoCharge para sus dispositivos. 
-              Calidad premium a un clic de distancia.
+              Calidad a un clic de distancia.
             </p>
             <div className="flex flex-col sm:flex-row gap-5 justify-center pt-6">
               <Button asChild size="xl" className="bg-white text-slate-900 hover:bg-blue-50 rounded-2xl font-bold shadow-xl transition-all duration-500 hover:scale-105">

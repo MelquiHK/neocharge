@@ -14,7 +14,7 @@ const faqs = [
   },
   {
     q: "¿Cuáles son las formas de pago?",
-    a: "Aceptamos efectivo en USD, CUP y MLC. También transferencias bancarias. El pago se realiza al momento de recibir el producto, ya sea en el local o por mensajería.",
+    a: "Aceptamos efectivo en USD y CUP.El pago se realiza al momento de recibir el producto, ya sea en el local o por mensajería.",
   },
   {
     q: "¿Tienen garantía los productos?",
@@ -30,7 +30,7 @@ const faqs = [
   },
   {
     q: "¿Qué pasa si no sé qué cargador necesito?",
-    a: "Escríbenos por WhatsApp con el voltaje y capacidad de tu batería y te recomendamos el cargador ideal. También puedes visitarnos en cualquiera de nuestros 4 locales, siempre llamas antes.",
+    a: "Escríbenos por WhatsApp con el voltaje y capacidad de tu batería y te recomendamos el cargador ideal. También puedes visitarnos en cualquiera de nuestros locales, siempre llamas antes.",
   },
   {
     q: "¿Hacen envíos a otras provincias?",

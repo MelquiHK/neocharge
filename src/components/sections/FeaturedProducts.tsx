@@ -33,7 +33,7 @@ export function FeaturedProducts() {
           <div className="space-y-4 max-w-2xl">
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
               <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
-              Bestsellers
+              Nuestro Productos
             </div>
             <h2 className="font-display text-5xl md:text-6xl font-bold leading-tight">
               Lo más comprado <br /><span className="text-gradient-accent">este mes</span>
