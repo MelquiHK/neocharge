@@ -245,7 +245,7 @@ export function AdminProducts() {
       if (rows.length > 0) {
         const { error: upsertError } = await supabase
           .from("product_locations")
-          .upsert(rows, { onConflict: ["product_id", "location_id"] });
+          .upsert(rows, { onConflict: "product_id,location_id" });
         if (upsertError) {
           console.error("Error upserting product locations:", upsertError);
           toast.error("No se pudo guardar la disponibilidad en tiendas.");
