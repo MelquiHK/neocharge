@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Calendar, ChevronLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { renderMarkdown } from "@/lib/markdown";
 
 type Post = {
   id: string;
@@ -14,27 +15,6 @@ type Post = {
   created_at: string;
 };
 
-const escapeHtml = (text: string) =>
-  text
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-
-const linkifyMarkdown = (text: string) =>
-  text
-    .replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/gi,
-      '<a href="$2" target="_blank" rel="noreferrer noopener" class="text-primary underline decoration-primary/30 hover:decoration-primary">$1</a>')
-    .replace(/(^|\s)(https?:\/\/[^\s<]+)/gi,
-      '$1<a href="$2" target="_blank" rel="noreferrer noopener" class="text-primary underline decoration-primary/30 hover:decoration-primary">$2</a>');
-
-const formatBlogContent = (raw: string) =>
-  raw
-    .trim()
-    .split(/\n{2,}/)
-    .map((block) => `<p>${linkifyMarkdown(escapeHtml(block)).replace(/\n/g, "<br />")}</p>`)
-    .join("");
 
 const BlogPost = () => {
   const { slug } = useParams();
@@ -128,7 +108,7 @@ const BlogPost = () => {
 
       <article className="mt-10 prose prose-neutral dark:prose-invert max-w-3xl">
         {post.content ? (
-          <div dangerouslySetInnerHTML={{ __html: formatBlogContent(post.content) }} />
+          <div dangerouslySetInnerHTML={{ __html: renderMarkdown(post.content) }} />
         ) : (
           <p className="text-muted-foreground">Este artículo aún no tiene contenido.</p>
         )}

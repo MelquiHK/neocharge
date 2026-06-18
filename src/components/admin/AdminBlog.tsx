@@ -28,6 +28,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Image as ImageIcon, ExternalLink } from "lucide-react";
+import { renderMarkdown } from "@/lib/markdown";
 
 type BlogCategory = {
   id: string;
@@ -62,6 +63,7 @@ const slugify = (s: string) =>
 const BLOG_IMAGE_BUCKET = "product-images";
 const NONE_CATEGORY_VALUE = "__none__";
 
+
 export function AdminBlog() {
   const [tab, setTab] = useState<"posts" | "categories">("posts");
 
@@ -77,7 +79,41 @@ export function AdminBlog() {
   const [postOpen, setPostOpen] = useState(false);
   const [postEditing, setPostEditing] = useState<Partial<BlogPost> | null>(null);
   const [uploading, setUploading] = useState(false);
+  const [previewMode, setPreviewMode] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
+  const contentRef = useRef<HTMLTextAreaElement | null>(null);
+
+  const insertMarkdown = (template: string, placeholder = "texto") => {
+    const textarea = contentRef.current;
+    if (!textarea || !postEditing) return;
+    const current = postEditing.content ?? "";
+    const start = textarea.selectionStart;
+    const end = textarea.selectionEnd;
+    const selected = current.slice(start, end) || placeholder;
+    const formatted = template.replace(/\{\{text\}\}/g, selected);
+    const nextContent = `${current.slice(0, start)}${formatted}${current.slice(end)}`;
+    setPostEditing((prev) => ({ ...(prev ?? {}), content: nextContent }));
+    window.requestAnimationFrame(() => {
+      textarea.focus();
+      const cursor = start + formatted.indexOf(selected) + selected.length;
+      textarea.setSelectionRange(cursor, cursor);
+    });
+  };
+
+  const insertLinkMarkdown = () => {
+    insertMarkdown("[{{text}}](https://)", "texto del enlace");
+  };
+
+  const insertImageMarkdown = () => {
+    insertMarkdown("![{{text}}](https://)", "texto alternativo");
+  };
+
+  const insertUploadedImage = (src: string) => {
+    if (!postEditing) return;
+    const current = postEditing.content ?? "";
+    const nextContent = `${current}${current.endsWith("\n") || current === "" ? "" : "\n"}![Imagen](${src})\n`;
+    setPostEditing((prev) => ({ ...(prev ?? {}), content: nextContent }));
+  };
 
   const categoryOptions = useMemo(() => {
     const opts = [...categories].sort((a, b) => a.name.localeCompare(b.name));
@@ -519,13 +555,64 @@ export function AdminBlog() {
             </div>
 
             <div className="space-y-2">
-              <Label>Contenido</Label>
-              <Textarea
-                value={postEditing?.content ?? ""}
-                onChange={(e) => setPostEditing((p) => ({ ...(p ?? {}), content: e.target.value }))}
-                placeholder="Contenido del artículo (puedes usar Markdown si quieres)…"
-                className="min-h-[220px]"
-              />
+              <div className="flex flex-wrap items-center justify-between gap-3">
+                <div>
+                  <Label>Contenido</Label>
+                  <p className="text-xs text-muted-foreground">Puedes usar markdown básico para negritas, enlaces, listas e imágenes.</p>
+                </div>
+                <div className="flex items-center gap-2">
+                  <Button size="sm" variant={previewMode ? "outline" : "secondary"} onClick={() => setPreviewMode(false)}>
+                    Editar
+                  </Button>
+                  <Button size="sm" variant={previewMode ? "secondary" : "outline"} onClick={() => setPreviewMode(true)}>
+                    Vista previa
+                  </Button>
+                </div>
+              </div>
+              <div className="space-y-3">
+                <div className="flex flex-wrap items-center gap-2">
+                  <Button size="sm" variant="outline" onClick={() => insertMarkdown("**{{text}}**", "negrita")}>
+                    Negrita
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => insertMarkdown("*{{text}}*", "cursiva")}>
+                    Cursiva
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={() => insertMarkdown("- {{text}}\n", "Lista")}>
+                    Lista
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={insertLinkMarkdown}>
+                    Enlace
+                  </Button>
+                  <Button size="sm" variant="outline" onClick={insertImageMarkdown}>
+                    Imagen
+                  </Button>
+                </div>
+                {Array.isArray(postEditing?.images) && postEditing.images.length > 0 && (
+                  <div className="flex flex-wrap gap-2 rounded-2xl border border-border bg-muted/40 p-3 text-sm">
+                    <span className="text-muted-foreground">Imágenes subidas:</span>
+                    {postEditing.images.map((src) => (
+                      <Button key={src} size="sm" variant="secondary" onClick={() => insertUploadedImage(src)}>
+                        Insertar imagen
+                      </Button>
+                    ))}
+                  </div>
+                )}
+              {previewMode ? (
+                <div className="rounded-3xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950">
+                  <div
+                    className="prose prose-sm prose-slate dark:prose-invert"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(postEditing?.content ?? "") }}
+                  />
+                </div>
+              ) : (
+                <Textarea
+                  ref={contentRef}
+                  value={postEditing?.content ?? ""}
+                  onChange={(e) => setPostEditing((p) => ({ ...(p ?? {}), content: e.target.value }))}
+                  placeholder="Contenido del artículo (puedes usar Markdown si quieres)…"
+                  className="min-h-[220px]"
+                />
+              )}
             </div>
 
             <div className="space-y-3">
