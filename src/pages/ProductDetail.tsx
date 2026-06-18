@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
 import { toast } from "sonner";
+import { ChargerCalculator } from "@/components/ChargerCalculator";
 
 interface LocationStock {
   location_id: string;
@@ -349,147 +350,157 @@ export default function ProductDetail() {
         </div>
       </div>
 
-      {/* Specifications & Locations */}
-      <Tabs defaultValue="specs" className="mb-16">
-        <TabsList className="grid w-full max-w-md grid-cols-2">
-          <TabsTrigger value="specs">Especificaciones</TabsTrigger>
-          <TabsTrigger value="locations">Disponibilidad</TabsTrigger>
-        </TabsList>
+      <div className="grid gap-10 lg:grid-cols-[1.35fr_0.8fr] mb-16">
+        <div>
+          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950/80">
+            <h2 className="font-display text-2xl font-bold mb-3">Calculadora de cargador</h2>
+            <p className="text-sm text-muted-foreground mb-4">Comprueba si este cargador sirve para tu batería y obtén recomendaciones de voltaje y amperaje.</p>
+            <ChargerCalculator productName={product.name} productSpecs={product.specifications} />
+          </div>
+        </div>
+        <div>
+          <Tabs defaultValue="specs" className="mb-6">
+            <TabsList className="grid w-full max-w-md grid-cols-2">
+              <TabsTrigger value="specs">Especificaciones</TabsTrigger>
+              <TabsTrigger value="locations">Disponibilidad</TabsTrigger>
+            </TabsList>
 
-        <TabsContent value="specs" className="space-y-4 mt-6">
-          {product.specifications ? (
-            <div className="space-y-4">
-              {/* Parse specifications if JSON, otherwise display formatted */}
-              {(() => {
-                try {
-                  const specs = JSON.parse(product.specifications);
-                  if (Array.isArray(specs)) {
-                    return (
-                      <div className="grid gap-4">
-                        {specs.map((spec, idx) => (
-                          <div key={idx} className="border rounded-lg p-4 bg-slate-50/50 dark:bg-slate-900/30 hover:shadow-sm transition-shadow">
-                            {typeof spec === 'object' && spec !== null ? (
-                              <>
-                                {spec.title && <h4 className="font-semibold text-slate-900 dark:text-white mb-2">{spec.title}</h4>}
-                                {spec.items && Array.isArray(spec.items) ? (
-                                  <ul className="space-y-2">
-                                    {spec.items.map((item, i) => (
-                                      <li key={i} className="flex gap-3 text-slate-700 dark:text-slate-300">
-                                        <span className="text-blue-500 font-bold">•</span>
-                                        <span>{item}</span>
-                                      </li>
-                                    ))}
-                                  </ul>
-                                ) : spec.value ? (
-                                  <p className="text-slate-700 dark:text-slate-300">{spec.value}</p>
-                                ) : null}
-                              </>
-                            ) : (
-                              <p className="text-slate-700 dark:text-slate-300">{spec}</p>
-                            )}
+            <TabsContent value="specs" className="space-y-4 mt-6">
+              {product.specifications ? (
+                <div className="space-y-4">
+                  {/* Parse specifications if JSON, otherwise display formatted */}
+                  {(() => {
+                    try {
+                      const specs = JSON.parse(product.specifications);
+                      if (Array.isArray(specs)) {
+                        return (
+                          <div className="grid gap-4">
+                            {specs.map((spec, idx) => (
+                              <div key={idx} className="border rounded-lg p-4 bg-slate-50/50 dark:bg-slate-900/30 hover:shadow-sm transition-shadow">
+                                {typeof spec === 'object' && spec !== null ? (
+                                  <>
+                                    {spec.title && <h4 className="font-semibold text-slate-900 dark:text-white mb-2">{spec.title}</h4>}
+                                    {spec.items && Array.isArray(spec.items) ? (
+                                      <ul className="space-y-2">
+                                        {spec.items.map((item, i) => (
+                                          <li key={i} className="flex gap-3 text-slate-700 dark:text-slate-300">
+                                            <span className="text-blue-500 font-bold">•</span>
+                                            <span>{item}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    ) : spec.value ? (
+                                      <p className="text-slate-700 dark:text-slate-300">{spec.value}</p>
+                                    ) : null}
+                                  </>
+                                ) : (
+                                  <p className="text-slate-700 dark:text-slate-300">{spec}</p>
+                                )}
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    );
-                  } else if (typeof specs === 'object') {
-                    return (
-                      <div className="space-y-3">
-                        {Object.entries(specs).map(([key, value], idx) => (
-                          <div key={idx} className="border-b pb-3 last:border-b-0">
-                            <p className="font-semibold text-slate-900 dark:text-white mb-1">{key}</p>
-                            <p className="text-slate-700 dark:text-slate-300">{String(value)}</p>
+                        );
+                      } else if (typeof specs === 'object') {
+                        return (
+                          <div className="space-y-3">
+                            {Object.entries(specs).map(([key, value], idx) => (
+                              <div key={idx} className="border-b pb-3 last:border-b-0">
+                                <p className="font-semibold text-slate-900 dark:text-white mb-1">{key}</p>
+                                <p className="text-slate-700 dark:text-slate-300">{String(value)}</p>
+                              </div>
+                            ))}
                           </div>
-                        ))}
-                      </div>
-                    );
-                  }
-                  return <p className="text-slate-700 dark:text-slate-300">{product.specifications}</p>;
-                } catch {
-                  // Not JSON, display as formatted text
-                  const lines = product.specifications.split('\n').filter((line: string) => line.trim());
-                  if (lines.length > 1) {
-                    return (
-                      <ul className="space-y-2">
-                        {lines.map((line, idx) => (
-                          <li key={idx} className="flex gap-3 text-slate-700 dark:text-slate-300 p-2 hover:bg-slate-50 dark:hover:bg-slate-900/30 rounded transition-colors">
-                            <span className="text-blue-500 font-bold">✓</span>
-                            <span>{line.trim()}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    );
-                  }
-                  return <div className="bg-slate-50 dark:bg-slate-900/30 p-4 rounded-lg text-slate-700 dark:text-slate-300 leading-relaxed">{product.specifications}</div>;
-                }
-              })()}
-            </div>
-          ) : (
-            <p className="text-muted-foreground">No hay especificaciones disponibles.</p>
-          )}
-        </TabsContent>
+                        );
+                      }
+                      return <p className="text-slate-700 dark:text-slate-300">{product.specifications}</p>;
+                    } catch {
+                      // Not JSON, display as formatted text
+                      const lines = product.specifications.split('\n').filter((line: string) => line.trim());
+                      if (lines.length > 1) {
+                        return (
+                          <ul className="space-y-2">
+                            {lines.map((line, idx) => (
+                              <li key={idx} className="flex gap-3 text-slate-700 dark:text-slate-300 p-2 hover:bg-slate-50 dark:hover:bg-slate-900/30 rounded transition-colors">
+                                <span className="text-blue-500 font-bold">✓</span>
+                                <span>{line.trim()}</span>
+                              </li>
+                            ))}
+                          </ul>
+                        );
+                      }
+                      return <div className="bg-slate-50 dark:bg-slate-900/30 p-4 rounded-lg text-slate-700 dark:text-slate-300 leading-relaxed">{product.specifications}</div>;
+                    }
+                  })()}
+                </div>
+              ) : (
+                <p className="text-muted-foreground">No hay especificaciones disponibles.</p>
+              )}
+            </TabsContent>
 
-        <TabsContent value="locations" className="space-y-4 mt-6">
-          {locStock.length > 0 ? (
-            <div className="space-y-3">
-              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg p-4 mb-4">
-                <p className="text-sm font-semibold text-green-900 dark:text-green-200">✓ Producto disponible en {locStock.length} ubicación{locStock.length > 1 ? 'es' : ''}</p>
-              </div>
-              <div className="grid gap-4">
-                {locStock.map((loc) => (
-                  <div key={loc.store_locations.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow hover:border-blue-400 dark:hover:border-blue-600">
-                    <div className="flex items-start justify-between gap-4 mb-3">
-                      <div className="flex-1">
-                        <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
-                          <span className="text-lg">{loc.store_locations.location_type === 'physical' ? '🏪' : '📦'}</span>
-                          {loc.store_locations.name}
-                        </h3>
-                        <div className="space-y-2 mt-2">
-                          {loc.store_locations.address && (
-                            <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                              <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-500" />
-                              <span>{loc.store_locations.address}</span>
-                            </div>
-                          )}
-                          {loc.store_locations.hours && (
-                            <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                              <Clock className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-500" />
-                              <span>{loc.store_locations.hours}</span>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      <div className="text-right">
-                        <div className={`text-3xl font-bold ${loc.stock > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
-                          {loc.stock}
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-1">
-                          {loc.stock > 0 ? '✓ En stock' : 'Agotado'}
-                        </p>
-                      </div>
-                    </div>
-                    {loc.store_locations.map_link && (
-                      <Button
-                        asChild
-                        size="sm"
-                        className="w-full mt-2"
-                      >
-                        <a href={loc.store_locations.map_link} target="_blank" rel="noopener noreferrer">
-                          📍 Ver ubicación en mapa
-                        </a>
-                      </Button>
-                    )}
+            <TabsContent value="locations" className="space-y-4 mt-6">
+              {locStock.length > 0 ? (
+                <div className="space-y-3">
+                  <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg p-4 mb-4">
+                    <p className="text-sm font-semibold text-green-900 dark:text-green-200">✓ Producto disponible en {locStock.length} ubicación{locStock.length > 1 ? 'es' : ''}</p>
                   </div>
-                ))}
-              </div>
-            </div>
-          ) : (
-            <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-4 text-center">
-              <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200">⚠️ No hay información de disponibilidad en tiendas</p>
-              <p className="text-xs text-muted-foreground mt-1">Contacta con nosotros para conocer disponibilidad</p>
-            </div>
-          )}
-        </TabsContent>
-      </Tabs>
+                  <div className="grid gap-4">
+                    {locStock.map((loc) => (
+                      <div key={loc.store_locations.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow hover:border-blue-400 dark:hover:border-blue-600">
+                        <div className="flex items-start justify-between gap-4 mb-3">
+                          <div className="flex-1">
+                            <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                              <span className="text-lg">{loc.store_locations.location_type === 'physical' ? '🏪' : '📦'}</span>
+                              {loc.store_locations.name}
+                            </h3>
+                            <div className="space-y-2 mt-2">
+                              {loc.store_locations.address && (
+                                <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-500" />
+                                  <span>{loc.store_locations.address}</span>
+                                </div>
+                              )}
+                              {loc.store_locations.hours && (
+                                <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                                  <Clock className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-500" />
+                                  <span>{loc.store_locations.hours}</span>
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          <div className="text-right">
+                            <div className={`text-3xl font-bold ${loc.stock > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                              {loc.stock}
+                            </div>
+                            <p className="text-xs text-muted-foreground mt-1">
+                              {loc.stock > 0 ? '✓ En stock' : 'Agotado'}
+                            </p>
+                          </div>
+                        </div>
+                        {loc.store_locations.map_link && (
+                          <Button
+                            asChild
+                            size="sm"
+                            className="w-full mt-2"
+                          >
+                            <a href={loc.store_locations.map_link} target="_blank" rel="noopener noreferrer">
+                              📍 Ver ubicación en mapa
+                            </a>
+                          </Button>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-4 text-center">
+                  <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200">⚠️ No hay información de disponibilidad en tiendas</p>
+                  <p className="text-xs text-muted-foreground mt-1">Contacta con nosotros para conocer disponibilidad</p>
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
+        </div>
+      </div>
 
       {/* Related Products */}
       {related.length > 0 && (
