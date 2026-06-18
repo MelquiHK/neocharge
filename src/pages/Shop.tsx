@@ -77,6 +77,11 @@ const ShopPage = () => {
     return list;
   }, [products, categories, activeCat, search, sort]);
 
+  const activeCategory = categories.find((c) => c.slug === activeCat);
+  const isChargerCategory = activeCategory
+    ? activeCategory.slug === "cargadores" || activeCategory.name.toLowerCase().includes("cargador")
+    : false;
+
   const setCat = (slug: string) => {
     if (slug === "all") {
       searchParams.delete("cat");
@@ -167,6 +172,11 @@ const ShopPage = () => {
       </div>
 
       {/* Grid */}
+      {isChargerCategory && !loading && (
+        <div className="mb-6 rounded-3xl border border-blue-200 bg-blue-50/80 p-4 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-100">
+          La calculadora de compatibilidad sólo aparece en productos de cargadores. Si quieres un cargador ideal, usa esta categoría y valida el modelo que mejor se adapta a tu batería.
+        </div>
+      )}
       {loading ? (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {Array.from({ length: 8 }).map((_, i) => (

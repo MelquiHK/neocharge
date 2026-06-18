@@ -362,17 +362,19 @@ export default function ProductDetail() {
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[1.35fr_0.8fr] mb-16">
-        <div>
-          <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950/80">
-            <h2 className="font-display text-2xl font-bold mb-3">Calculadora de cargador</h2>
-            <p className="text-sm text-muted-foreground mb-4">Comprueba si este cargador sirve para tu batería y obtén recomendaciones de voltaje y amperaje.</p>
-            <ChargerCalculator
-              productName={product.name}
-              productSpecs={product.specifications}
-              availableChargers={chargerOptions}
-            />
+        {product.warranty_type === "charger" ? (
+          <div>
+            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950/80">
+              <h2 className="font-display text-2xl font-bold mb-3">Calculadora de cargador</h2>
+              <p className="text-sm text-muted-foreground mb-4">Comprueba si este cargador sirve para tu batería y obtén recomendaciones de voltaje y amperaje.</p>
+              <ChargerCalculator
+                productName={product.name}
+                productSpecs={product.specifications}
+                availableChargers={chargerOptions}
+              />
+            </div>
           </div>
-        </div>
+        ) : null}
         <div>
           <Tabs defaultValue="specs" className="mb-6">
             <TabsList className="grid w-full max-w-md grid-cols-2">
