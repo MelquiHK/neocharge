@@ -131,7 +131,6 @@ export default function ProductDetail() {
       return { usd: 0, cup: 0, primary: "USD" as const };
     }
   }, [product, exchangeRate]);
-  const mainImage = images[activeImage] ?? images[0];
   const discount =
     Number(product?.compare_price ?? 0) > Number(product?.price ?? 0)
       ? Math.round(((Number(product.compare_price ?? 0) - Number(product.price ?? 0)) / Number(product.compare_price ?? 0)) * 100)
