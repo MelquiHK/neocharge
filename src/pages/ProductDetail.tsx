@@ -421,44 +421,63 @@ export default function ProductDetail() {
 
         <TabsContent value="locations" className="space-y-4 mt-6">
           {locStock.length > 0 ? (
-            <div className="grid gap-4">
-              {locStock.map((loc) => (
-                <div key={loc.store_locations.id} className="border rounded-lg p-4">
-                  <div className="flex items-start justify-between mb-2">
-                    <div>
-                      <h3 className="font-semibold">{loc.store_locations.name}</h3>
-                      <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                        <MapPin className="w-4 h-4" />
-                        {loc.store_locations.address}
-                      </div>
-                      {loc.store_locations.hours && (
-                        <div className="flex items-center gap-1 text-sm text-muted-foreground mt-1">
-                          <Clock className="w-4 h-4" />
-                          {loc.store_locations.hours}
+            <div className="space-y-3">
+              <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg p-4 mb-4">
+                <p className="text-sm font-semibold text-green-900 dark:text-green-200">✓ Producto disponible en {locStock.length} ubicación{locStock.length > 1 ? 'es' : ''}</p>
+              </div>
+              <div className="grid gap-4">
+                {locStock.map((loc) => (
+                  <div key={loc.store_locations.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow hover:border-blue-400 dark:hover:border-blue-600">
+                    <div className="flex items-start justify-between gap-4 mb-3">
+                      <div className="flex-1">
+                        <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                          <span className="text-lg">{loc.store_locations.location_type === 'physical' ? '🏪' : '📦'}</span>
+                          {loc.store_locations.name}
+                        </h3>
+                        <div className="space-y-2 mt-2">
+                          {loc.store_locations.address && (
+                            <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                              <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-500" />
+                              <span>{loc.store_locations.address}</span>
+                            </div>
+                          )}
+                          {loc.store_locations.hours && (
+                            <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
+                              <Clock className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-500" />
+                              <span>{loc.store_locations.hours}</span>
+                            </div>
+                          )}
                         </div>
-                      )}
+                      </div>
+                      <div className="text-right">
+                        <div className={`text-3xl font-bold ${loc.stock > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                          {loc.stock}
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-1">
+                          {loc.stock > 0 ? '✓ En stock' : 'Agotado'}
+                        </p>
+                      </div>
                     </div>
-                    <div className="text-right">
-                      <p className="font-semibold">{loc.stock} en stock</p>
-                    </div>
+                    {loc.store_locations.map_link && (
+                      <Button
+                        asChild
+                        size="sm"
+                        className="w-full mt-2"
+                      >
+                        <a href={loc.store_locations.map_link} target="_blank" rel="noopener noreferrer">
+                          📍 Ver ubicación en mapa
+                        </a>
+                      </Button>
+                    )}
                   </div>
-                  {loc.store_locations.map_link && (
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      asChild
-                      className="mt-2"
-                    >
-                      <a href={loc.store_locations.map_link} target="_blank" rel="noopener noreferrer">
-                        Ver en mapa
-                      </a>
-                    </Button>
-                  )}
-                </div>
-              ))}
+                ))}
+              </div>
             </div>
           ) : (
-            <p className="text-muted-foreground">No hay información de disponibilidad en locales.</p>
+            <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-4 text-center">
+              <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200">⚠️ No hay información de disponibilidad en tiendas</p>
+              <p className="text-xs text-muted-foreground mt-1">Contacta con nosotros para conocer disponibilidad</p>
+            </div>
           )}
         </TabsContent>
       </Tabs>

@@ -587,20 +587,35 @@ export function AdminProducts() {
                 </div>
               </div>
 
-              {/* Stock por local */}
+              {/* Stock por local (Disponibilidad) */}
               {locations.length > 0 && (
-                <div className="space-y-2">
-                  <Label>Stock por local</Label>
-                  <div className="grid sm:grid-cols-2 gap-2">
+                <div className="space-y-3 border rounded-xl p-4 bg-blue-50 dark:bg-blue-950/20 border-blue-200 dark:border-blue-900/30">
+                  <div>
+                    <Label className="text-base font-semibold flex items-center gap-2">
+                      📍 Disponibilidad en Tiendas
+                      <span className="text-xs font-normal text-muted-foreground">(Esto aparecerá en la página del producto)</span>
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">Define cuántas unidades hay disponibles en cada tienda física</p>
+                  </div>
+                  <div className="grid sm:grid-cols-2 gap-3">
                     {locations.map((l) => (
-                      <div key={l.id} className="flex items-center gap-2 p-2 rounded-xl border border-border">
-                        <span className="text-sm flex-1 truncate">{l.name}</span>
-                        <Input
-                          type="number"
-                          value={productLocs[l.id] ?? 0}
-                          onChange={(e) => setProductLocs({ ...productLocs, [l.id]: Number(e.target.value) })}
-                          className="w-20"
-                        />
+                      <div key={l.id} className="flex flex-col gap-2 p-3 rounded-lg border border-blue-200 dark:border-blue-900 bg-white dark:bg-slate-900 hover:shadow-sm transition-shadow">
+                        <div className="flex items-center justify-between">
+                          <span className="font-medium text-sm text-slate-900 dark:text-white">{l.name}</span>
+                          <span className="text-xs text-muted-foreground">{l.location_type === 'physical' ? '🏪 Física' : '📦 Centro'}</span>
+                        </div>
+                        {l.address && <p className="text-xs text-muted-foreground">{l.address}</p>}
+                        <div className="flex items-center gap-2 mt-1">
+                          <label className="text-xs font-semibold text-slate-700 dark:text-slate-300">Stock:</label>
+                          <Input
+                            type="number"
+                            min="0"
+                            value={productLocs[l.id] ?? 0}
+                            onChange={(e) => setProductLocs({ ...productLocs, [l.id]: Math.max(0, Number(e.target.value)) })}
+                            className="w-24 text-center"
+                          />
+                          <span className="text-xs text-muted-foreground">unidades</span>
+                        </div>
                       </div>
                     ))}
                   </div>
