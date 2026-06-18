@@ -3,6 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
+import { useSEO } from "@/hooks/use-seo";
 import { Product } from "@/types";
 import { computeDisplayPrice, formatPrice, formatCUP } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -111,6 +112,14 @@ export default function ProductDetail() {
   }, [slug]);
 
   const images = Array.isArray(product?.images) ? product.images : [];
+  const mainImage = images[activeImage] ?? images[0] ?? "/images/og-home.jpg";
+
+  useSEO("productDetail", {
+    title: product ? `${product.name} — NeoCharge` : "Producto — NeoCharge",
+    description: product?.description,
+    ogImage: mainImage,
+  });
+
   const display = useMemo(() => {
     if (!product) {
       return { usd: 0, cup: 0, primary: "USD" as const };
