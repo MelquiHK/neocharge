@@ -238,13 +238,19 @@ export function AdminProducts() {
 
     // Sync product_locations
     if (productId) {
-      await supabase.from("product_locations").delete().eq("product_id", productId);
       const rows = Object.entries(productLocs)
-        .filter(([_, s]) => Number(s) >= 0) // Guarda cualquier valor >= 0
+        .filter(([_, stock]) => stock !== undefined && stock !== null && !Number.isNaN(Number(stock)))
         .map(([location_id, stock]) => ({ product_id: productId!, location_id, stock: Number(stock) }));
+
       if (rows.length > 0) {
-        const { error } = await supabase.from("product_locations").insert(rows);
-        if (error) console.error("Error inserting product locations:", error);
+        const { error: upsertError } = await supabase
+          .from("product_locations")
+          .upsert(rows, { onConflict: ["product_id", "location_id"] });
+        if (upsertError) {
+          console.error("Error upserting product locations:", upsertError);
+          toast.error("No se pudo guardar la disponibilidad en tiendas.");
+          return;
+        }
       }
     }
 
