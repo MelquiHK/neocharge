@@ -3,10 +3,12 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
+import { Product } from "@/types";
 
 interface ChargerCalculatorProps {
   productName: string;
   productSpecs?: string | null;
+  availableChargers?: Product[];
 }
 
 interface ChargerSpecs {
@@ -54,6 +56,9 @@ const parseChargerSpecifications = (raw: string | null | undefined): ChargerSpec
     if (/lifepo4|li-fe|li fe|litio fosfato/i.test(lower)) {
       specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "LiFePO4"])];
     }
+    if (/litio|li-ion|lithium/i.test(lower)) {
+      specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "Li-ion"])];
+    }
     if (/plomo|gel|lead-acid|acido/i.test(lower)) {
       specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "Plomo-ácido/Gel"])];
     }
@@ -67,13 +72,71 @@ const getRecommendedCurrent = (capacityAh: number) => {
   return recommended;
 };
 
-export function ChargerCalculator({ productName, productSpecs }: ChargerCalculatorProps) {
+const getBatteryTypeLabel = (type: string) => {
+  if (type === "lifepo4") return "LiFePO4";
+  if (type === "lead-acid") return "Plomo-ácido / Gel";
+  if (type === "lithium") return "Litio";
+  return "Desconocido";
+};
+
+const getChargerMatchScore = (
+  chargerSpecs: ChargerSpecs,
+  batteryType: string,
+  batteryVoltage: number,
+  recommendationCurrent: number
+) => {
+  let score = 0;
+  if (chargerSpecs.voltage) {
+    const diff = Math.abs(chargerSpecs.voltage - batteryVoltage);
+    if (diff === 0) score += 40;
+    else if (diff <= 1) score += 25;
+    else score -= 10;
+  } else {
+    score += 5;
+  }
+
+  if (chargerSpecs.batteryTypes?.length) {
+    if (
+      batteryType === "lifepo4" && chargerSpecs.batteryTypes.includes("LiFePO4")
+    ) {
+      score += 30;
+    } else if (
+      batteryType === "lithium" && (chargerSpecs.batteryTypes.includes("Li-ion") || chargerSpecs.batteryTypes.includes("LiFePO4"))
+    ) {
+      score += 25;
+    } else if (
+      batteryType === "lead-acid" && chargerSpecs.batteryTypes.includes("Plomo-ácido/Gel")
+    ) {
+      score += 30;
+    } else if (batteryType === "unknown") {
+      score += 0;
+    } else {
+      score -= 10;
+    }
+  }
+
+  if (chargerSpecs.current) {
+    const diff = Math.abs(chargerSpecs.current - recommendationCurrent);
+    const relative = diff / recommendationCurrent;
+    if (relative <= 0.2) score += 25;
+    else if (relative <= 0.5) score += 12;
+    else score -= 5;
+
+    if (chargerSpecs.current > recommendationCurrent * 2) score -= 8;
+    if (chargerSpecs.current < recommendationCurrent * 0.5) score -= 5;
+  }
+
+  return score;
+};
+
+export function ChargerCalculator({ productName, productSpecs, availableChargers = [] }: ChargerCalculatorProps) {
   const [batteryVoltage, setBatteryVoltage] = useState(48);
   const [batteryCapacity, setBatteryCapacity] = useState(20);
-  const [batteryType, setBatteryType] = useState("unknown");
+  const [batteryType, setBatteryType] = useState("lead-acid");
   const [showResult, setShowResult] = useState(false);
 
   const specs = useMemo(() => parseChargerSpecifications(productSpecs), [productSpecs]);
+  const chargerOptions = useMemo(() => availableChargers ?? [], [availableChargers]);
 
   const result = useMemo(() => {
     const voltage = parseNumber(batteryVoltage);
@@ -81,56 +144,81 @@ export function ChargerCalculator({ productName, productSpecs }: ChargerCalculat
     if (!voltage || !capacity) return null;
 
     const recommendationCurrent = getRecommendedCurrent(capacity);
-    const chargeHours = specs.current ? Number((capacity / specs.current).toFixed(1)) : undefined;
-    const voltageMatch = specs.voltage ? Math.abs(specs.voltage - voltage) <= 1 : undefined;
+    const userTypeLabel = getBatteryTypeLabel(batteryType);
     const batteryTypeWarnings: string[] = [];
-
     if (batteryType === "lifepo4") {
       batteryTypeWarnings.push(
         "Si tu batería es LiFePO4, confirma que el cargador sea compatible con ese tipo antes de comprar."
       );
     }
-
-    let compatibilityMessage = "No hay suficiente información técnica del cargador para asegurar compatibilidad.";
-    let compatible = false;
-
-    if (specs.voltage) {
-      if (voltageMatch) {
-        compatible = true;
-        compatibilityMessage = `El cargador tiene salida de ${specs.voltage}V y tu batería es de ${voltage}V, por lo que el voltaje es compatible.`;
-      } else {
-        compatibilityMessage = `El cargador está diseñado para ${specs.voltage}V y tu batería es de ${voltage}V. No son compatibles. Busca un cargador de ${voltage}V.`;
-      }
+    if (batteryType === "lithium") {
+      batteryTypeWarnings.push(
+        "Si tu batería es de litio, elige un cargador que soporte baterías de litio o LiFePO4 para una carga segura."
+      );
     }
 
-    if (specs.current && compatible) {
-      if (chargeHours) {
-        compatibilityMessage += ` La carga estimada con este cargador es de aproximadamente ${chargeHours} horas.`;
-      }
-      if (specs.current < capacity * 0.05) {
-        compatibilityMessage += " Este cargador es muy lento para tu batería, puede tardar demasiado.";
-      }
-      if (specs.current > capacity * 0.3) {
-        compatibilityMessage += " Este cargador puede ser muy rápido para tu batería, consulta si tu batería admite carga rápida.";
-      }
-    }
+    const comparisonChargers = chargerOptions.length
+      ? chargerOptions
+      : [{
+          id: "fallback",
+          name: productName,
+          slug: "",
+          price: 0,
+          currency: "USD",
+          price_cup: 0,
+          extra_cup_per_usd: 0,
+          warranty_type: "charger",
+          specifications: productSpecs,
+          images: [],
+          main_image_index: 0,
+        } as Product];
 
-    if (!specs.voltage && specs.current) {
-      compatibilityMessage = `El cargador entrega ${specs.current}A. Para tu batería de ${voltage}V se recomienda un cargador de al menos ${recommendationCurrent}A.`;
-      compatible = true;
-    }
+    const chargerResults = comparisonChargers.map((charger) => {
+      const chargerSpecs = parseChargerSpecifications(charger.specifications);
+      const score = getChargerMatchScore(chargerSpecs, batteryType, voltage, recommendationCurrent);
+      const chargeHours = chargerSpecs.current ? Number((capacity / chargerSpecs.current).toFixed(1)) : undefined;
+      return {
+        charger,
+        chargerSpecs,
+        score,
+        chargeHours,
+      };
+    });
+
+    const bestChargerResult = chargerResults.reduce((best, current) => {
+      return !best || current.score > best.score ? current : best;
+    }, chargerResults[0]);
+
+    const bestName = bestChargerResult?.charger.name ?? productName;
+    const bestSpecs = bestChargerResult?.chargerSpecs;
+    const bestChargeHours = bestChargerResult?.chargeHours;
+    const bestVoltageText = bestSpecs?.voltage ? `${bestSpecs.voltage}V` : "el voltaje recomendado";
+    const bestCurrentText = bestSpecs?.current ? `${bestSpecs.current}A` : "la corriente recomendada";
+    const supportedTypesText = bestSpecs?.batteryTypes?.length
+      ? bestSpecs.batteryTypes.join(" / ")
+      : "Plomo-ácido, Gel o Litio según modelo";
+
+    const compatibilityMessage = `La mejor opción del catálogo para tu batería es ${bestName}. ` +
+      `Este cargador ofrece ${bestVoltageText} y ${bestCurrentText}, lo que lo hace ideal para tu batería de ${voltage}V y ${capacity}Ah. ` +
+      `Estimamos que la recarga completa tomará alrededor de ${bestChargeHours ? `${bestChargeHours} horas` : "el tiempo esperado según la corriente del cargador"}. ` +
+      `Es una recomendación segura para baterías ${userTypeLabel}, con un balance entre velocidad y cuidado para que tu batería se cargue bien y te dure más.`;
 
     return {
       voltage,
       capacity,
       recommendationCurrent,
-      chargeHours,
-      voltageMatch,
+      chargeHours: bestChargeHours,
       batteryTypeWarnings,
-      compatible,
+      bestCharger: bestChargerResult?.charger,
       compatibilityMessage,
+      bestVoltageText,
+      bestCurrentText,
+      userTypeLabel,
+      supportedTypesText,
+      allChargers: comparisonChargers,
+      compatible: true,
     };
-  }, [batteryVoltage, batteryCapacity, batteryType, specs]);
+  }, [batteryVoltage, batteryCapacity, batteryType, chargerOptions, productName, productSpecs]);
 
   const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
     event.preventDefault();
@@ -189,6 +277,7 @@ export function ChargerCalculator({ productName, productSpecs }: ChargerCalculat
               <option value="unknown">Desconocido</option>
               <option value="lead-acid">Plomo-ácido / Gel</option>
               <option value="lifepo4">LiFePO4</option>
+              <option value="lithium">Litio</option>
             </select>
           </div>
         </div>

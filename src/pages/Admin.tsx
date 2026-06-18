@@ -43,11 +43,16 @@ const Admin = () => {
 
   return (
     <div className="container-page py-12 space-y-8">
-      <OrderNotificationsWidget />
+      <div className="rounded-3xl border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/80">
+        <OrderNotificationsWidget inline />
+      </div>
       <header className="space-y-2">
         <h1 className="font-display text-4xl font-bold">Panel de administración</h1>
-        <p className="text-muted-foreground">
-          {isOwner ? "Acceso completo (Dueño)" : "Acceso de administrador"}
+        <p className="text-muted-foreground max-w-3xl">
+          Controla los pedidos en tiempo real, administra productos y clientes, y observa los datos más importantes desde un panel moderno y adaptable.
+        </p>
+        <p className="text-sm text-muted-foreground">
+          Usa las pestañas para acceder rápido a cada sección. En dispositivos móviles las opciones se adaptan y se muestran con botones claros.
         </p>
       </header>
 

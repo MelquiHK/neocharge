@@ -31,6 +31,7 @@ export default function ProductDetail() {
   const { rate: exchangeRate } = useExchangeRate();
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
+  const [chargerOptions, setChargerOptions] = useState<Product[]>([]);
   const [locStock, setLocStock] = useState<LocationStock[]>([]);
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
@@ -85,6 +86,16 @@ export default function ProductDetail() {
           .eq("product_id", data.id);
         if (locError) console.error("Location stock error:", locError);
         if (ls) setLocStock(ls as any);
+
+        const { data: chargers, error: chargerError } = await supabase
+          .from("products")
+          .select("id,name,slug,price,currency,price_cup,extra_cup_per_usd,warranty_type,specifications,images,main_image_index")
+          .eq("is_active", true)
+          .eq("warranty_type", "charger")
+          .order("created_at", { ascending: false })
+          .limit(24);
+        if (chargerError) console.error("Charger products error:", chargerError);
+        if (chargers) setChargerOptions(chargers as Product[]);
 
         if (data.category_id) {
           const { data: rel, error: relError } = await supabase
@@ -355,7 +366,11 @@ export default function ProductDetail() {
           <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950/80">
             <h2 className="font-display text-2xl font-bold mb-3">Calculadora de cargador</h2>
             <p className="text-sm text-muted-foreground mb-4">Comprueba si este cargador sirve para tu batería y obtén recomendaciones de voltaje y amperaje.</p>
-            <ChargerCalculator productName={product.name} productSpecs={product.specifications} />
+            <ChargerCalculator
+              productName={product.name}
+              productSpecs={product.specifications}
+              availableChargers={chargerOptions}
+            />
           </div>
         </div>
         <div>
