@@ -89,7 +89,7 @@ export default function ProductDetail() {
 
         const { data: chargers, error: chargerError } = await supabase
           .from("products")
-          .select("id,name,slug,price,currency,price_cup,extra_cup_per_usd,warranty_type,specifications,images,main_image_index")
+          .select("id,name,slug,price,currency,price_cup,extra_cup_per_usd,warranty_type,specifications,images,main_image_index,stock")
           .eq("is_active", true)
           .eq("warranty_type", "charger")
           .order("created_at", { ascending: false })

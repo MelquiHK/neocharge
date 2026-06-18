@@ -220,6 +220,16 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
     const bestChargerResult = sortedResults[0];
     const topChargerResults = sortedResults.slice(0, 3);
 
+    // Preferir cargadores 72V con 7A o 10A que estén en stock
+    const preferred72Candidates = sortedResults.filter((r) =>
+      r.chargerSpecs.voltage === 72 && (r.chargerSpecs.current === 7 || r.chargerSpecs.current === 10) && Number(r.charger.stock ?? 0) > 0
+    );
+
+    const preferred72 = preferred72Candidates.length > 0 ? preferred72Candidates[0] : null;
+
+    // Si no hay preferidos en stock, buscar la mejor alternativa que esté en stock
+    const inStockBest = sortedResults.find((r) => Number(r.charger.stock ?? 0) > 0) ?? null;
+
     const bestName = bestChargerResult?.charger.name ?? productName;
     const bestSpecs = bestChargerResult?.chargerSpecs;
     const bestChargeHours = bestChargerResult?.chargeHours;
@@ -259,6 +269,8 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
       topChargerResults,
       commonChargeOptions,
       exactVoltageMatches,
+      preferred72,
+      inStockBest,
       compatible: true,
     };
   }, [batteryVoltage, batteryCapacity, batteryType, chargerOptions, productName, productSpecs]);
@@ -454,6 +466,36 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
               </p>
             </div>
           )}
+
+          {result.preferred72 ? (
+            <div className="mt-4 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm text-green-900 dark:bg-green-950/20 dark:border-green-800">
+              <p className="font-semibold">Mejor opción disponible (72V)</p>
+              <div className="mt-2 flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">{result.preferred72.charger.name}</p>
+                  <p className="text-sm text-muted-foreground">{formatChargerSpecs(result.preferred72.chargerSpecs)}</p>
+                </div>
+                {result.preferred72.charger.slug ? (
+                  <Link to={`/producto/${result.preferred72.charger.slug}`} className="text-primary font-semibold hover:underline">Ver producto</Link>
+                ) : null}
+              </div>
+              <p className="mt-2 text-sm">Stock disponible: {result.preferred72.charger.stock}</p>
+            </div>
+          ) : result.inStockBest ? (
+            <div className="mt-4 rounded-2xl border border-yellow-200 bg-yellow-50 p-4 text-sm text-yellow-900 dark:bg-yellow-950/20 dark:border-yellow-800">
+              <p className="font-semibold">Alternativa en stock</p>
+              <div className="mt-2 flex items-center justify-between">
+                <div>
+                  <p className="font-semibold">{result.inStockBest.charger.name}</p>
+                  <p className="text-sm text-muted-foreground">{formatChargerSpecs(result.inStockBest.chargerSpecs)}</p>
+                </div>
+                {result.inStockBest.charger.slug ? (
+                  <Link to={`/producto/${result.inStockBest.charger.slug}`} className="text-primary font-semibold hover:underline">Ver producto</Link>
+                ) : null}
+              </div>
+              <p className="mt-2 text-sm">Stock disponible: {result.inStockBest.charger.stock}</p>
+            </div>
+          ) : null}
         </div>
       )}
     </div>
