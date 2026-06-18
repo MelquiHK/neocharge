@@ -11,6 +11,7 @@ import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock } fr
 import { toast } from "sonner";
 
 interface LocationStock {
+  location_id: string;
   stock: number;
   store_locations: {
     id: string;
@@ -78,7 +79,7 @@ export default function ProductDetail() {
 
         const { data: ls, error: locError } = await supabase
           .from("product_locations")
-          .select("stock, store_locations(id,name,address,location_type,map_link,hours)")
+          .select("location_id, stock, store_locations(id,name,address,location_type,map_link,hours)")
           .eq("product_id", data.id);
         if (locError) console.error("Location stock error:", locError);
         if (ls) setLocStock(ls as any);
@@ -121,7 +122,7 @@ export default function ProductDetail() {
       return { usd: 0, cup: 0, primary: "USD" as const };
     }
   }, [product, exchangeRate]);
-  const mainImage = images[Number(product?.main_image_index ?? 0)];
+  const mainImage = images[activeImage] ?? images[0];
   const discount =
     Number(product?.compare_price ?? 0) > Number(product?.price ?? 0)
       ? Math.round(((Number(product.compare_price ?? 0) - Number(product.price ?? 0)) / Number(product.compare_price ?? 0)) * 100)

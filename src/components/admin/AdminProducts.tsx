@@ -240,9 +240,12 @@ export function AdminProducts() {
     if (productId) {
       await supabase.from("product_locations").delete().eq("product_id", productId);
       const rows = Object.entries(productLocs)
-        .filter(([_, s]) => Number(s) >= 0)
+        .filter(([_, s]) => Number(s) >= 0) // Guarda cualquier valor >= 0
         .map(([location_id, stock]) => ({ product_id: productId!, location_id, stock: Number(stock) }));
-      if (rows.length > 0) await supabase.from("product_locations").insert(rows);
+      if (rows.length > 0) {
+        const { error } = await supabase.from("product_locations").insert(rows);
+        if (error) console.error("Error inserting product locations:", error);
+      }
     }
 
     toast.success("Producto guardado");
