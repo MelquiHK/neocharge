@@ -269,7 +269,10 @@ export default function ProductDetail() {
 
           {/* Description */}
           {product.description && (
-            <p className="text-muted-foreground">{product.description}</p>
+            <div className="bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/30 dark:to-slate-900/30 rounded-lg p-5 border border-blue-100 dark:border-blue-900/30">
+              <h3 className="font-semibold text-slate-900 dark:text-white mb-3">Descripción</h3>
+              <p className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{product.description}</p>
+            </div>
           )}
 
           {/* Add to Cart */}
@@ -346,8 +349,70 @@ export default function ProductDetail() {
 
         <TabsContent value="specs" className="space-y-4 mt-6">
           {product.specifications ? (
-            <div className="prose prose-sm max-w-none dark:prose-invert">
-              <p>{product.specifications}</p>
+            <div className="space-y-4">
+              {/* Parse specifications if JSON, otherwise display formatted */}
+              {(() => {
+                try {
+                  const specs = JSON.parse(product.specifications);
+                  if (Array.isArray(specs)) {
+                    return (
+                      <div className="grid gap-4">
+                        {specs.map((spec, idx) => (
+                          <div key={idx} className="border rounded-lg p-4 bg-slate-50/50 dark:bg-slate-900/30 hover:shadow-sm transition-shadow">
+                            {typeof spec === 'object' && spec !== null ? (
+                              <>
+                                {spec.title && <h4 className="font-semibold text-slate-900 dark:text-white mb-2">{spec.title}</h4>}
+                                {spec.items && Array.isArray(spec.items) ? (
+                                  <ul className="space-y-2">
+                                    {spec.items.map((item, i) => (
+                                      <li key={i} className="flex gap-3 text-slate-700 dark:text-slate-300">
+                                        <span className="text-blue-500 font-bold">•</span>
+                                        <span>{item}</span>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : spec.value ? (
+                                  <p className="text-slate-700 dark:text-slate-300">{spec.value}</p>
+                                ) : null}
+                              </>
+                            ) : (
+                              <p className="text-slate-700 dark:text-slate-300">{spec}</p>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  } else if (typeof specs === 'object') {
+                    return (
+                      <div className="space-y-3">
+                        {Object.entries(specs).map(([key, value], idx) => (
+                          <div key={idx} className="border-b pb-3 last:border-b-0">
+                            <p className="font-semibold text-slate-900 dark:text-white mb-1">{key}</p>
+                            <p className="text-slate-700 dark:text-slate-300">{String(value)}</p>
+                          </div>
+                        ))}
+                      </div>
+                    );
+                  }
+                  return <p className="text-slate-700 dark:text-slate-300">{product.specifications}</p>;
+                } catch {
+                  // Not JSON, display as formatted text
+                  const lines = product.specifications.split('\n').filter((line: string) => line.trim());
+                  if (lines.length > 1) {
+                    return (
+                      <ul className="space-y-2">
+                        {lines.map((line, idx) => (
+                          <li key={idx} className="flex gap-3 text-slate-700 dark:text-slate-300 p-2 hover:bg-slate-50 dark:hover:bg-slate-900/30 rounded transition-colors">
+                            <span className="text-blue-500 font-bold">✓</span>
+                            <span>{line.trim()}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    );
+                  }
+                  return <div className="bg-slate-50 dark:bg-slate-900/30 p-4 rounded-lg text-slate-700 dark:text-slate-300 leading-relaxed">{product.specifications}</div>;
+                }
+              })()}
             </div>
           ) : (
             <p className="text-muted-foreground">No hay especificaciones disponibles.</p>
