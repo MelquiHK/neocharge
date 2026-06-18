@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -130,8 +130,8 @@ const getChargerMatchScore = (
 };
 
 export function ChargerCalculator({ productName, productSpecs, availableChargers = [] }: ChargerCalculatorProps) {
-  const [batteryVoltage, setBatteryVoltage] = useState(48);
-  const [batteryCapacity, setBatteryCapacity] = useState(20);
+  const [batteryVoltage, setBatteryVoltage] = useState("");
+  const [batteryCapacity, setBatteryCapacity] = useState("");
   const [batteryType, setBatteryType] = useState("lead-acid");
   const [showResult, setShowResult] = useState(false);
 
@@ -141,7 +141,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
   const result = useMemo(() => {
     const voltage = parseNumber(batteryVoltage);
     const capacity = parseNumber(batteryCapacity);
-    if (!voltage || !capacity) return null;
+    if (voltage === undefined || capacity === undefined) return null;
 
     const recommendationCurrent = getRecommendedCurrent(capacity);
     const userTypeLabel = getBatteryTypeLabel(batteryType);
@@ -220,7 +220,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
     };
   }, [batteryVoltage, batteryCapacity, batteryType, chargerOptions, productName, productSpecs]);
 
-  const handleSubmit = (event: React.FormEvent<HTMLFormElement>) => {
+  const handleSubmit = (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
     setShowResult(true);
   };
@@ -249,7 +249,8 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
               min={12}
               step={1}
               value={batteryVoltage}
-              onChange={(event) => setBatteryVoltage(Number(event.target.value))}
+              placeholder="48"
+              onChange={(event) => setBatteryVoltage(event.target.value)}
             />
           </div>
           <div className="space-y-2">
@@ -260,7 +261,8 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
               min={1}
               step={1}
               value={batteryCapacity}
-              onChange={(event) => setBatteryCapacity(Number(event.target.value))}
+              placeholder="20"
+              onChange={(event) => setBatteryCapacity(event.target.value)}
             />
           </div>
           <div className="space-y-2">

@@ -27,10 +27,6 @@ export function OrderNotificationsWidget({ inline }: OrderNotificationsWidgetPro
     setNotificationEnabled(true);
   };
 
-  if (!isListening) {
-    return null;
-  }
-
   const wrapperClasses = inline
     ? "rounded-3xl border border-slate-200 bg-slate-50 p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/90"
     : "fixed bottom-4 right-4 z-50";
@@ -49,6 +45,12 @@ export function OrderNotificationsWidget({ inline }: OrderNotificationsWidgetPro
           {unreadCount} {unreadCount === 1 ? "nuevo" : "nuevos"}
         </Badge>
       </div>
+      {!isListening && (
+        <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-100 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+          <p className="font-medium">Conectando con pedidos en tiempo real...</p>
+          <p className="mt-1">Si no llega la notificación, revisa que tu conexión sea estable y que el servicio de Supabase esté activo.</p>
+        </div>
+      )}
 
       <div className="mt-4">
         {notifications.length === 0 ? (

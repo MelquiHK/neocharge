@@ -1,9 +1,8 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Calendar } from "lucide-react";
+import { Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/use-seo";
-import { useEffect } from "react";
 
 interface Post {
   id: string;
@@ -18,6 +17,7 @@ interface Post {
 const Blog = () => {
   const [posts, setPosts] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+  const [newPost, setNewPost] = useState<Post | null>(null);
 
   useSEO("blog");
 
@@ -28,14 +28,129 @@ const Blog = () => {
       .eq("is_published", true)
       .order("created_at", { ascending: false })
       .then(({ data }) => {
-        if (data) setPosts(data);
+        if (data) {
+          setPosts(data);
+          const latest = data[0];
+          const lastSeenId = window.localStorage.getItem("neocharge-blog-last-seen");
+
+          if (latest) {
+            if (lastSeenId && latest.id !== lastSeenId) {
+              setNewPost(latest);
+            } else if (!lastSeenId) {
+              window.localStorage.setItem("neocharge-blog-last-seen", latest.id);
+            }
+          }
+        }
         setLoading(false);
       });
+  }, []);
+
+  useEffect(() => {
+    if (!newPost) return;
+    if ('Notification' in window && Notification.permission === 'granted') {
+      const notification = new Notification('📝 Nuevo artículo en NeoCharge', {
+        body: newPost.title,
+        icon: '/images/logo.png',
+        tag: `blog-${newPost.id}`,
+      });
+      notification.onclick = () => {
+        window.open(`/blog/${newPost.slug}`, "_blank");
+      };
+    }
+  }, [newPost]);
+
+  useEffect(() => {
+    const channel = supabase
+      .channel('blog-posts')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'blog_posts',
+        },
+        (payload: any) => {
+          const newArticle = payload.new;
+          if (!newArticle.is_published) return;
+
+          setPosts((prev) => [newArticle, ...prev]);
+
+          const lastSeenId = window.localStorage.getItem("neocharge-blog-last-seen");
+          if (!lastSeenId || lastSeenId !== newArticle.id) {
+            setNewPost(newArticle);
+          }
+
+          if ('Notification' in window && Notification.permission === 'granted') {
+            const notification = new Notification('📝 Nuevo artículo en NeoCharge', {
+              body: newArticle.title,
+              icon: '/images/logo.png',
+              tag: `blog-${newArticle.id}`,
+            });
+            notification.onclick = () => {
+              window.open(`/blog/${newArticle.slug}`, "_blank");
+            };
+          }
+        }
+      );
+
+    channel.subscribe();
+
+    return () => {
+      channel.unsubscribe();
+      supabase.removeChannel(channel).catch(() => {});
+    };
   }, []);
 
   return (
     <div className="container-page py-12 md:py-16">
       <header className="max-w-3xl mb-16 space-y-5">
+        {newPost && (
+          <div className="rounded-3xl border border-blue-200 bg-blue-50 p-4 text-sm text-blue-900 dark:border-blue-800 dark:bg-blue-950/40 dark:text-blue-100">
+            <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+              <div>
+                <p className="font-semibold">Nuevo artículo disponible</p>
+                <p className="text-sm text-slate-700 dark:text-slate-300">{newPost.title}</p>
+              </div>
+              <div className="flex items-center gap-2">
+                <Link
+                  to={`/blog/${newPost.slug}`}
+                  onClick={() => window.localStorage.setItem("neocharge-blog-last-seen", newPost.id)}
+                  className="rounded-full bg-primary px-4 py-2 text-sm font-semibold text-white transition hover:bg-primary/90"
+                >
+                  Leer ahora
+                </Link>
+                <button
+                  type="button"
+                  className="rounded-full border border-current px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  onClick={() => {
+                    window.localStorage.setItem("neocharge-blog-last-seen", newPost.id);
+                    setNewPost(null);
+                  }}
+                >
+                  Cerrar
+                </button>
+                <button
+                  type="button"
+                  className="rounded-full border border-current px-4 py-2 text-sm text-slate-700 transition hover:bg-slate-100 dark:text-slate-200 dark:hover:bg-slate-800"
+                  onClick={() => {
+                    if ('Notification' in window && Notification.permission === 'default') {
+                      Notification.requestPermission().then((permission) => {
+                        if (permission === 'granted') {
+                          new Notification('📝 Notificaciones activadas', {
+                            body: 'Recibirás avisos cuando haya artículos nuevos en el blog.',
+                            icon: '/images/logo.png',
+                          });
+                        }
+                      });
+                    }
+                  }}
+                >
+                  Activar notificaciones
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
           NeoCharge Blog
         </div>

@@ -1,6 +1,5 @@
 import { useEffect, useState, useCallback } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { RealtimeChannel } from '@supabase/supabase-js';
 import { useToast } from '@/hooks/use-toast';
 
 interface OrderNotification {
@@ -19,7 +18,6 @@ export function useOrderNotifications(enabled: boolean = true) {
   const [unreadCount, setUnreadCount] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
-  let channel: RealtimeChannel | null = null;
 
   // Cargar notificaciones previas no leídas
   const loadUnreadOrders = useCallback(async () => {
@@ -57,8 +55,8 @@ export function useOrderNotifications(enabled: boolean = true) {
 
     loadUnreadOrders();
 
-    const subscription = supabase
-      .channel('public:orders')
+    const channel = supabase
+      .channel('orders')
       .on(
         'postgres_changes',
         {
@@ -79,21 +77,17 @@ export function useOrderNotifications(enabled: boolean = true) {
             created_at: newOrder.created_at,
           };
 
-          // Agregar a notificaciones
           setNotifications((prev) => [notif, ...prev]);
           setUnreadCount((prev) => prev + 1);
 
-          // Sonido de notificación
           playNotificationSound();
 
-          // Toast
           toast({
             title: '🎉 Nuevo pedido!',
             description: `${newOrder.customer_name} - Orden #${newOrder.order_number}`,
             duration: 10000,
           });
 
-          // Notificación del navegador si está permitido
           if ('Notification' in window && Notification.permission === 'granted') {
             new Notification('🎉 Nuevo pedido en NeoCharge!', {
               body: `${newOrder.customer_name} - Orden #${newOrder.order_number}\n${newOrder.payment_currency === 'USD' ? '$' : '₱'} ${newOrder.payment_currency === 'USD' ? newOrder.total : newOrder.total_cup}`,
@@ -102,17 +96,24 @@ export function useOrderNotifications(enabled: boolean = true) {
             });
           }
         }
-      )
-      .subscribe((status) => {
-        if (status === 'SUBSCRIBED') {
-          setIsListening(true);
-        } else if (status === 'CLOSED') {
-          setIsListening(false);
-        }
-      });
+      );
+
+    channel.subscribe((status, err) => {
+      if (status === 'SUBSCRIBED') {
+        setIsListening(true);
+      } else {
+        setIsListening(false);
+      }
+      if (err) {
+        console.error('Realtime order subscription error:', err);
+      }
+    });
 
     return () => {
-      subscription.unsubscribe();
+      channel.unsubscribe();
+      supabase.removeChannel(channel).catch(() => {
+        // Ignore cleanup errors
+      });
     };
   }, [enabled, loadUnreadOrders, toast]);
 
