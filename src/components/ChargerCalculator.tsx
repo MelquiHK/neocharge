@@ -1,4 +1,5 @@
 import { useMemo, useState, type FormEvent } from "react";
+import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -79,6 +80,27 @@ const getBatteryTypeLabel = (type: string) => {
   return "Desconocido";
 };
 
+const formatChargerSpecs = (specs: ChargerSpecs) => {
+  const parts: string[] = [];
+  if (specs.voltage) parts.push(`${specs.voltage}V`);
+  if (specs.current) parts.push(`${specs.current}A`);
+  if (specs.batteryTypes?.length) parts.push(specs.batteryTypes.join(" / "));
+  return parts.length > 0 ? parts.join(" · ") : "Especificaciones no disponibles";
+};
+
+interface ChargerResult {
+  charger: Product;
+  chargerSpecs: ChargerSpecs;
+  score: number;
+  chargeHours?: number;
+}
+
+interface ChargeOption {
+  current: number;
+  hours: number;
+  description: string;
+}
+
 const getChargerMatchScore = (
   chargerSpecs: ChargerSpecs,
   batteryType: string,
@@ -90,6 +112,7 @@ const getChargerMatchScore = (
     const diff = Math.abs(chargerSpecs.voltage - batteryVoltage);
     if (diff === 0) score += 40;
     else if (diff <= 1) score += 25;
+    else if (diff <= 3) score += 10;
     else score -= 10;
   } else {
     score += 5;
@@ -143,7 +166,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
     const capacity = parseNumber(batteryCapacity);
     if (voltage === undefined || capacity === undefined) return null;
 
-    const recommendationCurrent = getRecommendedCurrent(capacity);
+      const recommendationCurrent = getRecommendedCurrent(capacity);
     const userTypeLabel = getBatteryTypeLabel(batteryType);
     const batteryTypeWarnings: string[] = [];
     if (batteryType === "lifepo4") {
@@ -154,6 +177,11 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
     if (batteryType === "lithium") {
       batteryTypeWarnings.push(
         "Si tu batería es de litio, elige un cargador que soporte baterías de litio o LiFePO4 para una carga segura."
+      );
+    }
+    if (batteryType === "lead-acid") {
+      batteryTypeWarnings.push(
+        "Para baterías de plomo-ácido o gel, evita cargadores diseñados solo para litio rápido."
       );
     }
 
@@ -173,7 +201,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
           main_image_index: 0,
         } as Product];
 
-    const chargerResults = comparisonChargers.map((charger) => {
+    const chargerResults: ChargerResult[] = comparisonChargers.map((charger) => {
       const chargerSpecs = parseChargerSpecifications(charger.specifications);
       const score = getChargerMatchScore(chargerSpecs, batteryType, voltage, recommendationCurrent);
       const chargeHours = chargerSpecs.current ? Number((capacity / chargerSpecs.current).toFixed(1)) : undefined;
@@ -185,23 +213,35 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
       };
     });
 
-    const bestChargerResult = chargerResults.reduce((best, current) => {
-      return !best || current.score > best.score ? current : best;
-    }, chargerResults[0]);
+    const sortedResults = chargerResults
+      .slice()
+      .sort((a, b) => b.score - a.score || (a.chargeHours ?? 999) - (b.chargeHours ?? 999));
+
+    const bestChargerResult = sortedResults[0];
+    const topChargerResults = sortedResults.slice(0, 3);
 
     const bestName = bestChargerResult?.charger.name ?? productName;
     const bestSpecs = bestChargerResult?.chargerSpecs;
     const bestChargeHours = bestChargerResult?.chargeHours;
     const bestVoltageText = bestSpecs?.voltage ? `${bestSpecs.voltage}V` : "el voltaje recomendado";
     const bestCurrentText = bestSpecs?.current ? `${bestSpecs.current}A` : "la corriente recomendada";
-    const supportedTypesText = bestSpecs?.batteryTypes?.length
-      ? bestSpecs.batteryTypes.join(" / ")
-      : "Plomo-ácido, Gel o Litio según modelo";
 
-    const compatibilityMessage = `La mejor opción del catálogo para tu batería es ${bestName}. ` +
-      `Este cargador ofrece ${bestVoltageText} y ${bestCurrentText}, lo que lo hace ideal para tu batería de ${voltage}V y ${capacity}Ah. ` +
-      `Estimamos que la recarga completa tomará alrededor de ${bestChargeHours ? `${bestChargeHours} horas` : "el tiempo esperado según la corriente del cargador"}. ` +
-      `Es una recomendación segura para baterías ${userTypeLabel}, con un balance entre velocidad y cuidado para que tu batería se cargue bien y te dure más.`;
+    const compatibilityMessageLines = [
+      `La mejor opción del catálogo para tu batería es ${bestName}.`,
+      `Este cargador ofrece ${bestVoltageText} y ${bestCurrentText}.`,
+      `Estimamos que la recarga completa tomará alrededor de ${bestChargeHours ? `${bestChargeHours} horas` : "el tiempo esperado según la corriente del cargador"}.`,
+      `Recomendado para baterías ${userTypeLabel} con un balance entre velocidad y cuidado.`,
+    ];
+
+    const commonChargeOptions: ChargeOption[] = [3, 5].map((current) => ({
+      current,
+      hours: Number((capacity / current).toFixed(1)),
+      description: `Con un cargador de ${current}A, tarda alrededor de ${Number((capacity / current).toFixed(1))} horas.`,
+    }));
+
+    const exactVoltageMatches = chargerResults
+      .filter((item) => item.chargerSpecs.voltage === voltage)
+      .sort((a, b) => b.score - a.score || (a.chargeHours ?? 999) - (b.chargeHours ?? 999));
 
     return {
       voltage,
@@ -210,12 +250,15 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
       chargeHours: bestChargeHours,
       batteryTypeWarnings,
       bestCharger: bestChargerResult?.charger,
-      compatibilityMessage,
+      compatibilityMessage: compatibilityMessageLines.join(" "),
       bestVoltageText,
       bestCurrentText,
       userTypeLabel,
-      supportedTypesText,
+      supportedTypesText: formatChargerSpecs(bestSpecs ?? {}),
       allChargers: comparisonChargers,
+      topChargerResults,
+      commonChargeOptions,
+      exactVoltageMatches,
       compatible: true,
     };
   }, [batteryVoltage, batteryCapacity, batteryType, chargerOptions, productName, productSpecs]);
@@ -323,6 +366,75 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
             <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Carga recomendada</p>
               <p className="mt-2 text-base font-semibold">{result.recommendationCurrent}A</p>
+            </div>
+          </div>
+
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Tiempos de carga con cargadores comunes</p>
+            <ul className="mt-3 space-y-2 text-sm">
+              {result.commonChargeOptions.map((option) => (
+                <li key={option.current}>
+                  <span className="font-semibold">{option.current}A</span> — {option.description}
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {result.exactVoltageMatches.length > 0 && (
+            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+              <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Cargadores disponibles para {result.voltage}V</p>
+              <div className="mt-3 grid gap-3">
+                {result.exactVoltageMatches.slice(0, 3).map((item) => (
+                  <div key={item.charger.id} className="rounded-2xl border border-border bg-white p-4 dark:bg-slate-950">
+                    <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                      <div>
+                        <p className="font-semibold">{item.charger.name}</p>
+                        <p className="text-sm text-muted-foreground">{formatChargerSpecs(item.chargerSpecs)}</p>
+                      </div>
+                      {item.charger.slug ? (
+                        <Link
+                          to={`/producto/${item.charger.slug}`}
+                          className="text-primary text-sm font-semibold hover:underline"
+                        >
+                          Ver producto
+                        </Link>
+                      ) : null}
+                    </div>
+                    <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-700 dark:text-slate-300">
+                      <span>Score: {item.score}</span>
+                      {item.chargeHours ? <span>~{item.chargeHours}h</span> : <span>Tiempo no disponible</span>}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </div>
+          )}
+
+          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+            <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Recomendaciones del catálogo</p>
+            <div className="mt-3 space-y-3">
+              {result.topChargerResults.map((item) => (
+                <div key={item.charger.id} className="rounded-2xl border border-border bg-white p-4 dark:bg-slate-950">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div>
+                      <p className="font-semibold">{item.charger.name}</p>
+                      <p className="text-sm text-muted-foreground">{formatChargerSpecs(item.chargerSpecs)}</p>
+                    </div>
+                    {item.charger.slug ? (
+                      <Link
+                        to={`/producto/${item.charger.slug}`}
+                        className="text-primary text-sm font-semibold hover:underline"
+                      >
+                        Ver producto
+                      </Link>
+                    ) : null}
+                  </div>
+                  <div className="mt-2 flex flex-wrap gap-3 text-sm text-slate-700 dark:text-slate-300">
+                    <span>Score: {item.score}</span>
+                    {item.chargeHours ? <span>~{item.chargeHours}h</span> : <span>Tiempo no disponible</span>}
+                  </div>
+                </div>
+              ))}
             </div>
           </div>
 
