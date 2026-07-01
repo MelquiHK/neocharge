@@ -44,16 +44,16 @@ export function buildWhatsAppMessage(p: CheckoutPayload): string {
   const subtotalCup = p.subtotalCUP ?? 0;
   const shippingUsd = p.shippingUSD ?? 0;
   const shippingCup = p.shippingCUP ?? 0;
-  const paymentLabel = p.paymentCurrency === "USD" ? "PAGO EN USD" : "PAGO EN CUP";
+  const paymentLabel = p.paymentCurrency === "USD" ? "USD" : "CUP";
 
   lines.push("");
   lines.push(`💰 *PRODUCTO:* ${formatCurrencyAmount(subtotalUsd, "USD")} / ${formatCurrencyAmount(subtotalCup, "CUP")}`);
   if (p.deliveryMethod === "delivery" && (shippingCup > 0 || shippingUsd > 0)) {
     lines.push(`🚚 *MENSAJERÍA:* ${formatCurrencyAmount(shippingCup, "CUP")}`);
   } else if (p.deliveryMethod === "pickup") {
-    lines.push("🏪 *RECOGIDA EN LOCAL*" );
+    lines.push("🏪 *RECOGIDA EN LOCAL*");
   }
-  lines.push(`💵 *TOTAL ${paymentLabel}:* ${p.paymentCurrency === "USD" ? formatCurrencyAmount(subtotalUsd + shippingUsd, "USD") : formatCurrencyAmount(subtotalCup + shippingCup, "CUP")}`);
+  lines.push(`💵 *TOTAL A PAGAR EN ${paymentLabel}:* ${p.paymentCurrency === "USD" ? formatCurrencyAmount(subtotalUsd, "USD") : formatCurrencyAmount(subtotalCup + shippingCup, "CUP")}`);
   if (p.paymentCurrency === "USD") {
     lines.push(`💶 *TOTAL EN CUP:* ${formatCurrencyAmount(subtotalCup + shippingCup, "CUP")}`);
   } else {

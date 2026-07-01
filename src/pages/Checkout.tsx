@@ -572,8 +572,9 @@ const Checkout = () => {
                     type="number"
                     min="0"
                     step="0.01"
-                    value={shippingUSD}
-                    onChange={(e) => setShippingUSD(Number(e.target.value))}
+                    inputMode="decimal"
+                    value={shippingUSD === 0 ? "" : shippingUSD}
+                    onChange={(e) => setShippingUSD(e.target.value === "" ? 0 : Number(e.target.value))}
                     className="h-8 w-24 text-right"
                   />
                 </div>
@@ -583,8 +584,9 @@ const Checkout = () => {
                     type="number"
                     min="0"
                     step="1"
-                    value={shippingCUP}
-                    onChange={(e) => setShippingCUP(Number(e.target.value))}
+                    inputMode="numeric"
+                    value={shippingCUP === 0 ? "" : shippingCUP}
+                    onChange={(e) => setShippingCUP(e.target.value === "" ? 0 : Number(e.target.value))}
                     className="h-8 w-24 text-right"
                   />
                 </div>
