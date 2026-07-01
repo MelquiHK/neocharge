@@ -100,16 +100,25 @@ export function AdminOrders() {
       })
       .join("\n");
     
-    const subtotalFormatted = `USD ${formatPrice(Number(viewing.subtotal))} / CUP ${formatCUP(Number(viewing.total_cup ?? viewing.subtotal))}`;
-    const deliveryFormatted = `USD ${formatPrice(Number(deliveryFee))} / CUP ${formatCUP(Number((viewing as any).shipping_cup ?? deliveryFee))}`;
-    const totalFormatted = `USD ${formatPrice(Number(viewing.subtotal) + Number(deliveryFee))} / CUP ${formatCUP(Number(viewing.total_cup ?? Number(viewing.subtotal) + Number(deliveryFee)))}`;
+    const paymentCurrency = (viewing as any).payment_currency || "USD";
+    const subtotalFormatted = paymentCurrency === "USD"
+      ? `USD ${formatPrice(Number(viewing.subtotal))}`
+      : `CUP ${formatCUP(Number(viewing.total_cup ?? viewing.subtotal))}`;
+    const shippingFormatted = viewing.delivery_method === "delivery" && Number(deliveryFee) > 0
+      ? `Mensajería en CUP: ${formatCUP(Number(deliveryFee))}`
+      : viewing.delivery_method === "pickup"
+        ? "Recogida en local"
+        : "Sin mensajería";
+    const totalFormatted = paymentCurrency === "USD"
+      ? `USD ${formatPrice(Number(viewing.subtotal) + Number(deliveryFee))}`
+      : `CUP ${formatCUP(Number(viewing.total_cup ?? Number(viewing.subtotal) + Number(deliveryFee)))}`;
 
     const msg = `🛍️ *VALE DE PEDIDO — NeoCharge*\n\n` +
       `Hola ${viewing.customer_name}, te confirmamos tu pedido:\n\n` +
       `${items}\n\n` +
-      `Subtotal: ${subtotalFormatted}\n` +
-      `Envío: ${deliveryFormatted}\n` +
-      `*TOTAL: ${totalFormatted}*\n\n` +
+      `Producto: ${subtotalFormatted}\n` +
+      `${shippingFormatted}\n` +
+      `*TOTAL ${paymentCurrency === "USD" ? "EN USD" : "EN CUP"}: ${totalFormatted}*\n\n` +
       (viewing.delivery_method === "delivery" ? `📍 Entrega: ${viewing.customer_address}\n` : `🏪 Recoger en: ${viewing.pickup_location}\n`) +
       (courier ? `🛵 Mensajero: ${courier}\n` : "") +
       `\nGracias por tu compra. ¡Te avisamos cuando salga en camino!`;

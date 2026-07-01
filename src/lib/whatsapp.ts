@@ -31,22 +31,34 @@ export function buildWhatsAppMessage(p: CheckoutPayload): string {
   lines.push("");
   lines.push("*PRODUCTOS:*");
   p.items.forEach((it, i) => {
-    const itemSubtotal = p.paymentCurrency === "USD" 
-      ? (it.displayPriceUSD || 0) * it.quantity 
+    const itemSubtotal = p.paymentCurrency === "USD"
+      ? (it.displayPriceUSD || 0) * it.quantity
       : (it.displayPriceCUP || 0) * it.quantity;
-    
+
     lines.push(`${i + 1}. ${it.name}`);
     lines.push(`   • Cantidad: ${it.quantity}`);
     lines.push(`   • Subtotal: ${p.paymentCurrency === "USD" ? `$${itemSubtotal.toFixed(2)} USD` : `${Math.round(itemSubtotal)} CUP`}`);
   });
+
   const subtotalUsd = p.subtotalUSD ?? p.total;
   const subtotalCup = p.subtotalCUP ?? 0;
   const shippingUsd = p.shippingUSD ?? 0;
   const shippingCup = p.shippingCUP ?? 0;
+  const paymentLabel = p.paymentCurrency === "USD" ? "PAGO EN USD" : "PAGO EN CUP";
+
   lines.push("");
   lines.push(`💰 *PRODUCTO:* ${formatCurrencyAmount(subtotalUsd, "USD")} / ${formatCurrencyAmount(subtotalCup, "CUP")}`);
-  lines.push(`🚚 *ENVÍO:* ${formatCurrencyAmount(shippingUsd, "USD")} / ${formatCurrencyAmount(shippingCup, "CUP")}`);
-  lines.push(`💵 *TOTAL:* ${formatCurrencyAmount(subtotalUsd + shippingUsd, "USD")} / ${formatCurrencyAmount(subtotalCup + shippingCup, "CUP")}`);
+  if (p.deliveryMethod === "delivery" && (shippingCup > 0 || shippingUsd > 0)) {
+    lines.push(`🚚 *MENSAJERÍA:* ${formatCurrencyAmount(shippingCup, "CUP")}`);
+  } else if (p.deliveryMethod === "pickup") {
+    lines.push("🏪 *RECOGIDA EN LOCAL*" );
+  }
+  lines.push(`💵 *TOTAL ${paymentLabel}:* ${p.paymentCurrency === "USD" ? formatCurrencyAmount(subtotalUsd + shippingUsd, "USD") : formatCurrencyAmount(subtotalCup + shippingCup, "CUP")}`);
+  if (p.paymentCurrency === "USD") {
+    lines.push(`💶 *TOTAL EN CUP:* ${formatCurrencyAmount(subtotalCup + shippingCup, "CUP")}`);
+  } else {
+    lines.push(`💵 *TOTAL EN USD:* ${formatCurrencyAmount(subtotalUsd + shippingUsd, "USD")}`);
+  }
   lines.push("");
   lines.push(`⏰ ${new Date().toLocaleString("es-CU")}`);
   lines.push("");
