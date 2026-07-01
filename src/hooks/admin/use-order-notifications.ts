@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { showBrowserNotification } from '@/lib/notifications';
+import { getUnseenOrders } from '@/hooks/admin/order-notifications.utils';
 
 interface OrderNotification {
   id: string;
@@ -61,10 +62,9 @@ export function useOrderNotifications(enabled: boolean = true) {
     try {
       const { data, error } = await supabase
         .from('orders')
-        .select('id,order_number,customer_name,total,total_cup,payment_currency,items,created_at')
-        .eq('status', 'pending')
+        .select('id,order_number,customer_name,total,total_cup,payment_currency,items,created_at,status')
         .order('created_at', { ascending: false })
-        .limit(10);
+        .limit(15);
 
       if (error) throw error;
 
@@ -97,18 +97,16 @@ export function useOrderNotifications(enabled: boolean = true) {
       try {
         const { data, error } = await supabase
           .from('orders')
-          .select('id,order_number,customer_name,total,total_cup,payment_currency,items,created_at')
-          .eq('status', 'pending')
+          .select('id,order_number,customer_name,total,total_cup,payment_currency,items,created_at,status')
           .order('created_at', { ascending: false })
-          .limit(20);
+          .limit(25);
 
         if (error) throw error;
 
-        (data || []).forEach((order: any) => {
+        const unseenOrders = getUnseenOrders(seenOrderIdsRef.current, data || []);
+        unseenOrders.forEach((order: any) => {
           if (!order.id) return;
-          if (!seenOrderIdsRef.current.has(order.id)) {
-            pushNotification(order);
-          }
+          pushNotification(order);
         });
       } catch (error) {
         console.error('Error polling orders:', error);
@@ -128,6 +126,20 @@ export function useOrderNotifications(enabled: boolean = true) {
           const newOrder = payload.new;
           if (newOrder?.id) {
             pushNotification(newOrder);
+          }
+        }
+      )
+      .on(
+        'postgres_changes',
+        {
+          event: 'UPDATE',
+          schema: 'public',
+          table: 'orders',
+        },
+        (payload: any) => {
+          const updatedOrder = payload.new;
+          if (updatedOrder?.id) {
+            pushNotification(updatedOrder);
           }
         }
       );

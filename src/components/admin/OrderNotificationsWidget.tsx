@@ -2,8 +2,7 @@ import { useEffect, useState } from 'react';
 import { useOrderNotifications } from '@/hooks/admin/use-order-notifications';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Bell, X, Volume2 } from 'lucide-react';
-import { cn } from '@/lib/utils';
+import { Bell, Volume2, CheckCircle2 } from 'lucide-react';
 
 interface OrderNotificationsWidgetProps {
   inline?: boolean;
@@ -12,19 +11,35 @@ interface OrderNotificationsWidgetProps {
 export function OrderNotificationsWidget({ inline }: OrderNotificationsWidgetProps) {
   const { notifications, unreadCount, isListening, clearNotifications, requestNotificationPermission } =
     useOrderNotifications(true);
-  const [isOpen, setIsOpen] = useState(false);
   const [notificationEnabled, setNotificationEnabled] = useState(false);
+  const [permissionState, setPermissionState] = useState<'default' | 'granted' | 'denied' | 'unsupported'>('default');
 
   useEffect(() => {
-    // Verificar si tenemos permiso para notificaciones
-    if ('Notification' in window) {
-      setNotificationEnabled(Notification.permission === 'granted');
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setPermissionState('unsupported');
+      return;
     }
+
+    setPermissionState(Notification.permission);
+    setNotificationEnabled(Notification.permission === 'granted');
   }, []);
 
-  const handleEnableNotifications = () => {
+  const handleEnableNotifications = async () => {
+    if (typeof window === 'undefined' || !('Notification' in window)) {
+      setPermissionState('unsupported');
+      return;
+    }
+
+    if (Notification.permission === 'granted') {
+      setNotificationEnabled(true);
+      setPermissionState('granted');
+      return;
+    }
+
+    const permission = await Notification.requestPermission();
+    setPermissionState(permission);
+    setNotificationEnabled(permission === 'granted');
     requestNotificationPermission();
-    setNotificationEnabled(true);
   };
 
   const wrapperClasses = inline
@@ -89,9 +104,9 @@ export function OrderNotificationsWidget({ inline }: OrderNotificationsWidgetPro
 
       <div className="mt-4 flex flex-wrap gap-2">
         {!notificationEnabled && (
-          <Button size="sm" variant="outline" onClick={handleEnableNotifications} className="flex-1 min-w-[140px]">
-            <Volume2 className="w-3 h-3" />
-            Habilitar notificaciones
+          <Button size="sm" variant="outline" onClick={() => { void handleEnableNotifications(); }} className="flex-1 min-w-[140px]">
+            {permissionState === 'denied' ? <CheckCircle2 className="w-3 h-3" /> : <Volume2 className="w-3 h-3" />}
+            {permissionState === 'denied' ? 'Reintentar permisos' : 'Habilitar notificaciones'}
           </Button>
         )}
         {notifications.length > 0 && (
