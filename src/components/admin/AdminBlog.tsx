@@ -250,15 +250,40 @@ export function AdminBlog() {
       is_published: !!postEditing.is_published,
     };
 
+    let savedPost: { id?: string; title: string; slug: string } | null = null;
+
     if (postEditing.id) {
-      const { error } = await supabase.from("blog_posts").update(payload as any).eq("id", postEditing.id);
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .update(payload as any)
+        .eq("id", postEditing.id)
+        .select("id,title,slug")
+        .single();
       if (error) return toast.error(error.message);
+      savedPost = data;
       toast.success("Artículo actualizado");
     } else {
-      const { error } = await supabase.from("blog_posts").insert(payload as any);
+      const { data, error } = await supabase
+        .from("blog_posts")
+        .insert(payload as any)
+        .select("id,title,slug")
+        .single();
       if (error) return toast.error(error.message);
+      savedPost = data;
       toast.success("Artículo creado");
     }
+
+    if (payload.is_published && savedPost) {
+      window.dispatchEvent(new CustomEvent("neocharge:blog-published", { detail: { post: savedPost } }));
+      if ('Notification' in window && Notification.permission === 'granted') {
+        new Notification('📝 Nuevo artículo publicado', {
+          body: savedPost.title,
+          icon: '/images/logo.png',
+          tag: `blog-${savedPost.id}`,
+        });
+      }
+    }
+
     setPostOpen(false);
     setPostEditing(null);
     load();
