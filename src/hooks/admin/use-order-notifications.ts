@@ -1,6 +1,7 @@
 import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
+import { showBrowserNotification } from '@/lib/notifications';
 
 interface OrderNotification {
   id: string;
@@ -48,13 +49,11 @@ export function useOrderNotifications(enabled: boolean = true) {
       duration: 10000,
     });
 
-    if ('Notification' in window && Notification.permission === 'granted') {
-      new Notification('🎉 Nuevo pedido en NeoCharge!', {
-        body: `${order.customer_name} - Orden #${order.order_number}\n${order.payment_currency === 'USD' ? '$' : '₱'} ${order.payment_currency === 'USD' ? order.total : order.total_cup}`,
-        icon: '/images/logo.png',
-        tag: `order-${id}`,
-      });
-    }
+    void showBrowserNotification('🎉 Nuevo pedido en NeoCharge!', {
+      body: `${order.customer_name} - Orden #${order.order_number}\n${order.payment_currency === 'USD' ? '$' : '₱'} ${order.payment_currency === 'USD' ? order.total : order.total_cup}`,
+      icon: '/images/logo.png',
+      tag: `order-${id}`,
+    });
   }, [toast]);
 
   // Cargar notificaciones previas no leídas

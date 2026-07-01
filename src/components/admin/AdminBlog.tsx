@@ -29,6 +29,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Image as ImageIcon, ExternalLink } from "lucide-react";
 import { renderMarkdown } from "@/lib/markdown";
+import { showBrowserNotification } from "@/lib/notifications";
 
 type BlogCategory = {
   id: string;
@@ -275,13 +276,11 @@ export function AdminBlog() {
 
     if (payload.is_published && savedPost) {
       window.dispatchEvent(new CustomEvent("neocharge:blog-published", { detail: { post: savedPost } }));
-      if ('Notification' in window && Notification.permission === 'granted') {
-        new Notification('📝 Nuevo artículo publicado', {
-          body: savedPost.title,
-          icon: '/images/logo.png',
-          tag: `blog-${savedPost.id}`,
-        });
-      }
+      void showBrowserNotification('📝 Nuevo artículo publicado', {
+        body: savedPost.title,
+        icon: '/images/logo.png',
+        tag: `blog-${savedPost.id}`,
+      });
     }
 
     setPostOpen(false);

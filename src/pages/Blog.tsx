@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Calendar } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/use-seo";
+import { showBrowserNotification } from "@/lib/notifications";
 
 interface Post {
   id: string;
@@ -44,7 +45,7 @@ const Blog = () => {
     setNotificationPermission(permission);
 
     if (permission === "granted") {
-      new Notification("📝 Notificaciones activadas", {
+      await showBrowserNotification("📝 Notificaciones activadas", {
         body: "Recibirás avisos cuando haya artículos nuevos en el blog.",
         icon: "/images/logo.png",
       });
@@ -62,16 +63,14 @@ const Blog = () => {
       setNewPost(article);
     }
 
-    if ('Notification' in window && Notification.permission === 'granted') {
-      const notification = new Notification('📝 Nuevo artículo en NeoCharge', {
-        body: article.title,
-        icon: '/images/logo.png',
-        tag: `blog-${article.id}`,
-      });
-      notification.onclick = () => {
+    void showBrowserNotification('📝 Nuevo artículo en NeoCharge', {
+      body: article.title,
+      icon: '/images/logo.png',
+      tag: `blog-${article.id}`,
+      onclick: () => {
         window.open(`/blog/${article.slug}`, "_blank");
-      };
-    }
+      },
+    });
   };
 
   useEffect(() => {
@@ -104,16 +103,14 @@ const Blog = () => {
 
   useEffect(() => {
     if (!newPost) return;
-    if ('Notification' in window && Notification.permission === 'granted') {
-      const notification = new Notification('📝 Nuevo artículo en NeoCharge', {
-        body: newPost.title,
-        icon: '/images/logo.png',
-        tag: `blog-${newPost.id}`,
-      });
-      notification.onclick = () => {
+    void showBrowserNotification('📝 Nuevo artículo en NeoCharge', {
+      body: newPost.title,
+      icon: '/images/logo.png',
+      tag: `blog-${newPost.id}`,
+      onclick: () => {
         window.open(`/blog/${newPost.slug}`, "_blank");
-      };
-    }
+      },
+    });
   }, [newPost]);
 
   useEffect(() => {
