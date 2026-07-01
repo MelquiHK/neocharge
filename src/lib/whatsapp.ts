@@ -11,6 +11,10 @@ interface CheckoutPayload {
   deliveryMethod: "pickup" | "delivery";
   customerAddress?: string;
   notes?: string;
+  shippingUSD?: number;
+  shippingCUP?: number;
+  subtotalUSD?: number;
+  subtotalCUP?: number;
 }
 
 export function buildWhatsAppMessage(p: CheckoutPayload): string {
@@ -35,13 +39,23 @@ export function buildWhatsAppMessage(p: CheckoutPayload): string {
     lines.push(`   • Cantidad: ${it.quantity}`);
     lines.push(`   • Subtotal: ${p.paymentCurrency === "USD" ? `$${itemSubtotal.toFixed(2)} USD` : `${Math.round(itemSubtotal)} CUP`}`);
   });
+  const subtotalUsd = p.subtotalUSD ?? p.total;
+  const subtotalCup = p.subtotalCUP ?? 0;
+  const shippingUsd = p.shippingUSD ?? 0;
+  const shippingCup = p.shippingCUP ?? 0;
   lines.push("");
-  lines.push(`💰 *TOTAL: ${p.paymentCurrency === "USD" ? `$${p.total.toFixed(2)} USD` : `${Math.round(p.total)} CUP`}*`);
+  lines.push(`💰 *PRODUCTO:* ${formatCurrencyAmount(subtotalUsd, "USD")} / ${formatCurrencyAmount(subtotalCup, "CUP")}`);
+  lines.push(`🚚 *ENVÍO:* ${formatCurrencyAmount(shippingUsd, "USD")} / ${formatCurrencyAmount(shippingCup, "CUP")}`);
+  lines.push(`💵 *TOTAL:* ${formatCurrencyAmount(subtotalUsd + shippingUsd, "USD")} / ${formatCurrencyAmount(subtotalCup + shippingCup, "CUP")}`);
   lines.push("");
   lines.push(`⏰ ${new Date().toLocaleString("es-CU")}`);
   lines.push("");
   lines.push("Por favor confirmen mi pedido. ¡Gracias!");
   return lines.join("\n");
+}
+
+function formatCurrencyAmount(value: number, currency: "USD" | "CUP") {
+  return currency === "USD" ? `$${Number(value || 0).toFixed(2)} USD` : `${Math.round(Number(value || 0))} CUP`;
 }
 
 export function getWhatsAppLink(message: string, phone = STORE_PHONE): string {

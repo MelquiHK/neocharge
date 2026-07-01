@@ -12,6 +12,7 @@ import { useSiteSettings } from "@/hooks/use-site-settings";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
+import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 
@@ -36,6 +37,8 @@ const Checkout = () => {
   const [delivery, setDelivery] = useState<"pickup" | "delivery">("delivery");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
+  const [shippingUSD, setShippingUSD] = useState(0);
+  const [shippingCUP, setShippingCUP] = useState(0);
 
   const [locations, setLocations] = useState<Loc[]>([]);
   const [pickupLocId, setPickupLocId] = useState<string>("");
@@ -227,6 +230,14 @@ const Checkout = () => {
         ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
         : null;
 
+      const breakdown = buildOrderBreakdown({
+        paymentCurrency,
+        subtotal: totalUSD,
+        subtotalCUP: totalCUP,
+        shippingUSD,
+        shippingCUP,
+      });
+
       const orderPayload = {
         user_id: user?.id ?? null,
         customer_name: name.trim(),
@@ -236,10 +247,10 @@ const Checkout = () => {
         pickup_location: delivery === "pickup" ? pickupLoc?.name ?? null : null,
         pickup_location_id: delivery === "pickup" ? pickupLocId : null,
         items: items as unknown,
-        subtotal: total,
-        delivery_fee: 0,
-        total,
-        total_cup: totalCUP,
+        subtotal: breakdown.productUSD,
+        delivery_fee: breakdown.shippingUSD,
+        total: breakdown.totalUSD,
+        total_cup: breakdown.totalCUP,
         exchange_rate: rate ?? null,
         admin_notes: notes.trim() || null,
         status: "pending",
@@ -266,6 +277,10 @@ const Checkout = () => {
         deliveryMethod: delivery,
         customerAddress: delivery === "delivery" ? address.trim() : undefined,
         notes: notes.trim() || undefined,
+        shippingUSD,
+        shippingCUP,
+        subtotalUSD: totalUSD,
+        subtotalCUP: totalCUP,
       });
 
       try {
@@ -543,24 +558,46 @@ const Checkout = () => {
             </div>
             <div className="border-t border-border pt-4 space-y-2 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Subtotal</span>
-                <span>{paymentCurrency === "USD" ? formatPrice(totalUSD) : formatCUP(totalCUP)}</span>
+                <span className="text-muted-foreground">Producto</span>
+                <span>{formatPrice(totalUSD)} / {formatCUP(totalCUP)}</span>
               </div>
-              <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Envío</span>
-                <span className="text-xs italic">Calculado al confirmar</span>
+              <div className="space-y-2 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-3">
+                <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+                  <span>Envío</span>
+                  <span>Separado por moneda</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">USD</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    value={shippingUSD}
+                    onChange={(e) => setShippingUSD(Number(e.target.value))}
+                    className="h-8 w-24 text-right"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">CUP</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    value={shippingCUP}
+                    onChange={(e) => setShippingCUP(Number(e.target.value))}
+                    className="h-8 w-24 text-right"
+                  />
+                </div>
               </div>
               <div className="flex items-center justify-between font-display font-bold text-base pt-2 border-t border-border">
                 <span>Total a pagar</span>
                 <div className="text-right">
-                  <span className="text-primary text-2xl block">
-                    {paymentCurrency === "USD" ? formatPrice(totalUSD) : formatCUP(totalCUP)}
+                  <span className="text-primary text-base block">
+                    USD {formatPrice(totalUSD + shippingUSD)}
                   </span>
-                  {paymentCurrency === "USD" ? (
-                    <span className="text-[10px] text-muted-foreground block">≈ {formatCUP(totalCUP)}</span>
-                  ) : (
-                    <span className="text-[10px] text-muted-foreground block">≈ {formatPrice(totalUSD)}</span>
-                  )}
+                  <span className="text-[10px] text-muted-foreground block">
+                    CUP {formatCUP(totalCUP + shippingCUP)}
+                  </span>
                 </div>
               </div>
             </div>

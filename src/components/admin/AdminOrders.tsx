@@ -100,11 +100,9 @@ export function AdminOrders() {
       })
       .join("\n");
     
-    const subtotalFormatted = currency === "USD" ? formatPrice(Number(viewing.subtotal)) : formatCUP(Number(viewing.subtotal));
-    const deliveryFormatted = currency === "USD" ? formatPrice(Number(deliveryFee)) : formatCUP(Number(deliveryFee));
-    const totalFormatted = currency === "USD" 
-      ? formatPrice(Number(viewing.subtotal) + Number(deliveryFee)) 
-      : formatCUP(Number(viewing.subtotal) + Number(deliveryFee));
+    const subtotalFormatted = `USD ${formatPrice(Number(viewing.subtotal))} / CUP ${formatCUP(Number(viewing.total_cup ?? viewing.subtotal))}`;
+    const deliveryFormatted = `USD ${formatPrice(Number(deliveryFee))} / CUP ${formatCUP(Number((viewing as any).shipping_cup ?? deliveryFee))}`;
+    const totalFormatted = `USD ${formatPrice(Number(viewing.subtotal) + Number(deliveryFee))} / CUP ${formatCUP(Number(viewing.total_cup ?? Number(viewing.subtotal) + Number(deliveryFee)))}`;
 
     const msg = `🛍️ *VALE DE PEDIDO — NeoCharge*\n\n` +
       `Hola ${viewing.customer_name}, te confirmamos tu pedido:\n\n` +
@@ -298,19 +296,17 @@ export function AdminOrders() {
                   return (
                     <>
                       <div className="flex justify-between text-sm">
-                        <span>Subtotal</span>
-                        <span>{currency === "USD" ? formatPrice(Number(viewing.subtotal)) : formatCUP(Number(viewing.subtotal))}</span>
+                        <span>Producto</span>
+                        <span>USD {formatPrice(Number(viewing.subtotal))} / CUP {formatCUP(Number(viewing.total_cup ?? viewing.subtotal))}</span>
                       </div>
                       <div className="flex justify-between text-sm">
                         <span>Envío</span>
-                        <span>{currency === "USD" ? formatPrice(Number(deliveryFee)) : formatCUP(Number(deliveryFee))}</span>
+                        <span>USD {formatPrice(Number(deliveryFee))} / CUP {formatCUP(Number((viewing as any).shipping_cup ?? deliveryFee))}</span>
                       </div>
                       <div className="flex justify-between font-display font-bold text-lg pt-2 border-t border-border">
                         <span>TOTAL</span>
                         <span className="text-primary">
-                          {currency === "USD" 
-                            ? formatPrice(Number(viewing.subtotal) + Number(deliveryFee)) 
-                            : formatCUP(Number(viewing.subtotal) + Number(deliveryFee))}
+                          USD {formatPrice(Number(viewing.subtotal) + Number(deliveryFee))} / CUP {formatCUP(Number(viewing.total_cup ?? Number(viewing.subtotal) + Number(deliveryFee))) }
                         </span>
                       </div>
                     </>
