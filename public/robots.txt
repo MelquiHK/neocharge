@@ -1,0 +1,39 @@
+# robots.txt for NeoCharge
+# Indicates which URLs and resources should be crawled by search engine bots
+
+User-agent: *
+Allow: /
+Disallow: /admin
+Disallow: /cuenta
+Disallow: /checkout
+Disallow: /auth
+Disallow: /*.json
+Disallow: /node_modules/
+Disallow: /.git/
+
+# Crawl delay (in seconds)
+Crawl-delay: 1
+
+# Sitemaps
+Sitemap: https://neocharge.vercel.app/sitemap.xml
+
+# Specific rules for Google
+User-agent: Googlebot
+Allow: /
+Disallow: /admin
+Disallow: /cuenta
+Crawl-delay: 0.5
+
+# Specific rules for Bing
+User-agent: Bingbot
+Allow: /
+Disallow: /admin
+Crawl-delay: 1
+
+# Allow social media crawlers
+User-agent: Twitterbot
+Allow: /
+
+User-agent: facebookexternalhit
+Allow: /
+

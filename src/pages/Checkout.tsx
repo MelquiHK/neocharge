@@ -1,0 +1,613 @@
+import { useEffect, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { ArrowLeft, MessageCircle, MapPin, Store, Truck, Loader2, Navigation } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Textarea } from "@/components/ui/textarea";
+import { useCart } from "@/contexts/CartContext";
+import { useAuth } from "@/contexts/AuthContext";
+import { useExchangeRate } from "@/hooks/use-exchange-rate";
+import { useSiteSettings } from "@/hooks/use-site-settings";
+import { supabase } from "@/integrations/supabase/client";
+import { formatPrice, formatCUP } from "@/lib/format";
+import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
+import { buildOrderBreakdown } from "@/lib/order-pricing";
+import { toast } from "sonner";
+import { cn } from "@/lib/utils";
+
+interface Loc {
+  id: string;
+  name: string;
+  address: string;
+  location_type: string;
+  hours: string | null;
+}
+
+const Checkout = () => {
+  const navigate = useNavigate();
+  const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP } = useCart();
+  const { user } = useAuth();
+  const { rate } = useExchangeRate();
+  const { settings } = useSiteSettings();
+  const [submitting, setSubmitting] = useState(false);
+
+  const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [delivery, setDelivery] = useState<"pickup" | "delivery">("delivery");
+  const [address, setAddress] = useState("");
+  const [notes, setNotes] = useState("");
+  const [shippingUSD, setShippingUSD] = useState(0);
+  const [shippingCUP, setShippingCUP] = useState(0);
+
+  const [locations, setLocations] = useState<Loc[]>([]);
+  const [pickupLocId, setPickupLocId] = useState<string>("");
+  const [locationProducts, setLocationProducts] = useState<Record<string, string[]>>({});
+  const [locationLoading, setLocationLoading] = useState(false);
+  const [locationError, setLocationError] = useState<string | null>(null);
+  const [locationFilter, setLocationFilter] = useState<"all" | "electronics" | "chargers" | "both">("all");
+
+  const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
+  const [geoLoading, setGeoLoading] = useState(false);
+  const [geoError, setGeoError] = useState<string | null>(null);
+
+  const filteredLocations = locations.filter((loc) => locationFilter === "all" || loc.location_type === locationFilter);
+
+  useEffect(() => {
+    document.title = "Finalizar pedido — NeoCharge";
+  }, []);
+
+  useEffect(() => {
+    if (items.length === 0) {
+      setLocations([]);
+      setLocationProducts({});
+      setPickupLocId("");
+      return;
+    }
+
+    setLocationLoading(true);
+    setLocationError(null);
+
+    const itemIds = items.map((item) => item.id).filter(Boolean) as string[];
+
+    const loadFallbackLocations = async () => {
+      const { data: allLocs, error: locsError } = await supabase
+        .from("store_locations")
+        .select("id,name,address,location_type,map_link,hours")
+        .eq("is_active", true)
+        .order("sort_order");
+
+      if (locsError) {
+        console.error("Error loading store locations fallback:", locsError);
+        return null;
+      }
+
+      return allLocs ?? [];
+    };
+
+    const handleFallback = async () => {
+      const fallbackLocations = await loadFallbackLocations();
+      if (!fallbackLocations) {
+        setLocationError("No pudimos cargar los locales disponibles. Intenta de nuevo.");
+        setLocationLoading(false);
+        return;
+      }
+      setLocations(fallbackLocations);
+      setLocationProducts({});
+      if (fallbackLocations.length > 0 && !fallbackLocations.some((loc) => loc.id === pickupLocId)) {
+        setPickupLocId(fallbackLocations[0].id);
+      }
+      setLocationLoading(false);
+    };
+
+    void (async () => {
+      if (itemIds.length === 0) {
+        await handleFallback();
+        return;
+      }
+
+      const { data, error } = await supabase
+        .from("product_locations")
+        .select("product_id,stock,store_locations(id,name,address,location_type,map_link,hours)")
+        .in("product_id", itemIds);
+
+      if (error) {
+        console.error("Error loading product locations:", error);
+        await handleFallback();
+        return;
+      }
+
+      const rows = (data ?? []) as any[];
+      const availableRows = rows.filter((row) => row.stock > 0 && row.store_locations);
+      const map: Record<string, Loc> = {};
+      const productsByLocation: Record<string, string[]> = {};
+
+// CAMBIA ESTE BLOQUE EXACTAMENTE:
+      availableRows.forEach((row) => {
+        // Forzamos a capturar el local ya sea si viene como objeto o como primer elemento de un array
+        const loc = Array.isArray(row.store_locations) ? row.store_locations[0] : row.store_locations;
+        if (!loc || !loc.id) return; // Si no hay local válido, ignorar
+        
+        const product = items.find((it) => it.id === row.product_id);
+        if (!product) return;
+
+        map[loc.id] = loc;
+        productsByLocation[loc.id] = productsByLocation[loc.id] ?? [];
+        if (!productsByLocation[loc.id].includes(product.name)) {
+          productsByLocation[loc.id].push(product.name);
+        }
+      });
+
+      const available = Object.values(map);
+
+      if (available.length > 0) {
+        setLocations(available);
+        setLocationProducts(productsByLocation);
+        if (!available.some((loc) => loc.id === pickupLocId)) {
+          setPickupLocId(available[0].id);
+        }
+        setLocationLoading(false);
+        return;
+      }
+
+      await handleFallback();
+    })();
+  }, [items, pickupLocId]);
+
+  useEffect(() => {
+    if (!user) return;
+    supabase
+      .from("profiles")
+      .select("full_name,phone,username")
+      .eq("id", user.id)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          if (data.full_name) setName(data.full_name);
+          else if (data.username) setName(data.username);
+          if (data.phone) setPhone(data.phone);
+        }
+      });
+  }, [user]);
+
+  const requestLocation = () => {
+    if (!navigator.geolocation) {
+      setGeoError("Tu navegador no soporta ubicación");
+      return;
+    }
+    setGeoLoading(true);
+    setGeoError(null);
+    navigator.geolocation.getCurrentPosition(
+      (pos) => {
+        setCoords({ lat: pos.coords.latitude, lng: pos.coords.longitude });
+        setGeoLoading(false);
+        toast.success("Ubicación capturada correctamente");
+      },
+      (err) => {
+        setGeoLoading(false);
+        if (err.code === err.PERMISSION_DENIED) {
+          setGeoError("Permiso denegado. Activa la ubicación en tu navegador y vuelve a intentar.");
+        } else {
+          setGeoError("No pudimos obtener tu ubicación. Intenta de nuevo.");
+        }
+      },
+      { enableHighAccuracy: true, timeout: 10000 },
+    );
+  };
+
+  if (items.length === 0) {
+    return (
+      <div className="container-page py-20 text-center space-y-4">
+        <h1 className="font-display text-3xl font-bold">Tu carrito está vacío</h1>
+        <p className="text-muted-foreground">Añade productos antes de continuar.</p>
+        <Button asChild variant="hero">
+          <Link to="/tienda">Ir a la tienda</Link>
+        </Button>
+      </div>
+    );
+  }
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!name.trim() || !phone.trim()) {
+      toast.error("Por favor completa nombre y teléfono");
+      return;
+    }
+    if (delivery === "delivery" && !address.trim()) {
+      toast.error("Indica la dirección de entrega");
+      return;
+    }
+    if (delivery === "pickup" && !pickupLocId) {
+      toast.error("Elige un local para recoger");
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      const pickupLoc = locations.find((l) => l.id === pickupLocId);
+      const mapLink = coords
+        ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
+        : null;
+
+      const breakdown = buildOrderBreakdown({
+        paymentCurrency,
+        subtotal: totalUSD,
+        subtotalCUP: totalCUP,
+        shippingUSD,
+        shippingCUP,
+      });
+
+      const orderPayload = {
+        user_id: user?.id ?? null,
+        customer_name: name.trim(),
+        customer_phone: phone.trim(),
+        customer_address: delivery === "delivery" ? address.trim() : null,
+        delivery_method: delivery,
+        pickup_location: delivery === "pickup" ? pickupLoc?.name ?? null : null,
+        pickup_location_id: delivery === "pickup" ? pickupLocId : null,
+        items: items as unknown,
+        subtotal: breakdown.productUSD,
+        delivery_fee: breakdown.shippingUSD,
+        total: breakdown.totalUSD,
+        total_cup: breakdown.totalCUP,
+        exchange_rate: rate ?? null,
+        admin_notes: notes.trim() || null,
+        status: "pending",
+        latitude: coords?.lat ?? null,
+        longitude: coords?.lng ?? null,
+        location_link: mapLink,
+        payment_method: paymentCurrency === "USD" ? "cash_usd" : "cash_cup",
+        payment_currency: paymentCurrency,
+      };
+
+      const { error } = await supabase.from("orders").insert(orderPayload);
+      if (error) {
+        console.error("Order save error:", error);
+        toast.error(error.message || "No se pudo guardar el pedido. Intenta de nuevo.");
+        return;
+      }
+
+      const waMessage = buildWhatsAppMessage({
+        items,
+        total,
+        paymentCurrency,
+        customerName: name.trim(),
+        customerPhone: phone.trim(),
+        deliveryMethod: delivery,
+        customerAddress: delivery === "delivery" ? address.trim() : undefined,
+        notes: notes.trim() || undefined,
+        shippingUSD,
+        shippingCUP,
+        subtotalUSD: totalUSD,
+        subtotalCUP: totalCUP,
+      });
+
+      try {
+        window.open(getWhatsAppLink(waMessage), "_blank");
+      } catch (openError) {
+        console.error("WhatsApp open error:", openError);
+        toast.error("Pedido guardado, pero no pudimos abrir WhatsApp automáticamente.");
+      }
+
+      toast.success("¡Pedido enviado! Te contactaremos pronto por WhatsApp para coordinar el pago.");
+      setTimeout(() => {
+        clearCart();
+        navigate("/");
+      }, 1500);
+    } catch (submitError) {
+      console.error("Checkout submit error:", submitError);
+      toast.error("Error inesperado al enviar el pedido. Por favor intenta de nuevo.");
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  return (
+    <div className="container-page py-12 md:py-20">
+      <div className="grid lg:grid-cols-[1fr_420px] gap-12">
+        <form onSubmit={handleSubmit} className="space-y-10">
+          <header className="space-y-4">
+            <Link to="/tienda" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-2">
+              <ArrowLeft className="w-4 h-4" /> Volver a la tienda
+            </Link>
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+              Checkout Seguro
+            </div>
+            <h1 className="font-display text-5xl font-bold tracking-tight">Finalizar pedido</h1>
+            <p className="text-xl text-muted-foreground font-light max-w-2xl">
+              Recibimos tu pedido directamente. Te contactaremos por WhatsApp para coordinar el envío y el pago.
+            </p>
+          </header>
+
+          <section className="card-elevated p-6 space-y-4">
+            <h2 className="font-display text-lg font-bold">Tus datos</h2>
+            <div className="grid sm:grid-cols-2 gap-4">
+              <div className="space-y-2">
+                <Label htmlFor="name">Nombre completo *</Label>
+                <Input id="name" value={name} onChange={(e) => setName(e.target.value)} required placeholder="Juan Pérez" />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="phone">WhatsApp *</Label>
+                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="+53 5XXXXXXX" />
+              </div>
+            </div>
+          </section>
+
+          <section className="card-elevated p-6 space-y-4">
+            <h2 className="font-display text-lg font-bold">Método de entrega</h2>
+            <div className="grid sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                onClick={() => setDelivery("delivery")}
+                className={cn(
+                  "p-4 rounded-2xl border-2 text-left transition-all",
+                  delivery === "delivery" ? "border-primary bg-primary/5 shadow-soft" : "border-border hover:border-primary/40",
+                )}
+              >
+                <Truck className={cn("w-5 h-5 mb-2", delivery === "delivery" ? "text-primary" : "text-muted-foreground")} />
+                <h3 className="font-semibold text-sm">Mensajería a domicilio</h3>
+                <p className="text-xs text-muted-foreground mt-1">El precio se acuerda al confirmar</p>
+              </button>
+              <button
+                type="button"
+                onClick={() => setDelivery("pickup")}
+                className={cn(
+                  "p-4 rounded-2xl border-2 text-left transition-all",
+                  delivery === "pickup" ? "border-primary bg-primary/5 shadow-soft" : "border-border hover:border-primary/40",
+                )}
+              >
+                <Store className={cn("w-5 h-5 mb-2", delivery === "pickup" ? "text-primary" : "text-muted-foreground")} />
+                <h3 className="font-semibold text-sm">Recoger en local</h3>
+                <p className="text-xs text-muted-foreground mt-1">{locations.length} locales disponibles</p>
+              </button>
+            </div>
+
+            {delivery === "delivery" && (
+              <div className="space-y-4 animate-fade-in">
+                <div className="space-y-2">
+                  <Label htmlFor="address">Dirección exacta *</Label>
+                  <Textarea
+                    id="address"
+                    value={address}
+                    onChange={(e) => setAddress(e.target.value)}
+                    required
+                    placeholder="Calle, número, apto, municipio, referencias..."
+                    className="min-h-[80px] rounded-xl"
+                  />
+                </div>
+
+                <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 space-y-3">
+                  <div className="flex items-start gap-3">
+                    <Navigation className="w-5 h-5 text-primary mt-0.5 shrink-0" />
+                    <div className="flex-1">
+                      <h4 className="font-semibold text-sm">Comparte tu ubicación exacta (recomendado)</h4>
+                      <p className="text-xs text-muted-foreground mt-1">
+                        Al darle clic, tu navegador te pedirá permiso para acceder a tu ubicación. Acepta para que el mensajero llegue más rápido y sin confusiones.
+                      </p>
+                    </div>
+                  </div>
+                  {coords ? (
+                    <div className="flex items-center justify-between bg-success/10 text-success rounded-xl p-3 text-sm font-semibold">
+                      <span>✓ Ubicación capturada</span>
+                      <button type="button" onClick={requestLocation} className="text-xs underline">
+                        Volver a capturar
+                      </button>
+                    </div>
+                  ) : (
+                    <Button type="button" onClick={requestLocation} variant="outline" className="w-full" disabled={geoLoading}>
+                      {geoLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Obteniendo...</> : <><Navigation className="w-4 h-4" /> Compartir mi ubicación</>}
+                    </Button>
+                  )}
+                  {geoError && <p className="text-xs text-destructive">{geoError}</p>}
+                </div>
+              </div>
+            )}
+
+            {delivery === "pickup" && (
+              <div className="space-y-2 animate-fade-in">
+                {settings?.locations_intro && (
+                  <p className="text-sm text-muted-foreground">{settings.locations_intro}</p>
+                )}
+                <Label>Elige el local *</Label>
+                {locationLoading ? (
+                  <p className="text-sm text-muted-foreground">Cargando locales disponibles...</p>
+                ) : locationError ? (
+                  <p className="text-sm text-destructive">{locationError}</p>
+                ) : locations.length === 0 ? (
+                  <div className="rounded-2xl bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-900">
+                    No hay locales con stock para los productos del carrito. Elige uno y te contactaremos para coordinar la disponibilidad.
+                  </div>
+                ) : (
+                  <>
+                    {locations.length > 1 && (
+                      <div className="rounded-2xl bg-blue-50 border border-blue-200 p-4 text-sm text-blue-900">
+                        Tu pedido incluye productos disponibles en varios locales. Usa el filtro para ver sólo locales de cargadores, electrónica o mixtos.
+                      </div>
+                    )}
+                    {locations.length > 1 && (
+                      <div className="flex flex-wrap gap-2">
+                        {[
+                          { value: "all", label: "Todos" },
+                          { value: "electronics", label: "Electrónica" },
+                          { value: "chargers", label: "Cargadores" },
+                          { value: "both", label: "Mixto" },
+                        ].map((option) => (
+                          <button
+                            key={option.value}
+                            type="button"
+                            onClick={() => setLocationFilter(option.value as typeof locationFilter)}
+                            className={cn(
+                              "rounded-full px-3 py-2 text-xs font-semibold transition-all",
+                              locationFilter === option.value
+                                ? "bg-primary text-primary-foreground"
+                                : "bg-muted text-muted-foreground hover:bg-muted/80"
+                            )}
+                          >
+                            {option.label}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                    {filteredLocations.length === 0 ? (
+                      <div className="rounded-2xl bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-900">
+                        No hay locales que coincidan con el filtro seleccionado. Cambia el filtro para ver más opciones.
+                      </div>
+                    ) : (
+                      <div className="grid gap-2">
+                        {filteredLocations.map((loc) => (
+                          <button
+                            type="button"
+                            key={loc.id}
+                            onClick={() => setPickupLocId(loc.id)}
+                            className={cn(
+                              "p-3 rounded-xl border-2 text-left transition-all",
+                              pickupLocId === loc.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30",
+                            )}
+                          >
+                            <div className="flex items-start gap-2">
+                              <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
+                              <div className="flex-1">
+                                <p className="font-semibold text-sm">{loc.name}</p>
+                                <p className="text-xs text-muted-foreground">{loc.address}</p>
+                                {loc.hours && <p className="text-xs text-muted-foreground mt-1">🕐 {loc.hours}</p>}
+                                {locationProducts[loc.id] ? (
+                                  <p className="text-xs text-muted-foreground mt-2">
+                                    Productos en este local: {locationProducts[loc.id].slice(0, 3).join(", ")}
+                                    {locationProducts[loc.id].length > 3 ? `, y ${locationProducts[loc.id].length - 3} más` : ""}
+                                  </p>
+                                ) : (
+                                  <p className="text-xs text-muted-foreground mt-2">No hay información de stock detallada para este local.</p>
+                                )}
+                              </div>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            )}
+          </section>
+
+          <section className="card-elevated p-6 space-y-3">
+            <Label htmlFor="notes" className="font-display text-lg font-bold">Notas (opcional)</Label>
+            <Textarea
+              id="notes"
+              value={notes}
+              onChange={(e) => setNotes(e.target.value)}
+              placeholder="Horario preferido, indicaciones especiales..."
+              className="min-h-[70px] rounded-xl"
+            />
+          </section>
+
+          <Button type="submit" variant="hero" size="xl" className="w-full" disabled={submitting}>
+            {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Enviando...</> : <><MessageCircle className="w-5 h-5" /> Confirmar pedido</>}
+          </Button>
+
+          <p className="text-xs text-muted-foreground text-center">
+            Te contactaremos por WhatsApp lo antes posible para confirmar disponibilidad, precio del envío y coordinar el pago.
+          </p>
+        </form>
+
+        <aside className="lg:sticky lg:top-28 lg:self-start">
+          <div className="card-elevated p-6 space-y-4">
+            <h2 className="font-display text-lg font-bold">Resumen del pedido</h2>
+
+            <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-1.5 rounded-2xl border border-border/50 shadow-inner">
+              <button
+                type="button"
+                onClick={() => setPaymentCurrency("USD")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
+                  paymentCurrency === "USD" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Pagar en USD
+              </button>
+              <button
+                type="button"
+                onClick={() => setPaymentCurrency("CUP")}
+                className={cn(
+                  "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
+                  paymentCurrency === "CUP" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                )}
+              >
+                Pagar en CUP
+              </button>
+            </div>
+
+            <div className="space-y-3 max-h-80 overflow-y-auto">
+              {items.map((it) => (
+                <div key={it.id} className="flex gap-3">
+                  <div className="w-14 h-14 rounded-xl bg-secondary overflow-hidden shrink-0">
+                    {it.image && <img src={it.image} alt="" loading="lazy" decoding="async" className="w-full h-full object-cover" />}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-semibold line-clamp-1">{it.name}</p>
+                    <p className="text-xs text-muted-foreground">Cant: {it.quantity}</p>
+                  </div>
+                  <span className="text-sm font-bold whitespace-nowrap">
+                    {paymentCurrency === "USD" 
+                      ? formatPrice((it.displayPriceUSD || 0) * it.quantity) 
+                      : formatCUP((it.displayPriceCUP || 0) * it.quantity)}
+                  </span>
+                </div>
+              ))}
+            </div>
+            <div className="border-t border-border pt-4 space-y-2 text-sm">
+              <div className="flex items-center justify-between">
+                <span className="text-muted-foreground">Producto</span>
+                <span>{formatPrice(totalUSD)} / {formatCUP(totalCUP)}</span>
+              </div>
+              <div className="space-y-2 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-3">
+                <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
+                  <span>Envío</span>
+                  <span>Separado por moneda</span>
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">USD</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="0.01"
+                    inputMode="decimal"
+                    value={shippingUSD === 0 ? "" : shippingUSD}
+                    onChange={(e) => setShippingUSD(e.target.value === "" ? 0 : Number(e.target.value))}
+                    className="h-8 w-24 text-right"
+                  />
+                </div>
+                <div className="flex items-center justify-between">
+                  <span className="text-muted-foreground">CUP</span>
+                  <Input
+                    type="number"
+                    min="0"
+                    step="1"
+                    inputMode="numeric"
+                    value={shippingCUP === 0 ? "" : shippingCUP}
+                    onChange={(e) => setShippingCUP(e.target.value === "" ? 0 : Number(e.target.value))}
+                    className="h-8 w-24 text-right"
+                  />
+                </div>
+              </div>
+              <div className="flex items-center justify-between font-display font-bold text-base pt-2 border-t border-border">
+                <span>Total a pagar</span>
+                <div className="text-right">
+                  <span className="text-primary text-base block">
+                    USD {formatPrice(totalUSD + shippingUSD)}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground block">
+                    CUP {formatCUP(totalCUP + shippingCUP)}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  );
+};
+
+export default Checkout;
