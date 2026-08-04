@@ -8,10 +8,17 @@ const FAVORITES_TABLE = "user_favorites";
 const LEGACY_FAVORITES_TABLE = "product_favorites";
 
 function isMissingTableError(error: any) {
+  const message = String(error?.message ?? error ?? "").toLowerCase();
   return (
     error?.code === "42P01" ||
-    error?.message?.toLowerCase().includes("does not exist") ||
-    error?.message?.toLowerCase().includes("could not find the table")
+    error?.code === "42703" ||
+    error?.code === "PGRST100" ||
+    message.includes("does not exist") ||
+    message.includes("could not find the table") ||
+    message.includes("schema cache") ||
+    message.includes("relation \"user_favorites\" does not exist") ||
+    message.includes("public.user_favorites") ||
+    (message.includes("user_favorites") && message.includes("public"))
   );
 }
 
@@ -20,6 +27,7 @@ export function useUserFavorites() {
   const navigate = useNavigate();
   const location = useLocation();
   const [favoriteIds, setFavoriteIds] = useState<Set<string>>(new Set());
+  const [favoritesTable, setFavoritesTable] = useState(FAVORITES_TABLE);
   const [loading, setLoading] = useState(true);
 
   const loadFavorites = useCallback(async () => {
@@ -34,11 +42,14 @@ export function useUserFavorites() {
     const queryFavorites = async (table: string) =>
       supabase.from(table).select("product_id").eq("user_id", user.id);
 
-    let { data, error } = await queryFavorites(FAVORITES_TABLE);
+    let table = favoritesTable;
+    let { data, error } = await queryFavorites(table);
     if (error && isMissingTableError(error)) {
-      const fallback = await queryFavorites(LEGACY_FAVORITES_TABLE);
+      table = LEGACY_FAVORITES_TABLE;
+      const fallback = await queryFavorites(table);
       data = fallback.data;
       error = fallback.error;
+      if (!error) setFavoritesTable(table);
     }
 
     if (error) {
@@ -48,7 +59,7 @@ export function useUserFavorites() {
       setFavoriteIds(new Set((data ?? []).map((item: any) => item.product_id)));
     }
     setLoading(false);
-  }, [user]);
+  }, [user, favoritesTable]);
 
   useEffect(() => {
     void loadFavorites();
@@ -69,11 +80,14 @@ export function useUserFavorites() {
       return supabase.from(table).insert({ user_id: user.id, product_id: productId });
     };
 
+    const tableToUse = favoritesTable === FAVORITES_TABLE ? FAVORITES_TABLE : LEGACY_FAVORITES_TABLE;
+
     if (already) {
-      let { error } = await runFavoriteQuery(FAVORITES_TABLE, "delete");
+      let { error } = await runFavoriteQuery(tableToUse, "delete");
       if (error && isMissingTableError(error)) {
         const fallback = await runFavoriteQuery(LEGACY_FAVORITES_TABLE, "delete");
         error = fallback.error;
+        if (!error) setFavoritesTable(LEGACY_FAVORITES_TABLE);
       }
       if (error) {
         toast.error("No se pudo quitar de favoritos: " + error.message);
@@ -87,17 +101,19 @@ export function useUserFavorites() {
       return;
     }
 
-    let { error } = await runFavoriteQuery(FAVORITES_TABLE, "insert");
+    let { error } = await runFavoriteQuery(tableToUse, "insert");
     if (error && isMissingTableError(error)) {
+      console.debug("user_favorites missing, falling back to product_favorites");
       const fallback = await runFavoriteQuery(LEGACY_FAVORITES_TABLE, "insert");
       error = fallback.error;
+      if (!error) setFavoritesTable(LEGACY_FAVORITES_TABLE);
     }
     if (error) {
       toast.error("No se pudo marcar como favorito: " + error.message);
       return;
     }
     setFavoriteIds((prev) => new Set(prev).add(productId));
-  }, [favoriteIds, user, navigate, location.pathname, location.search]);
+  }, [favoriteIds, user, navigate, location.pathname, location.search, favoritesTable]);
 
   return {
     favoriteIds,
