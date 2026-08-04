@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useEffect, useState, useMemo } from "react";
+import { Link, useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -12,6 +12,7 @@ import { ArrowLeft } from "lucide-react";
 
 const Auth = () => {
   const navigate = useNavigate();
+  const location = useLocation();
   const { user } = useAuth();
   const [mode, setMode] = useState<"login" | "signup">("login");
   const [email, setEmail] = useState("");
@@ -19,13 +20,22 @@ const Auth = () => {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    document.title = mode === "login" ? "Iniciar sesión — NeoCharge" : "Crear cuenta — NeoCharge";
-  }, [mode]);
+  const nextDestination = useMemo(() => {
+    const searchParams = new URLSearchParams(location.search);
+    return searchParams.get("next") ?? "/cuenta";
+  }, [location.search]);
 
   useEffect(() => {
-    if (user) navigate("/cuenta");
-  }, [user, navigate]);
+    const searchParams = new URLSearchParams(location.search);
+    const requestedMode = searchParams.get("mode");
+    if (requestedMode === "signup" || requestedMode === "login") {
+      setMode(requestedMode);
+    }
+  }, [location.search]);
+
+  useEffect(() => {
+    if (user) navigate(nextDestination);
+  }, [user, navigate, nextDestination]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -40,7 +50,7 @@ const Auth = () => {
           return;
         }
         toast.success("¡Bienvenido de nuevo!");
-        navigate("/cuenta");
+        navigate(nextDestination);
       } else {
         const redirectUrl = `${window.location.origin}/`;
         const { error } = await supabase.auth.signUp({
@@ -58,7 +68,7 @@ const Auth = () => {
           return;
         }
         toast.success("¡Cuenta creada! Revisa tu correo para confirmar.");
-        setMode("login");
+        navigate(nextDestination);
       }
     } catch (err: any) {
       console.error("Auth error:", err);
