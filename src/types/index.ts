@@ -5,7 +5,9 @@ export type Tables<T extends keyof Database["public"]["Tables"]> =
 export type Enums<T extends keyof Database["public"]["Enums"]> =
   Database["public"]["Enums"][T];
 
-export type Product = Tables<"products">;
+export type Product = Tables<"products"> & {
+  sort_order?: number | null;
+};
 export type Category = Tables<"categories">;
 export type Order = Tables<"orders">;
 export type StoreLocation = Tables<"store_locations">;
@@ -14,6 +16,22 @@ export type AdminPermission = Tables<"admin_permissions">;
 export type BlogPost = Tables<"blog_posts">;
 export type BlogCategory = Tables<"blog_categories">;
 export type ExchangeRate = Tables<"exchange_rates">;
+
+export interface Service {
+  id: string;
+  title: string;
+  slug: string;
+  summary?: string | null;
+  description?: string | null;
+  price?: number | null;
+  currency?: string | null;
+  category?: string | null;
+  features?: string[] | null;
+  is_active?: boolean | null;
+  sort_order?: number | null;
+  created_at?: string;
+  updated_at?: string;
+}
 
 export interface SiteSettings {
   id?: string;

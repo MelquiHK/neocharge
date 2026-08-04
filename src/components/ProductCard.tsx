@@ -1,6 +1,6 @@
 import { Link } from "react-router-dom";
 import { ShoppingBag, Check, Heart } from "lucide-react";
-import { memo, useState } from "react";
+import { memo, useState, type MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { formatPrice, formatCUP, computeDisplayPrice } from "@/lib/format";
@@ -11,13 +11,14 @@ import { Product } from "@/types";
 interface ProductCardProps {
   product: Product;
   variant?: "default" | "featured";
+  isFavorite?: boolean;
+  onToggleFavorite?: (event: MouseEvent<HTMLButtonElement>) => void;
 }
 
-function ProductCardComponent({ product, variant = "default" }: ProductCardProps) {
+function ProductCardComponent({ product, variant = "default", isFavorite = false, onToggleFavorite }: ProductCardProps) {
   const { addItem } = useCart();
   const { rate } = useExchangeRate();
   const [added, setAdded] = useState(false);
-  const [liked, setLiked] = useState(false);
   const images = Array.isArray(product.images) ? product.images : [];
   const display = computeDisplayPrice(product, rate);
   const mainImage = images[product.main_image_index ?? 0] ?? images[0];
@@ -182,14 +183,17 @@ function ProductCardComponent({ product, variant = "default" }: ProductCardProps
         onClick={(e) => {
           e.preventDefault();
           e.stopPropagation();
-          setLiked(!liked);
+          onToggleFavorite?.(e);
         }}
-        className="absolute top-3 right-3 z-30 p-2 rounded-lg backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border border-white/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-300 hover:scale-110"
+        className={cn(
+          "absolute top-3 right-3 z-30 p-2 rounded-lg backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border border-white/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-300 hover:scale-110",
+          isFavorite && "shadow-soft",
+        )}
       >
         <Heart
           className={cn(
             "w-5 h-5 transition-colors duration-300",
-            liked ? "fill-red-500 text-red-500" : "text-slate-400 dark:text-slate-300"
+            isFavorite ? "fill-red-500 text-red-500" : "text-slate-400 dark:text-slate-300"
           )}
         />
       </button>

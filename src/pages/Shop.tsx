@@ -7,6 +7,9 @@ import { ProductCard, type Product } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useSEO } from "@/hooks/use-seo";
+import { useAuth } from "@/contexts/AuthContext";
+import { useUserFavorites } from "@/hooks/use-user-favorites";
+import { sortProductsForShop, type ProductSortValue } from "@/lib/product-ordering";
 
 interface Category {
   id: string;
@@ -15,21 +18,27 @@ interface Category {
 }
 
 const sortOptions = [
+  { value: "manual", label: "Por defecto" },
   { value: "new", label: "Más nuevos" },
+  { value: "old", label: "Más antiguos" },
+  { value: "name", label: "Nombre" },
+  { value: "type", label: "Tipo" },
   { value: "price-asc", label: "Precio: menor a mayor" },
   { value: "price-desc", label: "Precio: mayor a menor" },
-  { value: "name", label: "Nombre" },
 ] as const;
 
-type Sort = (typeof sortOptions)[number]["value"];
+type Sort = ProductSortValue;
 
 const ShopPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
-  const [products, setProducts] = useState<(Product & { category_id: string | null })[]>([]);
+  const [products, setProducts] = useState<(Product & { category_id: string | null; category_name?: string | null; created_at?: string | null })[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
-  const [sort, setSort] = useState<Sort>("new");
+  const [sort, setSort] = useState<Sort>("manual");
+
+  const { user } = useAuth();
+  const { favoriteIds, toggleFavorite } = useUserFavorites();
 
   const activeCat = searchParams.get("cat") ?? "all";
 
@@ -42,12 +51,16 @@ const ShopPage = () => {
         supabase.from("categories").select("id,name,slug").order("sort_order"),
         supabase
           .from("products")
-          .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,category_id,currency,price_cup,extra_cup_per_usd,warranty_type")
+          .select("id,name,slug,description,price,compare_price,images,main_image_index,stock,is_featured,category_id,currency,price_cup,extra_cup_per_usd,warranty_type,created_at,sort_order")
           .eq("is_active", true)
           .order("created_at", { ascending: false }),
       ]);
+      const categoriesById = new Map((catRes.data ?? []).map((cat) => [cat.id, cat.name]));
       if (catRes.data) setCategories(catRes.data);
-      if (prodRes.data) setProducts(prodRes.data as any);
+      if (prodRes.data) setProducts((prodRes.data as any).map((item: any) => ({
+        ...item,
+        category_name: categoriesById.get(item.category_id ?? "") ?? null,
+      })));
       setLoading(false);
     };
     load();
@@ -55,29 +68,24 @@ const ShopPage = () => {
 
   const filtered = useMemo(() => {
     let list = [...products];
-    if (activeCat !== "all") {
-      const cat = categories.find((c) => c.slug === activeCat);
-      if (cat) list = list.filter((p) => p.category_id === cat.id);
-    }
-    if (search.trim()) {
-      const q = search.trim().toLowerCase();
-      list = list.filter((p) => (p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)) ?? false);
-    }
-    switch (sort) {
-      case "price-asc":
-        list.sort((a, b) => (a.price ?? 0) - (b.price ?? 0));
-        break;
-      case "price-desc":
-        list.sort((a, b) => (b.price ?? 0) - (a.price ?? 0));
-        break;
-      case "name":
-        list.sort((a, b) => (a.name ?? "").localeCompare(b.name ?? ""));
-        break;
-    }
-    return list;
-  }, [products, categories, activeCat, search, sort]);
+      if (activeCat === "favorites") {
+        list = list.filter((p) => favoriteIds.has(p.id));
+      } else if (activeCat !== "all") {
+        const cat = categories.find((c) => c.slug === activeCat);
+        if (cat) list = list.filter((p) => p.category_id === cat.id);
+      }
+      if (search.trim()) {
+        const q = search.trim().toLowerCase();
+        list = list.filter((p) => (p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)) ?? false);
+      }
+      return sortProductsForShop(list, sort);
+    }, [products, categories, activeCat, search, sort, favoriteIds]);
 
-  const activeCategory = categories.find((c) => c.slug === activeCat);
+  const activeCategory = useMemo(
+    () => categories.find((category) => category.slug === activeCat),
+    [categories, activeCat],
+  );
+
   const isChargerCategory = activeCategory
     ? activeCategory.slug === "cargadores" || activeCategory.name.toLowerCase().includes("cargador")
     : false;
@@ -155,6 +163,19 @@ const ShopPage = () => {
         >
           Todos
         </button>
+        {user && (
+          <button
+            onClick={() => setCat("favorites")}
+            className={cn(
+              "px-4 py-2 rounded-full text-sm font-semibold transition-all",
+              activeCat === "favorites"
+                ? "bg-foreground text-background shadow-soft"
+                : "bg-secondary text-foreground hover:bg-muted",
+            )}
+          >
+            Favoritos
+          </button>
+        )}
         {categories.map((c) => (
           <button
             key={c.id}
@@ -197,7 +218,12 @@ const ShopPage = () => {
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
           {filtered.map((p) => (
-            <ProductCard key={p.id} product={p} />
+            <ProductCard
+              key={p.id}
+              product={p}
+              isFavorite={favoriteIds.has(p.id)}
+              onToggleFavorite={() => toggleFavorite(p.id)}
+            />
           ))}
         </div>
       )}

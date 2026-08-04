@@ -11,6 +11,7 @@ import { AdminOrders } from "@/components/admin/AdminOrders";
 import { AdminCustomers } from "@/components/admin/AdminCustomers";
 import { AdminRates } from "@/components/admin/AdminRates";
 import { AdminBlog } from "@/components/admin/AdminBlog";
+import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { OrderNotificationsWidget } from "@/components/admin/OrderNotificationsWidget";
 
@@ -34,6 +35,7 @@ const Admin = () => {
     { v: "orders", l: "Pedidos", icon: ShoppingBag, show: isOwner || permissions.can_manage_orders },
     { v: "products", l: "Productos", icon: Package, show: isOwner || permissions.can_manage_products },
     { v: "categories", l: "Categorías", icon: FolderTree, show: isOwner || permissions.can_manage_products },
+    { v: "services", l: "Servicios", icon: Package, show: isOwner || permissions.can_manage_products },
     { v: "locations", l: "Locales", icon: MapPin, show: isOwner || permissions.can_manage_locations },
     { v: "customers", l: "Clientes", icon: Users, show: isOwner || permissions.can_manage_customers },
     { v: "rates", l: "Tasa USD", icon: TrendingUp, show: isOwner || permissions.can_manage_rates },
@@ -69,6 +71,7 @@ const Admin = () => {
         <TabsContent value="orders" className="mt-6"><AdminOrders /></TabsContent>
         <TabsContent value="products" className="mt-6"><AdminProducts /></TabsContent>
         <TabsContent value="categories" className="mt-6"><AdminCategories /></TabsContent>
+        <TabsContent value="services" className="mt-6"><AdminServices /></TabsContent>
         <TabsContent value="locations" className="mt-6"><AdminLocations /></TabsContent>
         <TabsContent value="customers" className="mt-6"><AdminCustomers /></TabsContent>
         <TabsContent value="rates" className="mt-6"><AdminRates /></TabsContent>
