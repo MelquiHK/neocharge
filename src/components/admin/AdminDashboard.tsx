@@ -1,6 +1,8 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, formatCUP } from "@/lib/format";
+import { useAdminSales } from "@/hooks/admin/use-admin-sales";
+import { computeSalesTotalsBySeller } from "@/lib/sales";
 import { useAuth } from "@/contexts/AuthContext";
 import { Package, ShoppingBag, Users, DollarSign, TrendingUp, AlertTriangle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -96,6 +98,9 @@ export function AdminDashboard() {
   const profit = stats.revenueMonth - stats.costsMonth;
   const margin = stats.revenueMonth > 0 ? (profit / stats.revenueMonth) * 100 : 0;
 
+  const { sales } = useAdminSales();
+  const salesTotals = computeSalesTotalsBySeller(sales ?? []);
+
   const cards = [
     { icon: Package, label: "Productos activos", value: stats.products, color: "text-primary" },
     { icon: AlertTriangle, label: "Stock bajo", value: stats.lowStock, color: "text-warning" },
@@ -137,6 +142,50 @@ export function AdminDashboard() {
             <p className="font-display text-2xl font-bold text-success">{formatPrice(profit)}</p>
           </div>
         </div>
+      )}
+
+      {permissions.can_view_finances && (
+        <section className="card-elevated p-6">
+          <h2 className="font-display text-xl font-bold mb-4">Ventas registradas (gestores)</h2>
+          {salesTotals.totalCount === 0 ? (
+            <p className="text-sm text-muted-foreground">No hay ventas registradas aún.</p>
+          ) : (
+            <div className="space-y-4">
+              <div className="flex items-center justify-between">
+                <div className="text-sm text-muted-foreground">Ventas totales</div>
+                <div className="font-semibold">{salesTotals.totalCount} ventas</div>
+              </div>
+              <div className="grid sm:grid-cols-2 gap-3">
+                <div className="p-4 rounded-lg border">
+                  <div className="text-xs text-muted-foreground">Total USD</div>
+                  <div className="font-display text-2xl font-bold">{formatPrice(salesTotals.totalUSD)}</div>
+                </div>
+                <div className="p-4 rounded-lg border">
+                  <div className="text-xs text-muted-foreground">Total CUP</div>
+                  <div className="font-display text-2xl font-bold">{formatCUP(salesTotals.totalCUP)}</div>
+                </div>
+              </div>
+
+              <div>
+                <h3 className="font-semibold mb-2">Por gestor</h3>
+                <div className="space-y-2">
+                  {salesTotals.bySeller.map((s) => (
+                    <div key={s.seller_user_id ?? s.seller_name} className="flex items-center justify-between p-3 rounded-lg border">
+                      <div>
+                        <div className="font-medium">{s.seller_name || "(sin nombre)"}</div>
+                        <div className="text-xs text-muted-foreground">{s.count} ventas</div>
+                      </div>
+                      <div className="text-right">
+                        <div className="font-semibold">{s.currency === "USD" ? formatPrice(s.totalUSD) : formatCUP(s.totalCUP)}</div>
+                        <div className="text-xs text-muted-foreground">Deuda: {formatPrice(s.amountOwedUSD || 0)}</div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            </div>
+          )}
+        </section>
       )}
 
       <section className="card-elevated p-6">
