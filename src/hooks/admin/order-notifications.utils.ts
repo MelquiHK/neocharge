@@ -3,6 +3,6 @@ export interface OrderLike {
   status?: string;
 }
 
-export function getUnseenOrders(existingIds: Set<string>, orders: OrderLike[]) {
-  return orders.filter((order) => Boolean(order.id) && !existingIds.has(order.id));
+export function getUnseenRecords(existingIds: Set<string>, records: OrderLike[]) {
+  return records.filter((record) => Boolean(record.id) && !existingIds.has(record.id));
 }

@@ -52,9 +52,9 @@ export function OrderNotificationsWidget({ inline }: OrderNotificationsWidgetPro
         <div>
           <div className="flex items-center gap-2 text-sm font-semibold text-slate-900 dark:text-slate-100">
             <Bell className="w-5 h-5 text-blue-600" />
-            <span>Nuevos pedidos</span>
+            <span>Notificaciones</span>
           </div>
-          <p className="text-xs text-muted-foreground mt-1">Últimas órdenes recibidas en tiempo real.</p>
+          <p className="text-xs text-muted-foreground mt-1">Pedidos y ventas nuevas en tiempo real.</p>
         </div>
         <Badge variant={unreadCount > 0 ? "destructive" : "secondary"} className="text-xs py-1 px-2">
           {unreadCount} {unreadCount === 1 ? "nuevo" : "nuevos"}
@@ -62,7 +62,7 @@ export function OrderNotificationsWidget({ inline }: OrderNotificationsWidgetPro
       </div>
       {!isListening && (
         <div className="mt-4 rounded-2xl border border-dashed border-slate-200 bg-slate-100 p-3 text-sm text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-          <p className="font-medium">Conectando con pedidos en tiempo real...</p>
+          <p className="font-medium">Conectando con notificaciones en tiempo real...</p>
           <p className="mt-1">Si no llega la notificación, revisa que tu conexión sea estable y que el servicio de Supabase esté activo.</p>
         </div>
       )}
@@ -70,7 +70,7 @@ export function OrderNotificationsWidget({ inline }: OrderNotificationsWidgetPro
       <div className="mt-4">
         {notifications.length === 0 ? (
           <div className="rounded-3xl border border-dashed border-slate-200 bg-slate-100 p-4 text-center text-sm text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
-            <p>No hay pedidos nuevos.</p>
+            <p>No hay notificaciones nuevas.</p>
           </div>
         ) : (
           <div className="space-y-3 max-h-72 overflow-y-auto pr-1">
@@ -81,18 +81,17 @@ export function OrderNotificationsWidget({ inline }: OrderNotificationsWidgetPro
               >
                 <div className="flex items-start justify-between gap-3">
                   <div>
-                    <p className="font-semibold text-slate-900 dark:text-white">Orden #{notif.order_number}</p>
-                    <p className="text-sm text-slate-500 dark:text-slate-400">{notif.customer_name}</p>
+                    <p className="font-semibold text-slate-900 dark:text-white">{notif.title}</p>
+                    <p className="text-sm text-slate-500 dark:text-slate-400">{notif.subtitle}</p>
                   </div>
                   <Badge variant="outline" className="border-green-200 bg-green-50 text-green-700 dark:border-green-800 dark:bg-green-950/30 dark:text-green-200">
                     Nuevo
                   </Badge>
                 </div>
                 <div className="mt-2 flex flex-wrap items-center justify-between gap-2 text-xs text-slate-500 dark:text-slate-400">
-                  <span>{notif.items_count} {notif.items_count === 1 ? 'artículo' : 'artículos'}</span>
+                  <span>{notif.type === 'order' ? 'Pedido' : 'Venta'}</span>
                   <span className="font-semibold text-slate-800 dark:text-slate-100">
-                    {notif.payment_currency === 'USD' ? '$' : '₱'}
-                    {notif.payment_currency === 'USD' ? notif.total : notif.total_cup}
+                    {notif.currency === 'USD' ? '$' : '₱'}{notif.amount.toFixed(2)}
                   </span>
                 </div>
                 <p className="mt-2 text-xs text-slate-400 dark:text-slate-500">{new Date(notif.created_at).toLocaleTimeString()}</p>

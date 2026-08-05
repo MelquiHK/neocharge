@@ -2,41 +2,43 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { showBrowserNotification } from '@/lib/notifications';
-import { getUnseenOrders } from '@/hooks/admin/order-notifications.utils';
+import { getUnseenRecords } from '@/hooks/admin/order-notifications.utils';
 
-interface OrderNotification {
+interface AdminNotification {
   id: string;
-  order_number: number;
-  customer_name: string;
-  total: number;
-  total_cup: number;
-  payment_currency: string;
-  items_count: number;
+  type: 'order' | 'sale';
+  title: string;
+  subtitle: string;
+  amount: number;
+  currency: string;
   created_at: string;
+  metadata: Record<string, any>;
 }
 
 export function useOrderNotifications(enabled: boolean = true) {
-  const [notifications, setNotifications] = useState<OrderNotification[]>([]);
+  const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
-  const seenOrderIdsRef = useRef<Set<string>>(new Set());
+  const seenRecordIdsRef = useRef<Set<string>>(new Set());
 
-  const pushNotification = useCallback((order: any) => {
-    const id = order.id;
-    if (!id || seenOrderIdsRef.current.has(id)) return;
+  const pushNotification = useCallback((payload: any, type: 'order' | 'sale') => {
+    const id = payload.id;
+    if (!id || seenRecordIdsRef.current.has(id)) return;
 
-    seenOrderIdsRef.current.add(id);
+    seenRecordIdsRef.current.add(id);
 
-    const notif: OrderNotification = {
+    const notif: AdminNotification = {
       id,
-      order_number: order.order_number,
-      customer_name: order.customer_name,
-      total: order.total,
-      total_cup: order.total_cup,
-      payment_currency: order.payment_currency,
-      items_count: Array.isArray(order.items) ? order.items.length : 0,
-      created_at: order.created_at,
+      type,
+      title: type === 'order' ? '🎉 Nuevo pedido!' : '📈 Nueva venta registrada',
+      subtitle: type === 'order'
+        ? `${payload.customer_name} - Orden #${payload.order_number}`
+        : `${payload.seller_name || 'Gestor'} - ${payload.product_name || 'Venta nueva'}`,
+      amount: type === 'order' ? Number(payload.total ?? 0) : Number(payload.price ?? 0),
+      currency: type === 'order' ? payload.payment_currency : payload.currency,
+      created_at: payload.created_at,
+      metadata: payload,
     };
 
     setNotifications((prev) => [notif, ...prev]);
@@ -45,45 +47,66 @@ export function useOrderNotifications(enabled: boolean = true) {
     playNotificationSound();
 
     toast({
-      title: '🎉 Nuevo pedido!',
-      description: `${order.customer_name} - Orden #${order.order_number}`,
+      title: notif.title,
+      description: notif.subtitle,
       duration: 10000,
     });
 
-    void showBrowserNotification('🎉 Nuevo pedido en NeoCharge!', {
-      body: `${order.customer_name} - Orden #${order.order_number}\n${order.payment_currency === 'USD' ? '$' : '₱'} ${order.payment_currency === 'USD' ? order.total : order.total_cup}`,
+    const formattedAmount = notif.currency === 'USD' ? `$ ${notif.amount}` : `₱ ${notif.amount}`;
+    void showBrowserNotification(notif.title, {
+      body: `${notif.subtitle}\n${formattedAmount}`,
       icon: '/images/logo.png',
-      tag: `order-${id}`,
+      tag: `${type}-${id}`,
     });
   }, [toast]);
 
   // Cargar notificaciones previas no leídas
-  const loadUnreadOrders = useCallback(async () => {
+  const loadRecentNotifications = useCallback(async () => {
     try {
-      const { data, error } = await supabase
-        .from('orders')
-        .select('id,order_number,customer_name,total,total_cup,payment_currency,items,created_at,status')
-        .order('created_at', { ascending: false })
-        .limit(15);
+      const [{ data: orderData, error: orderError }, { data: saleData, error: saleError }] = await Promise.all([
+        supabase
+          .from('orders')
+          .select('id,order_number,customer_name,total,total_cup,payment_currency,items,created_at,status')
+          .order('created_at', { ascending: false })
+          .limit(15),
+        supabase
+          .from('seller_sales')
+          .select('id,seller_name,product_name,price,currency,created_at')
+          .order('created_at', { ascending: false })
+          .limit(15),
+      ]);
 
-      if (error) throw error;
+      if (orderError) throw orderError;
+      if (saleError) throw saleError;
 
-      const notifs: OrderNotification[] = (data || []).map((order: any) => ({
+      const orderNotifs: AdminNotification[] = (orderData || []).map((order: any) => ({
         id: order.id,
-        order_number: order.order_number,
-        customer_name: order.customer_name,
-        total: order.total,
-        total_cup: order.total_cup,
-        payment_currency: order.payment_currency,
-        items_count: Array.isArray(order.items) ? order.items.length : 0,
+        type: 'order',
+        title: '🎉 Nuevo pedido!',
+        subtitle: `${order.customer_name} - Orden #${order.order_number}`,
+        amount: Number(order.total ?? 0),
+        currency: order.payment_currency,
         created_at: order.created_at,
+        metadata: order,
       }));
 
-      setNotifications(notifs);
-      setUnreadCount(notifs.length);
-      seenOrderIdsRef.current = new Set(notifs.map((notif) => notif.id));
+      const saleNotifs: AdminNotification[] = (saleData || []).map((sale: any) => ({
+        id: sale.id,
+        type: 'sale',
+        title: '📈 Nueva venta registrada',
+        subtitle: `${sale.seller_name || 'Gestor'} - ${sale.product_name ?? 'Venta'}`,
+        amount: Number(sale.price ?? 0),
+        currency: sale.currency,
+        created_at: sale.created_at,
+        metadata: sale,
+      }));
+
+      const allNotifs = [...orderNotifs, ...saleNotifs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
+      setNotifications(allNotifs);
+      setUnreadCount(allNotifs.length);
+      seenRecordIdsRef.current = new Set(allNotifs.map((notif) => notif.id));
     } catch (error) {
-      console.error('Error loading unread orders:', error);
+      console.error('Error loading notifications:', error);
     }
   }, []);
 
@@ -91,30 +114,44 @@ export function useOrderNotifications(enabled: boolean = true) {
   useEffect(() => {
     if (!enabled) return;
 
-    loadUnreadOrders();
+    loadRecentNotifications();
 
-    const pollForNewOrders = async () => {
+    const pollForNewRecords = async () => {
       try {
-        const { data, error } = await supabase
-          .from('orders')
-          .select('id,order_number,customer_name,total,total_cup,payment_currency,items,created_at,status')
-          .order('created_at', { ascending: false })
-          .limit(25);
+        const [{ data: orderData, error: orderError }, { data: saleData, error: saleError }] = await Promise.all([
+          supabase
+            .from('orders')
+            .select('id,order_number,customer_name,total,total_cup,payment_currency,items,created_at,status')
+            .order('created_at', { ascending: false })
+            .limit(25),
+          supabase
+            .from('seller_sales')
+            .select('id,seller_name,product_name,price,currency,created_at')
+            .order('created_at', { ascending: false })
+            .limit(25),
+        ]);
 
-        if (error) throw error;
+        if (orderError) throw orderError;
+        if (saleError) throw saleError;
 
-        const unseenOrders = getUnseenOrders(seenOrderIdsRef.current, data || []);
+        const unseenOrders = getUnseenRecords(seenRecordIdsRef.current, orderData || []);
         unseenOrders.forEach((order: any) => {
           if (!order.id) return;
-          pushNotification(order);
+          pushNotification(order, 'order');
+        });
+
+        const unseenSales = getUnseenRecords(seenRecordIdsRef.current, saleData || []);
+        unseenSales.forEach((sale: any) => {
+          if (!sale.id) return;
+          pushNotification(sale, 'sale');
         });
       } catch (error) {
-        console.error('Error polling orders:', error);
+        console.error('Error polling notifications:', error);
       }
     };
 
     const channel = supabase
-      .channel('orders')
+      .channel('admin-notifications')
       .on(
         'postgres_changes',
         {
@@ -125,21 +162,21 @@ export function useOrderNotifications(enabled: boolean = true) {
         (payload: any) => {
           const newOrder = payload.new;
           if (newOrder?.id) {
-            pushNotification(newOrder);
+            pushNotification(newOrder, 'order');
           }
         }
       )
       .on(
         'postgres_changes',
         {
-          event: 'UPDATE',
+          event: 'INSERT',
           schema: 'public',
-          table: 'orders',
+          table: 'seller_sales',
         },
         (payload: any) => {
-          const updatedOrder = payload.new;
-          if (updatedOrder?.id) {
-            pushNotification(updatedOrder);
+          const newSale = payload.new;
+          if (newSale?.id) {
+            pushNotification(newSale, 'sale');
           }
         }
       );
@@ -156,7 +193,7 @@ export function useOrderNotifications(enabled: boolean = true) {
     });
 
     const intervalId = window.setInterval(() => {
-      void pollForNewOrders();
+      void pollForNewRecords();
     }, 10000);
 
     return () => {
@@ -166,7 +203,7 @@ export function useOrderNotifications(enabled: boolean = true) {
         // Ignore cleanup errors
       });
     };
-  }, [enabled, loadUnreadOrders, pushNotification]);
+  }, [enabled, loadRecentNotifications, pushNotification]);
 
   // Función para reproducir sonido
   const playNotificationSound = () => {
