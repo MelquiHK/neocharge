@@ -11,6 +11,7 @@ import { AdminOrders } from "@/components/admin/AdminOrders";
 import { AdminCustomers } from "@/components/admin/AdminCustomers";
 import { AdminRates } from "@/components/admin/AdminRates";
 import { AdminBlog } from "@/components/admin/AdminBlog";
+import { AdminSales } from "@/components/admin/AdminSales";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { OrderNotificationsWidget } from "@/components/admin/OrderNotificationsWidget";
@@ -40,6 +41,7 @@ const Admin = () => {
     { v: "customers", l: "Clientes", icon: Users, show: isOwner || permissions.can_manage_customers },
     { v: "rates", l: "Tasa USD", icon: TrendingUp, show: isOwner || permissions.can_manage_rates },
     { v: "settings", l: "Configuración", icon: Settings, show: isOwner || !!Object.values(permissions).some(Boolean) },
+    { v: "sales", l: "Ventas", icon: TrendingUp, show: isOwner || permissions.can_manage_orders || permissions.can_view_finances },
     { v: "blog", l: "Blog", icon: BookOpen, show: isOwner || permissions.can_manage_blog },
   ].filter((t) => t.show);
 
@@ -77,6 +79,7 @@ const Admin = () => {
         <TabsContent value="rates" className="mt-6"><AdminRates /></TabsContent>
         <TabsContent value="settings" className="mt-6"><AdminSettings /></TabsContent>
         <TabsContent value="blog" className="mt-6"><AdminBlog /></TabsContent>
+        <TabsContent value="sales" className="mt-6"><AdminSales /></TabsContent>
       </Tabs>
     </div>
   );
