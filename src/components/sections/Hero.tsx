@@ -43,8 +43,8 @@ export function Hero() {
                 </span>
               </h1>
               <p className="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed font-light">
-                Elevamos tu experiencia tecnológica con productos premium, garantía total y entrega relámpago en toda La Habana. 
-                NeoCharge: Energía y tecnología sin límites.
+                Elevamos tu experiencia tecnológica con productos premium, garantía total y entrega rapida en toda La Habana. 
+                NeoCharge: Productos y tecnología sin límites.
               </p>
             </div>
 

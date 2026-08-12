@@ -7,6 +7,14 @@ const SUPABASE_KEY =
   import.meta.env.VITE_SUPABASE_ANON_KEY ??
   import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
+if (!SUPABASE_URL) {
+  throw new Error('supabaseUrl is required. Check your .env file.');
+}
+
+if (!SUPABASE_KEY) {
+  throw new Error('supabaseKey is required. Check your .env file.');
+}
+
 // Import the supabase client like this:
 // import { supabase } from "@/integrations/supabase/client";
 
