@@ -8,7 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useSEO } from "@/hooks/use-seo";
 import { useAuth } from "@/contexts/AuthContext";
-import { useUserFavorites } from "@/hooks/use-user-favorites";
+import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { sortProductsForShop, type ProductSortValue } from "@/lib/product-ordering";
 
 interface Category {
@@ -38,7 +38,7 @@ const ShopPage = () => {
   const [sort, setSort] = useState<Sort>("manual");
 
   const { user } = useAuth();
-  const { favoriteIds, toggleFavorite } = useUserFavorites();
+  const { favoriteIds, toggleFavorite, isFavorite } = useUnifiedFavorites();
 
   const activeCat = searchParams.get("cat") ?? "all";
 
@@ -69,7 +69,7 @@ const ShopPage = () => {
   const filtered = useMemo(() => {
     let list = [...products];
       if (activeCat === "favorites") {
-        list = list.filter((p) => favoriteIds.has(p.id));
+        list = list.filter((p) => isFavorite(p.id));
       } else if (activeCat !== "all") {
         const cat = categories.find((c) => c.slug === activeCat);
         if (cat) list = list.filter((p) => p.category_id === cat.id);
@@ -221,7 +221,7 @@ const ShopPage = () => {
             <ProductCard
               key={p.id}
               product={p}
-              isFavorite={favoriteIds.has(p.id)}
+              isFavorite={isFavorite(p.id)}
               onToggleFavorite={() => toggleFavorite(p.id)}
             />
           ))}

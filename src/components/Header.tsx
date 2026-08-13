@@ -18,6 +18,7 @@ import {
 const links = [
   { to: "/", label: "Inicio" },
   { to: "/tienda", label: "Tienda" },
+  { to: "/favoritos", label: "Favoritos" },
   { to: "/servicios", label: "Servicios" },
   { to: "/garantia", label: "Garantía" },
   { to: "/blog", label: "Blog" },

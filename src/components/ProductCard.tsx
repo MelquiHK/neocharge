@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/contexts/CartContext";
 import { formatPrice, formatCUP, computeDisplayPrice } from "@/lib/format";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
+import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { cn } from "@/lib/utils";
 import { Product } from "@/types";
 
@@ -15,9 +16,13 @@ interface ProductCardProps {
   onToggleFavorite?: (event: MouseEvent<HTMLButtonElement>) => void;
 }
 
-function ProductCardComponent({ product, variant = "default", isFavorite = false, onToggleFavorite }: ProductCardProps) {
+function ProductCardComponent({ product, variant = "default", isFavorite: propIsFavorite, onToggleFavorite: propOnToggleFavorite }: ProductCardProps) {
   const { addItem } = useCart();
   const { rate } = useExchangeRate();
+  const { isFavorite: checkFavorite, toggleFavorite } = useUnifiedFavorites();
+  
+  const isFavorite = propIsFavorite ?? checkFavorite(product.id);
+  
   const [added, setAdded] = useState(false);
   const images = Array.isArray(product.images) ? product.images : [];
   const display = computeDisplayPrice(product, rate);
@@ -29,7 +34,18 @@ function ProductCardComponent({ product, variant = "default", isFavorite = false
       ? Math.round(((product.compare_price - product.price) / product.compare_price) * 100)
       : null;
 
+  const handleToggleFavorite = (e: MouseEvent<HTMLButtonElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (propOnToggleFavorite) {
+      propOnToggleFavorite(e);
+    } else {
+      toggleFavorite(product.id);
+    }
+  };
+
   const handleAdd = (e: React.MouseEvent) => {
+
     e.preventDefault();
     e.stopPropagation();
     addItem({
@@ -180,11 +196,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite = false
 
       <button
         type="button"
-        onClick={(e) => {
-          e.preventDefault();
-          e.stopPropagation();
-          onToggleFavorite?.(e);
-        }}
+        onClick={handleToggleFavorite}
         className={cn(
           "absolute top-3 right-3 z-30 p-2 rounded-lg backdrop-blur-md bg-white/80 dark:bg-slate-800/80 border border-white/50 dark:border-slate-700/50 hover:bg-white dark:hover:bg-slate-700 transition-all duration-300 hover:scale-110",
           isFavorite && "shadow-soft",

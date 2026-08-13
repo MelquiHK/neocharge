@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/contexts/CartContext";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSEO } from "@/hooks/use-seo";
+import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { Product } from "@/types";
 import { computeDisplayPrice, formatPrice, formatCUP } from "@/lib/format";
 import { Button } from "@/components/ui/button";
@@ -37,7 +38,9 @@ export default function ProductDetail() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
-  const [liked, setLiked] = useState(false);
+  
+  const { isFavorite, toggleFavorite } = useUnifiedFavorites();
+  const liked = product ? isFavorite(product.id) : false;
 
 
   useEffect(() => {
@@ -329,7 +332,7 @@ export default function ProductDetail() {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => setLiked(!liked)}
+                onClick={() => product && toggleFavorite(product.id)}
                 className="w-12 h-12"
               >
                 <Heart className={`w-5 h-5 ${liked ? "fill-current text-destructive" : ""}`} />

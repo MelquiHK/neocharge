@@ -22,6 +22,7 @@ import NotFound from "./pages/NotFound.tsx";
 const Checkout = lazy(() => import("./pages/Checkout.tsx"));
 const Auth = lazy(() => import("./pages/Auth.tsx"));
 const Account = lazy(() => import("./pages/Account.tsx"));
+const Favorites = lazy(() => import("./pages/Favorites.tsx"));
 const About = lazy(() => import("./pages/About.tsx"));
 const Contact = lazy(() => import("./pages/Contact.tsx"));
 const Blog = lazy(() => import("./pages/Blog.tsx"));
@@ -61,6 +62,7 @@ const App = () => (
                   <Route path="/checkout" element={<Suspense fallback={<LoadingPlaceholder />}><Checkout /></Suspense>} />
                   <Route path="/auth" element={<Suspense fallback={<LoadingPlaceholder />}><Auth /></Suspense>} />
                   <Route path="/cuenta" element={<Suspense fallback={<LoadingPlaceholder />}><Account /></Suspense>} />
+                  <Route path="/favoritos" element={<Suspense fallback={<LoadingPlaceholder />}><Favorites /></Suspense>} />
                   <Route path="/sobre-nosotros" element={<Suspense fallback={<LoadingPlaceholder />}><About /></Suspense>} />
                   <Route path="/contacto" element={<Suspense fallback={<LoadingPlaceholder />}><Contact /></Suspense>} />
                   <Route path="/blog" element={<Suspense fallback={<LoadingPlaceholder />}><Blog /></Suspense>} />
