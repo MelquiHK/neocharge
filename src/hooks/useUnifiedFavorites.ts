@@ -86,7 +86,6 @@ export function useUnifiedFavorites() {
     // Una vez migrados, sobrescribir los locales con los de Supabase (se cargarán en loadFavorites)
     writeLocalFavoriteIds(new Set());
     setMigrationAttempted(true);
-    toast.success("Favoritos locales migrados a tu cuenta!");
   }, [user, migrationAttempted, favoritesTable, runSupabaseFavoriteQuery]);
 
   // Función para cargar favoritos (desde local o Supabase)
@@ -161,7 +160,7 @@ export function useUnifiedFavorites() {
       // Optimistic UI update
       setFavoriteIds(nextFavoriteIds);
       writeLocalFavoriteIds(nextFavoriteIds);
-      toast.success(wasFavorite ? "Eliminado de favoritos" : "Añadido a favoritos");
+      // toast.success(wasFavorite ? "Eliminado de favoritos" : "Añadido a favoritos"); // Move this after successful Supabase operation
 
       if (!user) {
         // Redirigir a login si el usuario no está autenticado y quiere persistir
@@ -188,6 +187,9 @@ export function useUnifiedFavorites() {
           setFavoriteIds(rollbackIds);
           writeLocalFavoriteIds(rollbackIds);
           toast.error(`No se pudo ${wasFavorite ? "quitar" : "añadir"} de favoritos.`);
+        } else {
+          // Solo mostrar toast de éxito si la operación de Supabase fue exitosa
+          toast.success(wasFavorite ? "Eliminado de favoritos" : "Añadido a favoritos");
         }
       } catch (error) {
         console.error("Error inesperado en toggleFavorite:", error);
