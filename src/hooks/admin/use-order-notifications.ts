@@ -15,6 +15,21 @@ interface AdminNotification {
   metadata: Record<string, any>;
 }
 
+const sharedRealtimeState = {
+  channel: null as ReturnType<typeof supabase.channel> | null,
+  subscribers: 0,
+};
+
+function unsubscribeSharedRealtimeChannel() {
+  const channel = sharedRealtimeState.channel;
+  if (!channel) return;
+
+  channel.unsubscribe();
+  void supabase.removeChannel(channel);
+  sharedRealtimeState.channel = null;
+  sharedRealtimeState.subscribers = 0;
+}
+
 export function useOrderNotifications(enabled: boolean = true) {
   const [notifications, setNotifications] = useState<AdminNotification[]>([]);
   const [unreadCount, setUnreadCount] = useState(0);
@@ -158,7 +173,16 @@ export function useOrderNotifications(enabled: boolean = true) {
 
   // Configurar escucha en tiempo real
   useEffect(() => {
-    if (!enabled) return;
+    if (!enabled) {
+      if (sharedRealtimeState.subscribers > 0) {
+        sharedRealtimeState.subscribers -= 1;
+      }
+
+      if (sharedRealtimeState.subscribers <= 0) {
+        unsubscribeSharedRealtimeChannel();
+      }
+      return;
+    }
 
     loadRecentNotifications();
 
@@ -196,7 +220,11 @@ export function useOrderNotifications(enabled: boolean = true) {
       }
     };
 
-    const channel = supabase
+    const intervalId = window.setInterval(() => {
+      void pollForNewRecords();
+    }, 10000);
+
+    const channel = sharedRealtimeState.channel ?? supabase
       .channel('admin-notifications')
       .on(
         'postgres_changes',
@@ -227,27 +255,30 @@ export function useOrderNotifications(enabled: boolean = true) {
         }
       );
 
-    channel.subscribe((status, err) => {
-      if (status === 'SUBSCRIBED') {
-        setIsListening(true);
-      } else {
-        setIsListening(false);
-      }
-      if (err) {
-        console.error('Realtime order subscription error:', err);
-      }
-    });
+    sharedRealtimeState.channel = channel;
+    sharedRealtimeState.subscribers += 1;
 
-    const intervalId = window.setInterval(() => {
-      void pollForNewRecords();
-    }, 10000);
+    if (!channel.state || channel.state === 'closed') {
+      channel.subscribe((status, err) => {
+        if (status === 'SUBSCRIBED') {
+          setIsListening(true);
+        } else {
+          setIsListening(false);
+        }
+        if (err) {
+          console.error('Realtime order subscription error:', err);
+        }
+      });
+    }
 
     return () => {
       window.clearInterval(intervalId);
-      channel.unsubscribe();
-      supabase.removeChannel(channel).catch(() => {
-        // Ignore cleanup errors
-      });
+
+      sharedRealtimeState.subscribers = Math.max(0, sharedRealtimeState.subscribers - 1);
+
+      if (sharedRealtimeState.subscribers === 0) {
+        unsubscribeSharedRealtimeChannel();
+      }
     };
   }, [enabled, loadRecentNotifications, pushNotification]);
 

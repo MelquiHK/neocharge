@@ -28,7 +28,6 @@ import { AdminBlog } from "@/components/admin/AdminBlog";
 import { AdminSales } from "@/components/admin/AdminSales";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminSettings } from "@/components/admin/AdminSettings";
-import { OrderNotificationsWidget } from "@/components/admin/OrderNotificationsWidget";
 import { useOrderNotifications } from "@/hooks/admin/use-order-notifications";
 import { cn } from "@/lib/utils";
 
@@ -188,9 +187,6 @@ const Admin = () => {
 
   return (
     <div className="flex h-screen bg-slate-50 dark:bg-slate-950 overflow-hidden">
-      {/* Background Widget floating to trigger notification subscriptions */}
-      <div className="hidden"><OrderNotificationsWidget inline /></div>
-
       {/* Desktop Sidebar (Left Column) */}
       <aside className="hidden lg:block w-64 h-full shrink-0">
         <SidebarContent />
