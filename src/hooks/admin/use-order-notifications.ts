@@ -22,6 +22,7 @@ export function useOrderNotifications(enabled: boolean = true) {
   const { toast } = useToast();
   const seenRecordIdsRef = useRef<Set<string>>(new Set());
   const flashIntervalRef = useRef<any>(null);
+  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Limpiar destellos de título al enfocar la pestaña
   useEffect(() => {
