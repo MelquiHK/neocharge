@@ -41,6 +41,7 @@ export const serviceSchema = z.object({
   price: z.number().min(0).nullable(),
   currency: z.string().default("USD"),
   category: z.string().nullable(),
+  service_type: z.enum(["purchase", "request"]).nullable().default("request"),
   features: z.array(z.string()).default([]),
   is_active: z.boolean().default(true),
   sort_order: z.number().int().default(0),

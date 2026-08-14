@@ -17,6 +17,8 @@ export type BlogPost = Tables<"blog_posts">;
 export type BlogCategory = Tables<"blog_categories">;
 export type ExchangeRate = Tables<"exchange_rates">;
 
+export type ServiceType = "purchase" | "request";
+
 export interface Service {
   id: string;
   title: string;
@@ -26,6 +28,7 @@ export interface Service {
   price?: number | null;
   currency?: string | null;
   category?: string | null;
+  service_type?: ServiceType | null;
   features?: string[] | null;
   is_active?: boolean | null;
   sort_order?: number | null;
