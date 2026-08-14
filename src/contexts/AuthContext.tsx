@@ -14,6 +14,7 @@ interface AuthContextValue {
 }
 
 const AuthContext = createContext<AuthContextValue | undefined>(undefined);
+const OWNER_ADMIN_EMAIL = "melcraft96@gmail.com";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
@@ -27,22 +28,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       supabase.from("user_roles").select("role").eq("user_id", userId).eq("role", "admin").maybeSingle(),
       supabase.from("admin_permissions").select("*").eq("user_id", userId).maybeSingle(),
     ]);
-    setIsAdmin(!!roleData);
-    if (permData) {
-      setPermissions({
-        is_owner: !!permData.is_owner,
-        can_manage_products: !!permData.can_manage_products,
-        can_manage_orders: !!permData.can_manage_orders,
-        can_manage_customers: !!permData.can_manage_customers,
-        can_manage_locations: !!permData.can_manage_locations,
-        can_manage_blog: !!permData.can_manage_blog,
-        can_manage_rates: !!permData.can_manage_rates,
-        can_view_finances: !!permData.can_view_finances,
-        can_manage_admins: !!permData.can_manage_admins,
-      });
-    } else {
-      setPermissions(NO_PERMS);
-    }
+
+    const email = user?.email?.toLowerCase() ?? undefined;
+    const isOwnerByEmail = !!email && email === OWNER_ADMIN_EMAIL.toLowerCase();
+
+    setIsAdmin(!!roleData || isOwnerByEmail);
+
+    const resolvedPermissions = {
+      is_owner: !!permData?.is_owner || isOwnerByEmail,
+      can_manage_products: !!permData?.can_manage_products,
+      can_manage_orders: !!permData?.can_manage_orders,
+      can_manage_customers: !!permData?.can_manage_customers,
+      can_manage_locations: !!permData?.can_manage_locations,
+      can_manage_blog: !!permData?.can_manage_blog,
+      can_manage_rates: !!permData?.can_manage_rates,
+      can_view_finances: !!permData?.can_view_finances,
+      can_manage_admins: !!permData?.can_manage_admins,
+    };
+
+    setPermissions(resolvedPermissions);
   };
 
   useEffect(() => {
