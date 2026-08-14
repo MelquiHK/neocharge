@@ -21,6 +21,25 @@ export function useOrderNotifications(enabled: boolean = true) {
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
   const seenRecordIdsRef = useRef<Set<string>>(new Set());
+  const flashIntervalRef = useRef<any>(null);
+
+  // Limpiar destellos de título al enfocar la pestaña
+  useEffect(() => {
+    const handleFocus = () => {
+      if (flashIntervalRef.current) {
+        clearInterval(flashIntervalRef.current);
+        flashIntervalRef.current = null;
+        document.title = "Admin — NeoCharge";
+      }
+    };
+    window.addEventListener("focus", handleFocus);
+    return () => {
+      window.removeEventListener("focus", handleFocus);
+      if (flashIntervalRef.current) {
+        clearInterval(flashIntervalRef.current);
+      }
+    };
+  }, []);
 
   const pushNotification = useCallback((payload: any, type: 'order' | 'sale') => {
     const id = payload.id;
@@ -45,6 +64,18 @@ export function useOrderNotifications(enabled: boolean = true) {
     setUnreadCount((prev) => prev + 1);
 
     playNotificationSound();
+
+    // Iniciar parpadeo del título de la pestaña si está en segundo plano
+    if (document.hidden) {
+      if (flashIntervalRef.current) clearInterval(flashIntervalRef.current);
+      let showAltTitle = true;
+      flashIntervalRef.current = setInterval(() => {
+        document.title = showAltTitle 
+          ? `🔴 ¡NUEVO PEDIDO!` 
+          : `🎉 Orden #${payload.order_number || 'Nueva'}`;
+        showAltTitle = !showAltTitle;
+      }, 1000);
+    }
 
     toast({
       title: notif.title,
