@@ -177,7 +177,7 @@ export function AdminDashboard() {
                       </div>
                       <div className="text-right">
                         <div className="font-semibold">{s.currency === "USD" ? formatPrice(s.totalUSD) : formatCUP(s.totalCUP)}</div>
-                        <div className="text-xs text-muted-foreground">Deuda: {formatPrice(s.amountOwedUSD || 0)}</div>
+                        <div className="text-xs text-muted-foreground">Comisión Pendiente: {formatCUP(s.pendingCommission || 0)}</div>
                       </div>
                     </div>
                   ))}

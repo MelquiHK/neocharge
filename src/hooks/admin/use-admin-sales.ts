@@ -42,7 +42,13 @@ export function useAdminSales() {
   }, [user?.email, user?.id]);
 
   const markPaid = useCallback(async (id: string) => {
-    let query = supabase.from("seller_sales").update({ is_paid: true }).eq("id", id);
+    // Get the sale first to know the commission amount
+    const { data: sale } = await supabase.from("seller_sales").select("commission_amount").eq("id", id).single();
+    
+    let query = supabase.from("seller_sales").update({ 
+      is_paid: true,
+      commission_paid_amount: sale?.commission_amount || 0 
+    }).eq("id", id);
 
     if (!permissions.is_owner) {
       query = query.eq("seller_user_id", user?.id ?? "__none__");

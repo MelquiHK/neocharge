@@ -134,6 +134,92 @@ export type Database = {
           },
         ]
       }
+      seller_sales: {
+        Row: {
+          id: string
+          product_id: string | null
+          product_name: string | null
+          seller_user_id: string | null
+          seller_name: string | null
+          price: number
+          currency: string
+          amount_to_receive: number | null
+          is_paid: boolean
+          notes: string | null
+          created_at: string
+          customer_name: string | null
+          customer_phone: string | null
+          location_name: string | null
+          delivery_type: string | null
+          sale_details: string | null
+          commission_amount: number | null
+          commission_currency: string | null
+          commission_paid_amount: number | null
+          is_approved: boolean | null
+          approval_notes: string | null
+          approved_by: string | null
+          approved_at: string | null
+        }
+        Insert: {
+          id?: string
+          product_id?: string | null
+          product_name?: string | null
+          seller_user_id?: string | null
+          seller_name?: string | null
+          price: number
+          currency?: string
+          amount_to_receive?: number | null
+          is_paid?: boolean
+          notes?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          location_name?: string | null
+          delivery_type?: string | null
+          sale_details?: string | null
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_paid_amount?: number | null
+          is_approved?: boolean | null
+          approval_notes?: string | null
+          approved_by?: string | null
+          approved_at?: string | null
+        }
+        Update: {
+          id?: string
+          product_id?: string | null
+          product_name?: string | null
+          seller_user_id?: string | null
+          seller_name?: string | null
+          price?: number
+          currency?: string
+          amount_to_receive?: number | null
+          is_paid?: boolean
+          notes?: string | null
+          created_at?: string
+          customer_name?: string | null
+          customer_phone?: string | null
+          location_name?: string | null
+          delivery_type?: string | null
+          sale_details?: string | null
+          commission_amount?: number | null
+          commission_currency?: string | null
+          commission_paid_amount?: number | null
+          is_approved?: boolean | null
+          approval_notes?: string | null
+          approved_by?: string | null
+          approved_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "seller_sales_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          }
+        ]
+      }
     }
     Views: {
       [_ in never]: never

@@ -3,12 +3,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAdminSales } from "@/hooks/admin/use-admin-sales";
 import { useAuth } from "@/contexts/AuthContext";
 import { toast } from "sonner";
 import { formatPrice, formatCUP } from "@/lib/format";
-import { BadgeCheck, DollarSign, ShieldCheck, Trash2 } from "lucide-react";
+import { BadgeCheck, DollarSign, ShieldCheck, Trash2, Eye, MapPin, Phone, User, FileText, Wallet, ArrowUpRight, CheckCircle2, Clock } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { computeSalesTotalsBySeller } from "@/lib/sales";
 
 interface ProductOption {
   id: string;
@@ -16,6 +19,11 @@ interface ProductOption {
   price: number;
   currency: string;
   price_cup: number | null;
+}
+
+interface StoredLocation {
+  id: string;
+  name: string;
 }
 
 export function AdminSales() {
@@ -26,8 +34,15 @@ export function AdminSales() {
   const [price, setPrice] = useState<number | string>(0);
   const [currency, setCurrency] = useState("USD");
   const [sellerName, setSellerName] = useState("");
+  const [customerName, setCustomerName] = useState("");
+  const [customerPhone, setCustomerPhone] = useState("");
+  const [locationName, setLocationName] = useState("");
+  const [saleDetails, setSaleDetails] = useState("");
+  const [commissionAmount, setCommissionAmount] = useState<number | string>(2000);
   const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
   const [filterSeller, setFilterSeller] = useState("all");
+  const [selectedSale, setSelectedSale] = useState<any | null>(null);
+  const [isDetailsOpen, setIsDetailsOpen] = useState(false);
 
   useEffect(() => {
     if (user) setSellerName((user.user_metadata as any)?.full_name ?? user.email ?? "");
@@ -61,6 +76,12 @@ export function AdminSales() {
         seller_name: sellerName || user?.email || "Gestor",
         price: Number(price || 0),
         currency,
+        customer_name: customerName,
+        customer_phone: customerPhone,
+        location_name: locationName,
+        sale_details: saleDetails,
+        commission_amount: Number(commissionAmount || 0),
+        commission_currency: "CUP",
         amount_to_receive: Number(price || 0),
         notes: `Venta registrada por ${sellerName || user?.email || "Gestor"}`,
       };
@@ -70,6 +91,11 @@ export function AdminSales() {
       setProductName("");
       setPrice(0);
       setCurrency("USD");
+      setCustomerName("");
+      setCustomerPhone("");
+      setLocationName("");
+      setSaleDetails("");
+      setCommissionAmount(2000);
     } catch (e: any) {
       toast.error(e.message || "Error creando venta");
     }
@@ -85,7 +111,20 @@ export function AdminSales() {
   const totals = useMemo(() => {
     const totalUSD = filteredSales.filter((s) => s.currency === "USD").reduce((a, b) => a + Number(b.price || 0), 0);
     const totalCUP = filteredSales.filter((s) => s.currency === "CUP").reduce((a, b) => a + Number(b.price || 0), 0);
-    return { totalUSD, totalCUP };
+    
+    // Calculate total commissions
+    const stats = computeSalesTotalsBySeller(filteredSales);
+    const totalCommissionPending = stats.bySeller.reduce((a, b) => a + b.pendingCommission, 0);
+    const totalCommissionPaid = stats.bySeller.reduce((a, b) => a + b.paidCommission, 0);
+
+    // Calculate weekly summary (last 7 days)
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 7);
+    const weeklySales = filteredSales.filter(s => new Date(s.created_at) >= sevenDaysAgo);
+    const weeklyStats = computeSalesTotalsBySeller(weeklySales);
+    const weeklyCommission = weeklyStats.bySeller.reduce((a, b) => a + b.totalCommission, 0);
+
+    return { totalUSD, totalCUP, stats, totalCommissionPending, totalCommissionPaid, weeklyCommission, weeklySalesCount: weeklySales.length };
   }, [filteredSales]);
 
   const sellers = useMemo(() => {
@@ -182,8 +221,108 @@ export function AdminSales() {
             </div>
           </div>
 
+          <div className="grid md:grid-cols-3 gap-4">
+            <div className="space-y-2">
+              <Label>Nombre del Cliente</Label>
+              <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ej: Juan Pérez" />
+            </div>
+            <div className="space-y-2">
+              <Label>Teléfono</Label>
+              <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Ej: +53 5..." />
+            </div>
+            <div className="space-y-2">
+              <Label>Dirección / Local</Label>
+              <Input value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder="Ej: Calle 10 #5..." />
+            </div>
+          </div>
+
+          <div className="grid md:grid-cols-2 gap-4">
+            <div className="space-y-2">
+              <Label>Comisión (CUP)</Label>
+              <Input type="number" value={commissionAmount as any} onChange={(e) => setCommissionAmount(e.target.value)} placeholder="Ej: 2000" />
+            </div>
+            <div className="space-y-2">
+              <Label>Detalles de la venta (Opcional)</Label>
+              <Textarea value={saleDetails} onChange={(e) => setSaleDetails(e.target.value)} placeholder="Escribe aquí cualquier detalle adicional..." />
+            </div>
+          </div>
+
           <div className="flex justify-end">
             <Button variant="hero" onClick={submit}>Registrar venta</Button>
+          </div>
+        </div>
+      )}
+
+      {isOwner && (
+        <div className="grid gap-4 rounded-3xl border border-border bg-secondary/40 p-5">
+          <div className="flex flex-col gap-4">
+            <div className="flex items-center gap-2 text-lg font-semibold text-primary">
+              <Wallet className="h-5 w-5" />
+              Control de Comisiones a Gestores
+            </div>
+            
+            <div className="grid md:grid-cols-3 gap-4">
+              <div className="rounded-2xl bg-white p-4 shadow-sm border border-border">
+                <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground mb-1">
+                  <ArrowUpRight className="h-3 w-3" /> Total por Pagar
+                </div>
+                <div className="text-2xl font-bold text-amber-600">{formatCUP(totals.totalCommissionPending)}</div>
+              </div>
+              
+              <div className="rounded-2xl bg-white p-4 shadow-sm border border-border">
+                <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground mb-1">
+                  <CheckCircle2 className="h-3 w-3" /> Total Pagado
+                </div>
+                <div className="text-2xl font-bold text-emerald-600">{formatCUP(totals.totalCommissionPaid)}</div>
+              </div>
+
+              <div className="rounded-2xl bg-white p-4 shadow-sm border border-border">
+                <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground mb-1">
+                  <Clock className="h-3 w-3" /> Total Acumulado
+                </div>
+                <div className="text-2xl font-bold text-primary">{formatCUP(totals.totalCommissionPending + totals.totalCommissionPaid)}</div>
+              </div>
+            </div>
+
+            <div className="rounded-2xl bg-primary/10 p-4 border border-primary/20">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h4 className="text-sm font-bold text-primary flex items-center gap-2">
+                    <TrendingUp className="h-4 w-4" /> Resumen de esta semana
+                  </h4>
+                  <p className="text-xs text-muted-foreground">Últimos 7 días de actividad</p>
+                </div>
+                <div className="text-right">
+                  <div className="text-lg font-bold text-primary">{formatCUP(totals.weeklyCommission)}</div>
+                  <p className="text-xs text-muted-foreground">{totals.weeklySalesCount} ventas registradas</p>
+                </div>
+              </div>
+            </div>
+
+            <div className="overflow-x-auto rounded-2xl border border-border bg-white shadow-sm mt-2">
+              <table className="w-full text-sm text-left">
+                <thead className="bg-secondary/30 text-xs font-medium uppercase text-muted-foreground">
+                  <tr>
+                    <th className="px-4 py-3">Gestor</th>
+                    <th className="px-4 py-3 text-center">Ventas</th>
+                    <th className="px-4 py-3 text-right">Pagado</th>
+                    <th className="px-4 py-3 text-right">Pendiente</th>
+                    <th className="px-4 py-3 text-right">Total</th>
+                  </tr>
+                </thead>
+                <tbody className="divide-y divide-border">
+                  {totals.stats.bySeller.map((s: any) => (
+                    <tr key={s.seller_user_id || s.seller_name} className="hover:bg-secondary/10 transition-colors">
+                      <td className="px-4 py-3 font-medium">{s.seller_name || "Desconocido"}</td>
+                      <td className="px-4 py-3 text-center">{s.count}</td>
+                      <td className="px-4 py-3 text-right text-emerald-600 font-medium">{formatCUP(s.paidCommission)}</td>
+                      <td className="px-4 py-3 text-right text-amber-600 font-medium">{formatCUP(s.pendingCommission)}</td>
+                      <td className="px-4 py-3 text-right font-bold">{formatCUP(s.totalCommission)}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
           </div>
         </div>
       )}
@@ -235,6 +374,9 @@ export function AdminSales() {
 
               <div className="flex flex-wrap items-center gap-3 md:justify-end">
                 <div className="font-semibold text-lg">{sale.currency === "USD" ? formatPrice(Number(sale.price)) : formatCUP(Number(sale.price))}</div>
+                <Button size="icon" variant="outline" onClick={() => { setSelectedSale(sale); setIsDetailsOpen(true); }}>
+                  <Eye className="h-4 w-4" />
+                </Button>
                 {!sale.is_paid && (
                   <Button size="sm" onClick={async () => { try { await markPaid(sale.id); toast.success("Venta marcada como pagada"); } catch (e: any) { toast.error(e.message || "No se pudo actualizar"); } }}>
                     Marcar pagada
@@ -253,6 +395,105 @@ export function AdminSales() {
           ))
         )}
       </div>
+
+      <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
+        <DialogContent className="max-w-2xl rounded-3xl">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <FileText className="h-5 w-5 text-primary" />
+              Detalles de la Venta
+            </DialogTitle>
+            <DialogDescription>
+              Información completa de la venta registrada.
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedSale && (
+            <div className="grid gap-6 py-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">Producto</span>
+                  <p className="font-semibold">{selectedSale.product_name}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">Precio de Venta</span>
+                  <p className="font-semibold text-lg">
+                    {selectedSale.currency === "USD" ? formatPrice(selectedSale.price) : formatCUP(selectedSale.price)}
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
+                <div className="space-y-1">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">Gestor</span>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <p>{selectedSale.seller_name}</p>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">Fecha</span>
+                  <p>{new Date(selectedSale.created_at).toLocaleString("es-ES")}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
+                <div className="space-y-1">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">Cliente</span>
+                  <div className="flex items-center gap-2">
+                    <User className="h-4 w-4 text-muted-foreground" />
+                    <p>{selectedSale.customer_name || "No especificado"}</p>
+                  </div>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">Teléfono</span>
+                  <div className="flex items-center gap-2">
+                    <Phone className="h-4 w-4 text-muted-foreground" />
+                    <p>{selectedSale.customer_phone || "No especificado"}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div className="space-y-1 border-t border-border pt-4">
+                <span className="text-xs font-medium uppercase text-muted-foreground">Ubicación / Dirección</span>
+                <div className="flex items-center gap-2">
+                  <MapPin className="h-4 w-4 text-muted-foreground" />
+                  <p>{selectedSale.location_name || "No especificado"}</p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
+                <div className="space-y-1">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">Comisión Gestor</span>
+                  <p className="font-semibold text-primary">{formatCUP(selectedSale.commission_amount || 0)}</p>
+                </div>
+                <div className="space-y-1">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">Estado de Pago</span>
+                  <div className="flex items-center gap-2">
+                    {selectedSale.is_paid ? (
+                      <BadgeCheck className="h-4 w-4 text-emerald-600" />
+                    ) : (
+                      <DollarSign className="h-4 w-4 text-amber-500" />
+                    )}
+                    <p className={selectedSale.is_paid ? "text-emerald-600 font-medium" : "text-amber-500 font-medium"}>
+                      {selectedSale.is_paid ? "Pagada al gestor" : "Pendiente de pago"}
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {selectedSale.sale_details && (
+                <div className="space-y-1 border-t border-border pt-4">
+                  <span className="text-xs font-medium uppercase text-muted-foreground">Detalles Adicionales</span>
+                  <p className="text-sm whitespace-pre-wrap bg-secondary/30 p-3 rounded-xl border border-border">
+                    {selectedSale.sale_details}
+                  </p>
+                </div>
+              )}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
