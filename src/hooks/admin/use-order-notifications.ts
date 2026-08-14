@@ -41,6 +41,20 @@ export function useOrderNotifications(enabled: boolean = true) {
     };
   }, []);
 
+  useEffect(() => {
+    if (enabled && typeof Notification !== "undefined" && Notification.permission === "default") {
+      // Solicitar permisos de notificación proactivamente si el usuario tiene privilegios de admin
+      // y aún no ha respondido a la solicitud de permisos.
+      Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+          console.log("Permisos de notificación concedidos.");
+        } else {
+          console.warn("Permisos de notificación denegados.");
+        }
+      });
+    }
+  }, [enabled]);
+
   const pushNotification = useCallback((payload: any, type: 'order' | 'sale') => {
     const id = payload.id;
     if (!id || seenRecordIdsRef.current.has(id)) return;
@@ -236,18 +250,31 @@ export function useOrderNotifications(enabled: boolean = true) {
     };
   }, [enabled, loadRecentNotifications, pushNotification]);
 
-  // Función para reproducir sonido
-  const playNotificationSound = () => {
+  // Función para reproducir sonido usando Web Audio API
+  const playNotificationSound = useCallback(() => {
     try {
-      const audio = new Audio('data:audio/wav;base64,UklGRiYAAABXQVZFZm10IBAAAAABAAEAQB8AAAB9AAACABAAZGF0YQIAAAAAAA==');
-      audio.play().catch(() => {
-        // Silenciosamente fallar si el audio no se puede reproducir
-      });
-    } catch (error) {
-      // Ignorar errores
-    }
-  };
+      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
+      if (!AudioContext) return; // Navegador no soporta AudioContext
 
+      const audioContext = new AudioContext();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.type = "sine"; // Puedes probar "square", "sawtooth", "triangle"
+      oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // Frecuencia de 440 Hz (La central)
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05); // Ataque rápido
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5); // Caída
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5); // Duración total del sonido
+    } catch (error) {
+      console.warn("Error reproduciendo sonido de notificación:", error);
+    }
+  }, []);
   // Pedir permisos para notificaciones
   const requestNotificationPermission = () => {
     if ('Notification' in window && Notification.permission === 'default') {
