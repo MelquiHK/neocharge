@@ -27,6 +27,7 @@ import { AdminRates } from "@/components/admin/AdminRates";
 import { AdminBlog } from "@/components/admin/AdminBlog";
 import { AdminSales } from "@/components/admin/AdminSales";
 import { AdminServices } from "@/components/admin/AdminServices";
+import { AdminMessenger } from "@/components/admin/AdminMessenger";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { useOrderNotifications } from "@/hooks/admin/use-order-notifications";
 import { cn } from "@/lib/utils";
@@ -77,6 +78,7 @@ const Admin = () => {
     { v: "categories", l: "Categorías", icon: FolderTree, show: isOwner || permissions.can_manage_products },
     { v: "services", l: "Servicios", icon: Package, show: isOwner || permissions.can_manage_products },
     { v: "locations", l: "Locales", icon: MapPin, show: isOwner || permissions.can_manage_locations },
+    { v: "messenger", l: "Mensajería", icon: MapPin, show: isOwner || permissions.can_manage_locations },
     { v: "customers", l: "Clientes", icon: Users, show: isOwner || permissions.can_manage_customers },
     { v: "rates", l: "Tasa USD", icon: TrendingUp, show: isOwner || permissions.can_manage_rates },
     { v: "sales", l: "Ventas", icon: TrendingUp, show: isOwner || permissions.can_manage_orders || permissions.can_view_finances },
@@ -94,6 +96,7 @@ const Admin = () => {
       case "categories": return <AdminCategories />;
       case "services": return <AdminServices />;
       case "locations": return <AdminLocations />;
+      case "messenger": return <AdminMessenger />;
       case "customers": return <AdminCustomers />;
       case "rates": return <AdminRates />;
       case "settings": return <AdminSettings />;
@@ -249,6 +252,7 @@ const Admin = () => {
                 {activeTab === "categories" && "Clasifica y jerarquiza tus productos en el catálogo de la tienda."}
                 {activeTab === "services" && "Administración de servicios técnicos oficiales de reparación e instalación."}
                 {activeTab === "locations" && "Gestión de puntos de venta físicos, almacenes y horarios de atención."}
+                {activeTab === "messenger" && "Configuración de puntos de despacho, tarifas de mensajería y solicitudes de pago."}
                 {activeTab === "customers" && "Base de datos, perfiles e historial de compras de tus clientes."}
                 {activeTab === "rates" && "Actualización de tasas oficiales de cambio USD / CUP."}
                 {activeTab === "sales" && "Registro de transacciones de ventas y métricas financieras."}

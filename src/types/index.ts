@@ -17,6 +17,38 @@ export type BlogPost = Tables<"blog_posts">;
 export type BlogCategory = Tables<"blog_categories">;
 export type ExchangeRate = Tables<"exchange_rates">;
 
+export type UserRole = "admin" | "owner" | "gestor" | "mensajero" | "cliente" | "user";
+
+export interface MessengerProfile {
+  user_id: string;
+  rate_per_km: number;
+  vehicle_type: string;
+  is_active: boolean;
+  updated_at: string;
+}
+
+export interface SalePoint {
+  id: string;
+  name: string;
+  address?: string;
+  lat: number;
+  lng: number;
+  is_active: boolean;
+  created_at: string;
+}
+
+export interface PaymentRequest {
+  id: string;
+  user_id: string;
+  amount: number;
+  currency: string;
+  status: "pending" | "approved" | "rejected" | "paid";
+  notes?: string;
+  admin_notes?: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export type ServiceType = "purchase" | "request";
 
 export interface Service {
