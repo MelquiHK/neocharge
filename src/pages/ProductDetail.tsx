@@ -152,6 +152,48 @@ export default function ProductDetail() {
       : null;
   const outOfStock = Number(product?.stock ?? 0) <= 0;
 
+  const handleShare = async () => {
+    if (!product) return;
+
+    const shareData: ShareData = {
+      title: product.name,
+      text: `${product.name} - ${display.primary === "USD" ? formatPrice(display.usd) : formatCUP(display.cup)}\n${product.description || ''}\n¡Mira este producto en NeoCharge!`, // Richer text
+      url: window.location.href,
+    };
+
+    // Attempt to add main product image if available
+    const mainImage = product.images?.[product.main_image_index ?? 0] ?? product.images?.[0];
+    if (mainImage) {
+      try {
+        const response = await fetch(mainImage);
+        const blob = await response.blob();
+        const file = new File([blob], `${product.slug}.jpg`, { type: blob.type });
+        shareData.files = [file];
+      } catch (error) {
+        console.error("Error al cargar la imagen para compartir:", error);
+        // Fallback to sharing without image if image loading fails
+      }
+    }
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (error) {
+        console.error("Error compartiendo:", error);
+        if ((error as any).name !== "AbortError") {
+          // Only show toast if not cancelled by user
+          await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+          toast.success("¡Detalles y enlace del producto copiados al portapapeles!");
+        }
+      }
+    } else if (navigator.clipboard) {
+      await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
+      toast.success("¡Detalles y enlace del producto copiados al portapapeles!");
+    } else {
+      toast.error("Tu navegador no soporta la función de compartir.");
+    }
+  };
+
   if (loading) {
     return (
       <div className="container-page py-12">
@@ -340,13 +382,7 @@ export default function ProductDetail() {
               <Button
                 variant="outline"
                 size="icon"
-                onClick={() => {
-                  navigator.share?.({
-                    title: product.name,
-                    text: product.description || "",
-                    url: window.location.href,
-                  });
-                }}
+                onClick={handleShare}
                 className="w-12 h-12"
               >
                 <Share2 className="w-5 h-5" />
