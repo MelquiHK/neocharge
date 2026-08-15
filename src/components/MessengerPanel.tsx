@@ -9,7 +9,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { MapPin, Navigation, Trash2, Plus, Calculator, DollarSign, ArrowRight, Store, Home } from "lucide-react";
+import { MapPin, Navigation, Trash2, Plus, Calculator, DollarSign, ArrowRight, Store, Home, Info } from "lucide-react";
 import { formatCUP } from "@/lib/format";
 
 // Fix Leaflet marker icons
@@ -33,6 +33,8 @@ export function MessengerPanel() {
   const [rate, setRate] = useState(300);
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [route, setRoute] = useState<[number, number][]>([]);
+  const [latInput, setLatInput] = useState("");
+  const [lngInput, setLngInput] = useState("");
   const [distance, setDistance] = useState(0); // in km
   const [loading, setLoading] = useState(false);
   const [salePoints, setSalePoints] = useState<any[]>([]);
@@ -95,6 +97,25 @@ export function MessengerPanel() {
 
   const removeWaypoint = (id: string) => {
     setWaypoints(waypoints.filter(w => w.id !== id));
+  const removeWaypoint = (id: string) => {
+    setWaypoints(waypoints.filter((w) => w.id !== id));
+  };
+
+  const handleAddCoordinateWaypoint = () => {
+    const lat = parseFloat(latInput);
+    const lng = parseFloat(lngInput);
+
+    if (isNaN(lat) || isNaN(lng) || lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      toast.error("Por favor, introduce coordenadas válidas (Latitud: -90 a 90, Longitud: -180 a 180).");
+      return;
+    }
+
+    addWaypoint(lat, lng, `(${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+    setLatInput("");
+    setLngInput("");
+    toast.success("Parada añadida por coordenadas.");
+  };
+
   };
 
   const addSalePoint = (point: any) => {
@@ -115,6 +136,41 @@ export function MessengerPanel() {
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-2xl bg-primary/10 text-primary">
               <Calculator className="w-6 h-6" />
+          <div className="space-y-4">
+            <h3 className="font-bold text-lg flex items-center gap-2">
+              <Plus className="w-5 h-5 text-primary" /> Añadir Parada Manual
+            </h3>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-1">
+                <Label htmlFor="latitud">Latitud</Label>
+                <Input
+                  id="latitud"
+                  type="number"
+                  placeholder="Ej: 23.1136"
+                  value={latInput}
+                  onChange={(e) => setLatInput(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1">
+                <Label htmlFor="longitud">Longitud</Label>
+                <Input
+                  id="longitud"
+                  type="number"
+                  placeholder="Ej: -82.3666"
+                  value={lngInput}
+                  onChange={(e) => setLngInput(e.target.value)}
+                />
+              </div>
+            </div>
+            <Button
+              onClick={handleAddCoordinateWaypoint}
+              className="w-full text-white bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+            >
+              <Plus className="w-4 h-4 mr-2" /> Añadir Parada
+            </Button>
+          </div>
+
+          <div className="space-y-4">
             </div>
             <div>
               <h2 className="text-xl font-display font-bold">Calculadora de Ruta</h2>
