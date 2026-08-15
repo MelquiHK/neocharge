@@ -250,8 +250,6 @@ export function MessengerPanel() {
                 )}
               </div>
             </div>
-          </div>
-        </Card>
 
         {distance > 0 && (
           <Card className="p-6 rounded-3xl shadow-soft bg-primary text-white overflow-hidden relative">
@@ -276,7 +274,8 @@ export function MessengerPanel() {
             </div>
           </Card>
         )}
-      </div>
+        </div>
+      </Card>
 
       {/* Right Content: Map */}
       <div className="lg:col-span-8 h-[700px] lg:h-auto min-h-[500px] relative">
