@@ -96,8 +96,6 @@ export function MessengerPanel() {
   };
 
   const removeWaypoint = (id: string) => {
-    setWaypoints(waypoints.filter(w => w.id !== id));
-  const removeWaypoint = (id: string) => {
     setWaypoints(waypoints.filter((w) => w.id !== id));
   };
 
@@ -114,8 +112,6 @@ export function MessengerPanel() {
     setLatInput("");
     setLngInput("");
     toast.success("Parada añadida por coordenadas.");
-  };
-
   };
 
   const addSalePoint = (point: any) => {
@@ -136,49 +132,47 @@ export function MessengerPanel() {
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-2xl bg-primary/10 text-primary">
               <Calculator className="w-6 h-6" />
-          <div className="space-y-4">
-            <h3 className="font-bold text-lg flex items-center gap-2">
-              <Plus className="w-5 h-5 text-primary" /> Añadir Parada Manual
-            </h3>
-            <div className="grid grid-cols-2 gap-2">
-              <div className="space-y-1">
-                <Label htmlFor="latitud">Latitud</Label>
-                <Input
-                  id="latitud"
-                  type="number"
-                  placeholder="Ej: 23.1136"
-                  value={latInput}
-                  onChange={(e) => setLatInput(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1">
-                <Label htmlFor="longitud">Longitud</Label>
-                <Input
-                  id="longitud"
-                  type="number"
-                  placeholder="Ej: -82.3666"
-                  value={lngInput}
-                  onChange={(e) => setLngInput(e.target.value)}
-                />
-              </div>
-            </div>
-            <Button
-              onClick={handleAddCoordinateWaypoint}
-              className="w-full text-white bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
-            >
-              <Plus className="w-4 h-4 mr-2" /> Añadir Parada
-            </Button>
-          </div>
-
-          <div className="space-y-4">
             </div>
             <div>
               <h2 className="text-xl font-display font-bold">Calculadora de Ruta</h2>
               <p className="text-xs text-muted-foreground uppercase tracking-wider font-semibold">Mensajería NeoCharge</p>
             </div>
           </div>
-
           <div className="space-y-4">
+              <h3 className="font-bold text-lg flex items-center gap-2">
+                <Plus className="w-5 h-5 text-primary" /> Añadir Parada Manual
+              </h3>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <Label htmlFor="latitud">Latitud</Label>
+                  <Input
+                    id="latitud"
+                    type="number"
+                    placeholder="Ej: 23.1136"
+                    value={latInput}
+                    onChange={(e) => setLatInput(e.target.value)}
+                  />
+                </div>
+                <div className="space-y-1">
+                  <Label htmlFor="longitud">Longitud</Label>
+                  <Input
+                    id="longitud"
+                    type="number"
+                    placeholder="Ej: -82.3666"
+                    value={lngInput}
+                    onChange={(e) => setLngInput(e.target.value)}
+                  />
+                </div>
+              </div>
+              <Button
+                onClick={handleAddCoordinateWaypoint}
+                className="w-full text-white bg-gradient-to-r from-primary to-accent hover:from-primary/90 hover:to-accent/90"
+              >
+                <Plus className="w-4 h-4 mr-2" /> Añadir Parada
+              </Button>
+            </div>
+
+            <div className="space-y-4">
             <div className="space-y-2">
               <Label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                 <DollarSign className="w-3 h-3" /> Mi Tarifa por KM (CUP)
@@ -250,6 +244,8 @@ export function MessengerPanel() {
                 )}
               </div>
             </div>
+          </div>
+        </Card>
 
         {distance > 0 && (
           <Card className="p-6 rounded-3xl shadow-soft bg-primary text-white overflow-hidden relative">
@@ -274,8 +270,7 @@ export function MessengerPanel() {
             </div>
           </Card>
         )}
-        </div>
-      </Card>
+      </div>
 
       {/* Right Content: Map */}
       <div className="lg:col-span-8 h-[700px] lg:h-auto min-h-[500px] relative">
