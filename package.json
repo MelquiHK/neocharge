@@ -4,7 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "predev": "node copy-env.js",
     "dev": "NODE_OPTIONS='--max-old-space-size=2048' vite",
+    "prebuild": "node copy-env.js",
     "build": "NODE_OPTIONS='--max-old-space-size=2048' vite build",
     "build:dev": "NODE_OPTIONS='--max-old-space-size=2048' vite build --mode development",
     "lint": "eslint .",
