@@ -2,22 +2,14 @@
 import { createClient } from '@supabase/supabase-js';
 import type { Database } from './types';
 
-const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL || 'https://txkgchetianfvypnkziq.supabase.co';
+const SUPABASE_URL =
+  import.meta.env.VITE_SUPABASE_URL ||
+  'https://txkgchetianfvypnkziq.supabase.co';
+
 const SUPABASE_KEY =
-  import.meta.env.VITE_SUPABASE_ANON_KEY ??
-  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ??
-  'placeholder-key-safe-fallback-to-avoid-white-screen';
-
-if (!import.meta.env.VITE_SUPABASE_URL) {
-  console.warn('VITE_SUPABASE_URL is missing. Check your environment variables. Using fallback URL for compilation resilience.');
-}
-
-if (!import.meta.env.VITE_SUPABASE_ANON_KEY && !import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY) {
-  console.warn('VITE_SUPABASE_ANON_KEY/VITE_SUPABASE_PUBLISHABLE_KEY is missing. Check your environment variables. Using fallback key for compilation resilience.');
-}
-
-// Import the supabase client like this:
-// import { supabase } from "@/integrations/supabase/client";
+  import.meta.env.VITE_SUPABASE_ANON_KEY ||
+  import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY ||
+  'sb_publishable_v_tNhI6VgA5oZh0RTV33lQ_-xfuc5Jd';
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_KEY, {
   auth: {
