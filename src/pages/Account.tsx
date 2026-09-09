@@ -182,7 +182,14 @@ const handleAvatarUpload = async (file: File) => {
   const sendToWhatsApp = () => {
     if (!gestorStats) return;
     const stats = gestorStats.bySeller[0];
-    const message = `Hola, soy ${profile?.full_name || profile?.username}. Mi resumen de ventas:\\n\\n` +\n      `Total Ventas: ${stats.count}\\n` +\n      `Total Comisión: ${formatCUP(stats.totalCommission)}\\n` +\n      `Pagado: ${formatCUP(stats.paidCommission)}\\n` +\n      `Pendiente: ${formatCUP(stats.pendingCommission)}\\n\\n` +\n      `Por favor, revisa mis pagos. ¡Gracias!`;
+    const message = `Hola, soy ${profile?.full_name || profile?.username}. Mi resumen de ventas:
+
+Total Ventas: ${stats.count}
+Total Comisión: ${formatCUP(stats.totalCommission)}
+Pagado: ${formatCUP(stats.paidCommission)}
+Pendiente: ${formatCUP(stats.pendingCommission)}
+
+Por favor, revisa mis pagos. ¡Gracias!`;
     
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/5363180910?text=${encoded}`, "_blank");
