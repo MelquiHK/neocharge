@@ -2,156 +2,104 @@
 
 Tienda online moderna con integración Supabase, construida con Vite + React + TypeScript.
 
-## 🚀 Características
+## Características
 
-- **Autenticación:** Email/password con Supabase
-- **Gestión de productos:** Admin dashboard completo
-- **Carrito persistente:** localStorage + context API
+- **Autenticación:** Email/password con Supabase Auth
+- **Panel admin:** Dashboard con roles y permisos granulares
+- **Carrito persistente:** localStorage + Context API
+- **Favoritos unificados:** localStorage + sync Supabase
 - **Integración WhatsApp:** Checkout directo a WhatsApp
+- **Mensajería:** Sistema de entregas con mensajeros
+- **PWA:** Instalable como app móvil
 - **Responsive:** Diseño mobile-first
-- **TypeScript:** Type-safe en todo el código
-- **Tailwind + Radix UI:** UI moderna y accesible
 
-## 📋 Prerequisitos
+## Prerequisitos
 
 - Node.js 18+
-- npm o yarn
-- Cuenta Supabase (gratis en supabase.com)
+- npm
+- Cuenta Supabase
 
-## 🔧 Instalación
+## Instalación
 
-1. Clonar el repositorio:
 ```bash
 git clone https://github.com/MelquiHK/neocharge.git
 cd neocharge
-```
-
-2. Instalar dependencias:
-```bash
 npm install
-```
-
-3. Configurar variables de entorno:
-```bash
 cp .env.example .env.local
 ```
 
-Llenar `.env.local` con credenciales de Supabase:
-```
-VITE_SUPABASE_URL=https://txkgchetianfvypnkziq.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY=sb_publishable_v_tNhI6VgA5oZh0RTV33lQ_-xfuc5Jd
-VITE_SUPABASE_PROJECT_ID=txkgchetianfvypnkziq
-```
+Editar `.env.local` con tus credenciales de Supabase (ver `.env.example`).
 
-## 💻 Desarrollo
+## Desarrollo
 
-Iniciar servidor de desarrollo:
 ```bash
 npm run dev
 ```
 
-El servidor estará disponible en `http://localhost:8080`
+Servidor en `http://localhost:8080`
 
-## 🏗️ Build
+## Scripts
 
-Compilar para producción:
 ```bash
-npm run build
+npm run dev          # Desarrollo local
+npm run build        # Build producción
+npm run build:dev    # Build en modo development
+npm run lint         # ESLint
+npm run preview      # Previsualizar build
+npm run test         # Tests (Vitest)
+npm run test:watch   # Tests en modo watch
 ```
 
-Output en carpeta `dist/`
-
-## 🌐 Deployment en Vercel
-
-### 1. Conectar repositorio GitHub
-- Ir a [vercel.com](https://vercel.com)
-- Click "New Project"
-- Seleccionar repositorio `neocharge`
-
-### 2. Configurar Environment Variables en Vercel
-En el dashboard de Vercel → Settings → Environment Variables, agregar:
-
-```
-VITE_SUPABASE_URL              = https://txkgchetianfvypnkziq.supabase.co
-VITE_SUPABASE_PUBLISHABLE_KEY  = sb_publishable_v_tNhI6VgA5oZh0RTV33lQ_-xfuc5Jd
-VITE_SUPABASE_PROJECT_ID       = txkgchetianfvypnkziq
-```
-
-### 3. Deploy
-Vercel detectará automáticamente Vite y hará deploy. El build command es:
-```
-npm run build
-```
-
-Output directory: `dist`
-
-## 📁 Estructura del Proyecto
+## Estructura del proyecto
 
 ```
 src/
-├── App.tsx              # Componente principal
-├── main.tsx             # Entry point
-├── components/          # Componentes reutilizables
-│   ├── Header.tsx
-│   ├── Footer.tsx
-│   ├── admin/           # Dashboard admin
-│   └── sections/        # Secciones globales
-├── pages/               # Componentes de página
-│   ├── Shop.tsx
-│   ├── ProductDetail.tsx
-│   ├── Auth.tsx
-│   ├── Admin.tsx
-│   └── Checkout.tsx
-├── contexts/            # Global state
-│   ├── AuthContext.tsx  # Autenticación Supabase
-│   └── CartContext.tsx
-├── integrations/
-│   └── supabase/
-│       ├── client.ts    # Cliente Supabase
-│       └── types.ts     # Tipos de BD
-├── lib/                 # Utilidades
-│   ├── whatsapp.ts
-│   └── utils.ts
-└── hooks/               # React hooks
+├── App.tsx              # Router + providers globales
+├── pages/               # Páginas (tienda, admin, blog, etc.)
+├── components/
+│   ├── admin/           # Panel administrativo
+│   ├── sections/        # Secciones del homepage
+│   └── ui/              # Componentes shadcn/ui
+├── contexts/            # AuthContext, CartContext
+├── hooks/               # Hooks personalizados
+├── integrations/supabase/
+├── lib/                 # Utilidades (whatsapp, pricing, seo)
+└── types/               # Tipos TypeScript
+
+supabase/
+├── migrations/          # Migraciones de BD (fuente de verdad)
+└── scripts/             # SQL manual (RLS, fixes)
+
+docs/                    # Documentación completa del proyecto
 ```
 
-## 🔑 Variables de Entorno
+## Variables de entorno
 
-### Requeridas
-- `VITE_SUPABASE_URL` - URL de tu proyecto Supabase
-- `VITE_SUPABASE_PUBLISHABLE_KEY` - API key anónima
-- `VITE_SUPABASE_PROJECT_ID` - ID del proyecto
+| Variable | Descripción |
+|----------|-------------|
+| `VITE_SUPABASE_URL` | URL del proyecto Supabase |
+| `VITE_SUPABASE_PUBLISHABLE_KEY` | API key pública (anon) |
+| `VITE_SUPABASE_PROJECT_ID` | ID del proyecto |
 
-## 🛠️ Scripts Disponibles
+## Deploy en Vercel
 
-```bash
-npm run dev              # Desarrollo local
-npm run build            # Build producción
-npm run build:dev        # Build en modo development
-npm run lint             # Linting con ESLint
-npm run preview          # Previsualizar build
-npm run test             # Ejecutar tests
-npm run test:watch       # Tests en modo watch
-```
+1. Conectar repositorio en [vercel.com](https://vercel.com)
+2. Agregar las variables de entorno anteriores
+3. Build command: `npm run build`
+4. Output directory: `dist`
 
-## 🗄️ Supabase Setup
+Ver [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) para detalle completo.
 
-### 1. Crear proyecto en Supabase
-- Ir a [supabase.com](https://supabase.com)
-- Crear nuevo proyecto
-- Obtener credenciales en Settings → API
+## Documentación
 
-### 2. Crear tablas necesarias
-Ver archivo `supabase/migrations/` para el schema completo
+Toda la documentación está en la carpeta [`docs/`](./docs/):
 
-### 3. Habilitar autenticación
-En Supabase Dashboard → Authentication → Providers
-- Email/Password: habilitado por defecto
+- [Setup local](./docs/SETUP.md)
+- [Base de datos](./docs/DB_SETUP.md)
+- [Arquitectura](./docs/ANALISIS_PROYECTO_COMPLETO.md)
+- [Roadmap de mejoras](./docs/MEJORAS_RECOMENDADAS_2026.md)
+- [Índice completo](./docs/README.md)
 
-## 🤝 Contribuciones
+## Licencia
 
-Las contribuciones son bienvenidas. Para cambios mayores, abre un issue primero.
-
-## 📄 Licencia
-
-Este proyecto está bajo licencia MIT.
+MIT

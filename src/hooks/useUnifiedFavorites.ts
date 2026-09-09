@@ -131,7 +131,7 @@ export function useUnifiedFavorites() {
       writeLocalFavoriteIds(ids); // Sincronizar local con Supabase
     }
     setLoading(false);
-  }, [user, favoritesTable, migrationAttempted, migrateLocalFavorites]);
+  }, [user, favoritesTable, migrationAttempted, migrateLocalFavorites, runSupabaseFavoriteQuery]);
 
   useEffect(() => {
     if (!isAuthLoading) { // Solo cargar después de que el estado de autenticación se haya resuelto
