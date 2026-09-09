@@ -87,7 +87,7 @@ const handleAvatarUpload = async (file: File) => {
     try {
       const fileExt = file.name.split('.').pop();
       const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-      const filePath = `avatars/${fileName}`;
+      const filePath = `avatars/${user.id}/${fileName}`;
 
       const { error: uploadError, data } = await supabase.storage
         .from('avatars')
