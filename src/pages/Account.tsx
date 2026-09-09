@@ -85,8 +85,9 @@ const handleAvatarUpload = async (file: File) => {
     if (!user) return null;
     setUploading(true);
     try {
+      await supabase.auth.getSession(); // Refrescar sesión
       const fileExt = file.name.split('.').pop();
-      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`; // Nombre más único
       const filePath = `avatars/${user.id}/${fileName}`;
 
       const { error: uploadError, data } = await supabase.storage
