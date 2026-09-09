@@ -30,7 +30,9 @@ const Account = () => {
     bio: "",
     avatar_url: ""
   });
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [saving, setSaving] = useState(false);
+  const [uploading, setUploading] = useState(false);
   
   // Gestor specific data
   const [gestorSales, setGestorSales] = useState<any[]>([]);
@@ -79,10 +81,55 @@ const Account = () => {
     return computeSalesTotalsBySeller(gestorSales);
   }, [isGestor, gestorSales]);
 
+const handleAvatarUpload = async (file: File) => {
+    if (!user) return null;
+    setUploading(true);
+    try {
+      const fileExt = file.name.split('.').pop();
+      const fileName = `${user.id}-${Math.random()}.${fileExt}`;
+      const filePath = `avatars/${fileName}`;
+
+      const { error: uploadError, data } = await supabase.storage
+        .from('avatars')
+        .upload(filePath, file, {
+          cacheControl: '3600',
+          upsert: false,
+        });
+
+      if (uploadError) throw uploadError;
+
+      const { data: publicUrlData } = supabase.storage
+        .from('avatars')
+        .getPublicUrl(filePath);
+
+      return publicUrlData.publicUrl;
+    } catch (error: any) {
+      toast.error('Error al subir la imagen: ' + error.message);
+      return null;
+    } finally {
+      setUploading(false);
+    }
+  };
+
   const handleSaveProfile = async () => {
     if (!user) return;
     setSaving(true);
+    let newAvatarUrl = formData.avatar_url;
+
     try {
+      if (selectedFile) {
+        const uploadedUrl = await handleAvatarUpload(selectedFile);
+        if (uploadedUrl) {
+          newAvatarUrl = uploadedUrl;
+          setSelectedFile(null); // Clear selected file after successful upload
+        } else {
+          // If upload failed, stop saving profile and show error
+          toast.error("No se pudo subir la imagen. Intenta de nuevo.");
+          setSaving(false); // Ensure saving is false if upload fails
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from("profiles")
         .update({
@@ -90,7 +137,7 @@ const Account = () => {
           username: formData.username,
           phone: formData.phone,
           bio: formData.bio,
-          avatar_url: formData.avatar_url,
+          avatar_url: newAvatarUrl, // Use the new URL (or existing if no upload)
           updated_at: new Date().toISOString()
         })
         .eq("id", user.id);
@@ -135,12 +182,7 @@ const Account = () => {
   const sendToWhatsApp = () => {
     if (!gestorStats) return;
     const stats = gestorStats.bySeller[0];
-    const message = `Hola, soy ${profile?.full_name || profile?.username}. Mi resumen de ventas:\n\n` +
-      `Total Ventas: ${stats.count}\n` +
-      `Total Comisión: ${formatCUP(stats.totalCommission)}\n` +
-      `Pagado: ${formatCUP(stats.paidCommission)}\n` +
-      `Pendiente: ${formatCUP(stats.pendingCommission)}\n\n` +
-      `Por favor, revisa mis pagos. ¡Gracias!`;
+    const message = `Hola, soy ${profile?.full_name || profile?.username}. Mi resumen de ventas:\\n\\n` +\n      `Total Ventas: ${stats.count}\\n` +\n      `Total Comisión: ${formatCUP(stats.totalCommission)}\\n` +\n      `Pagado: ${formatCUP(stats.paidCommission)}\\n` +\n      `Pendiente: ${formatCUP(stats.pendingCommission)}\\n\\n` +\n      `Por favor, revisa mis pagos. ¡Gracias!`;
     
     const encoded = encodeURIComponent(message);
     window.open(`https://wa.me/5363180910?text=${encoded}`, "_blank");
@@ -237,15 +279,45 @@ const Account = () => {
                   <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} />
                 </div>
                 <div className="space-y-1">
-                  <Label>Foto de Perfil (URL)</Label>
-                  <Input value={formData.avatar_url} onChange={e => setFormData({...formData, avatar_url: e.target.value})} />
+                  <Label>Foto de Perfil</Label>
+                  <div className="flex items-center gap-4">
+                    <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center overflow-hidden border border-border">
+                      {selectedFile ? (
+                        <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover" />
+                      ) : formData.avatar_url ? (
+                        <img src={formData.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                      ) : (
+                        <User className="w-10 h-10 text-muted-foreground" />
+                      )}
+                    </div>
+                    <Input
+                      type="file"
+                      accept="image/*"
+                      onChange={e => {
+                        if (e.target.files && e.target.files[0]) {
+                          setSelectedFile(e.target.files[0]);
+                        }
+                      }}
+                      className="flex-grow"
+                    />
+                  </div>
+                  {selectedFile && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      Archivo seleccionado: {selectedFile.name}. Se subirá al guardar.
+                    </p>
+                  )}
+                  {!selectedFile && formData.avatar_url && (
+                    <p className="text-xs text-muted-foreground mt-1">
+                      URL actual: <a href={formData.avatar_url} target="_blank" rel="noopener noreferrer" className="underline">{formData.avatar_url.substring(0, 30)}...</a>
+                    </p>
+                  )}
                 </div>
                 <div className="space-y-1">
                   <Label>Biografía</Label>
                   <Textarea value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} />
                 </div>
-                <Button onClick={handleSaveProfile} disabled={saving} className="w-full mt-4">
-                  {saving ? "Guardando..." : "Guardar Cambios"}
+                <Button onClick={handleSaveProfile} disabled={saving || uploading} className="w-full mt-4">
+                  {uploading ? "Subiendo imagen..." : saving ? "Guardando..." : "Guardar Cambios"}
                 </Button>
               </div>
             </section>
