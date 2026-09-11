@@ -347,6 +347,27 @@ export function AdminCustomers() {
                 </div>
               )}
 
+              {permissions.can_manage_admins && (viewing.role === "admin" || viewing.role === "owner" || viewing.role === "gestor") && (
+                <div className="card-elevated p-4 space-y-3">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Shield className="w-5 h-5 text-primary" />
+                      <h3 className="font-semibold">Permisos de gestor / administrador</h3>
+                    </div>
+                    {perms && (
+                      <Button size="sm" variant="ghost" className="text-destructive" onClick={removeAdmin}>Quitar admin/gestor</Button>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    {Object.entries(PERM_LABELS).map(([key, label]) => (
+                      <div key={key} className="flex items-center justify-between">
+                        <Label htmlFor={key} className="text-sm">{label}</Label>
+                        <Switch id={key} checked={!!perms?.[key]} onCheckedChange={(v) => togglePerm(key, v)} />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
               {permissions.can_manage_admins && (viewing.role === "admin" || viewing.role === "owner") && (
                 <div className="card-elevated p-4 space-y-3">
                   <div className="flex items-center justify-between">
