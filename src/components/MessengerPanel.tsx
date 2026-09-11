@@ -9,7 +9,18 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { MapPin, Navigation, Trash2, Plus, Calculator, DollarSign, ArrowRight, Store, Home } from "lucide-react";
+import { 
+  MapPin, 
+  Navigation, 
+  Trash2, 
+  Plus, 
+  Calculator, 
+  DollarSign, 
+  Store, 
+  Info, 
+  LocateFixed, 
+  Crosshair 
+} from "lucide-react";
 import { formatCUP } from "@/lib/format";
 
 // Fix Leaflet marker icons
@@ -28,14 +39,30 @@ interface Waypoint {
   label: string;
 }
 
+// Controlador para mover y centrar suavemente el mapa cuando se añaden coordenadas
+function MapController({ center }: { center?: [number, number] | null }) {
+  const map = useMap();
+  useEffect(() => {
+    if (center) {
+      map.flyTo(center, Math.max(map.getZoom(), 14), { duration: 1.2 });
+    }
+  }, [center, map]);
+  return null;
+}
+
 export function MessengerPanel() {
-  const { user, profile } = useAuth();
+  const { user } = useAuth();
   const [rate, setRate] = useState(300);
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [route, setRoute] = useState<[number, number][]>([]);
   const [distance, setDistance] = useState(0); // in km
   const [loading, setLoading] = useState(false);
   const [salePoints, setSalePoints] = useState<any[]>([]);
+
+  // Estados para añadir coordenadas manualmente
+  const [coordInput, setCoordInput] = useState("");
+  const [coordLabel, setCoordLabel] = useState("");
+  const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
 
   // Fetch messenger rate and sale points
   useEffect(() => {
@@ -90,7 +117,8 @@ export function MessengerPanel() {
       lng,
       label
     };
-    setWaypoints([...waypoints, newWp]);
+    setWaypoints(prev => [...prev, newWp]);
+    setMapCenter([lat, lng]);
   };
 
   const removeWaypoint = (id: string) => {
@@ -105,6 +133,65 @@ export function MessengerPanel() {
     setWaypoints([]);
     setRoute([]);
     setDistance(0);
+  };
+
+  // Función para procesar y agregar coordenadas ingresadas por el usuario
+  const handleAddCustomCoordinates = (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+
+    if (!coordInput.trim()) {
+      toast.error("Por favor ingresa las coordenadas (Ej: 23.1259, -82.3791)");
+      return;
+    }
+
+    // Admite formatos: "23.1259, -82.3791", "23.1259,-82.3791", "23.1259 -82.3791", "23.1259; -82.3791"
+    const cleaned = coordInput.trim().replace(/[\t,;]+/g, " ");
+    const parts = cleaned.split(/\s+/).filter(Boolean);
+
+    if (parts.length < 2) {
+      toast.error("Formato inválido. Usa formato: Latitud, Longitud (Ej: 23.1259, -82.3791)");
+      return;
+    }
+
+    const lat = parseFloat(parts[0]);
+    const lng = parseFloat(parts[1]);
+
+    if (isNaN(lat) || isNaN(lng)) {
+      toast.error("Las coordenadas deben ser números válidos.");
+      return;
+    }
+
+    if (lat < -90 || lat > 90 || lng < -180 || lng > 180) {
+      toast.error("Coordenadas fuera de rango válido (-90 a 90 para latitud, -180 a 180 para longitud).");
+      return;
+    }
+
+    const label = coordLabel.trim() || `Parada (${lat.toFixed(4)}, ${lng.toFixed(4)})`;
+    addWaypoint(lat, lng, label);
+    toast.success(`Coordenada marcada: ${label}`);
+    setCoordInput("");
+    setCoordLabel("");
+  };
+
+  // Obtener ubicación GPS actual
+  const handleGetCurrentLocation = () => {
+    if (!navigator.geolocation) {
+      toast.error("Tu navegador no soporta geolocalización.");
+      return;
+    }
+
+    toast.info("Obteniendo tu ubicación actual...");
+    navigator.geolocation.getCurrentPosition(
+      pos => {
+        const { latitude, longitude } = pos.coords;
+        addWaypoint(latitude, longitude, "Mi ubicación actual");
+        toast.success("Ubicación actual marcada en el mapa.");
+      },
+      err => {
+        toast.error("No se pudo obtener la ubicación: " + err.message);
+      },
+      { enableHighAccuracy: true, timeout: 10000 }
+    );
   };
 
   return (
