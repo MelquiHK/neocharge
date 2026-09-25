@@ -77,15 +77,17 @@ export default function Services() {
           <p className="text-muted-foreground">Cargando servicios...</p>
         </div>
       ) : services.length === 0 ? (
-        <div className="rounded-3xl border border-border bg-secondary/50 p-12 text-center">
+        <div className="rounded-3xl border border-border bg-secondary/50 p-12 text-center space-y-4">
           <h2 className="font-display text-3xl font-bold">No hay servicios publicados aún</h2>
-          <p className="mt-3 text-muted-foreground">Pronto podrás ver aquí las opciones de mantenimiento, programación y soporte que ofrecemos.</p>
-          <Button asChild variant="hero"><Link to="/contacto">Contáctanos</Link></Button>
+          <p className="text-muted-foreground max-w-xl mx-auto">Pronto podrás ver aquí las opciones de mantenimiento, programación y soporte que ofrecemos.</p>
+          <div className="pt-2">
+            <Button asChild variant="hero"><Link to="/contacto">Contáctanos</Link></Button>
+          </div>
         </div>
       ) : (
         <>
           {selectedService && (
-            <section className="mb-10 overflow-hidden rounded-[28px] border border-border bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white shadow-2xl">
+            <section className="mb-10 overflow-hidden rounded-[28px] border border-border bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white shadow-2xl fx-water">
               <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[1.2fr_0.8fr]">
                 <div>
                   <div className="mb-4 flex flex-wrap items-center gap-3">

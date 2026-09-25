@@ -35,6 +35,31 @@ describe("parseChargerSpecifications", () => {
     expect(parseChargerSpecifications(null, null)).toEqual({});
     expect(parseChargerSpecifications("", "")).toEqual({});
   });
+
+  it("ignora menciones de amperaje en prosa de marketing (caso real 72V/5A)", () => {
+    // Las specs reales del "Cargador de 72V/5A" dicen
+    // "hasta 2× más rápido que el 3A": ese 3A no es la corriente del
+    // producto. Debe completarse desde el nombre.
+    const specs = parseChargerSpecifications(
+      "• Carga rápida: hasta 2× más rápido que el 3A\n• Ventilador inteligente con sensor de temperatura",
+      "Cargador de 72V/5A"
+    );
+    expect(specs.voltage).toBe(72);
+    expect(specs.current).toBe(5);
+  });
+
+  it("acepta corriente con etiqueta explícita", () => {
+    expect(parseChargerSpecifications("Corriente de carga: 5A").current).toBe(5);
+    expect(parseChargerSpecifications("Amperaje: 10A").current).toBe(10);
+    expect(parseChargerSpecifications("Salida: 72V 3A").current).toBe(3);
+  });
+
+  it("no inventa corriente desde prosa sin contexto de especificación", () => {
+    const specs = parseChargerSpecifications(
+      "Ideal para tu moto, carga 2 veces más rápido que el 3A"
+    );
+    expect(specs.current).toBeUndefined();
+  });
 });
 
 describe("parseNumber", () => {

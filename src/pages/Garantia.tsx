@@ -25,7 +25,7 @@ const Garantia = () => {
 
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow-primary">
+          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
             <ShieldCheck className="w-5 h-5 text-primary-foreground" />
           </div>
           <h2 className="font-display text-2xl md:text-3xl font-bold">{settings.warranty_chargers_title}</h2>
@@ -98,7 +98,7 @@ const Garantia = () => {
         <h2 className="font-display text-2xl font-bold">{settings.warranty_support_title}</h2>
         <p className="text-muted-foreground max-w-xl mx-auto">{settings.warranty_support_text}</p>
         <div className="flex flex-wrap items-center justify-center gap-3">
-          <Button asChild variant="hero" size="lg">
+          <Button asChild variant="hero" size="lg" className="fx-shine">
             <a href={settings.whatsapp_url ?? "https://wa.me/5363180910"} target="_blank" rel="noreferrer">
               <MessageCircle className="w-5 h-5" /> Escribir por WhatsApp
             </a>

@@ -22,6 +22,32 @@ export const parseNumber = (value: string | number | null | undefined): number |
   return Number.isFinite(parsed) ? parsed : undefined;
 };
 
+/**
+ * Patrones estrictos para la corriente del cargador.
+ * El patrón genérico anterior ("cualquier número seguido de A") capturaba
+ * menciones en prosa de marketing — p. ej. "hasta 2× más rápido que el 3A"
+ * en las specs del "Cargador de 72V/5A" — y como el texto tiene prioridad
+ * sobre el nombre, la calculadora mostraba un erróneo "(72V, 3A)".
+ * Ahora solo se acepta la corriente cuando aparece en contexto de
+ * especificación: con etiqueta explícita o en formato compacto "72V/5A".
+ */
+const LABELED_CURRENT_RE =
+  /(corriente|amper(?:io|ios|aje)?|salida|output)[^\d]{0,40}?(\d+(?:[.,]\d+)?)\s*(?:a|amp)\b/i;
+const LABELED_CURRENT_AFTER_RE =
+  /(\d+(?:[.,]\d+)?)\s*(?:a|amp)\b[^\d]{0,20}(corriente|amper(?:io|ios|aje)?|salida|output)/i;
+const COMPACT_CURRENT_RE =
+  /(\d+(?:[.,]\d+)?)\s*v\s*[/\s]\s*(\d+(?:[.,]\d+)?)\s*a\b/i;
+
+const extractCurrentFromLine = (line: string): number | undefined => {
+  const labeledBefore = line.match(LABELED_CURRENT_RE);
+  if (labeledBefore) return parseNumber(labeledBefore[2]);
+  const labeledAfter = line.match(LABELED_CURRENT_AFTER_RE);
+  if (labeledAfter) return parseNumber(labeledAfter[1]);
+  const compact = line.match(COMPACT_CURRENT_RE);
+  if (compact) return parseNumber(compact[2]);
+  return undefined;
+};
+
 const parseChargerSpecsText = (text: string | null | undefined): ChargerSpecs => {
   const specs: ChargerSpecs = {};
   if (!text) return specs;
@@ -40,11 +66,9 @@ const parseChargerSpecsText = (text: string | null | undefined): ChargerSpecs =>
       }
     }
 
-    if (/(amp(?:er)?|a)\b/i.test(line) && !/ah\b/i.test(lower)) {
-      const currentMatch = line.match(/(\d+(?:[.,]\d+)?)(?=\s*(?:a|amp))/i);
-      if (currentMatch) {
-        specs.current = parseNumber(currentMatch[1]);
-      }
+    const current = extractCurrentFromLine(line);
+    if (current !== undefined) {
+      specs.current = current;
     }
 
     if (/lifepo4|li-fe|li fe|litio fosfato/i.test(lower)) {

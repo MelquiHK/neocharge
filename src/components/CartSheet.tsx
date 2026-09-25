@@ -1,9 +1,11 @@
 import { Link } from "react-router-dom";
 import { Minus, Plus, ShoppingBag, Trash2, X, ArrowRight } from "lucide-react";
+import { useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice, formatCUP } from "@/lib/format";
+import { ensureNcFx } from "@/lib/fly-to-cart";
 import { cn } from "@/lib/utils";
 
 export function CartSheet() {
@@ -27,10 +29,14 @@ export function CartSheet() {
   const shownTotalUSD = completeUSD ? formatPrice(totalUSD) : "—";
   const shownTotalCUP = completeCUP ? formatCUP(totalCUP) : "—";
 
+  useEffect(() => {
+    ensureNcFx();
+  }, []);
+
   return (
     <Sheet open={isOpen} onOpenChange={(o) => (o ? null : closeCart())}>
       <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0 border-l">
-        <SheetHeader className="px-6 py-5 border-b">
+        <SheetHeader className="px-6 py-5 border-b bg-white/70 dark:bg-slate-950/60 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
           <div className="flex items-center justify-between">
             <SheetTitle className="font-display text-xl flex items-center gap-2">
               <ShoppingBag className="w-5 h-5" />
@@ -44,8 +50,11 @@ export function CartSheet() {
 
         {items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
-            <div className="w-20 h-20 rounded-full bg-secondary flex items-center justify-center">
-              <ShoppingBag className="w-9 h-9 text-muted-foreground" />
+            <div className="relative">
+              <div className="absolute inset-0 -m-4 rounded-full bg-gradient-to-br from-primary/20 via-cyan-400/10 to-transparent blur-2xl" aria-hidden />
+              <div className="relative w-20 h-20 rounded-full bg-secondary flex items-center justify-center">
+                <ShoppingBag className="w-9 h-9 text-muted-foreground" />
+              </div>
             </div>
             <div>
               <h3 className="font-display text-lg font-bold">Tu carrito está vacío</h3>
@@ -60,10 +69,11 @@ export function CartSheet() {
         ) : (
           <>
             <div className="flex-1 overflow-y-auto px-6 py-6 space-y-5">
-              {items.map((item) => (
+              {items.map((item, index) => (
                 <div
                   key={item.id}
-                  className="flex gap-5 p-4 rounded-[1.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/20 transition-all duration-300 shadow-sm hover:shadow-md group"
+                  className="nc-rise flex gap-5 p-4 rounded-[1.5rem] bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/20 transition-all duration-300 shadow-sm hover:shadow-md group"
+                  style={{ animationDelay: `${Math.min(index * 60, 360)}ms` }}
                 >
                   <div className="w-20 h-20 rounded-xl overflow-hidden bg-secondary shrink-0">
                     {item.image ? (

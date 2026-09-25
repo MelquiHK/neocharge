@@ -6,7 +6,8 @@ import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSEO } from "@/hooks/use-seo";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { Product } from "@/types";
-import { computeDisplayPrice, formatPrice, formatCUP, type DisplayPrice } from "@/lib/format";
+import { computeDisplayPrice, formatPrice, formatCUP, formatMoney, hasSaneDiscount, warrantyTypeLabel, type DisplayPrice } from "@/lib/format";
+import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { responsiveImage } from "@/lib/responsive-image";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
@@ -44,9 +45,10 @@ function displayPriceLabel(display: DisplayPrice): string {
 }
 
 // Línea secundaria de conversión (puede quedar vacía si no hay tasa).
+// NOTA: formatPrice ya incluye "US$", no se añade " USD" detrás (doble símbolo).
 function displayConvertedLine(display: DisplayPrice): string | null {
   if (display.primary === "USD") return display.cup != null ? `≈ ${formatCUP(display.cup)}` : null;
-  return display.usd != null ? `≈ ${formatPrice(display.usd)} USD` : null;
+  return display.usd != null ? `≈ ${formatPrice(display.usd)}` : null;
 }
 
 export default function ProductDetail() {
@@ -168,11 +170,19 @@ export default function ProductDetail() {
       return { usd: 0, cup: 0, primary: "USD" as const };
     }
   }, [product, exchangeRate]);
-  const discount =
-    Number(product?.compare_price ?? 0) > Number(product?.price ?? 0)
-      ? Math.round(((Number(product.compare_price ?? 0) - Number(product.price ?? 0)) / Number(product.compare_price ?? 0)) * 100)
-      : null;
+  const comparePrice = Number(product?.compare_price ?? 0);
+  const priceNum = Number(product?.price ?? 0);
+  // El "precio anterior" solo se muestra si el descuento es creíble
+  // (>90% implicaría un dato mal cargado) y en la moneda del producto.
+  const showCompare = hasSaneDiscount(priceNum, comparePrice);
+  const discount = showCompare
+    ? Math.round(((comparePrice - priceNum) / comparePrice) * 100)
+    : null;
   const outOfStock = Number(product?.stock ?? 0) <= 0;
+
+  useEffect(() => {
+    ensureNcFx();
+  }, []);
 
   const handleShare = async () => {
     if (!product) return;
@@ -220,11 +230,13 @@ export default function ProductDetail() {
     return (
       <div className="container-page py-12">
         <div className="grid lg:grid-cols-2 gap-12">
-          <div className="aspect-square rounded-3xl bg-muted animate-pulse" />
-          <div className="space-y-4">
-            <div className="h-8 bg-muted rounded animate-pulse w-3/4" />
-            <div className="h-6 bg-muted rounded animate-pulse w-1/4" />
-            <div className="h-32 bg-muted rounded animate-pulse" />
+          <div className="aspect-square rounded-3xl nc-water-shine bg-gradient-to-br from-muted via-muted/60 to-muted" aria-hidden />
+          <div className="space-y-4" aria-hidden>
+            <div className="h-9 rounded-xl bg-muted animate-pulse w-3/4" />
+            <div className="h-6 rounded-lg bg-muted animate-pulse w-1/4" />
+            <div className="h-10 rounded-xl bg-muted animate-pulse w-1/2" />
+            <div className="h-32 rounded-2xl bg-muted animate-pulse" />
+            <div className="h-12 rounded-2xl bg-muted animate-pulse" />
           </div>
         </div>
       </div>
@@ -254,7 +266,8 @@ export default function ProductDetail() {
       </div>
     );
   }
-  const handleAddToCart = () => {
+  const handleAddToCart = (e?: React.MouseEvent<HTMLButtonElement>) => {
+    if (e) flyToCart(e.currentTarget, mainImage);
     addItem({
       id: product.id,
       name: product.name,
@@ -375,9 +388,9 @@ export default function ProductDetail() {
               <span className="font-display text-3xl font-bold">
                 {displayPriceLabel(display)}
               </span>
-              {product.compare_price && (
+              {showCompare && (
                 <span className="text-lg text-muted-foreground line-through">
-                  {formatPrice(Number(product.compare_price))}
+                  {formatMoney(Number(product.compare_price), product.currency)}
                 </span>
               )}
             </div>
@@ -425,7 +438,7 @@ export default function ProductDetail() {
             <Button
               onClick={handleAddToCart}
               disabled={outOfStock}
-              className="w-full h-12 text-base"
+              className="w-full h-12 text-base nc-btn-shine relative overflow-hidden active:scale-[0.99] transition-transform"
             >
               {outOfStock ? "Agotado" : "Añadir al carrito"}
             </Button>
@@ -453,7 +466,7 @@ export default function ProductDetail() {
           {/* Warranty */}
           {product.warranty_type && (
             <div className="bg-primary/10 rounded-lg p-4 text-sm">
-              <p className="font-semibold text-primary mb-1">✓ Garantía: {product.warranty_type}</p>
+              <p className="font-semibold text-primary mb-1">✓ {warrantyTypeLabel(product.warranty_type)}</p>
               <p className="text-muted-foreground">Todos nuestros productos incluyen garantía completa y soporte técnico.</p>
             </div>
           )}
@@ -588,7 +601,7 @@ export default function ProductDetail() {
                   {prod.name}
                 </h3>
                 <p className="text-sm text-muted-foreground mt-1">
-                  {prod.price ? formatPrice(Number(prod.price)) : "N/A"}
+                  {prod.price ? formatMoney(Number(prod.price), prod.currency) : "N/A"}
                 </p>
               </Link>
             ))}

@@ -3,10 +3,11 @@ import { TrustStrip } from "@/components/sections/TrustStrip";
 import { FeaturedProducts } from "@/components/sections/FeaturedProducts";
 import { Categories } from "@/components/sections/Categories";
 import { Features } from "@/components/sections/Features";
-import { Testimonials } from "@/components/sections/Testimonials";
+import { HowToBuy } from "@/components/sections/HowToBuy";
 import { FAQ } from "@/components/sections/FAQ";
 import { CTA } from "@/components/sections/CTA";
 import { useSEO } from "@/hooks/use-seo";
+import "@/components/sections/visual-effects.css";
 
 const Index = () => {
   useSEO("home");
@@ -18,7 +19,7 @@ const Index = () => {
       <FeaturedProducts />
       <Categories />
       <Features />
-      <Testimonials />
+      <HowToBuy />
       <FAQ />
       <CTA />
     </>

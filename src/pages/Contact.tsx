@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Mail, MapPin, MessageCircle, Phone, Clock, Send } from "lucide-react";
+import { Mail, MapPin, MessageCircle, Clock, Send } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -27,34 +27,56 @@ const Contact = () => {
   return (
     <div className="container-page py-12 md:py-24">
       <header className="text-center max-w-3xl mx-auto mb-20 space-y-6">
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+        <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full fx-glass text-primary text-xs font-bold uppercase tracking-widest">
           Contacto Directo
         </div>
         <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight">Hablemos</h1>
         <p className="text-xl text-muted-foreground font-light leading-relaxed">
-          Estamos disponibles las 24 horas para resolver tus dudas. <br className="hidden md:block" />
+          Estamos disponibles de 8am a 8pm para resolver tus dudas. <br className="hidden md:block" />
           Elige el canal que prefieras y te responderemos al instante.
         </p>
       </header>
 
       <div className="grid lg:grid-cols-[1fr_1.2fr] gap-10">
         <div className="space-y-4">
+          {/* WhatsApp / Teléfono: una sola fila, es el mismo número */}
+          <a
+            href={settings.whatsapp_url ?? "https://wa.me/5363180910"}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="block p-5 rounded-2xl border border-accent/20 bg-accent/5 hover:border-accent/50 hover:shadow-soft transition-all fx-shine"
+          >
+            <div className="flex items-center gap-4">
+              <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-accent text-accent-foreground">
+                <MessageCircle className="w-5 h-5" />
+              </div>
+              <div className="flex-1">
+                <p className="text-xs uppercase tracking-wider text-muted-foreground font-semibold">
+                  WhatsApp / Teléfono
+                </p>
+                <p className="font-semibold text-foreground">
+                  {settings.support_phone ?? "+53 6318-0910"}
+                </p>
+              </div>
+              <span className="text-xs font-semibold text-accent bg-accent/10 rounded-full px-3 py-1.5 whitespace-nowrap">
+                Escríbenos
+              </span>
+            </div>
+          </a>
           {[
-            { icon: MessageCircle, title: "WhatsApp", value: settings.support_phone ?? "+53 6318-0910", href: settings.whatsapp_url ?? "https://wa.me/5363180910", accent: true },
-            { icon: Phone, title: "Teléfono", value: settings.support_phone ?? "+53 6318-0910", href: `tel:${settings.support_phone?.replace(/\s+/g, "") ?? "+5363180910"}` },
             { icon: Mail, title: "Correo", value: settings.support_email ?? "habanasound90@gmail.com", href: `mailto:${settings.support_email ?? "habanasound90@gmail.com"}` },
             { icon: MapPin, title: "Local", value: settings.support_address ?? "D entre 21 y 23, Vedado, La Habana" },
-            { icon: Clock, title: "Horario", value: settings.support_hours ?? "Atención 24 horas, todos los días" },
+            { icon: Clock, title: "Horario", value: settings.support_hours ?? "Atención de 8am a 8pm, todos los días" },
           ].map((c, i) => (
             <a
               key={i}
               href={c.href}
               target={c.href?.startsWith("http") ? "_blank" : undefined}
               rel="noopener noreferrer"
-              className={`block p-5 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-soft transition-all ${c.accent ? "bg-accent/5 border-accent/20" : ""}`}
+              className="block p-5 rounded-2xl border border-border bg-card hover:border-primary/40 hover:shadow-soft transition-all"
             >
               <div className="flex items-center gap-4">
-                <div className={`w-11 h-11 rounded-xl flex items-center justify-center shrink-0 ${c.accent ? "bg-accent text-accent-foreground" : "bg-primary/10 text-primary"}`}>
+                <div className="w-11 h-11 rounded-xl flex items-center justify-center shrink-0 bg-primary/10 text-primary">
                   <c.icon className="w-5 h-5" />
                 </div>
                 <div>

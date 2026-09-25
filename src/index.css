@@ -86,19 +86,61 @@
   }
   html {
     scroll-behavior: smooth;
+    /* El header es flotante (fijo): deja aire al saltar a anclas */
+    scroll-padding-top: 104px;
+  }
+  @media (min-width: 768px) {
+    html {
+      scroll-padding-top: 152px;
+    }
   }
   body {
     @apply bg-background text-foreground antialiased;
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
+    text-rendering: optimizeLegibility;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
-    @apply tracking-tight;
+    @apply tracking-tight text-balance;
+  }
+  p {
+    @apply text-pretty;
+  }
+  /* Transiciones suaves globales para interactivos */
+  a, button, [role="button"] {
+    transition: color 0.2s ease, background-color 0.2s ease, border-color 0.2s ease, opacity 0.2s ease;
+  }
+  :focus-visible {
+    outline: 2px solid hsl(var(--ring));
+    outline-offset: 2px;
   }
   ::selection {
-    background: hsl(var(--primary) / 0.2);
+    background: hsl(var(--primary) / 0.22);
     color: hsl(var(--primary));
+  }
+  /* Scrollbar sutil */
+  ::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: hsl(var(--muted-foreground) / 0.28);
+    border-radius: 8px;
+    border: 2px solid transparent;
+    background-clip: content-box;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: hsl(var(--muted-foreground) / 0.45);
+    background-clip: content-box;
+    border: 2px solid transparent;
+  }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: hsl(var(--muted-foreground) / 0.35) transparent;
   }
 }
 
@@ -381,7 +423,124 @@
   }
 }
 
+/* =========================================
+   NEOCHARGE FX — utilidades visuales premium
+   -----------------------------------------
+   Clases opt-in (no se aplican solas): añádelas donde quieras
+   un acabado llamativo sin tocar el resto del diseño.
+   Reglas: solo transform/opacity en las animaciones (nada de
+   blur animado ni filtros costosos). Todo respeta
+   prefers-reduced-motion (ver guarda al final del archivo).
+
+   .fx-glass          → glassmorphism claro (badges, pills)
+   .fx-shine          → barrido de brillo al hover (CTAs, tarjetas)
+   .fx-float          → flotación suave vertical (iconos, badges)
+   .fx-wave           → deriva horizontal suave (capas decorativas)
+   .fx-gradient-pan   → gradiente animado (SUPERFICIES PEQUEÑAS:
+                        texto, badges; no en secciones enteras)
+   .fx-water          → "efecto agua": luz líquida a la deriva tras
+                        el contenido (fondos de sección/paneles).
+                        El contenedor necesita position:relative
+                        (la clase ya lo pone) y overflow-hidden.
+   .fx-delay-1/2/3    → desfases para animaciones escalonadas
+   ========================================= */
+
+.fx-glass {
+  background: linear-gradient(135deg, hsl(0 0% 100% / 0.78), hsl(0 0% 100% / 0.45));
+  backdrop-filter: blur(14px) saturate(160%);
+  -webkit-backdrop-filter: blur(14px) saturate(160%);
+  border: 1px solid hsl(0 0% 100% / 0.65);
+  box-shadow: var(--shadow-sm), inset 0 1px 0 hsl(0 0% 100% / 0.7);
+}
+
+.fx-shine {
+  position: relative;
+  overflow: hidden;
+}
+.fx-shine::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(115deg, transparent 42%, hsl(0 0% 100% / 0.38) 50%, transparent 58%);
+  transform: translateX(-130%);
+  pointer-events: none;
+}
+.fx-shine:hover::after {
+  animation: fx-shine-sweep 0.9s var(--transition-base);
+}
+@keyframes fx-shine-sweep {
+  to { transform: translateX(130%); }
+}
+
+@keyframes fx-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+.fx-float {
+  animation: fx-float 6s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes fx-wave {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(-26px); }
+}
+.fx-wave {
+  animation: fx-wave 7s ease-in-out infinite;
+  will-change: transform;
+}
+
+@keyframes fx-gradient-pan {
+  0%, 100% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+}
+.fx-gradient-pan {
+  background-size: 220% 220%;
+  animation: fx-gradient-pan 9s ease-in-out infinite;
+}
+
+/* Efecto agua: dos focos de luz a la deriva tras el contenido. */
+.fx-water {
+  position: relative;
+  isolation: isolate;
+}
+.fx-water::before {
+  content: "";
+  position: absolute;
+  inset: -35%;
+  z-index: 0;
+  background:
+    radial-gradient(closest-side, hsl(var(--primary) / 0.22), transparent 70%),
+    radial-gradient(closest-side, hsl(var(--accent) / 0.20), transparent 70%);
+  background-repeat: no-repeat;
+  background-size: 55% 55%, 48% 48%;
+  background-position: 18% 28%, 82% 72%;
+  animation: fx-water-drift 16s ease-in-out infinite alternate;
+  pointer-events: none;
+}
+.fx-water > * {
+  position: relative;
+  z-index: 1;
+}
+@keyframes fx-water-drift {
+  from { transform: translate3d(-7%, -5%, 0); }
+  to { transform: translate3d(7%, 6%, 0); }
+}
+
+.fx-delay-1 { animation-delay: 1.4s; }
+.fx-delay-2 { animation-delay: 2.8s; }
+.fx-delay-3 { animation-delay: 4.2s; }
+
 @media (prefers-reduced-motion: reduce) {
+  /* Guarda global FX: desactiva las animaciones decorativas */
+  .fx-float,
+  .fx-wave,
+  .fx-gradient-pan,
+  .fx-shine:hover::after,
+  .fx-water::before {
+    animation: none !important;
+  }
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
