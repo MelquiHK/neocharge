@@ -25,12 +25,12 @@ import {
   Info,
   LocateFixed,
   Link2,
-  MessageCircle,
   Search,
   Store,
 } from "lucide-react";
 import { formatCUP } from "@/lib/format";
 import { parseLocationInput } from "@/lib/location-links";
+import { DeliveryOrderForm } from "@/components/DeliveryOrderForm";
 
 // Fix Leaflet marker icons
 // @ts-ignore
@@ -41,8 +41,8 @@ L.Icon.Default.mergeOptions({
   shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
 });
 
-// ÚNICO número de contacto permitido en toda la calculadora (Mel). Nunca usar otro.
-const WHATSAPP_NUMBER = "5363180910";
+// El número de WhatsApp del pedido ahora lo maneja DeliveryOrderForm
+// (constante hardcodeada 5363180910, el único número permitido).
 
 const DEFAULT_ORIGIN = { lat: 23.13474182, lng: -82.39116033, label: "Local Vedado" };
 const DEFAULT_PRICE_PER_KM = 250;
@@ -319,16 +319,7 @@ export function DeliveryCalculator() {
 
   const price = Math.round(distanceKm * pricePerKm);
 
-  const whatsappHref = () => {
-    const lines = [
-      "Hola NeoCharge 🛵, necesito un envío.",
-      `📍 Destino: ${dest!.lat.toFixed(6)},${dest!.lng.toFixed(6)}`,
-    ];
-    if (stop) lines.push(`🛑 Parada: ${stop.lat.toFixed(6)},${stop.lng.toFixed(6)}`);
-    lines.push(`📏 Distancia: ${distanceKm.toFixed(1)} km`);
-    lines.push(`💰 Costo: ${formatCUP(price)} (calculadora web)`);
-    return `https://wa.me/${WHATSAPP_NUMBER}?text=${encodeURIComponent(lines.join("\n"))}`;
-  };
+  const orderReady = distanceKm > 0 && !!dest;
 
   const otherPoints = salePoints.filter(
     (p) =>
@@ -464,7 +455,7 @@ export function DeliveryCalculator() {
         </Card>
 
         {/* Resultado */}
-        {distanceKm > 0 && dest && (
+        {orderReady && (
           <Card className="p-6 rounded-3xl shadow-soft bg-primary text-white overflow-hidden relative">
             <div className="absolute -right-4 -bottom-4 opacity-10">
               <Navigation className="w-32 h-32" />
@@ -487,14 +478,9 @@ export function DeliveryCalculator() {
                   🛑 Incluye una parada intermedia en la ruta.
                 </p>
               )}
-              <a
-                href={whatsappHref()}
-                target="_blank"
-                rel="noreferrer"
-                className="flex items-center justify-center gap-2 w-full bg-white text-primary font-bold rounded-xl py-3 text-sm hover:bg-white/90 transition-colors"
-              >
-                <MessageCircle className="w-4 h-4" /> Pedir por WhatsApp
-              </a>
+              <p className="text-[11px] opacity-80 text-center">
+                Completa el formulario de abajo para hacer tu pedido por WhatsApp.
+              </p>
               <button
                 onClick={clearAll}
                 className="w-full text-[11px] uppercase font-bold opacity-80 hover:opacity-100"
@@ -615,6 +601,19 @@ export function DeliveryCalculator() {
           </MapContainer>
         </div>
       </div>
+
+      {/* Formulario de pedido completo: datos, dirección escrita, productos y totales */}
+      {orderReady && (
+        <div className="lg:col-span-12">
+          <DeliveryOrderForm
+            distanceKm={distanceKm}
+            pricePerKm={pricePerKm}
+            originLabel={origin?.label ?? "Local Vedado"}
+            dest={dest}
+            stop={stop}
+          />
+        </div>
+      )}
     </div>
   );
 }
