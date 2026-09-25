@@ -13,6 +13,21 @@ import { BadgeCheck, DollarSign, ShieldCheck, Trash2, Eye, MapPin, Phone, User, 
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { computeSalesTotalsBySeller, type SellerSale, type SellerTotals } from "@/lib/sales";
+import {
+  AdminCard,
+  AdminCardTitle,
+  AdminEmptyState,
+  AdminFilters,
+  AdminLoading,
+  AdminSectionHeader,
+  AdminStat,
+  AdminTable,
+  AdminTableHead,
+  StatusBadge,
+  adminTd,
+  adminTh,
+  adminTr,
+} from "./ui";
 
 interface ProductOption {
   id: string;
@@ -114,7 +129,7 @@ export function AdminSales() {
   const totals = useMemo(() => {
     const totalUSD = filteredSales.filter((s) => s.currency === "USD").reduce((a, b) => a + Number(b.price || 0), 0);
     const totalCUP = filteredSales.filter((s) => s.currency === "CUP").reduce((a, b) => a + Number(b.price || 0), 0);
-    
+
     // Calculate total commissions
     const stats = computeSalesTotalsBySeller(filteredSales);
     const totalCommissionPending = stats.bySeller.reduce((a, b) => a + b.pendingCommission, 0);
@@ -143,207 +158,196 @@ export function AdminSales() {
 
   return (
     <div className="space-y-6">
-      <header className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
-        <div>
-          <h2 className="font-display text-2xl font-bold">{isOwner ? "Ventas del negocio" : "Mi panel de ventas"}</h2>
-          <p className="text-sm text-muted-foreground">
-            {isOwner ? "Control total de ventas y comisiones del negocio." : "Registra tus ventas y revisa tu desempeño personal."}
-          </p>
-        </div>
-        <div className="text-sm text-muted-foreground rounded-full border border-border bg-secondary/50 px-3 py-1.5">
-          Total USD: {formatPrice(totals.totalUSD)} — Total CUP: {formatCUP(totals.totalCUP)}
-        </div>
-      </header>
+      <AdminSectionHeader
+        icon={TrendingUp}
+        title="Ventas"
+        description="Historial de transacciones y métricas financieras."
+        actions={
+          <div className="rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground">
+            Total USD: {formatPrice(totals.totalUSD)} — Total CUP: {formatCUP(totals.totalCUP)}
+          </div>
+        }
+      />
 
       {!isOwner && (
-        <div className="rounded-3xl border border-border bg-gradient-to-r from-primary/5 to-blue-500/5 p-5">
+        <AdminCard className="border-primary/20 bg-gradient-to-r from-primary/5 to-blue-500/5">
           <div className="flex items-center gap-2 text-sm font-semibold text-primary">
             <ShieldCheck className="h-4 w-4" /> Panel de gestor
           </div>
           <p className="mt-1 text-sm text-muted-foreground">Tus ventas solo son visibles para ti y para el administrador principal.</p>
-        </div>
+        </AdminCard>
       )}
 
       {!isOwner && (
-        <div className="grid gap-4 rounded-3xl border border-border bg-white/80 p-5 shadow-soft">
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Producto</Label>
-              <Select
-                value={productId ?? undefined}
-                onValueChange={(value) => {
-                  const selected = productOptions.find((p) => p.id === value);
-                  if (!selected) return;
-                  setProductId(value);
-                  setProductName(selected.name);
-                  setCurrency(selected.currency || "USD");
-                  setPrice(selected.currency === "CUP" ? (selected.price_cup ?? selected.price) : selected.price);
-                }}
-              >
-                <SelectTrigger>
-                  <SelectValue placeholder="Selecciona producto" />
-                </SelectTrigger>
-                <SelectContent>
-                  {productOptions.map((product) => (
-                    <SelectItem key={product.id} value={product.id}>
-                      {product.name} — {product.currency === "CUP" ? `${product.price_cup ?? product.price} CUP` : `${product.price} USD`}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+        <AdminCard>
+          <AdminCardTitle icon={FileText} title="Registrar venta" />
+          <div className="grid gap-4">
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Producto</Label>
+                <Select
+                  value={productId ?? undefined}
+                  onValueChange={(value) => {
+                    const selected = productOptions.find((p) => p.id === value);
+                    if (!selected) return;
+                    setProductId(value);
+                    setProductName(selected.name);
+                    setCurrency(selected.currency || "USD");
+                    setPrice(selected.currency === "CUP" ? (selected.price_cup ?? selected.price) : selected.price);
+                  }}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder="Selecciona producto" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {productOptions.map((product) => (
+                      <SelectItem key={product.id} value={product.id}>
+                        {product.name} — {product.currency === "CUP" ? `${product.price_cup ?? product.price} CUP` : `${product.price} USD`}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Nombre del producto</Label>
+                <Input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Nombre o referencia del producto" />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              <Label>Nombre del producto</Label>
-              <Input value={productName} onChange={(e) => setProductName(e.target.value)} placeholder="Nombre o referencia del producto" />
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Precio</Label>
+                <Input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
+              </div>
+
+              <div className="space-y-2">
+                <Label>Moneda</Label>
+                <Select value={currency} onValueChange={(v) => setCurrency(v)}>
+                  <SelectTrigger>
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="USD">USD</SelectItem>
+                    <SelectItem value="CUP">CUP</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+
+              <div className="space-y-2">
+                <Label>Gestor</Label>
+                <Input value={sellerName} onChange={(e) => setSellerName(e.target.value)} placeholder="Nombre del gestor" />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3">
+              <div className="space-y-2">
+                <Label>Nombre del Cliente</Label>
+                <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ej: Juan Pérez" />
+              </div>
+              <div className="space-y-2">
+                <Label>Teléfono</Label>
+                <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Ej: +53 5..." />
+              </div>
+              <div className="space-y-2">
+                <Label>Dirección / Local</Label>
+                <Input value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder="Ej: Calle 10 #5..." />
+              </div>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>Comisión (CUP)</Label>
+                <Input type="number" value={commissionAmount} onChange={(e) => setCommissionAmount(e.target.value)} placeholder="Ej: 2000" />
+              </div>
+              <div className="space-y-2">
+                <Label>Detalles de la venta (Opcional)</Label>
+                <Textarea value={saleDetails} onChange={(e) => setSaleDetails(e.target.value)} placeholder="Escribe aquí cualquier detalle adicional..." />
+              </div>
+            </div>
+
+            <div className="flex justify-end">
+              <Button variant="hero" className="h-10 w-full sm:w-auto" onClick={submit}>Registrar venta</Button>
             </div>
           </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Precio</Label>
-              <Input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Moneda</Label>
-              <Select value={currency} onValueChange={(v) => setCurrency(v)}>
-                <SelectTrigger>
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="USD">USD</SelectItem>
-                  <SelectItem value="CUP">CUP</SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-
-            <div className="space-y-2">
-              <Label>Gestor</Label>
-              <Input value={sellerName} onChange={(e) => setSellerName(e.target.value)} placeholder="Nombre del gestor" />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-3 gap-4">
-            <div className="space-y-2">
-              <Label>Nombre del Cliente</Label>
-              <Input value={customerName} onChange={(e) => setCustomerName(e.target.value)} placeholder="Ej: Juan Pérez" />
-            </div>
-            <div className="space-y-2">
-              <Label>Teléfono</Label>
-              <Input value={customerPhone} onChange={(e) => setCustomerPhone(e.target.value)} placeholder="Ej: +53 5..." />
-            </div>
-            <div className="space-y-2">
-              <Label>Dirección / Local</Label>
-              <Input value={locationName} onChange={(e) => setLocationName(e.target.value)} placeholder="Ej: Calle 10 #5..." />
-            </div>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label>Comisión (CUP)</Label>
-              <Input type="number" value={commissionAmount} onChange={(e) => setCommissionAmount(e.target.value)} placeholder="Ej: 2000" />
-            </div>
-            <div className="space-y-2">
-              <Label>Detalles de la venta (Opcional)</Label>
-              <Textarea value={saleDetails} onChange={(e) => setSaleDetails(e.target.value)} placeholder="Escribe aquí cualquier detalle adicional..." />
-            </div>
-          </div>
-
-          <div className="flex justify-end">
-            <Button variant="hero" onClick={submit}>Registrar venta</Button>
-          </div>
-        </div>
+        </AdminCard>
       )}
 
       {isOwner && (
-        <div className="grid gap-4 rounded-3xl border border-border bg-secondary/40 p-5">
-          <div className="flex flex-col gap-4">
-            <div className="flex items-center gap-2 text-lg font-semibold text-primary">
-              <Wallet className="h-5 w-5" />
-              Control de Comisiones a Gestores
-            </div>
-            
-            <div className="grid md:grid-cols-3 gap-4">
-              <div className="rounded-2xl bg-white p-4 shadow-sm border border-border">
-                <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground mb-1">
-                  <ArrowUpRight className="h-3 w-3" /> Total por Pagar
-                </div>
-                <div className="text-2xl font-bold text-amber-600">{formatCUP(totals.totalCommissionPending)}</div>
-              </div>
-              
-              <div className="rounded-2xl bg-white p-4 shadow-sm border border-border">
-                <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground mb-1">
-                  <CheckCircle2 className="h-3 w-3" /> Total Pagado
-                </div>
-                <div className="text-2xl font-bold text-emerald-600">{formatCUP(totals.totalCommissionPaid)}</div>
-              </div>
+        <AdminCard>
+          <AdminCardTitle icon={Wallet} title="Control de Comisiones a Gestores" />
 
-              <div className="rounded-2xl bg-white p-4 shadow-sm border border-border">
-                <div className="flex items-center gap-2 text-xs font-medium uppercase text-muted-foreground mb-1">
-                  <Clock className="h-3 w-3" /> Total Acumulado
-                </div>
-                <div className="text-2xl font-bold text-primary">{formatCUP(totals.totalCommissionPending + totals.totalCommissionPaid)}</div>
-              </div>
-            </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <AdminStat
+              icon={ArrowUpRight}
+              label="Total por pagar"
+              value={formatCUP(totals.totalCommissionPending)}
+              tone="amber"
+            />
+            <AdminStat
+              icon={CheckCircle2}
+              label="Total pagado"
+              value={formatCUP(totals.totalCommissionPaid)}
+              tone="emerald"
+            />
+            <AdminStat
+              icon={Clock}
+              label="Total acumulado"
+              value={formatCUP(totals.totalCommissionPending + totals.totalCommissionPaid)}
+              tone="blue"
+            />
+          </div>
 
-            <div className="rounded-2xl bg-primary/10 p-4 border border-primary/20">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h4 className="text-sm font-bold text-primary flex items-center gap-2">
-                    <TrendingUp className="h-4 w-4" /> Resumen de esta semana
-                  </h4>
-                  <p className="text-xs text-muted-foreground">Últimos 7 días de actividad</p>
-                </div>
-                <div className="text-right">
-                  <div className="text-lg font-bold text-primary">{formatCUP(totals.weeklyCommission)}</div>
-                  <p className="text-xs text-muted-foreground">{totals.weeklySalesCount} ventas registradas</p>
-                </div>
-              </div>
-            </div>
+          <AdminStat
+            icon={TrendingUp}
+            label="Resumen de esta semana"
+            value={formatCUP(totals.weeklyCommission)}
+            sub={`Últimos 7 días · ${totals.weeklySalesCount} ventas registradas`}
+            tone="violet"
+            className="mt-4"
+          />
 
-            <div className="overflow-x-auto rounded-2xl border border-border bg-white shadow-sm mt-2">
-              <table className="w-full text-sm text-left">
-                <thead className="bg-secondary/30 text-xs font-medium uppercase text-muted-foreground">
-                  <tr>
-                    <th className="px-4 py-3">Gestor</th>
-                    <th className="px-4 py-3 text-center">Ventas</th>
-                    <th className="px-4 py-3 text-right">Pagado</th>
-                    <th className="px-4 py-3 text-right">Pendiente</th>
-                    <th className="px-4 py-3 text-right">Total</th>
+          <div className="mt-4">
+            <AdminTable>
+              <AdminTableHead>
+                <tr>
+                  <th className={adminTh}>Gestor</th>
+                  <th className={adminTh + " text-center"}>Ventas</th>
+                  <th className={adminTh + " text-right"}>Pagado</th>
+                  <th className={adminTh + " text-right"}>Pendiente</th>
+                  <th className={adminTh + " text-right"}>Total</th>
+                </tr>
+              </AdminTableHead>
+              <tbody>
+                {totals.stats.bySeller.map((s: SellerTotals) => (
+                  <tr key={s.seller_user_id || s.seller_name} className={adminTr}>
+                    <td className={adminTd}>
+                      <div className="flex items-center gap-2 font-medium">
+                        {s.seller_name || "Desconocido"}
+                        <Button size="icon" variant="ghost" className="h-8 w-8 text-primary" onClick={() => { setAuditGestor(s); setIsAuditOpen(true); }} aria-label="Auditar gestor">
+                          <ShieldAlert className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </td>
+                    <td className={adminTd + " text-center"}>{s.count}</td>
+                    <td className={adminTd + " text-right font-medium text-emerald-600 dark:text-emerald-400"}>{formatCUP(s.paidCommission)}</td>
+                    <td className={adminTd + " text-right font-medium text-amber-600 dark:text-amber-400"}>{formatCUP(s.pendingCommission)}</td>
+                    <td className={adminTd + " text-right font-bold"}>{formatCUP(s.totalCommission)}</td>
                   </tr>
-                </thead>
-                <tbody className="divide-y divide-border">
-                  {totals.stats.bySeller.map((s: SellerTotals) => (
-                    <tr key={s.seller_user_id || s.seller_name} className="hover:bg-secondary/10 transition-colors">
-                      <td className="px-4 py-3 font-medium">
-                        <div className="flex items-center gap-2">
-                          {s.seller_name || "Desconocido"}
-                          <Button size="icon" variant="ghost" className="h-6 w-6 text-primary" onClick={() => { setAuditGestor(s); setIsAuditOpen(true); }}>
-                            <ShieldAlert className="h-3 w-3" />
-                          </Button>
-                        </div>
-                      </td>
-                      <td className="px-4 py-3 text-center">{s.count}</td>
-                      <td className="px-4 py-3 text-right text-emerald-600 font-medium">{formatCUP(s.paidCommission)}</td>
-                      <td className="px-4 py-3 text-right text-amber-600 font-medium">{formatCUP(s.pendingCommission)}</td>
-                      <td className="px-4 py-3 text-right font-bold">{formatCUP(s.totalCommission)}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+                ))}
+              </tbody>
+            </AdminTable>
           </div>
-        </div>
+        </AdminCard>
       )}
 
       {isOwner && (
-        <div className="grid gap-4 rounded-3xl border border-border bg-secondary/40 p-5">
-          <div className="flex flex-col gap-3 md:flex-row md:items-end md:justify-between">
-            <div className="space-y-2">
+        <AdminCard>
+          <AdminFilters>
+            <div className="w-full space-y-2 sm:w-auto">
               <Label>Filtrar por gestor</Label>
               <Select value={filterSeller} onValueChange={setFilterSeller}>
-                <SelectTrigger className="w-full md:w-[240px]">
+                <SelectTrigger className="h-10 w-full md:w-[240px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -354,60 +358,66 @@ export function AdminSales() {
                 </SelectContent>
               </Select>
             </div>
-            <div className="flex items-center gap-2 rounded-full border border-border bg-background px-3 py-1.5 text-sm text-muted-foreground">
+            <div className="flex items-center gap-2 rounded-full border border-border bg-card px-3 py-1.5 text-sm text-muted-foreground sm:ml-auto">
               <DollarSign className="h-4 w-4 text-primary" />
               {filteredSales.length} ventas visibles
             </div>
-          </div>
-        </div>
+          </AdminFilters>
+        </AdminCard>
       )}
 
       <div className="space-y-4">
         {loading ? (
-          <div className="rounded-2xl border border-dashed border-border bg-secondary/30 p-8 text-center text-sm text-muted-foreground">Cargando ventas...</div>
+          <AdminLoading label="Cargando ventas…" />
         ) : filteredSales.length === 0 ? (
-          <div className="rounded-2xl border border-dashed border-border bg-secondary/30 p-8 text-center text-sm text-muted-foreground">
-            {isOwner ? "Aún no hay ventas registradas en el panel principal." : "Todavía no has registrado ventas para este gestor."}
-          </div>
+          <AdminEmptyState
+            icon={TrendingUp}
+            title="Sin ventas"
+            description={isOwner ? "Aún no hay ventas registradas en el panel principal." : "Todavía no has registrado ventas para este gestor."}
+          />
         ) : (
           filteredSales.map((sale) => (
-            <div key={sale.id} className="flex flex-col gap-3 rounded-3xl border border-border bg-white/80 p-4 shadow-soft md:flex-row md:items-center md:justify-between">
-              <div>
-                <div className="flex items-center gap-2">
-                  <p className="font-semibold">{sale.product_name ?? "Producto sin nombre"}</p>
-                  {sale.is_paid && <BadgeCheck className="h-4 w-4 text-emerald-600" />}
+            <AdminCard key={sale.id} className="p-4">
+              <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2">
+                    <p className="font-semibold">{sale.product_name ?? "Producto sin nombre"}</p>
+                    <StatusBadge tone={sale.is_paid ? "success" : "warning"}>
+                      {sale.is_paid ? "Pagada" : "Pendiente"}
+                    </StatusBadge>
+                  </div>
+                  <div className="mt-1 text-sm text-muted-foreground">
+                    {sale.seller_name || "Gestor sin nombre"} • {new Date(sale.created_at).toLocaleString("es-ES")}
+                  </div>
                 </div>
-                <div className="mt-1 text-sm text-muted-foreground">
-                  {sale.seller_name || "Gestor sin nombre"} • {new Date(sale.created_at).toLocaleString("es-ES")}
-                </div>
-              </div>
 
-              <div className="flex flex-wrap items-center gap-3 md:justify-end">
-                <div className="font-semibold text-lg">{sale.currency === "USD" ? formatPrice(Number(sale.price)) : formatCUP(Number(sale.price))}</div>
-                <Button size="icon" variant="outline" onClick={() => { setSelectedSale(sale); setIsDetailsOpen(true); }}>
-                  <Eye className="h-4 w-4" />
-                </Button>
-                {!sale.is_paid && (
-                  <Button size="sm" onClick={async () => { try { await markPaid(sale.id); toast.success("Venta marcada como pagada"); } catch (e: unknown) { toast.error((e instanceof Error ? e.message : null) || "No se pudo actualizar"); } }}>
-                    Marcar pagada
+                <div className="flex flex-wrap items-center gap-2.5 md:justify-end">
+                  <div className="font-display text-lg font-bold text-primary">{sale.currency === "USD" ? formatPrice(Number(sale.price)) : formatCUP(Number(sale.price))}</div>
+                  <Button size="icon" variant="outline" className="h-9 w-9" onClick={() => { setSelectedSale(sale); setIsDetailsOpen(true); }} aria-label="Ver detalles">
+                    <Eye className="h-4 w-4" />
                   </Button>
-                )}
-                {(isOwner || sale.seller_user_id === user?.id) && (
-                  <Button size="icon" variant="ghost" className="text-destructive" onClick={async () => {
-                    if (!confirm("¿Eliminar esta venta?")) return;
-                    try { await removeSale(sale.id); toast.success("Venta eliminada"); } catch (e: unknown) { toast.error((e instanceof Error ? e.message : null) || "No se pudo eliminar"); }
-                  }}>
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                )}
+                  {!sale.is_paid && (
+                    <Button size="sm" className="h-9" onClick={async () => { try { await markPaid(sale.id); toast.success("Venta marcada como pagada"); } catch (e: unknown) { toast.error((e instanceof Error ? e.message : null) || "No se pudo actualizar"); } }}>
+                      Marcar pagada
+                    </Button>
+                  )}
+                  {(isOwner || sale.seller_user_id === user?.id) && (
+                    <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive hover:text-destructive" onClick={async () => {
+                      if (!confirm("¿Eliminar esta venta?")) return;
+                      try { await removeSale(sale.id); toast.success("Venta eliminada"); } catch (e: unknown) { toast.error((e instanceof Error ? e.message : null) || "No se pudo eliminar"); }
+                    }} aria-label="Eliminar venta">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  )}
+                </div>
               </div>
-            </div>
+            </AdminCard>
           ))
         )}
       </div>
 
       <Dialog open={isDetailsOpen} onOpenChange={setIsDetailsOpen}>
-        <DialogContent className="max-w-2xl rounded-3xl">
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto rounded-3xl">
           <DialogHeader>
             <DialogTitle className="flex items-center gap-2">
               <FileText className="h-5 w-5 text-primary" />
@@ -427,7 +437,7 @@ export function AdminSales() {
                 </div>
                 <div className="space-y-1">
                   <span className="text-xs font-medium uppercase text-muted-foreground">Precio de Venta</span>
-                  <p className="font-semibold text-lg">
+                  <p className="text-lg font-semibold text-primary">
                     {selectedSale.currency === "USD" ? formatPrice(Number(selectedSale.price ?? 0)) : formatCUP(Number(selectedSale.price ?? 0))}
                   </p>
                 </div>
@@ -479,23 +489,16 @@ export function AdminSales() {
                 </div>
                 <div className="space-y-1">
                   <span className="text-xs font-medium uppercase text-muted-foreground">Estado de Pago</span>
-                  <div className="flex items-center gap-2">
-                    {selectedSale.is_paid ? (
-                      <BadgeCheck className="h-4 w-4 text-emerald-600" />
-                    ) : (
-                      <DollarSign className="h-4 w-4 text-amber-500" />
-                    )}
-                    <p className={selectedSale.is_paid ? "text-emerald-600 font-medium" : "text-amber-500 font-medium"}>
-                      {selectedSale.is_paid ? "Pagada al gestor" : "Pendiente de pago"}
-                    </p>
-                  </div>
+                  <StatusBadge tone={selectedSale.is_paid ? "success" : "warning"}>
+                    {selectedSale.is_paid ? "Pagada al gestor" : "Pendiente de pago"}
+                  </StatusBadge>
                 </div>
               </div>
 
               {selectedSale.sale_details && (
                 <div className="space-y-1 border-t border-border pt-4">
                   <span className="text-xs font-medium uppercase text-muted-foreground">Detalles Adicionales</span>
-                  <p className="text-sm whitespace-pre-wrap bg-secondary/30 p-3 rounded-xl border border-border">
+                  <p className="whitespace-pre-wrap rounded-xl border border-border bg-muted/30 p-3 text-sm">
                     {String(selectedSale.sale_details ?? "")}
                   </p>
                 </div>
@@ -506,42 +509,42 @@ export function AdminSales() {
       </Dialog>
 
       <Dialog open={isAuditOpen} onOpenChange={setIsAuditOpen}>
-        <DialogContent className="max-w-4xl rounded-3xl overflow-hidden p-0 border-none shadow-2xl">
-          <div className="bg-primary p-6 text-white">
+        <DialogContent className="max-h-[90vh] max-w-4xl overflow-hidden rounded-3xl border-border bg-card p-0 shadow-2xl">
+          <div className="bg-primary p-6 text-primary-foreground">
             <DialogHeader>
-              <DialogTitle className="flex items-center gap-3 text-2xl font-display">
-                <ShieldCheck className="h-8 w-8 text-white/80" />
+              <DialogTitle className="flex items-center gap-3 font-display text-2xl">
+                <ShieldCheck className="h-8 w-8 opacity-80" />
                 Auditoría Semanal: {auditGestor?.seller_name}
               </DialogTitle>
-              <DialogDescription className="text-white/60">
+              <DialogDescription className="text-primary-foreground/70">
                 Revisa las ventas registradas esta semana para detectar posibles irregularidades.
               </DialogDescription>
             </DialogHeader>
           </div>
 
-          <div className="p-6 max-h-[70vh] overflow-y-auto custom-scrollbar bg-secondary/5">
-            <div className="grid md:grid-cols-3 gap-4 mb-8">
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-border">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Ventas Semanales</p>
+          <div className="max-h-[70vh] overflow-y-auto bg-muted/20 p-6">
+            <div className="mb-8 grid gap-4 md:grid-cols-3">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <p className="mb-1 text-[10px] font-bold uppercase text-muted-foreground">Ventas Semanales</p>
                 <p className="text-2xl font-bold text-primary">
-                  {filteredSales.filter(s => 
+                  {filteredSales.filter(s =>
                     (s.seller_user_id === auditGestor?.seller_user_id || s.seller_name === auditGestor?.seller_name) &&
                     new Date(s.created_at) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                   ).length}
                 </p>
               </div>
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-border">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Total Comisión</p>
-                <p className="text-2xl font-bold text-amber-600">
-                  {formatCUP(filteredSales.filter(s => 
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <p className="mb-1 text-[10px] font-bold uppercase text-muted-foreground">Total Comisión</p>
+                <p className="text-2xl font-bold text-amber-600 dark:text-amber-400">
+                  {formatCUP(filteredSales.filter(s =>
                     (s.seller_user_id === auditGestor?.seller_user_id || s.seller_name === auditGestor?.seller_name) &&
                     new Date(s.created_at) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                   ).reduce((a, b) => a + Number(b.commission_amount || 0), 0))}
                 </p>
               </div>
-              <div className="bg-white p-4 rounded-2xl shadow-sm border border-border">
-                <p className="text-[10px] uppercase font-bold text-muted-foreground mb-1">Alerta de Fraude</p>
-                <div className="flex items-center gap-2 text-emerald-600 font-bold">
+              <div className="rounded-2xl border border-border bg-card p-4 shadow-sm">
+                <p className="mb-1 text-[10px] font-bold uppercase text-muted-foreground">Alerta de Fraude</p>
+                <div className="flex items-center gap-2 font-bold text-emerald-600 dark:text-emerald-400">
                   <CheckCircle2 className="h-4 w-4" />
                   <span>Nivel Bajo</span>
                 </div>
@@ -549,20 +552,20 @@ export function AdminSales() {
             </div>
 
             <div className="space-y-3">
-              <h4 className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2 mb-4">
+              <h4 className="mb-4 flex items-center gap-2 text-xs font-bold uppercase text-muted-foreground">
                 <AlertCircle className="h-3 w-3" /> Registros de los últimos 7 días
               </h4>
               {filteredSales
-                .filter(s => 
+                .filter(s =>
                   (s.seller_user_id === auditGestor?.seller_user_id || s.seller_name === auditGestor?.seller_name) &&
                   new Date(s.created_at) >= new Date(Date.now() - 7 * 24 * 60 * 60 * 1000)
                 )
                 .map((sale) => (
-                  <div key={sale.id} className="bg-white p-4 rounded-2xl border border-border shadow-sm flex items-center justify-between gap-4">
-                    <div className="space-y-1 flex-1">
-                      <div className="flex items-center gap-2">
-                        <span className="font-bold text-sm">{sale.product_name}</span>
-                        <Badge variant="outline" className="text-[9px] uppercase font-bold px-1.5 py-0">
+                  <div key={sale.id} className="flex items-center justify-between gap-4 rounded-2xl border border-border bg-card p-4 shadow-sm">
+                    <div className="min-w-0 flex-1 space-y-1">
+                      <div className="flex flex-wrap items-center gap-2">
+                        <span className="text-sm font-bold">{sale.product_name}</span>
+                        <Badge variant="outline" className="px-1.5 py-0 text-[9px] font-bold uppercase">
                           {sale.currency}
                         </Badge>
                       </div>
@@ -572,7 +575,7 @@ export function AdminSales() {
                         <span className="flex items-center gap-1"><MapPin className="h-3 w-3" /> {sale.location_name || "Sin loc"}</span>
                       </div>
                     </div>
-                    <div className="text-right shrink-0">
+                    <div className="shrink-0 text-right">
                       <p className="font-bold text-primary">{formatCUP(Number(sale.commission_amount ?? 0))}</p>
                       <p className="text-[10px] text-muted-foreground">{new Date(sale.created_at).toLocaleDateString()}</p>
                     </div>
