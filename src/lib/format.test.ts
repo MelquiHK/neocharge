@@ -10,13 +10,13 @@ import {
 
 describe("formatPrice (bug del doble símbolo de moneda)", () => {
   it("incluye el símbolo de moneda una sola vez", () => {
-    // Intl es-CU con currency USD ya produce "US$55.00": quien renderiza
-    // NO debe añadir "US$" ni " USD" alrededor.
-    expect(formatPrice(55)).toBe("US$55.00");
+    // Intl es-CU con currency USD + narrowSymbol produce "$55.00":
+    // quien renderiza NO debe añadir "US$" ni " USD" alrededor.
+    expect(formatPrice(55)).toBe("$55.00");
   });
 
   it("no duplica el símbolo en miles", () => {
-    expect(formatPrice(3000)).toBe("US$3,000.00");
+    expect(formatPrice(3000)).toBe("$3,000.00");
   });
 
   it("formatCUP usa sufijo CUP, no doble símbolo", () => {
@@ -26,8 +26,8 @@ describe("formatPrice (bug del doble símbolo de moneda)", () => {
 
 describe("formatMoney", () => {
   it("formatea en USD por defecto", () => {
-    expect(formatMoney(55, "USD")).toBe("US$55.00");
-    expect(formatMoney(55)).toBe("US$55.00");
+    expect(formatMoney(55, "USD")).toBe("$55.00");
+    expect(formatMoney(55)).toBe("$55.00");
   });
 
   it("formatea en CUP cuando la moneda del producto es CUP", () => {

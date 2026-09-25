@@ -45,7 +45,7 @@ function displayPriceLabel(display: DisplayPrice): string {
 }
 
 // Línea secundaria de conversión (puede quedar vacía si no hay tasa).
-// NOTA: formatPrice ya incluye "US$", no se añade " USD" detrás (doble símbolo).
+// NOTA: formatPrice ya incluye "$", no se añade " USD" detrás (doble símbolo).
 function displayConvertedLine(display: DisplayPrice): string | null {
   if (display.primary === "USD") return display.cup != null ? `≈ ${formatCUP(display.cup)}` : null;
   return display.usd != null ? `≈ ${formatPrice(display.usd)}` : null;

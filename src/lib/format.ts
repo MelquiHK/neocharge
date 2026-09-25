@@ -4,6 +4,7 @@ export function formatPrice(value: number, currency = "USD") {
   return new Intl.NumberFormat("es-CU", {
     style: "currency",
     currency,
+    currencyDisplay: "narrowSymbol",
     maximumFractionDigits: 2,
   }).format(value);
 }
@@ -14,8 +15,8 @@ export function formatCUP(value: number) {
 
 /**
  * Formatea un monto en la moneda del producto.
- * NOTA: `formatPrice` (Intl es-CU, USD) ya incluye el símbolo "US$" en la
- * propia cadena ("US$55.00"). Nunca se debe anteponer ni posponer otro
+ * NOTA: `formatPrice` (Intl es-CU, USD, narrowSymbol) ya incluye el símbolo
+ * "$" en la propia cadena ("$55.00"). Nunca se debe anteponer ni posponer otro
  * indicador de moneda (p. ej. "US$ " + formatPrice(x) o formatPrice(x) + " USD"),
  * porque eso produce el doble símbolo. Usa esta función cuando la moneda
  * puede variar por producto.
