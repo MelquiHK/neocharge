@@ -242,6 +242,12 @@
   50% { transform: translateY(-12px); }
 }
 
+@keyframes cart-pop {
+  0% { transform: scale(0.5); }
+  60% { transform: scale(1.18); }
+  100% { transform: scale(1); }
+}
+
 @keyframes pulse-glow {
   0%, 100% { opacity: 0.5; transform: scale(1); }
   50% { opacity: 0.85; transform: scale(1.05); }
@@ -304,6 +310,10 @@
 @layer utilities {
   .text-glow {
     filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+  }
+
+  .animate-cart-pop {
+    animation: cart-pop 0.35s ease;
   }
 
   .text-glow-lg {

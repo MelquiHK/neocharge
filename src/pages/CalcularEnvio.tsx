@@ -7,8 +7,8 @@ const CalcularEnvio = () => {
   }, []);
 
   return (
-    <div className="container-page py-24">
-      <header className="text-center space-y-4 mb-10">
+    <div className="container-page py-12 sm:py-16 lg:py-24 w-full max-w-full overflow-x-clip">
+      <header className="text-center space-y-4 mb-8 sm:mb-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
           Envíos en La Habana
         </div>
@@ -16,8 +16,10 @@ const CalcularEnvio = () => {
           Calcula tu <span className="text-gradient-accent">envío</span>
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed">
-          Marca tu ubicación en el mapa y descubre al instante cuántos kilómetros
-          son desde nuestro local del Vedado y cuánto cuesta la mensajería.
+          Marca tu ubicación en el mapa, descubre cuántos kilómetros son desde
+          nuestro local del Vedado y cuánto cuesta la mensajería. Después
+          completa tus datos, elige tus productos y confirma tu pedido por
+          WhatsApp.
         </p>
       </header>
       <DeliveryCalculator />
