@@ -49,6 +49,20 @@ const Admin = () => {
     document.title = "Admin — NeoCharge";
   }, []);
 
+  // El panel se comporta como una app: sin pellizco para ampliar.
+  // Al salir del panel se restaura el viewport original (la tienda conserva el zoom).
+  useEffect(() => {
+    const meta = document.querySelector('meta[name="viewport"]');
+    const original = meta?.getAttribute("content") ?? "";
+    meta?.setAttribute(
+      "content",
+      "width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    );
+    return () => {
+      if (meta) meta.setAttribute("content", original);
+    };
+  }, []);
+
   if (loading)
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950">
