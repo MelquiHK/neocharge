@@ -16,8 +16,10 @@ const CalcularEnvio = () => {
           Calcula tu <span className="text-gradient-accent">envío</span>
         </h1>
         <p className="text-lg text-muted-foreground max-w-2xl mx-auto font-light leading-relaxed">
-          Marca tu ubicación en el mapa y descubre al instante cuántos kilómetros
-          son desde nuestro local del Vedado y cuánto cuesta la mensajería.
+          Marca tu ubicación en el mapa, descubre cuántos kilómetros son desde
+          nuestro local del Vedado y cuánto cuesta la mensajería. Después
+          completa tus datos, elige tus productos y confirma tu pedido por
+          WhatsApp.
         </p>
       </header>
       <DeliveryCalculator />
