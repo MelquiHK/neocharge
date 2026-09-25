@@ -332,9 +332,9 @@ export function DeliveryCalculator() {
   );
 
   return (
-    <div className="grid gap-5 sm:gap-6 md:grid-cols-12 max-w-[1600px] mx-auto">
+    <div className="grid gap-5 sm:gap-6 md:grid-cols-12 max-w-[1600px] mx-auto w-full min-w-0">
       {/* Panel lateral: controles */}
-      <div className="md:col-span-5 xl:col-span-4 space-y-5 sm:space-y-6">
+      <div className="md:col-span-5 xl:col-span-4 space-y-5 sm:space-y-6 min-w-0 max-w-full">
         <Card className="p-6 rounded-3xl shadow-soft border-border/50 bg-white/80 backdrop-blur-sm">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-2xl bg-primary/10 text-primary">
@@ -363,13 +363,13 @@ export function DeliveryCalculator() {
               <Label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                 <Search className="w-3 h-3" /> Buscar dirección
               </Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 min-w-0">
                 <Input
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Ej: Calle 23 y M, Vedado"
                   aria-label="Buscar dirección"
-                  className="rounded-xl h-11"
+                  className="rounded-xl h-11 min-w-0 flex-1"
                 />
                 <Button
                   type="submit"
@@ -406,26 +406,26 @@ export function DeliveryCalculator() {
               <Button
                 variant="outline"
                 onClick={handleGps}
-                className="rounded-xl min-h-[44px]"
+                className="rounded-xl min-h-[44px] min-w-0 w-full px-2 text-xs sm:text-sm"
               >
-                <LocateFixed className="w-4 h-4 mr-1" /> Mi ubicación
+                <LocateFixed className="w-4 h-4 mr-1 shrink-0" /> <span className="truncate">Mi ubicación</span>
               </Button>
               {stop ? (
                 <Button
                   variant="outline"
                   onClick={() => setStop(null)}
-                  className="rounded-xl min-h-[44px]"
+                  className="rounded-xl min-h-[44px] min-w-0 w-full px-2 text-xs sm:text-sm"
                 >
-                  <X className="w-4 h-4 mr-1" /> Quitar parada
+                  <X className="w-4 h-4 mr-1 shrink-0" /> <span className="truncate">Quitar parada</span>
                 </Button>
               ) : (
                 <Button
                   variant={addingStop ? "default" : "outline"}
                   onClick={() => setAddingStop((v) => !v)}
-                  className="rounded-xl min-h-[44px]"
+                  className="rounded-xl min-h-[44px] min-w-0 w-full px-2 text-xs sm:text-sm"
                 >
-                  <Plus className="w-4 h-4 mr-1" />
-                  {addingStop ? "Toca el mapa…" : "Agregar parada"}
+                  <Plus className="w-4 h-4 mr-1 shrink-0" />
+                  <span className="truncate">{addingStop ? "Toca el mapa…" : "Agregar parada"}</span>
                 </Button>
               )}
             </div>
@@ -435,13 +435,13 @@ export function DeliveryCalculator() {
               <Label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                 <Link2 className="w-3 h-3" /> Pegar coordenadas o enlace
               </Label>
-              <div className="flex gap-2">
+              <div className="flex gap-2 min-w-0">
                 <Input
                   value={linkInput}
                   onChange={(e) => setLinkInput(e.target.value)}
                   placeholder="23.13, -82.39 o enlace de Maps / MAPS.ME / WhatsApp"
                   aria-label="Pegar coordenadas o enlace"
-                  className="rounded-xl h-11"
+                  className="rounded-xl h-11 min-w-0 flex-1"
                 />
                 <Button
                   type="submit"
@@ -473,17 +473,17 @@ export function DeliveryCalculator() {
             <div className="absolute -right-4 -bottom-4 opacity-10">
               <Navigation className="w-32 h-32" />
             </div>
-            <div className="relative z-10 space-y-4">
-              <div className="grid grid-cols-2 gap-4">
-                <div>
+            <div className="relative z-10 space-y-4 min-w-0">
+              <div className="grid grid-cols-2 gap-4 min-w-0">
+                <div className="min-w-0">
                   <p className="text-[10px] uppercase font-bold opacity-80">Distancia</p>
-                  <p className="text-3xl font-display font-bold tabular-nums">
+                  <p className="text-2xl sm:text-3xl font-display font-bold tabular-nums leading-tight break-words">
                     {loadingRoute ? "…" : `${distanceKm.toFixed(1)} km`}
                   </p>
                 </div>
-                <div className="text-right">
+                <div className="text-right min-w-0">
                   <p className="text-[10px] uppercase font-bold opacity-80">Costo del envío</p>
-                  <p className="text-3xl font-display font-bold tabular-nums">{formatCUP(price)}</p>
+                  <p className="text-2xl sm:text-3xl font-display font-bold tabular-nums leading-tight break-words">{formatCUP(price)}</p>
                 </div>
               </div>
               {stop && (
@@ -545,7 +545,7 @@ export function DeliveryCalculator() {
       </div>
 
       {/* Mapa */}
-      <div className="md:col-span-7 xl:col-span-8 h-[420px] sm:h-[500px] md:h-auto md:min-h-[620px] relative">
+      <div className="md:col-span-7 xl:col-span-8 h-[420px] sm:h-[500px] md:h-auto md:min-h-[620px] relative min-w-0 max-w-full">
         <div className="absolute inset-0 rounded-3xl overflow-hidden border border-border/50 ring-1 ring-border/60 shadow-soft">
           <MapContainer
             center={[DEFAULT_ORIGIN.lat, DEFAULT_ORIGIN.lng]}
@@ -617,7 +617,7 @@ export function DeliveryCalculator() {
 
       {/* Formulario de pedido completo: datos, dirección escrita, productos y totales */}
       {orderReady && (
-        <div className="md:col-span-12">
+        <div className="md:col-span-12 min-w-0 max-w-full">
           <DeliveryOrderForm
             distanceKm={distanceKm}
             pricePerKm={pricePerKm}

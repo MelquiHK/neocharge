@@ -83,7 +83,7 @@ function OrderSteps({
       aria-label="Progreso del pedido"
       className="rounded-2xl border border-border/50 bg-white/70 backdrop-blur px-3 py-2.5 sm:px-4 shadow-soft"
     >
-      <ol className="flex items-center gap-1 sm:gap-2 overflow-x-auto">
+      <ol className="flex items-center gap-1 sm:gap-2 overflow-x-auto max-w-full min-w-0">
         {steps.map((s, i) => {
           const done = s.done;
           const isCurrent = i === current;
@@ -363,8 +363,8 @@ export function DeliveryOrderForm({
   };
 
   return (
-    <div className="space-y-5 sm:space-y-6 mt-8">
-      <div className="text-center max-w-2xl mx-auto">
+    <div className="space-y-5 sm:space-y-6 mt-8 min-w-0 max-w-full">
+      <div className="text-center max-w-2xl mx-auto min-w-0 max-w-full">
         <h2 className="font-display text-2xl md:text-3xl font-bold flex items-center justify-center gap-2">
           <ClipboardList className="w-7 h-7 text-primary" /> Completa tu pedido
         </h2>
