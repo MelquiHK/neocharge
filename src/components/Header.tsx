@@ -20,6 +20,7 @@ const links = [
   { to: "/tienda", label: "Tienda" },
   { to: "/favoritos", label: "Favoritos" },
   { to: "/servicios", label: "Servicios" },
+  { to: "/calcular-envio", label: "Calcular envío" },
   { to: "/garantia", label: "Garantía" },
   { to: "/blog", label: "Blog" },
   { to: "/sobre-nosotros", label: "Nosotros" },
@@ -210,3 +211,4 @@ export function Header({ className }: { className?: string }) {
     </header>
   );
 }
+
