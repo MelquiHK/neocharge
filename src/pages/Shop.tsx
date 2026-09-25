@@ -147,7 +147,7 @@ const ShopPage = () => {
       </header>
 
       {/* Filters bar */}
-      <div className="sticky top-24 z-30 mb-8">
+      <div className="sticky top-24 z-40 mb-8">
         <div className="glass rounded-2xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center shadow-soft">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
