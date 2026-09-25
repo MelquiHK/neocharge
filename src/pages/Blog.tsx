@@ -258,7 +258,7 @@ const Blog = () => {
             <p className="font-display text-3xl font-bold">Blog en construcción</p>
             <p className="text-muted-foreground">Pronto compartiremos guías, noticias y consejos sobre electrónica.</p>
           </div>
-          <a href="/tienda" className="inline-block mt-4 text-primary hover:underline font-semibold">Ver tienda →</a>
+          <Link to="/tienda" className="inline-block mt-4 text-primary hover:underline font-semibold">Ver tienda →</Link>
         </div>
       ) : (
         <div className="grid md:grid-cols-3 gap-6">

@@ -1,15 +1,13 @@
-import { useEffect } from "react";
 import { ShieldCheck, Clock, Repeat, MessageCircle, AlertTriangle, Package } from "lucide-react";
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useSiteSettings } from "@/hooks/use-site-settings";
+import { useSEO } from "@/hooks/use-seo";
 
 const Garantia = () => {
   const { settings } = useSiteSettings();
 
-  useEffect(() => {
-    document.title = "Garantía — NeoCharge";
-  }, []);
+  useSEO("garantia");
 
   return (
     <div className="container-page py-24 max-w-5xl space-y-24">

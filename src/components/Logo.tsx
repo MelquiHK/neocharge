@@ -9,7 +9,7 @@ interface LogoProps {
 
 export function Logo({ className, showText = true }: LogoProps) {
   return (
-    <Link to="/" className={cn("flex items-center gap-2.5 group", className)} aria-label="Neocharge inicio">
+    <Link to="/" className={cn("flex items-center gap-2.5 group", className)} aria-label="NeoCharge inicio">
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-primary rounded-xl blur-md opacity-50 group-hover:opacity-80 transition-opacity" />
         <div className="relative w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">

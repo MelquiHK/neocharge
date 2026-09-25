@@ -87,6 +87,7 @@ export function Footer() {
               <li><Link to="/sobre-nosotros" className="text-muted-foreground hover:text-primary transition-colors">Sobre nosotros</Link></li>
               <li><Link to="/blog" className="text-muted-foreground hover:text-primary transition-colors">Blog</Link></li>
               <li><Link to="/garantia" className="text-muted-foreground hover:text-primary transition-colors">Garantía</Link></li>
+              <li><Link to="/preguntas-frecuentes" className="text-muted-foreground hover:text-primary transition-colors">Preguntas frecuentes</Link></li>
               <li><Link to="/legales/terminos" className="text-muted-foreground hover:text-primary transition-colors">Términos</Link></li>
               <li><Link to="/legales/privacidad" className="text-muted-foreground hover:text-primary transition-colors">Privacidad</Link></li>
               <li><Link to="/contacto" className="text-muted-foreground hover:text-primary transition-colors">Contacto</Link></li>

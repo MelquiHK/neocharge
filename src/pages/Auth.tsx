@@ -9,6 +9,7 @@ import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ArrowLeft } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -24,6 +25,8 @@ const Auth = () => {
     const searchParams = new URLSearchParams(location.search);
     return searchParams.get("next") ?? "/cuenta";
   }, [location.search]);
+
+  useSEO("auth");
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search);

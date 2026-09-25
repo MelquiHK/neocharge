@@ -10,9 +10,17 @@ import { computeDisplayPrice, formatPrice, formatCUP, type DisplayPrice } from "
 import { responsiveImage } from "@/lib/responsive-image";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
+import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock, Truck } from "lucide-react";
 import { toast } from "sonner";
 import { ChargerCalculator } from "@/components/ChargerCalculator";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 
 interface LocationStock {
   location_id: string;
@@ -267,9 +275,25 @@ export default function ProductDetail() {
     <div className="container-page py-12">
       {/* Breadcrumb */}
       <div className="mb-8">
-        <Link to="/tienda" className="text-sm text-muted-foreground hover:text-foreground">
-          ← Volver a la tienda
-        </Link>
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/">Inicio</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink asChild>
+                <Link to="/tienda">Tienda</Link>
+              </BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>{product?.name ?? "Producto"}</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
       </div>
 
       {/* Main Product Section */}
@@ -432,6 +456,24 @@ export default function ProductDetail() {
               <p className="text-muted-foreground">Todos nuestros productos incluyen garantía completa y soporte técnico.</p>
             </div>
           )}
+
+          {/* Delivery: entrelazado con la calculadora de envío */}
+          <Link
+            to="/calcular-envio"
+            className="flex items-center gap-3 rounded-lg border border-border/60 bg-secondary/40 p-4 text-sm hover:border-primary/50 hover:bg-secondary/70 transition-colors group"
+          >
+            <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+              <Truck className="w-5 h-5 text-primary" />
+            </span>
+            <span>
+              <span className="font-semibold block group-hover:text-primary transition-colors">
+                ¿Lo quieres a domicilio?
+              </span>
+              <span className="text-muted-foreground">
+                Calcula el costo de la mensajería hasta tu ubicación.
+              </span>
+            </span>
+          </Link>
         </div>
       </div>
 

@@ -1,12 +1,10 @@
-import { useEffect } from "react";
 import { Link } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useSEO } from "@/hooks/use-seo";
 
 const LegalTerms = () => {
-  useEffect(() => {
-    document.title = "Términos y condiciones — Neocharge";
-  }, []);
+  useSEO("legal", { title: "Términos y condiciones — NeoCharge" });
 
   return (
     <div className="container-page py-12 md:py-16 space-y-8 max-w-3xl">

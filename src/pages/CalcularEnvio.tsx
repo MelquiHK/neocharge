@@ -1,10 +1,11 @@
-import { useEffect } from "react";
+import { Link } from "react-router-dom";
+import { ArrowRight, ShoppingBag } from "lucide-react";
+import { Button } from "@/components/ui/button";
 import { DeliveryCalculator } from "@/components/DeliveryCalculator";
+import { useSEO } from "@/hooks/use-seo";
 
 const CalcularEnvio = () => {
-  useEffect(() => {
-    document.title = "Calcular envío — NeoCharge";
-  }, []);
+  useSEO("calcular");
 
   return (
     <div className="container-page py-12 sm:py-16 lg:py-24 w-full max-w-full overflow-x-clip">
@@ -23,6 +24,29 @@ const CalcularEnvio = () => {
         </p>
       </header>
       <DeliveryCalculator />
+
+      {/* Entrelazado: seguir comprando o ir al checkout tras calcular */}
+      <section className="mt-12 rounded-3xl border border-border/60 bg-secondary/40 p-8 md:p-10 text-center space-y-4">
+        <h2 className="font-display text-2xl md:text-3xl font-bold">
+          ¿Ya sabes cuánto cuesta tu envío?
+        </h2>
+        <p className="text-muted-foreground max-w-xl mx-auto">
+          Explora el catálogo y arma tu pedido, o ve directo al checkout si ya
+          elegiste tus productos.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+          <Button asChild size="lg" className="rounded-full">
+            <Link to="/tienda">
+              <ShoppingBag className="w-5 h-5" /> Ver productos
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="rounded-full">
+            <Link to="/checkout">
+              Ir al checkout <ArrowRight className="w-5 h-5" />
+            </Link>
+          </Button>
+        </div>
+      </section>
     </div>
   );
 };

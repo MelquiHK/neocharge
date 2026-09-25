@@ -1,8 +1,9 @@
 import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
-import { Calendar, ChevronLeft } from "lucide-react";
+import { ArrowRight, Calendar, ChevronLeft, ShoppingBag } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { renderMarkdown } from "@/lib/markdown";
+import { Button } from "@/components/ui/button";
 
 type Post = {
   id: string;
@@ -19,6 +20,7 @@ type Post = {
 const BlogPost = () => {
   const { slug } = useParams();
   const [post, setPost] = useState<Post | null>(null);
+  const [related, setRelated] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
 
   const images = useMemo(() => {
@@ -47,7 +49,19 @@ const BlogPost = () => {
             setPost(null);
           }
         } else {
-          setPost((data as Post | null) ?? null);
+          const current = (data as Post | null) ?? null;
+          setPost(current);
+          // Artículos relacionados: otros publicados, los más recientes.
+          if (current) {
+            const { data: rel } = await supabase
+              .from("blog_posts")
+              .select("id,title,slug,excerpt,image_url,created_at")
+              .eq("is_published", true)
+              .neq("id", current.id)
+              .order("created_at", { ascending: false })
+              .limit(3);
+            if (!cancelled) setRelated((rel as Post[] | null) ?? []);
+          }
         }
         setLoading(false);
       } catch (err) {
@@ -120,6 +134,66 @@ const BlogPost = () => {
           <p className="text-muted-foreground">Este artículo aún no tiene contenido.</p>
         )}
       </article>
+
+      {/* Entrelazado: artículos relacionados + CTA a la tienda */}
+      {related.length > 0 && (
+        <section className="mt-16">
+          <h2 className="font-display text-2xl md:text-3xl font-bold mb-6">
+            Sigue leyendo
+          </h2>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {related.map((r) => (
+              <Link
+                key={r.id}
+                to={`/blog/${r.slug}`}
+                className="group rounded-3xl border border-border/60 overflow-hidden bg-card hover:border-primary/50 transition-colors"
+              >
+                {r.image_url && (
+                  <div className="aspect-[16/9] overflow-hidden bg-secondary">
+                    <img
+                      src={r.image_url}
+                      alt={r.title}
+                      loading="lazy"
+                      decoding="async"
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform"
+                    />
+                  </div>
+                )}
+                <div className="p-5">
+                  <h3 className="font-semibold line-clamp-2 group-hover:text-primary transition-colors">
+                    {r.title}
+                  </h3>
+                  {r.excerpt && (
+                    <p className="text-sm text-muted-foreground mt-2 line-clamp-2">{r.excerpt}</p>
+                  )}
+                </div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
+
+      <section className="mt-12 rounded-3xl border border-border/60 bg-secondary/40 p-8 md:p-10 text-center space-y-4">
+        <h2 className="font-display text-2xl md:text-3xl font-bold">
+          ¿Te gustó el artículo?
+        </h2>
+        <p className="text-muted-foreground max-w-xl mx-auto">
+          Ponlo en práctica con nuestros productos: cargadores y accesorios con
+          garantía certificada.
+        </p>
+        <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+          <Button asChild size="lg" className="rounded-full">
+            <Link to="/tienda">
+              <ShoppingBag className="w-5 h-5" /> Ver la tienda
+            </Link>
+          </Button>
+          <Button asChild size="lg" variant="outline" className="rounded-full">
+            <Link to="/blog">
+              Más artículos <ArrowRight className="w-5 h-5" />
+            </Link>
+          </Button>
+        </div>
+      </section>
     </div>
   );
 };
