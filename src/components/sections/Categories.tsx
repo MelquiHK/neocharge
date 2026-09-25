@@ -90,6 +90,7 @@ export function Categories() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
                 <div className="absolute inset-0 p-5 flex flex-col justify-end text-white">
+                  <div className="rounded-2xl border border-white/25 nc-liquid p-4">
                   <span
                     className={cn(
                       "self-start mb-2.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider",
@@ -111,6 +112,7 @@ export function Categories() {
                       Ver productos <ArrowRight className="w-4 h-4" />
                     </span>
                   )}
+                  </div>
                 </div>
               </>
             );

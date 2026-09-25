@@ -24,7 +24,7 @@ export function CTA() {
           <div className="absolute -bottom-40 -left-40 w-[420px] h-[420px] rounded-full bg-cyan-500/15 blur-[100px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "2s" }} aria-hidden />
 
           <div className="relative max-w-3xl mx-auto space-y-6 md:space-y-7">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-blue-500/10 border border-blue-400/25 text-blue-200 text-xs font-bold uppercase tracking-[0.18em]">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/25 nc-liquid text-blue-100 text-xs font-bold uppercase tracking-[0.18em]">
               <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
               NeoCharge · La Habana
             </div>

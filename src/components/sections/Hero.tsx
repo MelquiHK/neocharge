@@ -173,7 +173,7 @@ export function Hero() {
           {/* Columna derecha: producto protagonista real */}
           <div className="relative animate-fade-in-right" style={{ animationDelay: "0.25s" }}>
             <div className="absolute -inset-6 bg-blue-600/15 blur-3xl rounded-full pointer-events-none" aria-hidden />
-            <div className="relative rounded-[2rem] border border-white/10 nc-glass nc-sheen p-4 sm:p-5 hover:border-white/25 transition-colors duration-500">
+            <div className="relative rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-4 sm:p-5 hover:border-white/40 transition-colors duration-500">
               <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-slate-800/60 nc-ripple">
                 {spotlightImage ? (
                   <img
@@ -217,12 +217,12 @@ export function Hero() {
             </div>
 
             {/* Chips flotantes */}
-            <div className="absolute -top-4 -right-2 sm:-right-4 flex items-center gap-2 rounded-2xl border border-white/10 nc-glass-chip px-3.5 py-2.5 animate-float">
+            <div className="absolute -top-4 -right-2 sm:-right-4 flex items-center gap-2 rounded-2xl border border-white/25 nc-liquid px-3.5 py-2.5 animate-float">
               <ShieldCheck className="w-4 h-4 text-emerald-400" />
               <span className="text-xs font-bold text-slate-200">Garantía incluida</span>
             </div>
             <div
-              className="absolute -bottom-4 -left-2 sm:-left-4 flex items-center gap-2 rounded-2xl border border-white/10 nc-glass-chip px-3.5 py-2.5 animate-float"
+              className="absolute -bottom-4 -left-2 sm:-left-4 flex items-center gap-2 rounded-2xl border border-white/25 nc-liquid px-3.5 py-2.5 animate-float"
               style={{ animationDelay: "1.4s" }}
             >
               <Truck className="w-4 h-4 text-blue-300" />
