@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal, X } from "lucide-react";
+import { Search, SlidersHorizontal, X, MessageCircle } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProductCard, type Product } from "@/components/ProductCard";
@@ -10,6 +10,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { useAuth } from "@/hooks/use-auth";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { sortProductsForShop, type ProductSortValue } from "@/lib/product-ordering";
+import { getWhatsAppLink } from "@/lib/whatsapp";
 
 interface Category {
   id: string;
@@ -212,9 +213,16 @@ const ShopPage = () => {
           </div>
           <h3 className="font-display text-xl font-bold">No encontramos productos</h3>
           <p className="text-muted-foreground">Prueba con otra búsqueda o categoría.</p>
-          <Button variant="outline" onClick={() => { setSearch(""); setCat("all"); }}>
-            Limpiar filtros
-          </Button>
+          <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
+            <Button variant="outline" onClick={() => { setSearch(""); setCat("all"); }}>
+              Limpiar filtros
+            </Button>
+            <Button asChild>
+              <a href={getWhatsAppLink("Hola NeoCharge, estoy buscando un producto")} target="_blank" rel="noopener noreferrer">
+                <MessageCircle className="w-4 h-4" /> Preguntar por WhatsApp
+              </a>
+            </Button>
+          </div>
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">

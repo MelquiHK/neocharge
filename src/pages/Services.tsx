@@ -28,10 +28,6 @@ export default function Services() {
   selectedServiceIdRef.current = selectedServiceId;
 
   useEffect(() => {
-    document.title = "Servicios — NeoCharge";
-  }, []);
-
-  useEffect(() => {
     const load = async () => {
       setLoading(true);
       const { data, error } = await supabase

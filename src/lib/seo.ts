@@ -79,6 +79,20 @@ export const seoConfig: Record<string, MetaTags> = {
     description:
       "Respuestas a las preguntas más comunes sobre nuestros productos y servicios.",
   },
+  favorites: {
+    title: "Favoritos - NeoCharge",
+    description: "Tus productos favoritos en NeoCharge.",
+  },
+  services: {
+    title: "Servicios - NeoCharge",
+    description:
+      "Servicios de NeoCharge: desarrollo web, mantenimiento de splits, reparaciones y soporte técnico en La Habana.",
+  },
+  calcular: {
+    title: "Calcular envío - NeoCharge",
+    description:
+      "Calcula el costo de la mensajería desde nuestro local del Vedado hasta tu ubicación en La Habana.",
+  },
   legal: {
     title: "Términos y Condiciones - NeoCharge",
     description: "Lee nuestros términos de uso y política de privacidad.",
