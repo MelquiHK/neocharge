@@ -6,87 +6,20 @@ import { Label } from "@/components/ui/label";
 import { cn } from "@/lib/utils";
 import { Product } from "@/types";
 
+import {
+  formatChargerSpecs,
+  getBatteryTypeLabel,
+  getRecommendedCurrent,
+  parseChargerSpecifications,
+  parseNumber,
+  type ChargerSpecs,
+} from "@/lib/charger-specs";
+
 interface ChargerCalculatorProps {
   productName: string;
   productSpecs?: string | null;
   availableChargers?: Product[];
 }
-
-interface ChargerSpecs {
-  voltage?: number;
-  current?: number;
-  batteryTypes?: string[];
-}
-
-const parseNumber = (value: string | number | null | undefined) => {
-  if (value === null || value === undefined) return undefined;
-  const cleaned = String(value)
-    .replace(/,/g, ".")
-    .replace(/[^0-9.]/g, "")
-    .trim();
-  if (!cleaned) return undefined;
-  const parsed = Number(cleaned);
-  return Number.isFinite(parsed) ? parsed : undefined;
-};
-
-const parseChargerSpecifications = (raw: string | null | undefined): ChargerSpecs => {
-  const specs: ChargerSpecs = {};
-  if (!raw) return specs;
-  const lines = raw
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter(Boolean);
-
-  for (const line of lines) {
-    const lower = line.toLowerCase();
-
-    if (/volt/i.test(line) || /v\b/.test(line)) {
-      const voltageMatch = line.match(/(\d+(?:[.,]\d+)?)(?=\s*(?:v|volt))/i);
-      if (voltageMatch) {
-        specs.voltage = parseNumber(voltageMatch[1]);
-      }
-    }
-
-    if (/(amp(?:er)?|a)\b/i.test(line) && !/ah\b/i.test(lower)) {
-      const currentMatch = line.match(/(\d+(?:[.,]\d+)?)(?=\s*(?:a|amp))/i);
-      if (currentMatch) {
-        specs.current = parseNumber(currentMatch[1]);
-      }
-    }
-
-    if (/lifepo4|li-fe|li fe|litio fosfato/i.test(lower)) {
-      specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "LiFePO4"])];
-    }
-    if (/litio|li-ion|lithium/i.test(lower)) {
-      specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "Li-ion"])];
-    }
-    if (/plomo|gel|lead-acid|acido/i.test(lower)) {
-      specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "Plomo-ácido/Gel"])];
-    }
-  }
-
-  return specs;
-};
-
-const getRecommendedCurrent = (capacityAh: number) => {
-  const recommended = Math.max(2, Math.min(10, Math.round(capacityAh * 0.15)));
-  return recommended;
-};
-
-const getBatteryTypeLabel = (type: string) => {
-  if (type === "lifepo4") return "LiFePO4";
-  if (type === "lead-acid") return "Plomo-ácido / Gel";
-  if (type === "lithium") return "Litio";
-  return "Desconocido";
-};
-
-const formatChargerSpecs = (specs: ChargerSpecs) => {
-  const parts: string[] = [];
-  if (specs.voltage) parts.push(`${specs.voltage}V`);
-  if (specs.current) parts.push(`${specs.current}A`);
-  if (specs.batteryTypes?.length) parts.push(specs.batteryTypes.join(" / "));
-  return parts.length > 0 ? parts.join(" · ") : "Especificaciones no disponibles";
-};
 
 interface ChargerResult {
   charger: Product;
@@ -158,7 +91,10 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
   const [batteryType, setBatteryType] = useState("lead-acid");
   const [showResult, setShowResult] = useState(false);
 
-  const specs = useMemo(() => parseChargerSpecifications(productSpecs), [productSpecs]);
+  const specs = useMemo(
+    () => parseChargerSpecifications(productSpecs, productName),
+    [productSpecs, productName]
+  );
   const chargerOptions = useMemo(() => availableChargers ?? [], [availableChargers]);
 
   const result = useMemo(() => {
@@ -202,7 +138,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
         } as Product];
 
     const chargerResults: ChargerResult[] = comparisonChargers.map((charger) => {
-      const chargerSpecs = parseChargerSpecifications(charger.specifications);
+      const chargerSpecs = parseChargerSpecifications(charger.specifications, charger.name);
       const score = getChargerMatchScore(chargerSpecs, batteryType, voltage, recommendationCurrent);
       const chargeHours = chargerSpecs.current ? Number((capacity / chargerSpecs.current).toFixed(1)) : undefined;
       return {
@@ -357,7 +293,9 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
             Calcular compatibilidad
           </Button>
           <p className="text-sm text-muted-foreground">
-            {productName} {specs.voltage ? `(${voltageDescription}, ${currentDescription})` : "(datos técnicos parciales)"}
+            {specs.voltage
+              ? `${productName} (${voltageDescription}, ${currentDescription})`
+              : productName}
           </p>
         </div>
       </form>
