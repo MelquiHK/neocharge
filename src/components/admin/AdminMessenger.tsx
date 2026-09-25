@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { formatCUP } from "@/lib/format";
-import { MapPin, Plus, Trash2, CheckCircle, XCircle, Store, Wallet, User, Clock } from "lucide-react";
+import { MapPin, Plus, Trash2, CheckCircle, XCircle, Store, Wallet, User, Clock, Navigation } from "lucide-react";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
@@ -15,15 +15,45 @@ export function AdminMessenger() {
   const [newPoint, setNewPoint] = useState({ name: "", address: "", lat: 23.1136, lng: -82.3666 });
   const [loading, setLoading] = useState(true);
 
+  // Tarifa pública de envío (calculadora /calcular-envio + bot de WhatsApp)
+  const [deliveryPrice, setDeliveryPrice] = useState(250);
+  const [deliveryOriginId, setDeliveryOriginId] = useState("");
+  const [savingDelivery, setSavingDelivery] = useState(false);
+
   const loadData = async () => {
     setLoading(true);
-    const [{ data: points }, { data: requests }] = await Promise.all([
+    const [{ data: points }, { data: requests }, { data: dcfg }] = await Promise.all([
       supabase.from("sale_points").select("*").order("created_at", { ascending: false }),
-      supabase.from("payment_requests").select("*, profiles:user_id(full_name, username)").order("created_at", { ascending: false })
+      supabase.from("payment_requests").select("*, profiles:user_id(full_name, username)").order("created_at", { ascending: false }),
+      supabase.from("site_settings").select("value").eq("key", "delivery_config").maybeSingle()
     ]);
     setSalePoints(points ?? []);
     setPaymentRequests(requests ?? []);
+    const v = dcfg?.value as any;
+    if (v) {
+      if (Number.isFinite(Number(v.price_per_km)) && Number(v.price_per_km) > 0) {
+        setDeliveryPrice(Number(v.price_per_km));
+      }
+      if (v.origin_sale_point_id) setDeliveryOriginId(String(v.origin_sale_point_id));
+    }
     setLoading(false);
+  };
+
+  const saveDeliveryConfig = async () => {
+    if (!Number.isFinite(deliveryPrice) || deliveryPrice <= 0) {
+      return toast.error("El precio por km debe ser mayor que 0");
+    }
+    setSavingDelivery(true);
+    const { error } = await supabase.from("site_settings").upsert(
+      {
+        key: "delivery_config",
+        value: { price_per_km: deliveryPrice, origin_sale_point_id: deliveryOriginId || null },
+      },
+      { onConflict: "key" }
+    );
+    setSavingDelivery(false);
+    if (error) toast.error("Error: " + error.message);
+    else toast.success("Tarifa de envío guardada");
   };
 
   useEffect(() => {
@@ -61,6 +91,45 @@ export function AdminMessenger() {
 
   return (
     <div className="space-y-8">
+      {/* Tarifa pública de envío (calculadora /calcular-envio + bot de WhatsApp) */}
+      <Card className="p-6 rounded-3xl border-border/50 shadow-soft">
+        <h3 className="font-display text-lg font-bold flex items-center gap-2 mb-2">
+          <Navigation className="w-5 h-5 text-primary" /> Tarifa de envío para clientes
+        </h3>
+        <p className="text-xs text-muted-foreground mb-4">
+          Esta tarifa la usan la calculadora pública (/calcular-envio) y el bot de WhatsApp.
+        </p>
+        <div className="grid sm:grid-cols-3 gap-3">
+          <div className="space-y-1">
+            <Label>Precio por km (CUP)</Label>
+            <Input
+              type="number"
+              min={0}
+              value={deliveryPrice}
+              onChange={(e) => setDeliveryPrice(Number(e.target.value))}
+            />
+          </div>
+          <div className="space-y-1 sm:col-span-2">
+            <Label>Local origen de los envíos</Label>
+            <select
+              value={deliveryOriginId}
+              onChange={(e) => setDeliveryOriginId(e.target.value)}
+              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+            >
+              <option value="">Automático (Vedado o el primero)</option>
+              {salePoints.map((p) => (
+                <option key={p.id} value={p.id}>
+                  {p.name}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <Button onClick={saveDeliveryConfig} disabled={savingDelivery} className="mt-4 rounded-xl">
+          {savingDelivery ? "Guardando…" : "Guardar tarifa"}
+        </Button>
+      </Card>
+
       {/* Sale Points Management */}
       <div className="grid md:grid-cols-3 gap-6">
         <div className="md:col-span-1 space-y-4">
@@ -202,3 +271,4 @@ export function AdminMessenger() {
     </div>
   );
 }
+
