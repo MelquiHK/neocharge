@@ -7,8 +7,8 @@ const CalcularEnvio = () => {
   }, []);
 
   return (
-    <div className="container-page py-24">
-      <header className="text-center space-y-4 mb-10">
+    <div className="container-page py-12 sm:py-16 lg:py-24">
+      <header className="text-center space-y-4 mb-8 sm:mb-10">
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
           Envíos en La Habana
         </div>
