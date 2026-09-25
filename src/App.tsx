@@ -34,6 +34,7 @@ const Garantia = lazy(() => import("./pages/Garantia.tsx"));
 const FAQ = lazy(() => import("./pages/FAQ.tsx"));
 const LegalTerms = lazy(() => import("./pages/LegalTerms.tsx"));
 const LegalPrivacy = lazy(() => import("./pages/LegalPrivacy.tsx"));
+const CalcularEnvio = lazy(() => import("./pages/CalcularEnvio.tsx"));
 
 // Loading placeholder component
 const LoadingPlaceholder = () => (
@@ -76,6 +77,7 @@ const App = () => (
                   <Route path="/envios-y-garantia" element={<Suspense fallback={<LoadingPlaceholder />}><Garantia /></Suspense>} />
                   <Route path="/legales/terminos" element={<Suspense fallback={<LoadingPlaceholder />}><LegalTerms /></Suspense>} />
                   <Route path="/legales/privacidad" element={<Suspense fallback={<LoadingPlaceholder />}><LegalPrivacy /></Suspense>} />
+                  <Route path="/calcular-envio" element={<Suspense fallback={<LoadingPlaceholder />}><CalcularEnvio /></Suspense>} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Route>
@@ -89,3 +91,4 @@ const App = () => (
 );
 
 export default App;
+
