@@ -22,8 +22,8 @@ export function useAdminLocations() {
         .order("sort_order");
       if (error) throw error;
       setLocations((data ?? []) as StoreLocation[]);
-    } catch (error: any) {
-      toast.error("No se pudo cargar los locales: " + error.message);
+    } catch (error: unknown) {
+      toast.error("No se pudo cargar los locales: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setLoading(false);
     }
@@ -36,18 +36,18 @@ export function useAdminLocations() {
   const saveLocation = async (payload: StoreLocationInput) => {
     try {
       if (payload.id) {
-        const { error } = await supabase.from("store_locations").update(payload as any).eq("id", payload.id);
+        const { error } = await supabase.from("store_locations").update(payload).eq("id", payload.id);
         if (error) throw error;
         toast.success("Local actualizado");
       } else {
-        const { error } = await supabase.from("store_locations").insert(payload as any);
+        const { error } = await supabase.from("store_locations").insert(payload);
         if (error) throw error;
         toast.success("Local creado");
       }
       await load();
       return true;
-    } catch (error: any) {
-      toast.error("Error guardando local: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Error guardando local: " + (error instanceof Error ? error.message : String(error)));
       return false;
     }
   };
@@ -59,8 +59,8 @@ export function useAdminLocations() {
       toast.success("Local eliminado");
       await load();
       return true;
-    } catch (error: any) {
-      toast.error("Error al eliminar local: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Error al eliminar local: " + (error instanceof Error ? error.message : String(error)));
       return false;
     }
   };

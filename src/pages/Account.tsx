@@ -1,6 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { Link, Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -9,14 +9,19 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { Package, LogOut, LayoutDashboard, User, Phone, Info, Save, MessageSquare, Wallet, CheckCircle, Clock, Map, Calculator, Send } from "lucide-react";
 import { toast } from "sonner";
-import { computeSalesTotalsBySeller } from "@/lib/sales";
+import { computeSalesTotalsBySeller, type SellerSale } from "@/lib/sales";
 
 interface Order {
   id: string;
   created_at: string;
   total: number;
   status: string;
-  items: any;
+  items: unknown;
+}
+
+interface ProfileWithBio {
+  bio?: string | null;
+  [key: string]: unknown;
 }
 
 const Account = () => {
@@ -35,7 +40,7 @@ const Account = () => {
   const [uploading, setUploading] = useState(false);
   
   // Gestor specific data
-  const [gestorSales, setGestorSales] = useState<any[]>([]);
+  const [gestorSales, setGestorSales] = useState<SellerSale[]>([]);
   const [requestingPayment, setRequestingPayment] = useState(false);
 
   useEffect(() => {
@@ -48,7 +53,7 @@ const Account = () => {
         full_name: profile.full_name || "",
         username: profile.username || "",
         phone: profile.phone || "",
-        bio: (profile as any).bio || "",
+        bio: (profile as ProfileWithBio | null)?.bio || "",
         avatar_url: profile.avatar_url || ""
       });
     }
@@ -104,8 +109,8 @@ const handleAvatarUpload = async (file: File) => {
         .getPublicUrl(filePath);
 
       return publicUrlData.publicUrl;
-    } catch (error: any) {
-      toast.error('Error al subir la imagen: ' + error.message);
+    } catch (error: unknown) {
+      toast.error('Error al subir la imagen: ' + (error instanceof Error ? error.message : String(error)));
       return null;
     } finally {
       setUploading(false);
@@ -147,8 +152,8 @@ const handleAvatarUpload = async (file: File) => {
       await refreshProfile();
       setEditing(false);
       toast.success("Perfil actualizado correctamente");
-    } catch (error: any) {
-      toast.error("Error al actualizar perfil: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Error al actualizar perfil: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setSaving(false);
     }
@@ -173,8 +178,8 @@ const handleAvatarUpload = async (file: File) => {
 
       if (error) throw error;
       toast.success("Solicitud de pago enviada al administrador.");
-    } catch (error: any) {
-      toast.error("Error al solicitar pago: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Error al solicitar pago: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setRequestingPayment(false);
     }
@@ -265,7 +270,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
               </div>
               <div className="flex items-start gap-2 text-sm">
                 <Info className="w-4 h-4 text-primary mt-1" />
-                <p className="text-muted-foreground italic">{(profile as any)?.bio || "Sin biografía"}</p>
+                <p className="text-muted-foreground italic">{(profile as ProfileWithBio | null)?.bio || "Sin biografía"}</p>
               </div>
             </div>
           </section>

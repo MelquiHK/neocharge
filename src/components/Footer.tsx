@@ -1,29 +1,20 @@
 import { Link } from "react-router-dom";
-import { Facebook, MapPin, Phone, Clock, Mail, Send } from "lucide-react";
+import { Facebook, MapPin, Phone, Clock, Mail, MessageCircle } from "lucide-react";
 import { Logo } from "@/components/Logo";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { useState } from "react";
-import { toast } from "sonner";
+
+const WHATSAPP_URL =
+  "https://wa.me/5363180910?text=" +
+  encodeURIComponent("Hola NeoCharge, quiero recibir sus novedades y ofertas.");
 
 export function Footer() {
-  const [email, setEmail] = useState("");
-
-  const handleSubscribe = (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!email.includes("@")) {
-      toast.error("Introduce un correo válido");
-      return;
-    }
-    toast.success("¡Gracias por suscribirte! Te avisaremos de novedades.");
-    setEmail("");
-  };
-
   return (
     <footer className="relative mt-32 border-t border-border bg-secondary/30">
       <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
 
-      {/* Newsletter band */}
+      {/* Banda de contacto directo por WhatsApp.
+          (Antes había un "newsletter" que no guardaba los correos en ningún lado:
+          se reemplazó por un CTA honesto al WhatsApp del negocio.) */}
       <div className="container-page pt-16 pb-12">
         <div className="rounded-3xl bg-gradient-primary p-8 md:p-12 shadow-glow text-primary-foreground overflow-hidden relative">
           <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-accent/30 blur-3xl" />
@@ -34,22 +25,17 @@ export function Footer() {
                 Novedades y Ofertas
               </h3>
               <p className="text-primary-foreground/85 text-base md:text-lg">
-                Recibe ofertas exclusivas, nuevos productos y consejos directo en tu correo.
+                Escríbenos por WhatsApp y te avisamos de ofertas exclusivas,
+                nuevos productos y consejos.
               </p>
             </div>
-            <form onSubmit={handleSubscribe} className="flex gap-2 w-full">
-              <Input
-                type="email"
-                placeholder="tu@correo.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                required
-                className="bg-white/95 text-foreground border-0 h-12 rounded-full px-5 placeholder:text-muted-foreground"
-              />
-              <Button type="submit" variant="electric" size="lg" className="shrink-0">
-                <Send className="w-4 h-4" /> Suscribirme
+            <div className="flex md:justify-end">
+              <Button asChild variant="electric" size="lg" className="h-12 rounded-full px-6">
+                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+                  <MessageCircle className="w-5 h-5" /> Escríbenos por WhatsApp
+                </a>
               </Button>
-            </form>
+            </div>
           </div>
         </div>
       </div>

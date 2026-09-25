@@ -12,7 +12,27 @@ interface AdminNotification {
   amount: number;
   currency: string;
   created_at: string;
-  metadata: Record<string, any>;
+  metadata: Record<string, unknown>;
+}
+
+interface OrderPayload {
+  id: string;
+  customer_name?: string | null;
+  order_number?: string | null;
+  total?: number | string | null;
+  payment_currency?: string | null;
+  created_at: string;
+  [key: string]: unknown;
+}
+
+interface SalePayload {
+  id: string;
+  seller_name?: string | null;
+  product_name?: string | null;
+  price?: number | string | null;
+  currency?: string | null;
+  created_at: string;
+  [key: string]: unknown;
 }
 
 const sharedRealtimeState = {
@@ -36,7 +56,7 @@ export function useOrderNotifications(enabled: boolean = true) {
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
   const seenRecordIdsRef = useRef<Set<string>>(new Set());
-  const flashIntervalRef = useRef<any>(null);
+  const flashIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Limpiar destellos de título al enfocar la pestaña
@@ -71,21 +91,49 @@ export function useOrderNotifications(enabled: boolean = true) {
     }
   }, [enabled]);
 
-  const pushNotification = useCallback((payload: any, type: 'order' | 'sale') => {
+  // Función para reproducir sonido usando Web Audio API
+  const playNotificationSound = useCallback(() => {
+    try {
+      const AudioContext = window.AudioContext || (window as unknown as { webkitAudioContext?: typeof AudioContext }).webkitAudioContext;
+      if (!AudioContext) return; // Navegador no soporta AudioContext
+
+      const audioContext = new AudioContext();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+
+      oscillator.type = "sine"; // Puedes probar "square", "sawtooth", "triangle"
+      oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // Frecuencia de 440 Hz (La central)
+      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05); // Ataque rápido
+      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5); // Caída
+
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.5); // Duración total del sonido
+    } catch (error) {
+      console.warn("Error reproduciendo sonido de notificación:", error);
+    }
+  }, []);
+
+  const pushNotification = useCallback((payload: OrderPayload | SalePayload, type: 'order' | 'sale') => {
     const id = payload.id;
     if (!id || seenRecordIdsRef.current.has(id)) return;
 
     seenRecordIdsRef.current.add(id);
 
+    const order = type === 'order' ? (payload as OrderPayload) : null;
+    const sale = type === 'sale' ? (payload as SalePayload) : null;
     const notif: AdminNotification = {
       id,
       type,
       title: type === 'order' ? '🎉 Nuevo pedido!' : '📈 Nueva venta registrada',
-      subtitle: type === 'order'
-        ? `${payload.customer_name} - Orden #${payload.order_number}`
-        : `${payload.seller_name || 'Gestor'} - ${payload.product_name || 'Venta nueva'}`,
-      amount: type === 'order' ? Number(payload.total ?? 0) : Number(payload.price ?? 0),
-      currency: type === 'order' ? payload.payment_currency : payload.currency,
+      subtitle: order
+        ? `${order.customer_name} - Orden #${order.order_number}`
+        : `${sale?.seller_name || 'Gestor'} - ${sale?.product_name || 'Venta nueva'}`,
+      amount: order ? Number(order.total ?? 0) : Number(sale?.price ?? 0),
+      currency: (order?.payment_currency ?? sale?.currency ?? 'USD') as string,
       created_at: payload.created_at,
       metadata: payload,
     };
@@ -119,7 +167,7 @@ export function useOrderNotifications(enabled: boolean = true) {
       icon: '/images/logo.png',
       tag: `${type}-${id}`,
     });
-  }, [toast]);
+  }, [toast, playNotificationSound]);
 
   // Cargar notificaciones previas no leídas
   const loadRecentNotifications = useCallback(async () => {
@@ -140,7 +188,7 @@ export function useOrderNotifications(enabled: boolean = true) {
       if (orderError) throw orderError;
       if (saleError) throw saleError;
 
-      const orderNotifs: AdminNotification[] = (orderData || []).map((order: any) => ({
+      const orderNotifs: AdminNotification[] = (orderData || []).map((order: OrderPayload) => ({
         id: order.id,
         type: 'order',
         title: '🎉 Nuevo pedido!',
@@ -151,7 +199,7 @@ export function useOrderNotifications(enabled: boolean = true) {
         metadata: order,
       }));
 
-      const saleNotifs: AdminNotification[] = (saleData || []).map((sale: any) => ({
+      const saleNotifs: AdminNotification[] = (saleData || []).map((sale: SalePayload) => ({
         id: sale.id,
         type: 'sale',
         title: '📈 Nueva venta registrada',
@@ -205,13 +253,13 @@ export function useOrderNotifications(enabled: boolean = true) {
         if (saleError) throw saleError;
 
         const unseenOrders = getUnseenRecords(seenRecordIdsRef.current, orderData || []);
-        unseenOrders.forEach((order: any) => {
+        unseenOrders.forEach((order: OrderPayload) => {
           if (!order.id) return;
           pushNotification(order, 'order');
         });
 
         const unseenSales = getUnseenRecords(seenRecordIdsRef.current, saleData || []);
-        unseenSales.forEach((sale: any) => {
+        unseenSales.forEach((sale: SalePayload) => {
           if (!sale.id) return;
           pushNotification(sale, 'sale');
         });
@@ -233,8 +281,8 @@ export function useOrderNotifications(enabled: boolean = true) {
           schema: 'public',
           table: 'orders',
         },
-        (payload: any) => {
-          const newOrder = payload.new;
+        (payload) => {
+          const newOrder = payload.new as unknown as OrderPayload;
           if (newOrder?.id) {
             pushNotification(newOrder, 'order');
           }
@@ -247,8 +295,8 @@ export function useOrderNotifications(enabled: boolean = true) {
           schema: 'public',
           table: 'seller_sales',
         },
-        (payload: any) => {
-          const newSale = payload.new;
+        (payload) => {
+          const newSale = payload.new as unknown as SalePayload;
           if (newSale?.id) {
             pushNotification(newSale, 'sale');
           }
@@ -282,31 +330,6 @@ export function useOrderNotifications(enabled: boolean = true) {
     };
   }, [enabled, loadRecentNotifications, pushNotification]);
 
-  // Función para reproducir sonido usando Web Audio API
-  const playNotificationSound = useCallback(() => {
-    try {
-      const AudioContext = window.AudioContext || (window as any).webkitAudioContext;
-      if (!AudioContext) return; // Navegador no soporta AudioContext
-
-      const audioContext = new AudioContext();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      oscillator.type = "sine"; // Puedes probar "square", "sawtooth", "triangle"
-      oscillator.frequency.setValueAtTime(440, audioContext.currentTime); // Frecuencia de 440 Hz (La central)
-      gainNode.gain.setValueAtTime(0, audioContext.currentTime);
-      gainNode.gain.linearRampToValueAtTime(0.3, audioContext.currentTime + 0.05); // Ataque rápido
-      gainNode.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + 0.5); // Caída
-
-      oscillator.start(audioContext.currentTime);
-      oscillator.stop(audioContext.currentTime + 0.5); // Duración total del sonido
-    } catch (error) {
-      console.warn("Error reproduciendo sonido de notificación:", error);
-    }
-  }, []);
   // Pedir permisos para notificaciones
   const requestNotificationPermission = () => {
     if ('Notification' in window && Notification.permission === 'default') {

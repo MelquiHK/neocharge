@@ -7,7 +7,7 @@ import { ProductCard, type Product } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useSEO } from "@/hooks/use-seo";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { sortProductsForShop, type ProductSortValue } from "@/lib/product-ordering";
 
@@ -38,7 +38,7 @@ const ShopPage = () => {
   const [sort, setSort] = useState<Sort>("manual");
 
   const { user } = useAuth();
-  const { favoriteIds, toggleFavorite, isFavorite } = useUnifiedFavorites();
+  const { toggleFavorite, isFavorite } = useUnifiedFavorites();
 
   const activeCat = searchParams.get("cat") ?? "all";
 
@@ -57,8 +57,9 @@ const ShopPage = () => {
       ]);
       const categoriesById = new Map((catRes.data ?? []).map((cat) => [cat.id, cat.name]));
       if (catRes.data) setCategories(catRes.data);
-      if (prodRes.data) setProducts((prodRes.data as any).map((item: any) => ({
+      if (prodRes.data) setProducts((prodRes.data as Product[]).map((item: Product) => ({
         ...item,
+        category_id: item.category_id ?? "",
         category_name: categoriesById.get(item.category_id ?? "") ?? null,
       })));
       setLoading(false);
@@ -79,7 +80,7 @@ const ShopPage = () => {
         list = list.filter((p) => (p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)) ?? false);
       }
       return sortProductsForShop(list, sort);
-    }, [products, categories, activeCat, search, sort, favoriteIds]);
+    }, [products, categories, activeCat, search, sort, isFavorite]);
 
   const activeCategory = useMemo(
     () => categories.find((category) => category.slug === activeCat),

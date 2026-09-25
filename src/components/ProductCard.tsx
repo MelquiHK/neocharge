@@ -2,8 +2,9 @@ import { Link } from "react-router-dom";
 import { ShoppingBag, Check, Heart } from "lucide-react";
 import { memo, useState, type MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
+import { useCart } from "@/hooks/use-cart";
 import { formatPrice, formatCUP, computeDisplayPrice } from "@/lib/format";
+import { responsiveImage } from "@/lib/responsive-image";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { cn } from "@/lib/utils";
@@ -83,31 +84,41 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
             </div>
 
             {/* Main Image */}
-            {mainImage && (
-              <img
-                src={mainImage}
-                alt={product.name}
-                loading="lazy"
-                decoding="async"
-                className={cn(
-                  "absolute inset-0 w-full h-full object-cover transition-all duration-700",
-                  "group-hover:scale-120",
-                  hoverImage && "group-hover:opacity-0",
-                )}
-              />
-            )}
+            {mainImage && (() => {
+              const ri = responsiveImage(mainImage, "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px");
+              return (
+                <img
+                  src={ri.src}
+                  srcSet={ri.srcSet}
+                  sizes={ri.sizes}
+                  alt={product.name}
+                  loading="lazy"
+                  decoding="async"
+                  className={cn(
+                    "absolute inset-0 w-full h-full object-cover transition-all duration-700",
+                    "group-hover:scale-120",
+                    hoverImage && "group-hover:opacity-0",
+                  )}
+                />
+              );
+            })()}
 
             {/* Hover Image */}
-            {hoverImage && (
-              <img
-                src={hoverImage}
-                alt=""
-                aria-hidden
-                loading="lazy"
-                decoding="async"
-                className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-110"
-              />
-            )}
+            {hoverImage && (() => {
+              const ri = responsiveImage(hoverImage, "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px");
+              return (
+                <img
+                  src={ri.src}
+                  srcSet={ri.srcSet}
+                  sizes={ri.sizes}
+                  alt=""
+                  aria-hidden
+                  loading="lazy"
+                  decoding="async"
+                  className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-110"
+                />
+              );
+            })()}
 
             {/* Top Badges */}
             <div className="absolute top-3 left-3 right-3 flex items-start justify-between z-10">
@@ -240,3 +251,4 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
 }
 
 export const ProductCard = memo(ProductCardComponent);
+export type { Product };

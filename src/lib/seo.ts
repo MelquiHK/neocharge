@@ -13,6 +13,9 @@ export interface MetaTags {
   canonicalUrl?: string;
 }
 
+// Dominio canónico del sitio (usado para URLs absolutas en OG/canonical).
+export const SITE_URL = "https://tienda-neocharge.vercel.app";
+
 // SEO configurations for each page
 export const seoConfig: Record<string, MetaTags> = {
   home: {
@@ -106,9 +109,12 @@ export function updateMetaTags(config: MetaTags): void {
     updateMetaTag("keywords", config.keywords);
   }
 
-  // Update og:image
+  // Update og:image (siempre URL absoluta para que WhatsApp/Facebook la lean bien)
   if (config.ogImage) {
-    updateMetaTag("og:image", config.ogImage);
+    const absolute = config.ogImage.startsWith("http")
+      ? config.ogImage
+      : `${SITE_URL}${config.ogImage.startsWith("/") ? "" : "/"}${config.ogImage}`;
+    updateMetaTag("og:image", absolute);
   }
 
   // Update canonical URL

@@ -13,9 +13,9 @@ describe("buildWhatsAppMessage", () => {
           displayPriceUSD: 70,
           displayPriceCUP: 3500,
           image: "",
-          category: "chargers",
+          slug: "ventilador-recargable-x11",
         },
-      ] as any,
+      ],
       total: 70,
       paymentCurrency: "USD",
       customerName: "Melquisedec",
@@ -31,5 +31,38 @@ describe("buildWhatsAppMessage", () => {
     expect(message).toContain("*TOTAL A PAGAR EN USD:* $70.00 USD");
     expect(message).toContain("*MENSAJERÍA:* 3300 CUP");
     expect(message).not.toContain("*TOTAL A PAGAR EN USD:* $3370.00");
+  });
+});
+
+describe("buildWhatsAppMessage sin tasa", () => {
+  it("omite las conversiones desconocidas en vez de mostrar 0", () => {
+    const message = buildWhatsAppMessage({
+      items: [
+        {
+          id: "1",
+          name: "Cargador 72V 5A",
+          quantity: 1,
+          price: 55,
+          displayPriceUSD: 55,
+          displayPriceCUP: null,
+          image: "",
+          slug: "cargador-72v-5a",
+        },
+      ],
+      total: 55,
+      paymentCurrency: "USD",
+      customerName: "Melquisedec",
+      customerPhone: "+53 55555555",
+      deliveryMethod: "pickup",
+      shippingUSD: 0,
+      shippingCUP: 0,
+      subtotalUSD: 55,
+      subtotalCUP: null,
+    });
+
+    expect(message).toContain("*TOTAL A PAGAR EN USD:* $55.00 USD");
+    expect(message).toContain("💰 *PRODUCTO:* $55.00 USD");
+    expect(message).not.toContain("0 CUP");
+    expect(message).not.toContain("TOTAL EN CUP");
   });
 });

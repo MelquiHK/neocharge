@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/use-seo";
@@ -23,6 +23,9 @@ export default function Services() {
   const [services, setServices] = useState<Service[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedServiceId, setSelectedServiceId] = useState<string | null>(null);
+  // Ref espejo para la carga inicial: evita refetchear cuando el usuario cambia de servicio.
+  const selectedServiceIdRef = useRef(selectedServiceId);
+  selectedServiceIdRef.current = selectedServiceId;
 
   useEffect(() => {
     document.title = "Servicios — NeoCharge";
@@ -42,7 +45,7 @@ export default function Services() {
       } else {
         const nextServices = (data ?? []) as Service[];
         setServices(nextServices);
-        if (!selectedServiceId && nextServices.length > 0) {
+        if (!selectedServiceIdRef.current && nextServices.length > 0) {
           setSelectedServiceId(nextServices[0].id);
         }
       }

@@ -1,7 +1,7 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
 // --- Constantes ---
@@ -30,12 +30,13 @@ function writeLocalFavoriteIds(ids: Set<string>): void {
 }
 
 // --- Helpers para errores de Supabase ---
-function isMissingTableError(error: any) {
-  const message = String(error?.message ?? error ?? "").toLowerCase();
+function isMissingTableError(error: unknown) {
+  const e = error as { code?: unknown; message?: unknown } | null | undefined;
+  const message = String(e?.message ?? error ?? "").toLowerCase();
   return (
-    error?.code === "42P01" ||
-    error?.code === "42703" ||
-    error?.code === "PGRST100" ||
+    e?.code === "42P01" ||
+    e?.code === "42703" ||
+    e?.code === "PGRST100" ||
     message.includes("does not exist") ||
     message.includes("could not find the table") ||
     message.includes("schema cache") ||
@@ -126,12 +127,12 @@ export function useUnifiedFavorites() {
       setFavoriteIds(new Set());
       writeLocalFavoriteIds(new Set()); // Limpiar local si hay error en Supabase
     } else {
-      const ids = new Set((data ?? []).map((item: any) => item.product_id));
+      const ids = new Set((data ?? []).map((item: { product_id: string }) => item.product_id));
       setFavoriteIds(ids);
       writeLocalFavoriteIds(ids); // Sincronizar local con Supabase
     }
     setLoading(false);
-  }, [user, favoritesTable, migrationAttempted, migrateLocalFavorites, runSupabaseFavoriteQuery]);
+  }, [user, favoritesTable, migrationAttempted, migrateLocalFavorites]);
 
   useEffect(() => {
     if (!isAuthLoading) { // Solo cargar después de que el estado de autenticación se haya resuelto

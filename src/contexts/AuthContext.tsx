@@ -1,25 +1,9 @@
-import { createContext, useContext, useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
+import { useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import type { Session, User } from "@supabase/supabase-js";
-import { AdminPermissions, NO_PERMS, UserRole, Profile } from "@/types";
+import { NO_PERMS, type AdminPermissions, type UserRole, type Profile } from "@/types";
+import { AuthContext, type AuthContextValue } from "@/hooks/use-auth";
 
-interface AuthContextValue {
-  user: User | null;
-  session: Session | null;
-  isAdmin: boolean;
-  isOwner: boolean;
-  isGestor: boolean;
-  isMensajero: boolean;
-  role: UserRole;
-  profile: Profile | null;
-  permissions: AdminPermissions;
-  loading: boolean;
-  signOut: () => Promise<void>;
-  refreshPermissions: () => Promise<void>;
-  refreshProfile: () => Promise<void>;
-}
-
-const AuthContext = createContext<AuthContextValue | undefined>(undefined);
 const OWNER_ADMIN_EMAIL = "melcraft96@gmail.com";
 
 export function AuthProvider({ children }: { children: ReactNode }) {
@@ -30,15 +14,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<AdminPermissions>(NO_PERMS);
   const [loading, setLoading] = useState(true);
 
-  const loadAuthData = async (userId: string) => {
+  const loadAuthData = useCallback(async (userId: string, email?: string) => {
     const [{ data: roles }, { data: permData }, { data: profileData }] = await Promise.all([
       supabase.from("user_roles").select("role").eq("user_id", userId),
       supabase.from("admin_permissions").select("*").eq("user_id", userId).maybeSingle(),
       supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
     ]);
 
-    const email = user?.email?.toLowerCase() ?? undefined;
-    const isOwnerByEmail = !!email && email === OWNER_ADMIN_EMAIL.toLowerCase();
+    const normalizedEmail = email?.toLowerCase() ?? undefined;
+    const isOwnerByEmail = !!normalizedEmail && normalizedEmail === OWNER_ADMIN_EMAIL.toLowerCase();
 
     // Determine primary role (simplification: take the most powerful one)
     const roleList = roles?.map(r => r.role as UserRole) ?? [];
@@ -65,14 +49,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     setPermissions(resolvedPermissions);
-  };
+  }, []);
 
   useEffect(() => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
       setSession(newSession);
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
-        setTimeout(() => loadAuthData(newSession.user.id), 0);
+        const u = newSession.user;
+        setTimeout(() => loadAuthData(u.id, u.email ?? undefined), 0);
       } else {
         setRole("user");
         setProfile(null);
@@ -83,27 +68,27 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      if (currentSession?.user) loadAuthData(currentSession.user.id);
+      if (currentSession?.user) loadAuthData(currentSession.user.id, currentSession.user.email ?? undefined);
       setLoading(false);
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [loadAuthData]);
 
-  const refreshPermissions = async () => {
-    if (user) await loadAuthData(user.id);
-  };
+  const refreshPermissions = useCallback(async () => {
+    if (user) await loadAuthData(user.id, user.email ?? undefined);
+  }, [user, loadAuthData]);
 
-  const refreshProfile = async () => {
+  const refreshProfile = useCallback(async () => {
     if (user) {
       const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
       if (data) setProfile(data as Profile);
     }
-  };
+  }, [user]);
 
-  const signOut = async () => {
+  const signOut = useCallback(async () => {
     await supabase.auth.signOut();
-  };
+  }, []);
 
   const value = useMemo<AuthContextValue>(
     () => ({ 
@@ -125,10 +110,4 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;
-}
-
-export function useAuth() {
-  const ctx = useContext(AuthContext);
-  if (!ctx) throw new Error("useAuth must be used within AuthProvider");
-  return ctx;
 }

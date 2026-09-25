@@ -20,8 +20,8 @@ export function useAdminProducts() {
       setProducts((p ?? []) as Product[]);
       setCategories((c ?? []) as Category[]);
       setLocations((l ?? []) as StoreLocation[]);
-    } catch (error: any) {
-      toast.error("Error al cargar datos: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Error al cargar datos: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setLoading(false);
     }

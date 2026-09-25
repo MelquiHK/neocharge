@@ -31,13 +31,16 @@ const BlogPost = () => {
   useEffect(() => {
     if (!slug) return;
     setLoading(true);
-    supabase
-      .from("blog_posts")
-      .select("id,title,slug,excerpt,content,image_url,images,created_at")
-      .eq("slug", slug)
-      .eq("is_published", true)
-      .maybeSingle()
-      .then(({ data, error }) => {
+    let cancelled = false;
+    (async () => {
+      try {
+        const { data, error } = await supabase
+          .from("blog_posts")
+          .select("id,title,slug,excerpt,content,image_url,images,created_at")
+          .eq("slug", slug)
+          .eq("is_published", true)
+          .maybeSingle();
+        if (cancelled) return;
         if (error) {
           console.error("BlogPost error:", error);
           if (error.code !== "PGRST116") {
@@ -47,12 +50,16 @@ const BlogPost = () => {
           setPost((data as Post | null) ?? null);
         }
         setLoading(false);
-      })
-      .catch((err) => {
+      } catch (err) {
+        if (cancelled) return;
         console.error("BlogPost catch:", err);
         setPost(null);
         setLoading(false);
-      });
+      }
+    })();
+    return () => {
+      cancelled = true;
+    };
   }, [slug]);
 
   useEffect(() => {

@@ -21,7 +21,7 @@ const slugify = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
     .replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
 
-const empty: Partial<Category> = { name: "", slug: "", description: "", sort_order: 0, image_url: "" as any };
+const empty: Partial<Category> = { name: "", slug: "", description: "", sort_order: 0, image_url: "" };
 
 export function AdminCategories() {
   const { categories: cats, loading, refresh, deleteCategory } = useAdminCategories();
@@ -35,9 +35,9 @@ export function AdminCategories() {
     if (otherIdx < 0 || otherIdx >= cats.length) return;
     const a = cats[idx];
     const b = cats[otherIdx];
-    const { error } = await supabase.from("categories").update({ sort_order: b.sort_order } as any).eq("id", a.id);
+    const { error } = await supabase.from("categories").update({ sort_order: b.sort_order }).eq("id", a.id);
     if (error) return toast.error(error.message);
-    const { error: e2 } = await supabase.from("categories").update({ sort_order: a.sort_order } as any).eq("id", b.id);
+    const { error: e2 } = await supabase.from("categories").update({ sort_order: a.sort_order }).eq("id", b.id);
     if (e2) return toast.error(e2.message);
     refresh();
   };
@@ -60,10 +60,10 @@ export function AdminCategories() {
 
     const payload = result.data;
     if (editing.id) {
-      const { error } = await supabase.from("categories").update(payload as any).eq("id", editing.id);
+      const { error } = await supabase.from("categories").update(payload).eq("id", editing.id);
       if (error) { toast.error(error.message); return; }
     } else {
-      const { error } = await supabase.from("categories").insert(payload as any);
+      const { error } = await supabase.from("categories").insert(payload);
       if (error) { toast.error(error.message); return; }
     }
     toast.success("Categoría guardada");
@@ -164,7 +164,7 @@ export function AdminCategories() {
               </div>
               <div className="space-y-2">
                 <Label>Imagen (URL)</Label>
-                <Input value={(editing as any).image_url ?? ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value } as any)} placeholder="https://..." />
+                <Input value={editing.image_url ?? ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} placeholder="https://..." />
               </div>
               <div className="space-y-2">
                 <Label>Orden</Label>

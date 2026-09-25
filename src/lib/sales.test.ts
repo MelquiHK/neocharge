@@ -8,13 +8,13 @@ describe("computeSalesTotalsBySeller", () => {
       { id: "3", seller_user_id: "u2", seller_name: "Luis", price: 200, currency: "CUP", is_paid: false },
     ];
 
-    const totals = computeSalesTotalsBySeller(sales as any);
+    const totals = computeSalesTotalsBySeller(sales);
     expect(totals.totalCount).toBe(3);
     expect(totals.totalUSD).toBe(150);
     expect(totals.totalCUP).toBe(200);
     expect(totals.bySeller.length).toBe(2);
-    const ana = totals.bySeller.find((s: any) => s.seller_user_id === "u1");
-    expect(ana.count).toBe(2);
-    expect(ana.totalUSD).toBe(150);
+    const ana = totals.bySeller.find((s) => s.seller_user_id === "u1");
+    expect(ana?.count).toBe(2);
+    expect(ana?.totalUSD).toBe(150);
   });
 });

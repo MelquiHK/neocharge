@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { useAdminSales } from "@/hooks/admin/use-admin-sales";
 import { computeSalesTotalsBySeller } from "@/lib/sales";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { Package, ShoppingBag, Users, DollarSign, TrendingUp, AlertTriangle, Eye } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -23,6 +23,31 @@ interface Stats {
 type TopPageRow = { path: string; views: number; unique_visitors: number };
 type RecentViewRow = { created_at: string; path: string; visitor_id: string };
 
+interface DashboardProduct {
+  id: string;
+  stock?: number | null;
+  low_stock_threshold?: number | null;
+  cost_price?: number | string | null;
+}
+
+interface DashboardOrder {
+  id?: string;
+  total?: number | string | null;
+  payment_currency?: string | null;
+  exchange_rate?: number | string | null;
+  items?: unknown;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  status?: string | null;
+  created_at?: string | null;
+}
+
+interface OrderItem {
+  id?: string;
+  product_id?: string;
+  quantity?: number | string | null;
+}
+
 export function AdminDashboard() {
   const { permissions } = useAuth();
   const [stats, setStats] = useState<Stats>({
@@ -30,7 +55,7 @@ export function AdminDashboard() {
     revenueMonth: 0, costsMonth: 0, customers: 0,
     visitsToday: 0, unique7d: 0, visits7d: 0,
   });
-  const [recent, setRecent] = useState<any[]>([]);
+  const [recent, setRecent] = useState<DashboardOrder[]>([]);
   const [topPages, setTopPages] = useState<TopPageRow[]>([]);
   const [recentViews, setRecentViews] = useState<RecentViewRow[]>([]);
   const [rateMissing, setRateMissing] = useState(false);
@@ -55,8 +80,8 @@ export function AdminDashboard() {
         supabase.from("exchange_rates").select("id,usd_to_cup").eq("rate_date", new Date().toISOString().slice(0, 10)).maybeSingle(),
       ]);
 
-      const lowStock = (products ?? []).filter((p: any) => p.stock <= (p.low_stock_threshold ?? 5)).length;
-      const revenue = (ordersMonth ?? []).reduce((s, o: any) => {
+      const lowStock = (products ?? []).filter((p: DashboardProduct) => (p.stock ?? 0) <= (p.low_stock_threshold ?? 5)).length;
+      const revenue = (ordersMonth ?? []).reduce((s, o: DashboardOrder) => {
         // Si el pedido fue en CUP, lo convertimos a USD para la analítica consolidada
         if (o.payment_currency === "CUP") {
           const rate = o.exchange_rate || todayRate.data?.usd_to_cup || 1;
@@ -66,10 +91,10 @@ export function AdminDashboard() {
       }, 0);
 
       // Calcular costos: sumar cost_price * cantidad por cada item
-      const costs = (ordersMonth ?? []).reduce((s, o: any) => {
-        const items = Array.isArray(o.items) ? o.items : [];
-        return s + items.reduce((acc: number, it: any) => {
-          const prod = products?.find((p: any) => p.id === it.id || p.id === it.product_id);
+      const costs = (ordersMonth ?? []).reduce((s, o: DashboardOrder) => {
+        const items = Array.isArray(o.items) ? (o.items as OrderItem[]) : [];
+        return s + items.reduce((acc: number, it: OrderItem) => {
+          const prod = (products as DashboardProduct[] | null)?.find((p) => p.id === it.id || p.id === it.product_id);
           const cost = Number(prod?.cost_price ?? 0);
           return acc + cost * Number(it.quantity ?? 1);
         }, 0);
@@ -87,9 +112,9 @@ export function AdminDashboard() {
         unique7d: Number(traffic.data?.unique_visitors ?? 0),
         visits7d: Number(traffic.data?.visits_total ?? 0),
       });
-      setRecent(recentOrders ?? []);
-      setTopPages((top.data ?? []) as any);
-      setRecentViews((recentV.data ?? []) as any);
+      setRecent((recentOrders ?? []) as DashboardOrder[]);
+      setTopPages((top.data ?? []) as TopPageRow[]);
+      setRecentViews((recentV.data ?? []) as RecentViewRow[]);
       setRateMissing(!todayRate.data);
     };
     load();
@@ -176,7 +201,7 @@ export function AdminDashboard() {
                         <div className="text-xs text-muted-foreground">{s.count} ventas</div>
                       </div>
                       <div className="text-right">
-                        <div className="font-semibold">{s.currency === "USD" ? formatPrice(s.totalUSD) : formatCUP(s.totalCUP)}</div>
+                        <div className="font-semibold">{s.totalUSD > 0 ? formatPrice(s.totalUSD) : formatCUP(s.totalCUP)}</div>
                         <div className="text-xs text-muted-foreground">Comisión Pendiente: {formatCUP(s.pendingCommission || 0)}</div>
                       </div>
                     </div>

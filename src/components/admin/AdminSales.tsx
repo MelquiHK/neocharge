@@ -6,12 +6,13 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useAdminSales } from "@/hooks/admin/use-admin-sales";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { BadgeCheck, DollarSign, ShieldCheck, Trash2, Eye, MapPin, Phone, User, FileText, Wallet, ArrowUpRight, CheckCircle2, Clock, TrendingUp, ShieldAlert, AlertCircle } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { computeSalesTotalsBySeller } from "@/lib/sales";
+import { computeSalesTotalsBySeller, type SellerSale, type SellerTotals } from "@/lib/sales";
 
 interface ProductOption {
   id: string;
@@ -41,13 +42,13 @@ export function AdminSales() {
   const [commissionAmount, setCommissionAmount] = useState<number | string>(2000);
   const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
   const [filterSeller, setFilterSeller] = useState("all");
-  const [selectedSale, setSelectedSale] = useState<any | null>(null);
+  const [selectedSale, setSelectedSale] = useState<SellerSale | null>(null);
   const [isDetailsOpen, setIsDetailsOpen] = useState(false);
   const [isAuditOpen, setIsAuditOpen] = useState(false);
-  const [auditGestor, setAuditGestor] = useState<any>(null);
+  const [auditGestor, setAuditGestor] = useState<SellerTotals | null>(null);
 
   useEffect(() => {
-    if (user) setSellerName((user.user_metadata as any)?.full_name ?? user.email ?? "");
+    if (user) setSellerName(user.user_metadata?.full_name ?? user.email ?? "");
   }, [user]);
 
   useEffect(() => {
@@ -98,8 +99,8 @@ export function AdminSales() {
       setLocationName("");
       setSaleDetails("");
       setCommissionAmount(2000);
-    } catch (e: any) {
-      toast.error(e.message || "Error creando venta");
+    } catch (e: unknown) {
+      toast.error((e instanceof Error ? e.message : null) || "Error creando venta");
     }
   };
 
@@ -201,7 +202,7 @@ export function AdminSales() {
           <div className="grid md:grid-cols-3 gap-4">
             <div className="space-y-2">
               <Label>Precio</Label>
-              <Input type="number" step="0.01" value={price as any} onChange={(e) => setPrice(e.target.value)} />
+              <Input type="number" step="0.01" value={price} onChange={(e) => setPrice(e.target.value)} />
             </div>
 
             <div className="space-y-2">
@@ -241,7 +242,7 @@ export function AdminSales() {
           <div className="grid md:grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Comisión (CUP)</Label>
-              <Input type="number" value={commissionAmount as any} onChange={(e) => setCommissionAmount(e.target.value)} placeholder="Ej: 2000" />
+              <Input type="number" value={commissionAmount} onChange={(e) => setCommissionAmount(e.target.value)} placeholder="Ej: 2000" />
             </div>
             <div className="space-y-2">
               <Label>Detalles de la venta (Opcional)</Label>
@@ -313,7 +314,7 @@ export function AdminSales() {
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-border">
-                  {totals.stats.bySeller.map((s: any) => (
+                  {totals.stats.bySeller.map((s: SellerTotals) => (
                     <tr key={s.seller_user_id || s.seller_name} className="hover:bg-secondary/10 transition-colors">
                       <td className="px-4 py-3 font-medium">
                         <div className="flex items-center gap-2">
@@ -387,14 +388,14 @@ export function AdminSales() {
                   <Eye className="h-4 w-4" />
                 </Button>
                 {!sale.is_paid && (
-                  <Button size="sm" onClick={async () => { try { await markPaid(sale.id); toast.success("Venta marcada como pagada"); } catch (e: any) { toast.error(e.message || "No se pudo actualizar"); } }}>
+                  <Button size="sm" onClick={async () => { try { await markPaid(sale.id); toast.success("Venta marcada como pagada"); } catch (e: unknown) { toast.error((e instanceof Error ? e.message : null) || "No se pudo actualizar"); } }}>
                     Marcar pagada
                   </Button>
                 )}
                 {(isOwner || sale.seller_user_id === user?.id) && (
                   <Button size="icon" variant="ghost" className="text-destructive" onClick={async () => {
                     if (!confirm("¿Eliminar esta venta?")) return;
-                    try { await removeSale(sale.id); toast.success("Venta eliminada"); } catch (e: any) { toast.error(e.message || "No se pudo eliminar"); }
+                    try { await removeSale(sale.id); toast.success("Venta eliminada"); } catch (e: unknown) { toast.error((e instanceof Error ? e.message : null) || "No se pudo eliminar"); }
                   }}>
                     <Trash2 className="h-4 w-4" />
                   </Button>
@@ -427,7 +428,7 @@ export function AdminSales() {
                 <div className="space-y-1">
                   <span className="text-xs font-medium uppercase text-muted-foreground">Precio de Venta</span>
                   <p className="font-semibold text-lg">
-                    {selectedSale.currency === "USD" ? formatPrice(selectedSale.price) : formatCUP(selectedSale.price)}
+                    {selectedSale.currency === "USD" ? formatPrice(Number(selectedSale.price ?? 0)) : formatCUP(Number(selectedSale.price ?? 0))}
                   </p>
                 </div>
               </div>
@@ -474,7 +475,7 @@ export function AdminSales() {
               <div className="grid grid-cols-2 gap-4 border-t border-border pt-4">
                 <div className="space-y-1">
                   <span className="text-xs font-medium uppercase text-muted-foreground">Comisión Gestor</span>
-                  <p className="font-semibold text-primary">{formatCUP(selectedSale.commission_amount || 0)}</p>
+                  <p className="font-semibold text-primary">{formatCUP(Number(selectedSale.commission_amount ?? 0))}</p>
                 </div>
                 <div className="space-y-1">
                   <span className="text-xs font-medium uppercase text-muted-foreground">Estado de Pago</span>
@@ -495,7 +496,7 @@ export function AdminSales() {
                 <div className="space-y-1 border-t border-border pt-4">
                   <span className="text-xs font-medium uppercase text-muted-foreground">Detalles Adicionales</span>
                   <p className="text-sm whitespace-pre-wrap bg-secondary/30 p-3 rounded-xl border border-border">
-                    {selectedSale.sale_details}
+                    {String(selectedSale.sale_details ?? "")}
                   </p>
                 </div>
               )}
@@ -572,7 +573,7 @@ export function AdminSales() {
                       </div>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="font-bold text-primary">{formatCUP(sale.commission_amount || 0)}</p>
+                      <p className="font-bold text-primary">{formatCUP(Number(sale.commission_amount ?? 0))}</p>
                       <p className="text-[10px] text-muted-foreground">{new Date(sale.created_at).toLocaleDateString()}</p>
                     </div>
                   </div>

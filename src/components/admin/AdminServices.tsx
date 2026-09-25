@@ -54,14 +54,14 @@ export function AdminServices() {
 
     const payload = result.data;
     if (editing.id) {
-      const { error } = await supabase.from("services").update(payload as any).eq("id", editing.id);
+      const { error } = await supabase.from("services").update(payload).eq("id", editing.id);
       if (error) {
         toast.error(error.message);
         return;
       }
       toast.success("Servicio actualizado");
     } else {
-      const { error } = await supabase.from("services").insert(payload as any);
+      const { error } = await supabase.from("services").insert(payload);
       if (error) {
         toast.error(error.message);
         return;

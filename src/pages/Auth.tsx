@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
@@ -70,9 +70,9 @@ const Auth = () => {
         toast.success("¡Cuenta creada! Revisa tu correo para confirmar.");
         navigate(nextDestination);
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error("Auth error:", err);
-      const message = err.message ?? "Error al procesar la solicitud";
+      const message = (err instanceof Error ? err.message : null) ?? "Error al procesar la solicitud";
       if (message.includes("already")) {
         toast.error("Este correo ya está registrado. Intenta iniciar sesión.");
       } else if (message.includes("password")) {

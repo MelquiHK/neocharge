@@ -24,7 +24,9 @@ export async function showBrowserNotification(title: string, options: Notificati
       const notification = await registration.showNotification(title, notificationOptions);
       // Service worker notifications don't return the Notification object directly for handling clicks.
       // Clicks are handled by the service worker's 'notificationclick' event.
-      return notification; // This is actually 'undefined' in most implementations, but good to keep.
+      // registration.showNotification() resolves to undefined: normalizar a null
+      // para cumplir el contrato Notification | null de esta función.
+      return notification ?? null;
     } catch (error) {
       console.warn("Error mostrando notificación a través del Service Worker:", error);
       // Fallback to direct Notification if service worker fails or is not ready.

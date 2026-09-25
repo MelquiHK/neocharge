@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -10,8 +10,24 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
 export function AdminMessenger() {
-  const [salePoints, setSalePoints] = useState<any[]>([]);
-  const [paymentRequests, setPaymentRequests] = useState<any[]>([]);
+  interface SalePointRow {
+    id: string;
+    name: string;
+    address?: string | null;
+    lat?: number | string | null;
+    lng?: number | string | null;
+    [key: string]: unknown;
+  }
+  interface PaymentRequestRow {
+    id: string;
+    amount?: number | string | null;
+    status?: string | null;
+    created_at?: string | null;
+    profiles?: { full_name?: string | null; username?: string | null } | null;
+    [key: string]: unknown;
+  }
+  const [salePoints, setSalePoints] = useState<SalePointRow[]>([]);
+  const [paymentRequests, setPaymentRequests] = useState<PaymentRequestRow[]>([]);
   const [newPoint, setNewPoint] = useState({ name: "", address: "", lat: 23.1136, lng: -82.3666 });
   const [loading, setLoading] = useState(true);
 
@@ -20,16 +36,28 @@ export function AdminMessenger() {
   const [deliveryOriginId, setDeliveryOriginId] = useState("");
   const [savingDelivery, setSavingDelivery] = useState(false);
 
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     setLoading(true);
     const [{ data: points }, { data: requests }, { data: dcfg }] = await Promise.all([
       supabase.from("sale_points").select("*").order("created_at", { ascending: false }),
       supabase.from("payment_requests").select("*, profiles:user_id(full_name, username)").order("created_at", { ascending: false }),
       supabase.from("site_settings").select("value").eq("key", "delivery_config").maybeSingle()
     ]);
-    setSalePoints(points ?? []);
-    setPaymentRequests(requests ?? []);
-    const v = dcfg?.value as any;
+    setSalePoints(
+      (points ?? []).map((p) => ({
+        ...p,
+        id: String(p.id),
+        name: String(p.name ?? ""),
+      })),
+    );
+    setPaymentRequests(
+      (requests ?? []).map((r) => ({
+        ...r,
+        id: String(r.id),
+        profiles: (r.profiles as unknown as PaymentRequestRow["profiles"]) ?? null,
+      })),
+    );
+    const v = dcfg?.value as { price_per_km?: unknown; origin_sale_point_id?: unknown } | null | undefined;
     if (v) {
       if (Number.isFinite(Number(v.price_per_km)) && Number(v.price_per_km) > 0) {
         setDeliveryPrice(Number(v.price_per_km));
@@ -37,7 +65,7 @@ export function AdminMessenger() {
       if (v.origin_sale_point_id) setDeliveryOriginId(String(v.origin_sale_point_id));
     }
     setLoading(false);
-  };
+  }, []);
 
   const saveDeliveryConfig = async () => {
     if (!Number.isFinite(deliveryPrice) || deliveryPrice <= 0) {
@@ -58,7 +86,7 @@ export function AdminMessenger() {
 
   useEffect(() => {
     loadData();
-  }, []);
+  }, [loadData]);
 
   const addPoint = async () => {
     if (!newPoint.name) return toast.error("El nombre es obligatorio");
@@ -175,7 +203,7 @@ export function AdminMessenger() {
                       <MapPin className="w-3 h-3" /> {p.address}
                     </p>
                     <p className="text-[10px] text-muted-foreground font-mono">
-                      {p.lat.toFixed(4)}, {p.lng.toFixed(4)}
+                      {Number(p.lat ?? 0).toFixed(4)}, {Number(p.lng ?? 0).toFixed(4)}
                     </p>
                   </div>
                   <Button variant="ghost" size="icon" onClick={() => deletePoint(p.id)} className="opacity-0 group-hover:opacity-100 transition-opacity">
@@ -223,15 +251,15 @@ export function AdminMessenger() {
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 font-bold text-primary">{formatCUP(r.amount)}</td>
+                  <td className="px-4 py-3 font-bold text-primary">{formatCUP(Number(r.amount ?? 0))}</td>
                   <td className="px-4 py-3 text-xs text-muted-foreground">
                     {new Date(r.created_at).toLocaleString("es-CU")}
                   </td>
                   <td className="px-4 py-3">
                     <Badge variant={
-                      r.status === 'paid' ? 'hero' : 
-                      r.status === 'pending' ? 'outline' : 
-                      r.status === 'approved' ? 'hero' : 'destructive'
+                      r.status === 'paid' ? 'default' :
+                      r.status === 'pending' ? 'outline' :
+                      r.status === 'approved' ? 'default' : 'destructive'
                     } className="text-[10px] uppercase font-bold px-2 py-0.5">
                       {r.status === 'pending' ? 'Pendiente' : 
                        r.status === 'paid' ? 'Pagado' : 

@@ -1,10 +1,12 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
+import type { SellerSale } from "@/lib/sales";
+import type { TablesInsert } from "@/integrations/supabase/types";
 
 export function useAdminSales() {
   const { user, permissions } = useAuth();
-  const [sales, setSales] = useState<any[]>([]);
+  const [sales, setSales] = useState<SellerSale[]>([]);
   const [loading, setLoading] = useState(true);
 
   const load = useCallback(async () => {
@@ -28,14 +30,18 @@ export function useAdminSales() {
 
   useEffect(() => { void load(); }, [load]);
 
-  const createSale = useCallback(async (payload: any) => {
+  const createSale = useCallback(async (payload: Record<string, unknown>) => {
     const safePayload = {
       ...payload,
       seller_user_id: user?.id ?? payload.seller_user_id ?? null,
       seller_name: payload.seller_name || user?.email || "Gestor",
     };
 
-    const { data, error } = await supabase.from("seller_sales").insert(safePayload).select().single();
+    const { data, error } = await supabase
+      .from("seller_sales")
+      .insert(safePayload as TablesInsert<"seller_sales">)
+      .select()
+      .single();
     if (error) throw error;
     setSales((s) => [data, ...s]);
     return data;

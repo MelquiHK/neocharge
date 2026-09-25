@@ -2,13 +2,13 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useSEO } from "@/hooks/use-seo";
-import { ProductCard, Product } from "@/components/ProductCard";
+import { ProductCard, type Product } from "@/components/ProductCard";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { Button } from "@/components/ui/button";
 import { Loader2, HeartOff } from "lucide-react";
 
 export default function FavoritesPage() {
-  useSEO("favorites", "Tus productos favoritos en NeoCharge.");
+  useSEO("favorites", { description: "Tus productos favoritos en NeoCharge." });
 
   const { favoriteIds, loading: favoritesLoading } = useUnifiedFavorites();
   const [allProducts, setAllProducts] = useState<Product[]>([]);
@@ -27,7 +27,7 @@ export default function FavoritesPage() {
 
         if (error) throw error;
         setAllProducts(data as Product[]);
-      } catch (err: any) {
+      } catch (err: unknown) {
         console.error("Error loading all products:", err);
         setError("No se pudieron cargar los productos. Intenta de nuevo más tarde.");
       } finally {

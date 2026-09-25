@@ -1,41 +1,8 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState, type ReactNode } from "react";
+import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { computeDisplayPrice } from "@/lib/format";
+import { CartContext, type CartItem, type CartContextValue } from "@/hooks/use-cart";
 
-export interface CartItem {
-  id: string;
-  name: string;
-  slug: string;
-  price: number;
-  currency?: string;
-  price_cup?: number;
-  extra_cup_per_usd?: number;
-  image?: string;
-  quantity: number;
-  stock?: number;
-  warranty_type?: string;
-  displayPriceUSD?: number;
-  displayPriceCUP?: number;
-}
-
-interface CartContextValue {
-  items: CartItem[];
-  addItem: (item: Omit<CartItem, "quantity"> & { quantity?: number }) => void;
-  removeItem: (id: string) => void;
-  updateQuantity: (id: string, quantity: number) => void;
-  clearCart: () => void;
-  isOpen: boolean;
-  openCart: () => void;
-  closeCart: () => void;
-  total: number;
-  totalUSD: number;
-  totalCUP: number;
-  itemCount: number;
-  paymentCurrency: "USD" | "CUP";
-  setPaymentCurrency: (currency: "USD" | "CUP") => void;
-}
-
-const CartContext = createContext<CartContextValue | undefined>(undefined);
 const STORAGE_KEY = "neocharge_cart_v1";
 
 export function CartProvider({ children }: { children: ReactNode }) {
@@ -108,13 +75,17 @@ export function CartProvider({ children }: { children: ReactNode }) {
       };
     });
 
-    const initialTotalUSD = updatedItems.reduce((sum, i) => sum + (i.displayPriceUSD || 0) * i.quantity, 0);
-    const initialTotalCUP = updatedItems.reduce((sum, i) => sum + (i.displayPriceCUP || 0) * i.quantity, 0);
+    const initialTotalUSD = updatedItems.reduce((sum, i) => sum + (i.displayPriceUSD ?? 0) * i.quantity, 0);
+    const initialTotalCUP = updatedItems.reduce((sum, i) => sum + (i.displayPriceCUP ?? 0) * i.quantity, 0);
     const itemCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
 
     const totalUSD = roundUpToNextWhole(initialTotalUSD);
     const totalCUP = roundUpToNextWhole(initialTotalCUP);
     const total = paymentCurrency === "USD" ? totalUSD : totalCUP;
+    // Sin tasa de cambio no se inventan conversiones: un total solo es
+    // "completo" si cada ítem tiene precio conocido en esa moneda.
+    const completeUSD = updatedItems.every((i) => i.displayPriceUSD != null);
+    const completeCUP = updatedItems.every((i) => i.displayPriceCUP != null);
 
     return {
       items: updatedItems,
@@ -128,6 +99,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
       total,
       totalUSD,
       totalCUP,
+      completeUSD,
+      completeCUP,
       itemCount,
       paymentCurrency,
       setPaymentCurrency: (currency: "USD" | "CUP") => setPaymentCurrency(currency),
@@ -135,10 +108,4 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, [items, addItem, removeItem, updateQuantity, clearCart, isOpen, openCart, closeCart, exchangeRate, paymentCurrency, roundUpToNextWhole]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
-}
-
-export function useCart() {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used within CartProvider");
-  return ctx;
 }

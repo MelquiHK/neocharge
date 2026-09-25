@@ -8,7 +8,7 @@ describe("sortProductsForShop", () => {
       { id: "2", is_featured: true, sort_order: 0, created_at: "2024-02-01T00:00:00Z" },
       { id: "3", is_featured: false, sort_order: 1, created_at: "2024-03-01T00:00:00Z" },
       { id: "4", is_featured: false, sort_order: 0, created_at: "2024-04-01T00:00:00Z" },
-    ] as any;
+    ];
 
     const sorted = sortProductsForShop(products, "manual");
 
@@ -20,7 +20,7 @@ describe("sortProductsForShop", () => {
       { id: "a", is_featured: false, sort_order: 0, created_at: "2024-01-01T00:00:00Z" },
       { id: "b", is_featured: true, sort_order: 0, created_at: "2024-02-01T00:00:00Z" },
       { id: "c", is_featured: false, sort_order: 0, created_at: "2024-05-01T00:00:00Z" },
-    ] as any;
+    ];
 
     const sorted = sortProductsForShop(products, "new");
 
@@ -32,7 +32,7 @@ describe("sortProductsForShop", () => {
       { id: "1", is_featured: false, category_name: "Cables" },
       { id: "2", is_featured: true, category_name: "Accesorios" },
       { id: "3", is_featured: false, category_name: "Baterías" },
-    ] as any;
+    ];
 
     const sorted = sortProductsForShop(products, "type");
 
