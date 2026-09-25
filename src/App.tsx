@@ -14,9 +14,12 @@ import { Spinner } from "@/components/ui/spinner";
 
 // Core pages (loaded upfront - essential for first paint)
 import Index from "./pages/Index.tsx";
-import Shop from "./pages/Shop.tsx";
-import ProductDetail from "./pages/ProductDetail.tsx";
 import NotFound from "./pages/NotFound.tsx";
+
+// Tienda y detalle de producto también van en lazy: son las páginas públicas
+// más pesadas (galerías, tabs, calculadora) y no hacen falta en la primera carga.
+const Shop = lazy(() => import("./pages/Shop.tsx"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail.tsx"));
 
 // Lazy-loaded pages (code-split by route)
 const Checkout = lazy(() => import("./pages/Checkout.tsx"));
@@ -59,8 +62,8 @@ const App = () => (
               <Routes>
                 <Route element={<SiteLayout />}>
                   <Route path="/" element={<Index />} />
-                  <Route path="/tienda" element={<Shop />} />
-                  <Route path="/producto/:slug" element={<ProductDetail />} />
+                  <Route path="/tienda" element={<Suspense fallback={<LoadingPlaceholder />}><Shop /></Suspense>} />
+                  <Route path="/producto/:slug" element={<Suspense fallback={<LoadingPlaceholder />}><ProductDetail /></Suspense>} />
                   <Route path="/checkout" element={<Suspense fallback={<LoadingPlaceholder />}><Checkout /></Suspense>} />
                   <Route path="/auth" element={<Suspense fallback={<LoadingPlaceholder />}><Auth /></Suspense>} />
                   <Route path="/cuenta" element={<Suspense fallback={<LoadingPlaceholder />}><Account /></Suspense>} />

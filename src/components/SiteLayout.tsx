@@ -2,7 +2,7 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartSheet } from "@/components/CartSheet";
 import { Outlet } from "react-router-dom";
-import { useCart } from "@/contexts/CartContext";
+import { useCart } from "@/hooks/use-cart";
 import { Info } from "lucide-react";
 
 export function SiteLayout() {

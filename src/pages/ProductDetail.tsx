@@ -1,12 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { useCart } from "@/contexts/CartContext";
+import { useCart } from "@/hooks/use-cart";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSEO } from "@/hooks/use-seo";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { Product } from "@/types";
-import { computeDisplayPrice, formatPrice, formatCUP } from "@/lib/format";
+import { computeDisplayPrice, formatPrice, formatCUP, type DisplayPrice } from "@/lib/format";
+import { responsiveImage } from "@/lib/responsive-image";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock } from "lucide-react";
@@ -26,9 +27,21 @@ interface LocationStock {
   };
 }
 
+// Etiqueta de precio principal: si la tasa no cargó y la conversión es
+// desconocida, se muestra "—" en vez de inventar un número.
+function displayPriceLabel(display: DisplayPrice): string {
+  if (display.primary === "USD") return display.usd != null ? formatPrice(display.usd) : "—";
+  return display.cup != null ? formatCUP(display.cup) : "—";
+}
+
+// Línea secundaria de conversión (puede quedar vacía si no hay tasa).
+function displayConvertedLine(display: DisplayPrice): string | null {
+  if (display.primary === "USD") return display.cup != null ? `≈ ${formatCUP(display.cup)}` : null;
+  return display.usd != null ? `≈ ${formatPrice(display.usd)} USD` : null;
+}
+
 export default function ProductDetail() {
-  const { slug } = useParams<{ slug: string }>();
-  const { addItem } = useCart();
+  const { slug } = useParams<{ slug: string }>();  const { addItem } = useCart();
   const { rate: exchangeRate } = useExchangeRate();
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
@@ -88,7 +101,7 @@ export default function ProductDetail() {
           .select("location_id, stock, store_locations(id,name,address,location_type,map_link,hours)")
           .eq("product_id", data.id);
         if (locError) console.error("Location stock error:", locError);
-        if (ls) setLocStock(ls as any);
+        if (ls) setLocStock(ls as unknown as LocationStock[]);
 
         const { data: chargers, error: chargerError } = await supabase
           .from("products")
@@ -157,7 +170,7 @@ export default function ProductDetail() {
 
     const shareData: ShareData = {
       title: product.name,
-      text: `${product.name} - ${display.primary === "USD" ? formatPrice(display.usd) : formatCUP(display.cup)}\n${product.description || ''}\n¡Mira este producto en NeoCharge!`, // Richer text
+      text: `${product.name} - ${displayPriceLabel(display)}\n${product.description || ''}\n¡Mira este producto en NeoCharge!`, // Richer text
       url: window.location.href,
     };
 
@@ -180,7 +193,7 @@ export default function ProductDetail() {
         await navigator.share(shareData);
       } catch (error) {
         console.error("Error compartiendo:", error);
-        if ((error as any).name !== "AbortError") {
+        if ((error as { name?: string } | null)?.name !== "AbortError") {
           // Only show toast if not cancelled by user
           await navigator.clipboard.writeText(`${shareData.title}\n${shareData.text}\n${shareData.url}`);
           toast.success("¡Detalles y enlace del producto copiados al portapapeles!");
@@ -265,11 +278,18 @@ export default function ProductDetail() {
         <div className="space-y-4">
           <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted">
             {mainImage ? (
-              <img
-                src={mainImage}
-                alt={product.name}
-                className="w-full h-full object-cover"
-              />
+              (() => {
+                const ri = responsiveImage(mainImage, "(max-width: 1024px) 100vw, 600px");
+                return (
+                  <img
+                    src={ri.src}
+                    srcSet={ri.srcSet}
+                    sizes={ri.sizes}
+                    alt={product.name}
+                    className="w-full h-full object-cover"
+                  />
+                );
+              })()
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                 Sin imagen
@@ -293,7 +313,20 @@ export default function ProductDetail() {
                     activeImage === idx ? "border-primary" : "border-transparent"
                   }`}
                 >
-                  <img src={img} alt={`${product.name} ${idx + 1}`} className="w-full h-full object-cover" />
+                  {(() => {
+                    const ri = responsiveImage(img, "64px");
+                    return (
+                      <img
+                        src={ri.src}
+                        srcSet={ri.srcSet}
+                        sizes={ri.sizes}
+                        alt={`${product.name} ${idx + 1}`}
+                        className="w-full h-full object-cover"
+                        loading="lazy"
+                        decoding="async"
+                      />
+                    );
+                  })()}
                 </button>
               ))}
             </div>
@@ -315,7 +348,7 @@ export default function ProductDetail() {
           <div className="space-y-2">
             <div className="flex items-baseline gap-3">
               <span className="font-display text-3xl font-bold">
-                {display.primary === "USD" ? formatPrice(display.usd) : formatCUP(display.cup)}
+                {displayPriceLabel(display)}
               </span>
               {product.compare_price && (
                 <span className="text-lg text-muted-foreground line-through">
@@ -323,9 +356,11 @@ export default function ProductDetail() {
                 </span>
               )}
             </div>
-            <p className="text-sm text-muted-foreground">
-              {display.primary === "USD" ? `≈ ${formatCUP(display.cup)}` : `≈ ${formatPrice(display.usd)} USD`}
-            </p>
+            {displayConvertedLine(display) && (
+              <p className="text-sm text-muted-foreground">
+                {displayConvertedLine(display)}
+              </p>
+            )}
           </div>
 
           {/* Stock Status */}

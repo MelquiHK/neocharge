@@ -33,9 +33,8 @@ import { formatCUP } from "@/lib/format";
 import { parseLocationInput } from "@/lib/location-links";
 import { DeliveryOrderForm } from "@/components/DeliveryOrderForm";
 
-// Fix Leaflet marker icons
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl;
+// Fix Leaflet marker icons (sin @ts-ignore: acceso tipado al prototipo)
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -133,21 +132,21 @@ export function DeliveryCalculator() {
           supabase.from("sale_points").select("*").eq("is_active", true),
         ]);
 
-        const price = Number((cfg?.value as any)?.price_per_km);
+        const price = Number((cfg?.value as { price_per_km?: unknown } | null)?.price_per_km);
         if (Number.isFinite(price) && price > 0) setPricePerKm(price);
 
         const pts: SalePoint[] = (points ?? [])
-          .map((p: any) => ({
+          .map((p: { id: unknown; name: string; address?: unknown; lat: unknown; lng: unknown }) => ({
             id: String(p.id),
             name: p.name,
-            address: p.address ?? null,
+            address: typeof p.address === "string" ? p.address : "",
             lat: Number(p.lat),
             lng: Number(p.lng),
           }))
           .filter((p) => Number.isFinite(p.lat) && Number.isFinite(p.lng));
         setSalePoints(pts);
 
-        const originId = (cfg?.value as any)?.origin_sale_point_id as
+        const originId = (cfg?.value as { origin_sale_point_id?: unknown } | null)?.origin_sale_point_id as
           | string
           | undefined;
         const pick =

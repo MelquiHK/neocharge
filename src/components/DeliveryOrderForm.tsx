@@ -182,7 +182,7 @@ export function DeliveryOrderForm({
           .eq("is_active", true)
           .order("name");
         if (error) throw error;
-        const list: CatalogProduct[] = (data ?? []).map((p: any) => {
+        const list: CatalogProduct[] = (data ?? []).map((p: { id: unknown; name: unknown; price: unknown; currency: unknown; price_cup: unknown; stock: unknown }) => {
           const currency = normalizeCurrency(p.currency);
           const unitPrice =
             currency === "CUP"

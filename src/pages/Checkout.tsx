@@ -5,10 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { useCart } from "@/contexts/CartContext";
-import { useAuth } from "@/contexts/AuthContext";
+import { useCart } from "@/hooks/use-cart";
+import { useAuth } from "@/hooks/use-auth";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSiteSettings } from "@/hooks/use-site-settings";
+import { useDeliveryQuote } from "@/hooks/use-delivery-quote";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
@@ -26,7 +27,10 @@ interface Loc {
 
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP } = useCart();
+  const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP, completeUSD, completeCUP } = useCart();
+  // Sin tasa no se inventan conversiones: un total incompleto se muestra como "—".
+  const shownTotalUSD = completeUSD ? formatPrice(totalUSD) : "—";
+  const shownTotalCUP = completeCUP ? formatCUP(totalCUP) : "—";
   const { user } = useAuth();
   const { rate } = useExchangeRate();
   const { settings } = useSiteSettings();
@@ -37,8 +41,11 @@ const Checkout = () => {
   const [delivery, setDelivery] = useState<"pickup" | "delivery">("delivery");
   const [address, setAddress] = useState("");
   const [notes, setNotes] = useState("");
-  const [shippingUSD, setShippingUSD] = useState(0);
-  const [shippingCUP, setShippingCUP] = useState(0);
+  // El costo de envío YA NO se escribe a mano: se cotiza automáticamente por km
+  // con la ubicación GPS del cliente (misma tarifa que /calcular-envio).
+  const { configError, quote, quotedCoords, quoting, quoteError, quoteFor, clearQuote } = useDeliveryQuote();
+  const shippingCUP = delivery === "delivery" ? quote?.priceCUP ?? 0 : 0;
+  const shippingUSD = 0;
 
   const [locations, setLocations] = useState<Loc[]>([]);
   const [pickupLocId, setPickupLocId] = useState<string>("");
@@ -51,11 +58,29 @@ const Checkout = () => {
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
 
+  // La cotización solo es válida si corresponde a las coordenadas actuales.
+  const quoteValid =
+    delivery !== "delivery" ||
+    (quote !== null &&
+      quotedCoords !== null &&
+      coords !== null &&
+      quotedCoords.lat === coords.lat &&
+      quotedCoords.lng === coords.lng);
+
   const filteredLocations = locations.filter((loc) => locationFilter === "all" || loc.location_type === locationFilter);
 
   useEffect(() => {
     document.title = "Finalizar pedido — NeoCharge";
   }, []);
+
+  // Cotizar el envío automáticamente cuando hay ubicación GPS (solo mensajería).
+  useEffect(() => {
+    if (delivery === "delivery" && coords) {
+      void quoteFor(coords.lat, coords.lng);
+    } else {
+      clearQuote();
+    }
+  }, [delivery, coords, quoteFor, clearQuote]);
 
   useEffect(() => {
     if (items.length === 0) {
@@ -117,16 +142,39 @@ const Checkout = () => {
         return;
       }
 
-      const rows = (data ?? []) as any[];
-      const availableRows = rows.filter((row) => row.stock > 0 && row.store_locations);
+      const rows = (data ?? []) as unknown as {
+        product_id?: string | null;
+        stock?: number | null;
+        store_locations?: {
+          id: string;
+          name: string;
+          address?: string | null;
+          location_type?: string | null;
+          hours?: string | null;
+        } | {
+          id: string;
+          name: string;
+          address?: string | null;
+          location_type?: string | null;
+          hours?: string | null;
+        }[] | null;
+      }[];
+      const availableRows = rows.filter((row) => (row.stock ?? 0) > 0 && row.store_locations);
       const map: Record<string, Loc> = {};
       const productsByLocation: Record<string, string[]> = {};
 
 // CAMBIA ESTE BLOQUE EXACTAMENTE:
       availableRows.forEach((row) => {
         // Forzamos a capturar el local ya sea si viene como objeto o como primer elemento de un array
-        const loc = Array.isArray(row.store_locations) ? row.store_locations[0] : row.store_locations;
-        if (!loc || !loc.id) return; // Si no hay local válido, ignorar
+        const raw = Array.isArray(row.store_locations) ? row.store_locations[0] : row.store_locations;
+        if (!raw || !raw.id) return; // Si no hay local válido, ignorar
+        const loc: Loc = {
+          id: raw.id,
+          name: raw.name ?? "",
+          address: raw.address ?? "",
+          location_type: raw.location_type ?? "",
+          hours: raw.hours ?? null,
+        };
         
         const product = items.find((it) => it.id === row.product_id);
         if (!product) return;
@@ -217,6 +265,22 @@ const Checkout = () => {
       toast.error("Indica la dirección de entrega");
       return;
     }
+    // Mensajería: exigir cotización válida. Sin ella no se puede enviar el pedido,
+    // para no registrar un envío con costo cero o inventado.
+    if (delivery === "delivery") {
+      if (quoting) {
+        toast.error("Espera a que calculemos el costo del envío…");
+        return;
+      }
+      if (!coords) {
+        toast.error("Comparte tu ubicación para calcular el costo del envío");
+        return;
+      }
+      if (!quoteValid) {
+        toast.error(quoteError ?? "No pudimos calcular el envío. Inténtalo de nuevo.");
+        return;
+      }
+    }
     if (delivery === "pickup" && !pickupLocId) {
       toast.error("Elige un local para recoger");
       return;
@@ -231,9 +295,8 @@ const Checkout = () => {
         : null;
 
       const breakdown = buildOrderBreakdown({
-        paymentCurrency,
-        subtotal: totalUSD,
-        subtotalCUP: totalCUP,
+        subtotal: completeUSD ? totalUSD : null,
+        subtotalCUP: completeCUP ? totalCUP : null,
         shippingUSD,
         shippingCUP,
       });
@@ -247,9 +310,9 @@ const Checkout = () => {
         pickup_location: delivery === "pickup" ? pickupLoc?.name ?? null : null,
         pickup_location_id: delivery === "pickup" ? pickupLocId : null,
         items: items as unknown,
-        subtotal: breakdown.productUSD,
+        subtotal: breakdown.productUSD ?? 0,
         delivery_fee: breakdown.shippingUSD,
-        total: breakdown.totalUSD,
+        total: breakdown.totalUSD ?? 0,
         total_cup: breakdown.totalCUP,
         exchange_rate: rate ?? null,
         admin_notes: notes.trim() || null,
@@ -279,8 +342,8 @@ const Checkout = () => {
         notes: notes.trim() || undefined,
         shippingUSD,
         shippingCUP,
-        subtotalUSD: totalUSD,
-        subtotalCUP: totalCUP,
+        subtotalUSD: completeUSD ? totalUSD : null,
+        subtotalCUP: completeCUP ? totalCUP : null,
       });
 
       try {
@@ -347,7 +410,7 @@ const Checkout = () => {
               >
                 <Truck className={cn("w-5 h-5 mb-2", delivery === "delivery" ? "text-primary" : "text-muted-foreground")} />
                 <h3 className="font-semibold text-sm">Mensajería a domicilio</h3>
-                <p className="text-xs text-muted-foreground mt-1">El precio se acuerda al confirmar</p>
+                <p className="text-xs text-muted-foreground mt-1">Se calcula automático con tu ubicación</p>
               </button>
               <button
                 type="button"
@@ -502,7 +565,7 @@ const Checkout = () => {
             />
           </section>
 
-          <Button type="submit" variant="hero" size="xl" className="w-full" disabled={submitting}>
+          <Button type="submit" variant="hero" size="xl" className="w-full" disabled={submitting || (delivery === "delivery" && (quoting || !quoteValid))}>
             {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Enviando...</> : <><MessageCircle className="w-5 h-5" /> Confirmar pedido</>}
           </Button>
 
@@ -549,9 +612,12 @@ const Checkout = () => {
                     <p className="text-xs text-muted-foreground">Cant: {it.quantity}</p>
                   </div>
                   <span className="text-sm font-bold whitespace-nowrap">
-                    {paymentCurrency === "USD" 
-                      ? formatPrice((it.displayPriceUSD || 0) * it.quantity) 
-                      : formatCUP((it.displayPriceCUP || 0) * it.quantity)}
+                    {(() => {
+                      const usd = it.displayPriceUSD != null ? formatPrice(it.displayPriceUSD * it.quantity) : null;
+                      const cup = it.displayPriceCUP != null ? formatCUP(it.displayPriceCUP * it.quantity) : null;
+                      if (paymentCurrency === "USD") return usd ?? cup ?? "—";
+                      return cup ?? usd ?? "—";
+                    })()}
                   </span>
                 </div>
               ))}
@@ -559,46 +625,47 @@ const Checkout = () => {
             <div className="border-t border-border pt-4 space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Producto</span>
-                <span>{formatPrice(totalUSD)} / {formatCUP(totalCUP)}</span>
+                <span>{shownTotalUSD} / {shownTotalCUP}</span>
               </div>
               <div className="space-y-2 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-3">
                 <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
                   <span>Envío</span>
-                  <span>Separado por moneda</span>
+                  <span>{delivery === "pickup" ? "Gratis en local" : "Automático por km"}</span>
                 </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">USD</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    inputMode="decimal"
-                    value={shippingUSD === 0 ? "" : shippingUSD}
-                    onChange={(e) => setShippingUSD(e.target.value === "" ? 0 : Number(e.target.value))}
-                    className="h-8 w-24 text-right"
-                  />
-                </div>
-                <div className="flex items-center justify-between">
-                  <span className="text-muted-foreground">CUP</span>
-                  <Input
-                    type="number"
-                    min="0"
-                    step="1"
-                    inputMode="numeric"
-                    value={shippingCUP === 0 ? "" : shippingCUP}
-                    onChange={(e) => setShippingCUP(e.target.value === "" ? 0 : Number(e.target.value))}
-                    className="h-8 w-24 text-right"
-                  />
-                </div>
+                {delivery === "pickup" ? (
+                  <p className="text-sm text-muted-foreground">Recoges gratis en el local elegido.</p>
+                ) : quoting ? (
+                  <p className="text-sm flex items-center gap-2 text-muted-foreground">
+                    <Loader2 className="w-4 h-4 animate-spin" /> Calculando envío…
+                  </p>
+                ) : quote ? (
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="text-sm text-muted-foreground">
+                      Mensajería ({quote.km.toFixed(1)} km × {formatCUP(quote.pricePerKm)}/km)
+                    </span>
+                    <span className="font-bold whitespace-nowrap">{formatCUP(quote.priceCUP)}</span>
+                  </div>
+                ) : (
+                  <div className="text-sm space-y-2">
+                    <p className="text-muted-foreground">
+                      Comparte tu ubicación en el formulario y calculamos el envío automáticamente.
+                    </p>
+                    <Link to="/calcular-envio" className="text-primary underline text-xs font-semibold">
+                      O calcúlalo aquí con tu ubicación →
+                    </Link>
+                    {quoteError && <p className="text-xs text-destructive">{quoteError}</p>}
+                    {configError && <p className="text-xs text-amber-600">{configError}</p>}
+                  </div>
+                )}
               </div>
               <div className="flex items-center justify-between font-display font-bold text-base pt-2 border-t border-border">
                 <span>Total a pagar</span>
                 <div className="text-right">
                   <span className="text-primary text-base block">
-                    USD {formatPrice(totalUSD + shippingUSD)}
+                    USD {completeUSD ? formatPrice(totalUSD + shippingUSD) : "—"}
                   </span>
                   <span className="text-[10px] text-muted-foreground block">
-                    CUP {formatCUP(totalCUP + shippingCUP)}
+                    CUP {completeCUP ? formatCUP(totalCUP + shippingCUP) : "—"}
                   </span>
                 </div>
               </div>

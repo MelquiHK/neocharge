@@ -1,12 +1,42 @@
-export function computeSalesTotalsBySeller(sales: any[]) {
+export interface SellerSale {
+  id: string;
+  seller_user_id?: string | null;
+  seller_name?: string | null;
+  product_name?: string | null;
+  price?: number | string | null;
+  price_cup?: number | string | null;
+  currency?: string | null;
+  commission_amount?: number | string | null;
+  commission_paid_amount?: number | string | null;
+  is_paid?: boolean | null;
+  customer_name?: string | null;
+  customer_phone?: string | null;
+  location_name?: string | null;
+  created_at?: string | null;
+  [key: string]: unknown;
+}
+
+export interface SellerTotals {
+  seller_user_id?: string | null;
+  seller_name?: string | null;
+  count: number;
+  totalUSD: number;
+  totalCUP: number;
+  amountOwedUSD: number;
+  totalCommission: number;
+  paidCommission: number;
+  pendingCommission: number;
+}
+
+export function computeSalesTotalsBySeller(sales: SellerSale[]) {
   const totals = {
     totalCount: 0,
     totalUSD: 0,
     totalCUP: 0,
-    bySeller: [] as Array<any>,
+    bySeller: [] as Array<SellerTotals>,
   };
 
-  const map = new Map<string, any>();
+  const map = new Map<string, SellerTotals>();
   for (const s of sales ?? []) {
     totals.totalCount += 1;
     const price = Number(s.price ?? 0);

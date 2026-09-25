@@ -97,7 +97,7 @@ export function AdminLocations() {
                 <p className="text-xs text-primary uppercase tracking-wider font-semibold">{typeLabel(l.location_type)}</p>
               </div>
               <div className="flex gap-1">
-                <Button size="icon" variant="ghost" onClick={() => { setEditing(l); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>
+                <Button size="icon" variant="ghost" onClick={() => { setEditing({ ...emptyLocation, ...l, name: String(l.name ?? ""), address: String(l.address ?? ""), location_type: String(l.location_type ?? "") }); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
                     <Button size="icon" variant="ghost" className="text-destructive"><Trash2 className="w-4 h-4" /></Button>

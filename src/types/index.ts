@@ -5,9 +5,29 @@ export type Tables<T extends keyof Database["public"]["Tables"]> =
 export type Enums<T extends keyof Database["public"]["Enums"]> =
   Database["public"]["Enums"][T];
 
-export type Product = Tables<"products"> & {
+export interface Product {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  compare_price?: number | null;
+  currency?: string | null;
+  price_cup?: number | null;
+  extra_cup_per_usd?: number | null;
+  images?: string[] | null;
+  main_image_index?: number | null;
+  stock?: number | null;
+  category_id?: string | null;
+  description?: string | null;
+  specifications?: string | null;
+  warranty_type?: string | null;
+  is_active?: boolean | null;
   sort_order?: number | null;
-};
+  created_at?: string | null;
+  updated_at?: string | null;
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any -- fallback intencional: columnas extra sin declarar en este tipo manual
+  [key: string]: any;
+}
 export type Category = Tables<"categories">;
 export type Order = Tables<"orders">;
 export type StoreLocation = Tables<"store_locations">;
@@ -89,7 +109,9 @@ export interface SiteSettings {
   locations_intro?: string | null;
 }
 
-export type OrderStatus = Enums<"order_status">;
+// El enum `order_status` no venía en el types.ts generado (vacío); se declara aquí
+// con los valores que usa la app. Si se regeneran los tipos, preferir Enums<"order_status">.
+export type OrderStatus = "pending" | "confirmed" | "preparing" | "shipped" | "delivered" | "cancelled";
 
 export interface AdminPermissions {
   is_owner: boolean;

@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { MessengerPanel } from "@/components/MessengerPanel";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";

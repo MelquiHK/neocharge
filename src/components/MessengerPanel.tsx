@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,9 +23,8 @@ import {
 } from "lucide-react";
 import { formatCUP } from "@/lib/format";
 
-// Fix Leaflet marker icons
-// @ts-ignore
-delete L.Icon.Default.prototype._getIconUrl;
+// Fix Leaflet marker icons (sin @ts-ignore: acceso tipado al prototipo)
+delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
 L.Icon.Default.mergeOptions({
   iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
   iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
@@ -57,7 +56,14 @@ export function MessengerPanel() {
   const [route, setRoute] = useState<[number, number][]>([]);
   const [distance, setDistance] = useState(0); // in km
   const [loading, setLoading] = useState(false);
-  const [salePoints, setSalePoints] = useState<any[]>([]);
+  interface SalePoint {
+    id: string;
+    name: string;
+    address?: string | null;
+    lat: number | string;
+    lng: number | string;
+  }
+  const [salePoints, setSalePoints] = useState<SalePoint[]>([]);
 
   // Estados para añadir coordenadas manualmente
   const [coordInput, setCoordInput] = useState("");
@@ -74,7 +80,17 @@ export function MessengerPanel() {
       ]);
 
       if (mProfile) setRate(Number(mProfile.rate_per_km));
-      if (points) setSalePoints(points);
+      if (points) {
+        setSalePoints(
+          points.map((p) => ({
+            id: String(p.id),
+            name: String(p.name ?? ""),
+            address: typeof p.address === "string" ? p.address : null,
+            lat: Number(p.lat) || 0,
+            lng: Number(p.lng) || 0,
+          })),
+        );
+      }
     };
     load();
   }, [user]);
@@ -88,7 +104,7 @@ export function MessengerPanel() {
       const data = await res.json();
       
       if (data.code === "Ok") {
-        const routeCoords = data.routes[0].geometry.coordinates.map((c: any) => [c[1], c[0]]);
+        const routeCoords = data.routes[0].geometry.coordinates.map((c: number[]) => [c[1], c[0]]);
         setRoute(routeCoords);
         setDistance(data.routes[0].distance / 1000); // meters to km
       } else {
@@ -125,7 +141,7 @@ export function MessengerPanel() {
     setWaypoints(waypoints.filter(w => w.id !== id));
   };
 
-  const addSalePoint = (point: any) => {
+  const addSalePoint = (point: { lat: number | string; lng: number | string; name: string }) => {
     addWaypoint(Number(point.lat), Number(point.lng), `Local: ${point.name}`);
   };
 

@@ -12,6 +12,7 @@ interface Post {
   excerpt: string | null;
   image_url: string | null;
   images?: string[] | null;
+  is_published?: boolean | null;
   created_at: string;
 }
 
@@ -132,7 +133,7 @@ const Blog = () => {
           schema: 'public',
           table: 'blog_posts',
         },
-        (payload: any) => {
+        (payload) => {
           const newArticle = payload.new as Post | undefined;
           if (!newArticle?.is_published) return;
           notifyNewPost(newArticle as Post);

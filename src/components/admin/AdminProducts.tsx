@@ -55,7 +55,7 @@ export function AdminProducts() {
     setEditing({ ...p });
     const { data } = await supabase.from("product_locations").select("location_id,stock").eq("product_id", p.id);
     const map: Record<string, number> = {};
-    (data ?? []).forEach((r: any) => { map[r.location_id] = r.stock; });
+    (data ?? []).forEach((r: { location_id: string; stock: number }) => { map[r.location_id] = r.stock; });
     setProductLocs(map);
     setDialogOpen(true);
   };
@@ -106,7 +106,7 @@ export function AdminProducts() {
   };
 
   const patchOne = async (id: string, patch: Partial<Product>) => {
-    const { error } = await supabase.from("products").update(patch as any).eq("id", id);
+    const { error } = await supabase.from("products").update(patch).eq("id", id);
     if (error) {
       toast.error(error.message);
       return false;
@@ -117,7 +117,7 @@ export function AdminProducts() {
   const bulkPatch = async (patch: Partial<Product>) => {
     const ids = Array.from(selected);
     if (ids.length === 0) return;
-    const { error } = await supabase.from("products").update(patch as any).in("id", ids);
+    const { error } = await supabase.from("products").update(patch).in("id", ids);
     if (error) {
       toast.error(error.message);
       return;
@@ -148,7 +148,7 @@ export function AdminProducts() {
       slug: `${p.slug}-${Math.random().toString(36).slice(2, 6)}`,
       is_featured: false,
       is_active: false,
-    } as any;
+    } as Partial<Product>;
     delete base.created_at;
     delete base.updated_at;
     const { error } = await supabase.from("products").insert(base);
@@ -170,8 +170,8 @@ export function AdminProducts() {
       is_featured: !!p.is_featured,
     }));
     const headers = Object.keys(rows[0] ?? { id: "" });
-    const esc = (v: unknown) => `"${String(v ?? "").replaceAll('"', '""')}"`;
-    const csv = [headers.join(","), ...rows.map((r) => headers.map((h) => esc((r as any)[h])).join(","))].join("\n");
+    const esc = (v: unknown) => `"${String(v ?? "").replace(/"/g, '""')}"`;
+    const csv = [headers.join(","), ...rows.map((r) => headers.map((h) => esc((r as Record<string, unknown>)[h])).join(","))].join("\n");
     const blob = new Blob([csv], { type: "text/csv;charset=utf-8" });
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
@@ -287,7 +287,7 @@ export function AdminProducts() {
           </div>
           <div className="space-y-1">
             <Label>Estado</Label>
-            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as any)}>
+            <Select value={statusFilter} onValueChange={(v) => setStatusFilter(v as typeof statusFilter)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="all">Todos</SelectItem>
@@ -300,7 +300,7 @@ export function AdminProducts() {
           </div>
           <div className="space-y-1">
             <Label>Orden</Label>
-            <Select value={sortBy} onValueChange={(v) => setSortBy(v as any)}>
+            <Select value={sortBy} onValueChange={(v) => setSortBy(v as typeof sortBy)}>
               <SelectTrigger><SelectValue /></SelectTrigger>
               <SelectContent>
                 <SelectItem value="newest">Más recientes</SelectItem>

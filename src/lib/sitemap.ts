@@ -15,47 +15,52 @@ export interface SitemapURL {
  */
 export const staticUrls: SitemapURL[] = [
   {
-    url: "https://neocharge.vercel.app/",
+    url: "https://tienda-neocharge.vercel.app/",
     changefreq: "weekly",
     priority: 1.0,
   },
   {
-    url: "https://neocharge.vercel.app/tienda",
+    url: "https://tienda-neocharge.vercel.app/tienda",
     changefreq: "daily",
     priority: 0.9,
   },
   {
-    url: "https://neocharge.vercel.app/sobre-nosotros",
+    url: "https://tienda-neocharge.vercel.app/calcular-envio",
+    changefreq: "weekly",
+    priority: 0.9,
+  },
+  {
+    url: "https://tienda-neocharge.vercel.app/sobre-nosotros",
     changefreq: "monthly",
     priority: 0.7,
   },
   {
-    url: "https://neocharge.vercel.app/contacto",
+    url: "https://tienda-neocharge.vercel.app/contacto",
     changefreq: "monthly",
     priority: 0.7,
   },
   {
-    url: "https://neocharge.vercel.app/blog",
+    url: "https://tienda-neocharge.vercel.app/blog",
     changefreq: "weekly",
     priority: 0.8,
   },
   {
-    url: "https://neocharge.vercel.app/garantia",
+    url: "https://tienda-neocharge.vercel.app/garantia",
     changefreq: "monthly",
     priority: 0.6,
   },
   {
-    url: "https://neocharge.vercel.app/preguntas-frecuentes",
+    url: "https://tienda-neocharge.vercel.app/preguntas-frecuentes",
     changefreq: "monthly",
     priority: 0.6,
   },
   {
-    url: "https://neocharge.vercel.app/legales/terminos",
+    url: "https://tienda-neocharge.vercel.app/legales/terminos",
     changefreq: "yearly",
     priority: 0.3,
   },
   {
-    url: "https://neocharge.vercel.app/legales/privacidad",
+    url: "https://tienda-neocharge.vercel.app/legales/privacidad",
     changefreq: "yearly",
     priority: 0.3,
   },

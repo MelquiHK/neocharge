@@ -5,7 +5,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useAuth } from "@/contexts/AuthContext";
+import { useAuth } from "@/hooks/use-auth";
+import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { formatPrice, formatCUP } from "@/lib/format";
 import {
@@ -28,7 +29,22 @@ interface Customer {
 }
 
 interface OrderHistory {
-  id: string; total: number; status: string; created_at: string; items: any[];
+  id: string;
+  total: number;
+  status: string;
+  created_at: string;
+  items: unknown[];
+  payment_currency?: string | null;
+  exchange_rate?: number | null;
+}
+
+interface AdminPerms {
+  [key: string]: unknown;
+}
+
+interface MessengerProfile {
+  rate_per_km?: number | null;
+  vehicle_type?: string | null;
 }
 
 export function AdminCustomers() {
@@ -36,8 +52,8 @@ export function AdminCustomers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [history, setHistory] = useState<OrderHistory[]>([]);
   const [viewing, setViewing] = useState<Customer | null>(null);
-  const [perms, setPerms] = useState<any>(null);
-  const [messengerProfile, setMessengerProfile] = useState<any>(null);
+  const [perms, setPerms] = useState<AdminPerms | null>(null);
+  const [messengerProfile, setMessengerProfile] = useState<MessengerProfile | null>(null);
 
   const load = async () => {
     const [{ data: profiles }, { data: roles }] = await Promise.all([
@@ -50,7 +66,7 @@ export function AdminCustomers() {
       role: roles?.find(r => r.user_id === p.id)?.role as UserRole || "user"
     }));
     
-    setCustomers(combined as any);
+    setCustomers(combined as Customer[]);
   };
 
   useEffect(() => { load(); }, []);
@@ -62,12 +78,12 @@ export function AdminCustomers() {
       supabase.from("admin_permissions").select("*").eq("user_id", c.id).maybeSingle(),
       supabase.from("messenger_profiles").select("*").eq("user_id", c.id).maybeSingle(),
     ]);
-    setHistory((orders ?? []) as any);
+    setHistory((orders ?? []) as OrderHistory[]);
     setPerms(p);
     setMessengerProfile(m);
   };
 
-  const totalSpentUSD = history.reduce((s, o: any) => {
+  const totalSpentUSD = history.reduce((s, o: OrderHistory) => {
     if (o.payment_currency === "CUP") {
       const rate = o.exchange_rate || 1;
       return s + (Number(o.total ?? 0) / rate);
@@ -87,13 +103,13 @@ export function AdminCustomers() {
     if (!viewing) return;
     if (!perms) {
       // Ensure they have the admin role if giving admin perms
-      await supabase.from("user_roles").upsert({ user_id: viewing.id, role: "admin" as any }, { onConflict: "user_id,role" });
-      const insertPayload: any = { user_id: viewing.id, [key]: value };
-      const { data } = await supabase.from("admin_permissions").insert(insertPayload).select().single();
+      await supabase.from("user_roles").upsert({ user_id: viewing.id, role: "admin" as UserRole }, { onConflict: "user_id,role" });
+      const insertPayload: Record<string, unknown> = { user_id: viewing.id, [key]: value };
+      const { data } = await supabase.from("admin_permissions").insert(insertPayload as TablesInsert<"admin_permissions">).select().single();
       setPerms(data);
     } else {
-      const updatePayload: any = { [key]: value };
-      const { data } = await supabase.from("admin_permissions").update(updatePayload).eq("user_id", viewing.id).select().single();
+      const updatePayload: Record<string, unknown> = { [key]: value };
+      const { data } = await supabase.from("admin_permissions").update(updatePayload as TablesUpdate<"admin_permissions">).eq("user_id", viewing.id).select().single();
       setPerms(data);
     }
     toast.success("Permisos actualizados");
@@ -109,7 +125,7 @@ export function AdminCustomers() {
       // Add new role
       const { error } = await supabase.from("user_roles").insert({
         user_id: viewing.id,
-        role: newRole as any
+        role: newRole as UserRole
       });
 
       if (error) throw error;
@@ -117,8 +133,8 @@ export function AdminCustomers() {
       setViewing({ ...viewing, role: newRole });
       toast.success(`Rol actualizado a ${newRole}`);
       load();
-    } catch (error: any) {
-      toast.error("Error al actualizar rol: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Error al actualizar rol: " + (error instanceof Error ? error.message : String(error)));
     }
   };
 
@@ -126,7 +142,7 @@ export function AdminCustomers() {
     if (!viewing) return;
     await Promise.all([
       supabase.from("admin_permissions").delete().eq("user_id", viewing.id),
-      supabase.from("user_roles").delete().eq("user_id", viewing.id).eq("role", "admin" as any),
+      supabase.from("user_roles").delete().eq("user_id", viewing.id).eq("role", "admin" as UserRole),
     ]);
     setPerms(null);
     toast.success("Acceso de administrador removido");
@@ -145,8 +161,8 @@ export function AdminCustomers() {
       toast.success("Cliente eliminado exitosamente.");
       setViewing(null);
       load(); // Reload the customer list
-    } catch (error: any) {
-      toast.error("Error al eliminar cliente: " + error.message);
+    } catch (error: unknown) {
+      toast.error("Error al eliminar cliente: " + (error instanceof Error ? error.message : String(error)));
     }
   };
 
@@ -260,7 +276,7 @@ export function AdminCustomers() {
                       <div key={o.id} className="flex items-center justify-between text-sm bg-muted/30 rounded-xl p-3">
                         <div>
                           <p className="font-semibold">
-                            {(o as any).payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
+                            {o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
                           </p>
                           <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("es-CU")}</p>
                         </div>

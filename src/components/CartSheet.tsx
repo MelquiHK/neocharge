@@ -2,7 +2,7 @@ import { Link } from "react-router-dom";
 import { Minus, Plus, ShoppingBag, Trash2, X, ArrowRight } from "lucide-react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/contexts/CartContext";
+import { useCart } from "@/hooks/use-cart";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -19,8 +19,13 @@ export function CartSheet() {
     paymentCurrency,
     setPaymentCurrency,
     totalUSD,
-    totalCUP
+    totalCUP,
+    completeUSD,
+    completeCUP
   } = useCart();
+  // Sin tasa no se inventan conversiones: un total incompleto se muestra como "—".
+  const shownTotalUSD = completeUSD ? formatPrice(totalUSD) : "—";
+  const shownTotalCUP = completeCUP ? formatCUP(totalCUP) : "—";
 
   return (
     <Sheet open={isOpen} onOpenChange={(o) => (o ? null : closeCart())}>
@@ -83,9 +88,20 @@ export function CartSheet() {
                       {item.name}
                     </Link>
                     <p className="text-base font-bold text-primary mt-1">
-                      {paymentCurrency === "USD" 
-                        ? formatPrice(item.displayPriceUSD || 0) 
-                        : formatCUP(item.displayPriceCUP || 0)}
+                      {(() => {
+                        // Sin tasa no se inventa conversión: se muestra el precio
+                        // nativo disponible, nunca un 0 engañoso.
+                        const usd = item.displayPriceUSD ?? null;
+                        const cup = item.displayPriceCUP ?? null;
+                        if (paymentCurrency === "USD") {
+                          if (usd !== null) return formatPrice(usd);
+                          if (cup !== null) return formatCUP(cup);
+                        } else {
+                          if (cup !== null) return formatCUP(cup);
+                          if (usd !== null) return formatPrice(usd);
+                        }
+                        return "—";
+                      })()}
                     </p>
 
                     <div className="flex items-center justify-between mt-2">
@@ -163,7 +179,7 @@ export function CartSheet() {
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>{paymentCurrency === "USD" ? formatPrice(totalUSD) : formatCUP(totalCUP)}</span>
+                  <span>{paymentCurrency === "USD" ? shownTotalUSD : shownTotalCUP}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>Envío</span>
@@ -173,12 +189,12 @@ export function CartSheet() {
                   <span className="tracking-tight">Total estimado</span>
                   <div className="text-right">
                     <span className="text-primary text-3xl block tracking-tighter text-glow">
-                      {paymentCurrency === "USD" ? formatPrice(totalUSD) : formatCUP(totalCUP)}
+                      {paymentCurrency === "USD" ? shownTotalUSD : shownTotalCUP}
                     </span>
                     {paymentCurrency === "USD" ? (
-                      <span className="text-xs text-muted-foreground block font-normal">≈ {formatCUP(totalCUP)}</span>
+                      completeCUP && <span className="text-xs text-muted-foreground block font-normal">≈ {formatCUP(totalCUP)}</span>
                     ) : (
-                      <span className="text-xs text-muted-foreground block font-normal">≈ {formatPrice(totalUSD)}</span>
+                      completeUSD && <span className="text-xs text-muted-foreground block font-normal">≈ {formatPrice(totalUSD)}</span>
                     )}
                   </div>
                 </div>

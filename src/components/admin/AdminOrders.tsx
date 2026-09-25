@@ -77,7 +77,7 @@ export function AdminOrders() {
 
   const saveOrderDetails = async () => {
     if (!viewing) return;
-    const paymentCurrency = (viewing as any).payment_currency || "USD";
+    const paymentCurrency = viewing.payment_currency || "USD";
     const subtotalUsd = Number(viewing.subtotal || 0);
     const subtotalCup = Number(viewing.total_cup ?? viewing.subtotal ?? 0);
     const shippingValue = Number(deliveryFee || 0);
@@ -98,7 +98,7 @@ export function AdminOrders() {
 
   const sendReceipt = async () => {
     if (!viewing) return;
-    const currency = (viewing as any).payment_currency || "USD";
+    const currency = viewing.payment_currency || "USD";
     const items = parseOrderItems(viewing.items)
       .map((it) => {
         const itemPrice = currency === "USD" ? (it.displayPriceUSD || it.price) : (it.displayPriceCUP || it.price);
@@ -106,7 +106,7 @@ export function AdminOrders() {
       })
       .join("\n");
     
-    const paymentCurrency = (viewing as any).payment_currency || "USD";
+    const paymentCurrency = viewing.payment_currency || "USD";
     const subtotalFormatted = paymentCurrency === "USD"
       ? `USD ${formatPrice(Number(viewing.subtotal || 0))}`
       : `CUP ${formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0))}`;
@@ -217,7 +217,7 @@ export function AdminOrders() {
                     </div>
                   </td>
                   <td className="py-3 px-4 font-bold text-primary">
-                    {(o as any).payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
+                    {o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
                   </td>
                   <td className="py-3 px-4">{statusBadge(o.status)}</td>
                   <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("es-CU")}</td>
@@ -275,7 +275,7 @@ export function AdminOrders() {
                   <p className="text-xs text-muted-foreground uppercase">Productos</p>
                   <div className="space-y-2">
                     {parseOrderItems(viewing.items).map((it, i) => {
-                      const currency = (viewing as any).payment_currency || "USD";
+                      const currency = viewing.payment_currency || "USD";
                       const itemPrice = currency === "USD" ? (it.displayPriceUSD || it.price) : (it.displayPriceCUP || it.price);
                       return (
                         <div key={i} className="flex items-center justify-between bg-muted/30 rounded-xl p-3 text-sm">
@@ -313,7 +313,7 @@ export function AdminOrders() {
 
               <div className="rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 p-4 space-y-1">
                 {(() => {
-                  const currency = (viewing as any).payment_currency || "USD";
+                  const currency = viewing.payment_currency || "USD";
                   return (
                     <>
                       <div className="flex justify-between text-sm">

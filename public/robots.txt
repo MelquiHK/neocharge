@@ -15,7 +15,7 @@ Disallow: /.git/
 Crawl-delay: 1
 
 # Sitemaps
-Sitemap: https://neocharge.vercel.app/sitemap.xml
+Sitemap: https://tienda-neocharge.vercel.app/sitemap.xml
 
 # Specific rules for Google
 User-agent: Googlebot

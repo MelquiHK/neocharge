@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { SiteSettings } from "@/types";
@@ -27,7 +27,16 @@ export function useAdminSettings() {
   const [settings, setSettings] = useState<SiteSettings>(DEFAULT_SETTINGS);
   const [loading, setLoading] = useState(true);
 
-  const load = async () => {
+  const errorMessage = (error: unknown): string => {
+    if (error instanceof Error) return error.message;
+    if (typeof error === "object" && error !== null && "message" in error) {
+      const m = (error as { message?: unknown }).message;
+      if (typeof m === "string") return m;
+    }
+    return String(error);
+  };
+
+  const load = useCallback(async () => {
     setLoading(true);
     try {
       const { data, error } = await supabase
@@ -37,21 +46,22 @@ export function useAdminSettings() {
         .maybeSingle();
       if (error) throw error;
       setSettings({ ...DEFAULT_SETTINGS, ...(data ?? {}) });
-    } catch (error: any) {
+    } catch (error: unknown) {
       // If migration wasn't applied and the column/table is missing, show a clearer message
-      if (error && typeof error.message === "string" && error.message.includes("setting_key")) {
+      const msg = errorMessage(error);
+      if (msg.includes("setting_key")) {
         toast.error("No se pudo cargar la configuración del sitio: falta la columna site_content_settings.setting_key. Ejecuta la migración SQL 'supabase/migrations/20260521000100_12d3a4b5_add_site_settings.sql'.");
       } else {
-        toast.error("No se pudo cargar la configuración del sitio: " + (error?.message ?? String(error)));
+        toast.error("No se pudo cargar la configuración del sitio: " + msg);
       }
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     load();
-  }, []);
+  }, [load]);
 
   const saveSettings = async (newSettings: SiteSettings) => {
     try {
@@ -63,11 +73,12 @@ export function useAdminSettings() {
       toast.success("Configuración guardada");
       await load();
       return true;
-    } catch (error: any) {
-      if (error && typeof error.message === "string" && error.message.includes("setting_key")) {
+    } catch (error: unknown) {
+      const msg = errorMessage(error);
+      if (msg.includes("setting_key")) {
         toast.error("Error al guardar: falta la columna site_content_settings.setting_key. Ejecuta la migración SQL en 'supabase/migrations/20260521000100_12d3a4b5_add_site_settings.sql'.");
       } else {
-        toast.error("Error al guardar configuración: " + (error?.message ?? String(error)));
+        toast.error("Error al guardar configuración: " + msg);
       }
       return false;
     }

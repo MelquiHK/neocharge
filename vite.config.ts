@@ -49,8 +49,21 @@ export default defineConfig(({ mode }) => ({
       },
       // Esto genera el Service Worker automáticamente en el build
       workbox: {
-        globPatterns: ['**/*.{js,css,html,ico,png,svg,webmanifest}'],
+        // Las imágenes NO se precachean (ahorra ~2MB en la primera carga):
+        // se sirven con caché en tiempo de ejecución más abajo.
+        globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest}'],
         cleanupOutdatedCaches: true,
+        maximumFileSizeToCacheInBytes: 1024 * 1024,
+        runtimeCaching: [
+          {
+            urlPattern: ({ request }) => request.destination === 'image',
+            handler: 'CacheFirst',
+            options: {
+              cacheName: 'neocharge-images',
+              expiration: { maxEntries: 80, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+        ],
       }
     })
   ].filter(Boolean),

@@ -256,7 +256,7 @@ export function AdminBlog() {
     if (postEditing.id) {
       const { data, error } = await supabase
         .from("blog_posts")
-        .update(payload as any)
+        .update(payload)
         .eq("id", postEditing.id)
         .select("id,title,slug")
         .single();
@@ -266,7 +266,7 @@ export function AdminBlog() {
     } else {
       const { data, error } = await supabase
         .from("blog_posts")
-        .insert(payload as any)
+        .insert(payload)
         .select("id,title,slug")
         .single();
       if (error) return toast.error(error.message);
@@ -677,7 +677,6 @@ export function AdminBlog() {
                             // sequential upload (simpler)
                             (async () => {
                               for (const f of files) {
-                                // eslint-disable-next-line no-await-in-loop
                                 await handleImageUpload(f);
                               }
                             })();
@@ -723,7 +722,6 @@ export function AdminBlog() {
                       if (files.length > 0) {
                         (async () => {
                           for (const f of files) {
-                            // eslint-disable-next-line no-await-in-loop
                             await handleImageUpload(f);
                           }
                         })();

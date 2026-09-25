@@ -13,8 +13,8 @@ export function useAdminCategories() {
       const { data, error } = await supabase.from("categories").select("*").order("sort_order");
       if (error) throw error;
       setCategories(data ?? []);
-    } catch (error: any) {
-      toast.error(error.message);
+    } catch (error: unknown) {
+      toast.error(error instanceof Error ? error.message : String(error));
     } finally {
       setLoading(false);
     }

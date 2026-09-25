@@ -30,25 +30,41 @@ interface PriceableProduct {
 }
 
 /**
- * Calcula el precio de visualización en USD y/o CUP según la tasa actual.
+ * Precio de visualización en USD y/o CUP según la tasa actual.
  * - Si el producto está en USD: muestra USD y conversión a CUP usando tasa (+ extra si es cargador).
  * - Si el producto está en CUP: muestra CUP fijo (price_cup o price).
+ *
+ * IMPORTANTE: si no hay tasa (rate === null), NO se inventa ninguna conversión.
+ * Los valores convertidos quedan en `null` y quien renderiza debe mostrar "—"
+ * u omitir esa parte, nunca un número calculado con tasa 1.
  */
-export function computeDisplayPrice(product: PriceableProduct, rate: ExchangeRate | null) {
+export type DisplayPrice = { usd: number | null; cup: number | null; primary: "USD" | "CUP" };
+
+export function computeDisplayPrice(product: PriceableProduct, rate: ExchangeRate | null): DisplayPrice {
   const currency = (product.currency ?? "USD").toUpperCase();
   const isCharger = product.warranty_type === "charger";
-  const actualRate = rate ? Number(rate.usd_to_cup) : 1; // Default to 1 if rate is null or undefined
-  const actualExtraCupChargers = (isCharger && rate) ? Number(rate.extra_cup_chargers) : 0;
+
+  if (!rate) {
+    if (currency === "CUP") {
+      const cup = Number(product.price_cup ?? product.price);
+      return { usd: null, cup, primary: "CUP" as const };
+    }
+    const usd = Number(product.price || 0);
+    return { usd, cup: null, primary: "USD" as const };
+  }
+
+  const actualRate = Number(rate.usd_to_cup);
+  const actualExtraCupChargers = isCharger ? Number(rate.extra_cup_chargers) : 0;
   const extraPerUsd = Number(product.extra_cup_per_usd ?? 0) || actualExtraCupChargers;
 
   if (currency === "CUP") {
     const cup = Number(product.price_cup ?? product.price);
-    const usd = cup / actualRate; // Use actualRate here
+    const usd = cup / actualRate;
     return { usd, cup, primary: "CUP" as const };
   }
 
   // USD
   const usd = Number(product.price || 0);
-  const cup = usd * (actualRate + extraPerUsd); // Use actualRate here
+  const cup = usd * (actualRate + extraPerUsd);
   return { usd, cup, primary: "USD" as const };
 }

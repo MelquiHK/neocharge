@@ -23,10 +23,10 @@ export function AdminRates() {
 
   const load = async () => {
     const { data } = await supabase.from("exchange_rates").select("*").order("rate_date", { ascending: false }).limit(30);
-    setRates((data ?? []) as any);
+    setRates((data ?? []) as Rate[]);
     if (data && data.length > 0) {
       const today = new Date().toISOString().split("T")[0];
-      const todays = data.find((r: any) => r.rate_date === today);
+      const todays = data.find((r: Rate) => r.rate_date === today);
       if (todays) {
         setTodayRate(String(todays.usd_to_cup));
         setExtra(String(todays.extra_cup_chargers));
