@@ -21,6 +21,7 @@ import {
   ShieldAlert,
   Store,
   ChevronRight,
+  Wallet,
 } from "lucide-react";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminProducts } from "@/components/admin/AdminProducts";
@@ -31,6 +32,7 @@ import { AdminCustomers } from "@/components/admin/AdminCustomers";
 import { AdminRates } from "@/components/admin/AdminRates";
 import { AdminBlog } from "@/components/admin/AdminBlog";
 import { AdminSales } from "@/components/admin/AdminSales";
+import { AdminCashbox } from "@/components/admin/AdminCashbox";
 import { AdminServices } from "@/components/admin/AdminServices";
 import { AdminMessenger } from "@/components/admin/AdminMessenger";
 import { AdminSettings } from "@/components/admin/AdminSettings";
@@ -96,6 +98,7 @@ const Admin = () => {
       items: [
         { v: "orders", l: "Pedidos", icon: ShoppingBag, show: isOwner || permissions.can_manage_orders, badge: unreadCount > 0 ? unreadCount : undefined },
         { v: "sales", l: "Ventas", icon: TrendingUp, show: isOwner || permissions.can_manage_orders || permissions.can_view_finances },
+        { v: "cashbox", l: "Caja", icon: Wallet, show: isOwner || permissions.can_view_finances },
         { v: "customers", l: "Clientes", icon: Users, show: isOwner || permissions.can_manage_customers },
       ],
     },
@@ -144,6 +147,7 @@ const Admin = () => {
       case "settings": return <AdminSettings />;
       case "blog": return <AdminBlog />;
       case "sales": return <AdminSales />;
+      case "cashbox": return <AdminCashbox />;
       default: return <AdminDashboard />;
     }
   };

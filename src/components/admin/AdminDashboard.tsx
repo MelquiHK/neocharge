@@ -2,11 +2,13 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { useAdminSales } from "@/hooks/admin/use-admin-sales";
-import { computeSalesTotalsBySeller } from "@/lib/sales";
+import { computeOwnerSalesSummary, computeSalesTotalsBySeller } from "@/lib/sales";
+import { useCashbox } from "@/hooks/admin/use-cashbox";
+import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Package, ShoppingBag, Users, DollarSign, TrendingUp, AlertTriangle, Eye,
-  LayoutDashboard, UserCheck, BarChart3, HandCoins, Globe, History,
+  LayoutDashboard, UserCheck, BarChart3, HandCoins, Globe, History, Wallet,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -167,6 +169,18 @@ export function AdminDashboard() {
 
   const { sales } = useAdminSales();
   const salesTotals = computeSalesTotalsBySeller(sales ?? []);
+  const { cashbox } = useCashbox();
+  const { rate } = useExchangeRate();
+  const rateValue = rate?.usd_to_cup ?? 0;
+
+  const summaryGlobal = computeOwnerSalesSummary(sales ?? [], rateValue);
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthSales = (sales ?? []).filter(
+    (s) => s.created_at && new Date(s.created_at) >= monthStart
+  );
+  const summaryMonth = computeOwnerSalesSummary(monthSales, rateValue);
 
   const cards = [
     { icon: Package, label: "Productos activos", value: stats.products, tone: "blue" as const, sub: "En catálogo" },
@@ -205,29 +219,54 @@ export function AdminDashboard() {
       </div>
 
       {permissions.can_view_finances && (
-        <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
-          <AdminStat
-            icon={DollarSign}
-            label="Ingresos del mes"
-            value={formatPrice(stats.revenueMonth)}
-            sub="Mes en curso (USD)"
-            tone="emerald"
-          />
-          <AdminStat
-            icon={Package}
-            label="Costos del mes"
-            value={formatPrice(stats.costsMonth)}
-            sub="Mercancía vendida"
-            tone="slate"
-          />
-          <AdminStat
-            icon={TrendingUp}
-            label="Ganancia"
-            value={formatPrice(profit)}
-            sub={`Margen ${margin.toFixed(1)}%`}
-            tone="emerald"
-          />
-        </div>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <AdminStat
+              icon={DollarSign}
+              label="Ingresos del mes"
+              value={formatPrice(stats.revenueMonth)}
+              sub="Mes en curso (USD)"
+              tone="emerald"
+            />
+            <AdminStat
+              icon={Package}
+              label="Costos del mes"
+              value={formatPrice(stats.costsMonth)}
+              sub="Mercancía vendida"
+              tone="slate"
+            />
+            <AdminStat
+              icon={TrendingUp}
+              label="Ganancia"
+              value={formatPrice(profit)}
+              sub={`Margen ${margin.toFixed(1)}%`}
+              tone="emerald"
+            />
+          </div>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <AdminStat
+              icon={ShoppingBag}
+              label="Ventas del mes"
+              value={monthSales.length}
+              sub={`${formatPrice(summaryMonth.totalUSD)} · ${formatCUP(summaryMonth.totalCUP)}`}
+              tone="blue"
+            />
+            <AdminStat
+              icon={HandCoins}
+              label="Comisiones pendientes"
+              value={formatCUP(summaryGlobal.pendingCUP)}
+              sub="Por pagar a gestores"
+              tone="amber"
+            />
+            <AdminStat
+              icon={Wallet}
+              label="Caja actual"
+              value={`${formatPrice(cashbox.cash_usd)} · ${formatCUP(cashbox.cash_cup)}`}
+              sub="Dinero en caja"
+              tone="emerald"
+            />
+          </div>
+        </>
       )}
 
       {permissions.can_view_finances && (
