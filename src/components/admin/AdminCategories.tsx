@@ -11,11 +11,21 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ArrowDown, ArrowUp, Image as ImageIcon, Plus, Pencil, Trash2 } from "lucide-react";
+import { ArrowDown, ArrowUp, Image as ImageIcon, Plus, Pencil, Trash2, FolderTree } from "lucide-react";
 import { toast } from "sonner";
 import { Category } from "@/types";
 import { useAdminCategories } from "@/hooks/admin/use-admin-categories";
 import { categorySchema } from "@/lib/schemas";
+import {
+  AdminSectionHeader,
+  AdminTable,
+  AdminTableHead,
+  AdminEmptyState,
+  AdminLoading,
+  adminTh,
+  adminTd,
+  adminTr,
+} from "./ui";
 
 const slugify = (s: string) =>
   s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "")
@@ -75,62 +85,123 @@ export function AdminCategories() {
     await deleteCategory(id);
   };
 
-  return (
-    <div className="space-y-6 max-w-3xl">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{cats.length} categorías</p>
-        <Button variant="hero" onClick={() => { setEditing({ ...empty, sort_order: cats.length }); setOpen(true); }}>
-          <Plus className="w-4 h-4" /> Nueva
-        </Button>
-      </div>
+  const openNew = () => {
+    setEditing({ ...empty, sort_order: cats.length });
+    setOpen(true);
+  };
 
-      <div className="card-elevated p-0 overflow-hidden">
-        <table className="w-full text-sm">
-          <thead className="bg-muted/50">
-            <tr className="text-left text-xs uppercase text-muted-foreground">
-              <th className="py-3 px-4 w-16">Orden</th>
-              <th className="py-3 px-4">Imagen</th>
-              <th className="py-3 px-4">Nombre</th>
-              <th className="py-3 px-4">Slug</th>
-              <th className="py-3 px-4 text-right">Acciones</th>
+  return (
+    <div className="mx-auto max-w-3xl space-y-6">
+      <AdminSectionHeader
+        icon={FolderTree}
+        title="Categorías"
+        description="Organiza tu catálogo por categorías."
+        actions={
+          <Button variant="hero" className="h-11" onClick={openNew}>
+            <Plus className="h-4 w-4" /> Nueva
+          </Button>
+        }
+      />
+
+      <p className="text-sm text-muted-foreground">
+        {cats.length} {cats.length === 1 ? "categoría" : "categorías"}
+      </p>
+
+      {loading && cats.length === 0 ? (
+        <AdminLoading label="Cargando categorías…" />
+      ) : cats.length === 0 ? (
+        <AdminEmptyState
+          icon={FolderTree}
+          title="Sin categorías"
+          description="Crea la primera categoría para empezar a organizar tu catálogo."
+          action={
+            <Button variant="hero" className="h-11" onClick={openNew}>
+              <Plus className="h-4 w-4" /> Crear categoría
+            </Button>
+          }
+        />
+      ) : (
+        <AdminTable>
+          <AdminTableHead>
+            <tr>
+              <th className={adminTh}>Orden</th>
+              <th className={adminTh}>Imagen</th>
+              <th className={adminTh}>Nombre</th>
+              <th className={adminTh}>Slug</th>
+              <th className={`${adminTh} text-right`}>Acciones</th>
             </tr>
-          </thead>
+          </AdminTableHead>
           <tbody>
             {cats.map((c) => (
-              <tr key={c.id} className="border-t border-border">
-                <td className="py-3 px-4">
-                  <div className="flex flex-col gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => c.id && move(c.id, "up")} disabled={cats[0]?.id === c.id}>
-                      <ArrowUp className="w-4 h-4" />
+              <tr key={c.id} className={adminTr}>
+                <td className={adminTd}>
+                  <div className="flex gap-1">
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-10 w-10"
+                      onClick={() => c.id && move(c.id, "up")}
+                      disabled={cats[0]?.id === c.id}
+                      aria-label="Subir orden"
+                    >
+                      <ArrowUp className="h-4 w-4" />
                     </Button>
-                    <Button size="icon" variant="ghost" onClick={() => c.id && move(c.id, "down")} disabled={cats[cats.length - 1]?.id === c.id}>
-                      <ArrowDown className="w-4 h-4" />
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-10 w-10"
+                      onClick={() => c.id && move(c.id, "down")}
+                      disabled={cats[cats.length - 1]?.id === c.id}
+                      aria-label="Bajar orden"
+                    >
+                      <ArrowDown className="h-4 w-4" />
                     </Button>
                   </div>
                 </td>
-                <td className="py-3 px-4">
-                  <div className="w-12 h-12 rounded-xl bg-secondary overflow-hidden flex items-center justify-center">
+                <td className={adminTd}>
+                  <div className="flex h-12 w-12 items-center justify-center overflow-hidden rounded-xl bg-muted">
                     {c.image_url ? (
-                      <img src={c.image_url} alt="" className="w-full h-full object-cover" />
+                      <img src={c.image_url} alt="" className="h-full w-full object-cover" />
                     ) : (
-                      <ImageIcon className="w-5 h-5 text-muted-foreground" />
+                      <ImageIcon className="h-5 w-5 text-muted-foreground" />
                     )}
                   </div>
                 </td>
-                <td className="py-3 px-4 font-semibold">{c.name}</td>
-                <td className="py-3 px-4 text-muted-foreground text-xs">{c.slug}</td>
-                <td className="py-3 px-4 text-right">
+                <td className={adminTd}>
+                  <p className="font-semibold">{c.name}</p>
+                </td>
+                <td className={adminTd}>
+                  <p className="font-mono text-xs text-muted-foreground">{c.slug}</p>
+                </td>
+                <td className={`${adminTd} text-right`}>
                   <div className="inline-flex gap-1">
-                    <Button size="icon" variant="ghost" onClick={() => { setEditing(c); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>
+                    <Button
+                      size="icon"
+                      variant="ghost"
+                      className="h-10 w-10"
+                      onClick={() => { setEditing(c); setOpen(true); }}
+                      aria-label="Editar"
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="icon" variant="ghost" className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
+                        <Button size="icon" variant="ghost" className="h-10 w-10 text-destructive" aria-label="Eliminar">
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
                       </AlertDialogTrigger>
-                      <AlertDialogContent>
-                        <AlertDialogHeader><AlertDialogTitle>¿Eliminar "{c.name}"?</AlertDialogTitle></AlertDialogHeader>
+                      <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+                        <AlertDialogHeader>
+                          <AlertDialogTitle>¿Eliminar "{c.name}"?</AlertDialogTitle>
+                          <AlertDialogDescription>
+                            La categoría se eliminará definitivamente.
+                          </AlertDialogDescription>
+                        </AlertDialogHeader>
                         <AlertDialogFooter>
-                          <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                          <AlertDialogAction onClick={() => c.id && remove(c.id)} className="bg-destructive">Eliminar</AlertDialogAction>
+                          <AlertDialogCancel className="h-11">Cancelar</AlertDialogCancel>
+                          <AlertDialogAction onClick={() => c.id && remove(c.id)} className="h-11 bg-destructive">
+                            Eliminar
+                          </AlertDialogAction>
                         </AlertDialogFooter>
                       </AlertDialogContent>
                     </AlertDialog>
@@ -138,43 +209,69 @@ export function AdminCategories() {
                 </td>
               </tr>
             ))}
-            {cats.length === 0 && <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">Sin categorías. Crea la primera.</td></tr>}
           </tbody>
-        </table>
-      </div>
+        </AdminTable>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent>
+        <DialogContent className="max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing?.id ? "Editar categoría" : "Nueva categoría"}</DialogTitle>
+            <DialogDescription>
+              {editing?.id ? "Actualiza los datos de la categoría." : "Completa los datos de la nueva categoría."}
+            </DialogDescription>
           </DialogHeader>
           {editing && (
-            <div className="space-y-3">
+            <div className="space-y-4">
               <div className="space-y-2">
                 <Label>Nombre *</Label>
-                <Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value, slug: editing.id ? editing.slug : slugify(e.target.value) })} />
+                <Input
+                  className="h-11"
+                  value={editing.name}
+                  onChange={(e) => setEditing({ ...editing, name: e.target.value, slug: editing.id ? editing.slug : slugify(e.target.value) })}
+                />
               </div>
-              <div className="space-y-2">
-                <Label>Slug</Label>
-                <Input value={editing.slug} onChange={(e) => setEditing({ ...editing, slug: e.target.value })} />
+              <div className="grid gap-4 sm:grid-cols-2">
+                <div className="space-y-2">
+                  <Label>Slug</Label>
+                  <Input
+                    className="h-11 font-mono"
+                    value={editing.slug}
+                    onChange={(e) => setEditing({ ...editing, slug: e.target.value })}
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label>Orden</Label>
+                  <Input
+                    type="number"
+                    className="h-11"
+                    value={editing.sort_order}
+                    onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })}
+                  />
+                </div>
               </div>
               <div className="space-y-2">
                 <Label>Descripción</Label>
-                <Textarea value={editing.description ?? ""} onChange={(e) => setEditing({ ...editing, description: e.target.value })} className="min-h-[60px]" />
+                <Textarea
+                  value={editing.description ?? ""}
+                  onChange={(e) => setEditing({ ...editing, description: e.target.value })}
+                  className="min-h-[60px]"
+                />
               </div>
               <div className="space-y-2">
                 <Label>Imagen (URL)</Label>
-                <Input value={editing.image_url ?? ""} onChange={(e) => setEditing({ ...editing, image_url: e.target.value })} placeholder="https://..." />
-              </div>
-              <div className="space-y-2">
-                <Label>Orden</Label>
-                <Input type="number" value={editing.sort_order} onChange={(e) => setEditing({ ...editing, sort_order: Number(e.target.value) })} />
+                <Input
+                  className="h-11"
+                  value={editing.image_url ?? ""}
+                  onChange={(e) => setEditing({ ...editing, image_url: e.target.value })}
+                  placeholder="https://..."
+                />
               </div>
             </div>
           )}
           <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button variant="hero" onClick={save}>Guardar</Button>
+            <Button variant="ghost" className="h-11" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button variant="hero" className="h-11" onClick={save}>Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

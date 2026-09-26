@@ -5,7 +5,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Badge } from "@/components/ui/badge";
 import { Checkbox } from "@/components/ui/checkbox";
 import {
   Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
@@ -14,11 +13,24 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ExternalLink, MapPin, MessageCircle, Trash2, Eye, Send } from "lucide-react";
+import { ExternalLink, MapPin, MessageCircle, Trash2, Eye, Send, ShoppingBag } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { Order, OrderStatus, OrderItem } from "@/types";
 import { useAdminOrders } from "@/hooks/admin/use-admin-orders";
+import { cn } from "@/lib/utils";
+import {
+  AdminEmptyState,
+  AdminFilters,
+  AdminLoading,
+  AdminSectionHeader,
+  AdminTable,
+  AdminTableHead,
+  StatusBadge,
+  adminTd,
+  adminTh,
+  adminTr,
+} from "./ui";
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
 
@@ -32,7 +44,7 @@ const parseOrderItems = (items: Order["items"]): (OrderItem & { currency?: strin
     const currency = typeof it.currency === "string" ? it.currency : undefined;
     const displayPriceUSD = typeof it.displayPriceUSD === "number" ? it.displayPriceUSD : undefined;
     const displayPriceCUP = typeof it.displayPriceCUP === "number" ? it.displayPriceCUP : undefined;
-    
+
     if (!name || !Number.isFinite(quantity) || !Number.isFinite(price)) return [];
     return [{ name, quantity, price, currency, displayPriceUSD, displayPriceCUP }];
   });
@@ -46,6 +58,17 @@ const STATUSES = [
   { v: "delivered", l: "Entregado", c: "bg-success/20 text-success" },
   { v: "cancelled", l: "Cancelado", c: "bg-destructive/20 text-destructive" },
 ] satisfies Array<{ v: OrderStatus; l: string; c: string }>;
+
+type StatusTone = "warning" | "info" | "primary" | "success" | "danger";
+
+const STATUS_TONES: Record<OrderStatus, StatusTone> = {
+  pending: "warning",
+  confirmed: "info",
+  preparing: "primary",
+  shipped: "primary",
+  delivered: "success",
+  cancelled: "danger",
+};
 
 export function AdminOrders() {
   const { orders, loading, updateStatus, deleteOrder, deleteManyOrders, refresh: load } = useAdminOrders();
@@ -105,7 +128,7 @@ export function AdminOrders() {
         return `• ${it.name} x${it.quantity} — ${currency === "USD" ? formatPrice(itemPrice * it.quantity) : formatCUP(itemPrice * it.quantity)}`;
       })
       .join("\n");
-    
+
     const paymentCurrency = viewing.payment_currency || "USD";
     const subtotalFormatted = paymentCurrency === "USD"
       ? `USD ${formatPrice(Number(viewing.subtotal || 0))}`
@@ -138,14 +161,20 @@ export function AdminOrders() {
 
   const statusBadge = (s: OrderStatus) => {
     const st = STATUSES.find((x) => x.v === s);
-    return <Badge className={st?.c ?? "bg-secondary"}>{st?.l ?? s}</Badge>;
+    return <StatusBadge tone={STATUS_TONES[s] ?? "neutral"}>{st?.l ?? s}</StatusBadge>;
   };
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-wrap items-center justify-between gap-3">
+      <AdminSectionHeader
+        icon={ShoppingBag}
+        title="Pedidos"
+        description="Gestiona, confirma y da seguimiento a cada pedido."
+      />
+
+      <AdminFilters>
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="w-48"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-10 w-full sm:w-48"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos ({orders.length})</SelectItem>
             {STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.l}</SelectItem>)}
@@ -154,7 +183,7 @@ export function AdminOrders() {
         {selected.size > 0 && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm"><Trash2 className="w-4 h-4" /> Eliminar {selected.size}</Button>
+              <Button variant="destructive" size="sm" className="h-10"><Trash2 className="h-4 w-4" /> Eliminar {selected.size}</Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -168,128 +197,141 @@ export function AdminOrders() {
             </AlertDialogContent>
           </AlertDialog>
         )}
-      </div>
+      </AdminFilters>
 
-      <div className="card-elevated p-0 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr className="text-left text-xs uppercase text-muted-foreground">
-                <th className="py-3 px-4 w-10">
+      {loading ? (
+        <AdminLoading label="Cargando pedidos…" />
+      ) : filtered.length === 0 ? (
+        <AdminEmptyState
+          icon={ShoppingBag}
+          title="No hay pedidos"
+          description={filter === "all" ? "Aún no se han registrado pedidos en la tienda." : "No hay pedidos con este estado. Prueba con otro filtro."}
+        />
+      ) : (
+        <AdminTable>
+          <AdminTableHead>
+            <tr>
+              <th className={cn(adminTh, "w-10")}>
+                <Checkbox
+                  checked={selected.size === filtered.length && filtered.length > 0}
+                  onCheckedChange={(v) => {
+                    const checked = v === true;
+                    setSelected(checked ? new Set(filtered.map((o) => o.id)) : new Set());
+                  }}
+                />
+              </th>
+              <th className={adminTh}>Cliente</th>
+              <th className={adminTh}>Entrega</th>
+              <th className={adminTh}>Total</th>
+              <th className={adminTh}>Estado</th>
+              <th className={adminTh}>Fecha</th>
+              <th className={cn(adminTh, "text-right")}>Acciones</th>
+            </tr>
+          </AdminTableHead>
+          <tbody>
+            {filtered.map((o) => (
+              <tr key={o.id} className={adminTr}>
+                <td className={adminTd}>
                   <Checkbox
-                    checked={selected.size === filtered.length && filtered.length > 0}
+                    checked={selected.has(o.id)}
                     onCheckedChange={(v) => {
-                      const checked = v === true;
-                      setSelected(checked ? new Set(filtered.map((o) => o.id)) : new Set());
+                      const n = new Set(selected);
+                      if (v === true) n.add(o.id);
+                      else n.delete(o.id);
+                      setSelected(n);
                     }}
                   />
-                </th>
-                <th className="py-3 px-4">Cliente</th>
-                <th className="py-3 px-4">Entrega</th>
-                <th className="py-3 px-4">Total</th>
-                <th className="py-3 px-4">Estado</th>
-                <th className="py-3 px-4">Fecha</th>
-                <th className="py-3 px-4 text-right">Acciones</th>
+                </td>
+                <td className={adminTd}>
+                  <div className="flex items-center gap-2.5">
+                    <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary">
+                      {(o.customer_name || "?").trim().charAt(0).toUpperCase()}
+                    </div>
+                    <div className="min-w-0">
+                      <p className="truncate font-semibold">{o.customer_name}</p>
+                      <p className="text-xs text-muted-foreground">{o.customer_phone}</p>
+                    </div>
+                  </div>
+                </td>
+                <td className={adminTd}>
+                  <div className="flex items-center gap-1.5 text-xs">
+                    {o.delivery_method === "delivery" ? "🚚 Domicilio" : "🏪 Recoger"}
+                    {o.location_link && <a href={o.location_link} target="_blank" rel="noreferrer" className="text-primary"><MapPin className="h-3.5 w-3.5" /></a>}
+                  </div>
+                </td>
+                <td className={cn(adminTd, "whitespace-nowrap font-display text-base font-bold text-primary")}>
+                  {o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
+                </td>
+                <td className={adminTd}>{statusBadge(o.status)}</td>
+                <td className={cn(adminTd, "whitespace-nowrap text-xs text-muted-foreground")}>{new Date(o.created_at).toLocaleString("es-CU")}</td>
+                <td className={adminTd}>
+                  <div className="flex items-center justify-end gap-1.5">
+                    <Button size="icon" variant="ghost" className="h-9 w-9" onClick={() => openView(o)} aria-label="Ver pedido"><Eye className="h-4 w-4" /></Button>
+                    <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v as OrderStatus)}>
+                      <SelectTrigger className="h-9 w-32 text-xs"><SelectValue /></SelectTrigger>
+                      <SelectContent>{STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.l}</SelectItem>)}</SelectContent>
+                    </Select>
+                  </div>
+                </td>
               </tr>
-            </thead>
-            <tbody>
-              {filtered.map((o) => (
-                <tr key={o.id} className="border-t border-border hover:bg-muted/20">
-                  <td className="py-3 px-4">
-                    <Checkbox
-                      checked={selected.has(o.id)}
-                      onCheckedChange={(v) => {
-                        const n = new Set(selected);
-                        if (v === true) n.add(o.id);
-                        else n.delete(o.id);
-                        setSelected(n);
-                      }}
-                    />
-                  </td>
-                  <td className="py-3 px-4">
-                    <p className="font-semibold">{o.customer_name}</p>
-                    <p className="text-xs text-muted-foreground">{o.customer_phone}</p>
-                  </td>
-                  <td className="py-3 px-4">
-                    <div className="flex items-center gap-1 text-xs">
-                      {o.delivery_method === "delivery" ? "🚚 Domicilio" : "🏪 Recoger"}
-                      {o.location_link && <a href={o.location_link} target="_blank" rel="noreferrer" className="text-primary"><MapPin className="w-3 h-3" /></a>}
-                    </div>
-                  </td>
-                  <td className="py-3 px-4 font-bold text-primary">
-                    {o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
-                  </td>
-                  <td className="py-3 px-4">{statusBadge(o.status)}</td>
-                  <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("es-CU")}</td>
-                  <td className="py-3 px-4 text-right">
-                    <div className="inline-flex gap-1">
-                      <Button size="icon" variant="ghost" onClick={() => openView(o)}><Eye className="w-4 h-4" /></Button>
-                      <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v as OrderStatus)}>
-                        <SelectTrigger className="h-8 w-32 text-xs"><SelectValue /></SelectTrigger>
-                        <SelectContent>{STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.l}</SelectItem>)}</SelectContent>
-                      </Select>
-                    </div>
-                  </td>
-                </tr>
-              ))}
-              {filtered.length === 0 && (
-                <tr><td colSpan={7} className="py-10 text-center text-muted-foreground">No hay pedidos.</td></tr>
-              )}
-            </tbody>
-          </table>
-        </div>
-      </div>
+            ))}
+          </tbody>
+        </AdminTable>
+      )}
 
       <Dialog open={!!viewing} onOpenChange={(v) => !v && setViewing(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
-            <DialogTitle>Pedido de {viewing?.customer_name}</DialogTitle>
+            <DialogTitle className="flex flex-wrap items-center gap-2">
+              Pedido de {viewing?.customer_name}
+              {viewing && statusBadge(viewing.status)}
+            </DialogTitle>
             <DialogDescription>{viewing && new Date(viewing.created_at).toLocaleString("es-CU")}</DialogDescription>
           </DialogHeader>
           {viewing && (
             <div className="space-y-5">
-              <div className="grid sm:grid-cols-2 gap-3 text-sm">
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase">Cliente</p>
+              <div className="grid gap-3 text-sm sm:grid-cols-2">
+                <div className="space-y-1 rounded-2xl border border-border/60 bg-card p-3.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</p>
                   <p className="font-semibold">{viewing.customer_name}</p>
-                  <a href={`https://wa.me/${viewing.customer_phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="text-primary text-xs hover:underline inline-flex items-center gap-1">
-                    <MessageCircle className="w-3 h-3" /> {viewing.customer_phone}
+                  <a href={`https://wa.me/${viewing.customer_phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                    <MessageCircle className="h-3 w-3" /> {viewing.customer_phone}
                   </a>
                 </div>
-                <div className="space-y-1">
-                  <p className="text-xs text-muted-foreground uppercase">Entrega</p>
+                <div className="space-y-1 rounded-2xl border border-border/60 bg-card p-3.5">
+                  <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Entrega</p>
                   <p className="font-semibold">{viewing.delivery_method === "delivery" ? "🚚 Domicilio" : "🏪 Recoger en local"}</p>
-                  <p className="text-xs">{viewing.delivery_method === "delivery" ? viewing.customer_address : viewing.pickup_location}</p>
+                  <p className="text-xs text-muted-foreground">{viewing.delivery_method === "delivery" ? viewing.customer_address : viewing.pickup_location}</p>
                 </div>
               </div>
 
               {viewing.location_link && (
-                <a href={viewing.location_link} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-xl border border-primary/30 bg-primary/5 p-3 hover:bg-primary/10">
-                  <MapPin className="w-4 h-4 text-primary" />
+                <a href={viewing.location_link} target="_blank" rel="noreferrer" className="flex items-center gap-2 rounded-2xl border border-primary/30 bg-primary/5 p-3 hover:bg-primary/10 dark:bg-primary/10 dark:hover:bg-primary/15">
+                  <MapPin className="h-4 w-4 text-primary" />
                   <span className="text-sm font-semibold text-primary">Ver ubicación exacta del cliente en mapa</span>
-                  <ExternalLink className="w-3 h-3 text-primary ml-auto" />
+                  <ExternalLink className="ml-auto h-3 w-3 text-primary" />
                 </a>
               )}
 
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Productos</p>
                 <div className="space-y-2">
-                  <p className="text-xs text-muted-foreground uppercase">Productos</p>
-                  <div className="space-y-2">
-                    {parseOrderItems(viewing.items).map((it, i) => {
-                      const currency = viewing.payment_currency || "USD";
-                      const itemPrice = currency === "USD" ? (it.displayPriceUSD || it.price) : (it.displayPriceCUP || it.price);
-                      return (
-                        <div key={i} className="flex items-center justify-between bg-muted/30 rounded-xl p-3 text-sm">
-                          <span>{it.name} <span className="text-muted-foreground">×{it.quantity}</span></span>
-                          <span className="font-bold">
-                            {currency === "USD" ? formatPrice(itemPrice * it.quantity) : formatCUP(itemPrice * it.quantity)}
-                          </span>
-                        </div>
-                      );
-                    })}
-                  </div>
+                  {parseOrderItems(viewing.items).map((it, i) => {
+                    const currency = viewing.payment_currency || "USD";
+                    const itemPrice = currency === "USD" ? (it.displayPriceUSD || it.price) : (it.displayPriceCUP || it.price);
+                    return (
+                      <div key={i} className="flex items-center justify-between gap-3 rounded-2xl border border-border/40 bg-muted/30 p-3 text-sm">
+                        <span className="min-w-0">{it.name} <span className="text-muted-foreground">×{it.quantity}</span></span>
+                        <span className="shrink-0 font-bold">
+                          {currency === "USD" ? formatPrice(itemPrice * it.quantity) : formatCUP(itemPrice * it.quantity)}
+                        </span>
+                      </div>
+                    );
+                  })}
                 </div>
+              </div>
 
-              <div className="grid sm:grid-cols-2 gap-3">
+              <div className="grid gap-3 sm:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Costo de envío</Label>
                   <Input
@@ -311,22 +353,22 @@ export function AdminOrders() {
                 <Textarea value={adminNotes} onChange={(e) => setAdminNotes(e.target.value)} className="min-h-[60px]" />
               </div>
 
-              <div className="rounded-xl bg-gradient-to-br from-primary/10 to-accent/10 p-4 space-y-1">
+              <div className="space-y-1 rounded-2xl border border-primary/20 bg-gradient-to-br from-primary/10 to-accent/10 p-4 dark:from-primary/15 dark:to-accent/10">
                 {(() => {
                   const currency = viewing.payment_currency || "USD";
                   return (
                     <>
-                      <div className="flex justify-between text-sm">
-                        <span>Producto</span>
-                        <span>USD {formatPrice(Number(viewing.subtotal || 0))} / CUP {formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0))}</span>
+                      <div className="flex justify-between gap-2 text-sm">
+                        <span className="text-muted-foreground">Producto</span>
+                        <span className="text-right">USD {formatPrice(Number(viewing.subtotal || 0))} / CUP {formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0))}</span>
                       </div>
-                      <div className="flex justify-between text-sm">
-                        <span>Envío</span>
+                      <div className="flex justify-between gap-2 text-sm">
+                        <span className="text-muted-foreground">Envío</span>
                         <span>{Number(deliveryFee) > 0 ? `CUP ${formatCUP(Number(deliveryFee))}` : "Sin mensajería"}</span>
                       </div>
-                      <div className="flex justify-between font-display font-bold text-lg pt-2 border-t border-border">
+                      <div className="flex justify-between gap-2 border-t border-border pt-2 font-display text-lg font-bold">
                         <span>TOTAL</span>
-                        <span className="text-primary">
+                        <span className="text-right text-primary">
                           USD {formatPrice(Number(viewing.subtotal || 0))} / CUP {formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0) + Number(deliveryFee))}
                         </span>
                       </div>
@@ -336,14 +378,14 @@ export function AdminOrders() {
               </div>
 
               {viewing.receipt_sent_at && (
-                <p className="text-xs text-success">✓ Vale enviado el {new Date(viewing.receipt_sent_at).toLocaleString("es-CU")}</p>
+                <p className="text-xs text-emerald-600 dark:text-emerald-400">✓ Vale enviado el {new Date(viewing.receipt_sent_at).toLocaleString("es-CU")}</p>
               )}
             </div>
           )}
           <DialogFooter className="gap-2">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" className="text-destructive mr-auto"><Trash2 className="w-4 h-4" /> Eliminar</Button>
+                <Button variant="ghost" className="mr-auto h-10 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /> Eliminar</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader><AlertDialogTitle>¿Eliminar pedido?</AlertDialogTitle></AlertDialogHeader>
@@ -353,8 +395,8 @@ export function AdminOrders() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button variant="outline" onClick={saveOrderDetails}>Guardar cambios</Button>
-            <Button variant="hero" onClick={sendReceipt}><Send className="w-4 h-4" /> Enviar vale por WhatsApp</Button>
+            <Button variant="outline" className="h-10" onClick={saveOrderDetails}>Guardar cambios</Button>
+            <Button variant="hero" className="h-10" onClick={sendReceipt}><Send className="h-4 w-4" /> Enviar vale por WhatsApp</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

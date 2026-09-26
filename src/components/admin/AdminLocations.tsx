@@ -12,9 +12,16 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter,
   AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Plus, Pencil, Trash2, MapPin, Navigation } from "lucide-react";
+import { Plus, Pencil, Trash2, MapPin, Navigation, Clock } from "lucide-react";
 import { toast } from "sonner";
 import { useAdminLocations, StoreLocationInput } from "@/hooks/admin/use-admin-locations";
+import {
+  AdminCard,
+  AdminSectionHeader,
+  AdminEmptyState,
+  AdminLoading,
+  StatusBadge,
+} from "./ui";
 
 const emptyLocation: StoreLocationInput = {
   name: "",
@@ -81,120 +88,197 @@ export function AdminLocations() {
 
   return (
     <div className="space-y-6">
-      <div className="flex items-center justify-between">
-        <p className="text-sm text-muted-foreground">{locations.length} locales registrados</p>
-        <Button variant="hero" onClick={() => { setEditing({ ...emptyLocation, sort_order: locations.length }); setOpen(true); }}>
-          <Plus className="w-4 h-4" /> Nuevo local
-        </Button>
-      </div>
+      <AdminSectionHeader
+        icon={MapPin}
+        title="Locales"
+        description="Puntos de venta, almacenes y horarios."
+        actions={
+          <>
+            <span className="self-center text-sm text-muted-foreground">
+              {locations.length} locales registrados
+            </span>
+            <Button variant="hero" className="h-11" onClick={() => { setEditing({ ...emptyLocation, sort_order: locations.length }); setOpen(true); }}>
+              <Plus className="h-4 w-4" /> Nuevo local
+            </Button>
+          </>
+        }
+      />
 
-      <div className="grid md:grid-cols-2 gap-4">
-        {locations.map((l) => (
-          <div key={l.id} className="card-elevated p-5 space-y-3">
-            <div className="flex items-start justify-between gap-2">
-              <div>
-                <h3 className="font-display font-bold text-lg">{l.name}</h3>
-                <p className="text-xs text-primary uppercase tracking-wider font-semibold">{typeLabel(l.location_type)}</p>
+      {loading && locations.length === 0 ? (
+        <AdminLoading label="Cargando locales…" />
+      ) : locations.length === 0 ? (
+        <AdminEmptyState
+          icon={MapPin}
+          title="No hay locales registrados"
+          description="Crea el primero con «Nuevo local»."
+          action={
+            <Button variant="hero" className="h-11" onClick={() => { setEditing({ ...emptyLocation, sort_order: locations.length }); setOpen(true); }}>
+              <Plus className="h-4 w-4" /> Nuevo local
+            </Button>
+          }
+        />
+      ) : (
+        <div className="grid gap-4 sm:grid-cols-2">
+          {locations.map((l) => (
+            <AdminCard key={l.id} className="space-y-3">
+              <div className="flex items-start justify-between gap-3">
+                <div className="flex min-w-0 items-start gap-3">
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                    <MapPin className="h-5 w-5" />
+                  </div>
+                  <div className="min-w-0">
+                    <h3 className="font-display text-lg font-bold leading-tight tracking-tight">{l.name}</h3>
+                    <div className="mt-1.5 flex flex-wrap items-center gap-1.5">
+                      <StatusBadge tone="info">{typeLabel(l.location_type)}</StatusBadge>
+                      <StatusBadge tone={l.is_active ? "success" : "neutral"}>
+                        {l.is_active ? "Activo" : "Inactivo"}
+                      </StatusBadge>
+                    </div>
+                  </div>
+                </div>
+                <div className="flex shrink-0 items-center gap-1">
+                  <Button size="icon" variant="ghost" className="h-10 w-10" aria-label="Editar local" onClick={() => { setEditing({ ...emptyLocation, ...l, name: String(l.name ?? ""), address: String(l.address ?? ""), location_type: String(l.location_type ?? "") }); setOpen(true); }}>
+                    <Pencil className="h-4 w-4" />
+                  </Button>
+                  <AlertDialog>
+                    <AlertDialogTrigger asChild>
+                      <Button size="icon" variant="ghost" className="h-10 w-10 text-destructive hover:text-destructive" aria-label="Eliminar local">
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    </AlertDialogTrigger>
+                    <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+                      <AlertDialogHeader>
+                        <AlertDialogTitle>¿Eliminar local?</AlertDialogTitle>
+                        <p className="text-sm text-muted-foreground">Se eliminará "{l.name}".</p>
+                      </AlertDialogHeader>
+                      <AlertDialogFooter>
+                        <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                        <AlertDialogAction onClick={() => remove(l.id)} className="bg-destructive">Eliminar</AlertDialogAction>
+                      </AlertDialogFooter>
+                    </AlertDialogContent>
+                  </AlertDialog>
+                </div>
               </div>
-              <div className="flex gap-1">
-                <Button size="icon" variant="ghost" onClick={() => { setEditing({ ...emptyLocation, ...l, name: String(l.name ?? ""), address: String(l.address ?? ""), location_type: String(l.location_type ?? "") }); setOpen(true); }}><Pencil className="w-4 h-4" /></Button>
-                <AlertDialog>
-                  <AlertDialogTrigger asChild>
-                    <Button size="icon" variant="ghost" className="text-destructive"><Trash2 className="w-4 h-4" /></Button>
-                  </AlertDialogTrigger>
-                  <AlertDialogContent>
-                    <AlertDialogHeader>
-                      <AlertDialogTitle>¿Eliminar local?</AlertDialogTitle>
-                      <p className="text-sm text-muted-foreground">Se eliminará "{l.name}".</p>
-                    </AlertDialogHeader>
-                    <AlertDialogFooter>
-                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                      <AlertDialogAction onClick={() => remove(l.id)} className="bg-destructive">Eliminar</AlertDialogAction>
-                    </AlertDialogFooter>
-                  </AlertDialogContent>
-                </AlertDialog>
+              <div className="space-y-1.5 text-sm">
+                <div className="flex items-start gap-2">
+                  <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-muted-foreground" />
+                  <span>{l.address}</span>
+                </div>
+                {l.latitude != null && l.longitude != null && (
+                  <div className="flex items-center gap-2">
+                    <Navigation className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="font-mono text-xs text-muted-foreground">
+                      {Number(l.latitude).toFixed(6)}, {Number(l.longitude).toFixed(6)}
+                    </span>
+                  </div>
+                )}
+                {l.hours && (
+                  <div className="flex items-center gap-2">
+                    <Clock className="h-4 w-4 shrink-0 text-muted-foreground" />
+                    <span className="text-muted-foreground">{l.hours}</span>
+                  </div>
+                )}
+                {l.map_link && (
+                  <a
+                    href={l.map_link}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-1 pt-0.5 text-xs font-semibold text-primary hover:underline"
+                  >
+                    Ver en mapa
+                  </a>
+                )}
               </div>
-            </div>
-            <div className="space-y-1 text-sm">
-              <div className="flex items-start gap-2"><MapPin className="w-4 h-4 text-muted-foreground mt-0.5 shrink-0" /><span>{l.address}</span></div>
-              {l.phone && <p className="text-muted-foreground">📞 {l.phone}</p>}
-              {l.hours && <p className="text-muted-foreground">🕐 {l.hours}</p>}
-              {l.map_link && <a href={l.map_link} target="_blank" rel="noreferrer" className="text-primary text-xs hover:underline">Ver en mapa</a>}
-            </div>
-          </div>
-        ))}
-        {locations.length === 0 && (
-          <div className="md:col-span-2 card-elevated p-10 text-center text-muted-foreground">
-            No hay locales todavía. Crea el primero con "Nuevo local".
-          </div>
-        )}
-      </div>
+            </AdminCard>
+          ))}
+        </div>
+      )}
 
       <Dialog open={open} onOpenChange={setOpen}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-h-[90vh] max-w-2xl overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editing?.id ? "Editar local" : "Nuevo local"}</DialogTitle>
           </DialogHeader>
           {editing && (
             <div className="space-y-4">
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Nombre *</Label>
-                  <Input value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Local Vedado" />
+              <fieldset className="space-y-3 rounded-2xl border border-border/60 p-4">
+                <legend className="px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Datos básicos
+                </legend>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Nombre *</Label>
+                    <Input className="h-11" value={editing.name} onChange={(e) => setEditing({ ...editing, name: e.target.value })} placeholder="Local Vedado" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tipo</Label>
+                    <Select value={editing.location_type} onValueChange={(v) => setEditing({ ...editing, location_type: v })}>
+                      <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="electronics">Electrónica</SelectItem>
+                        <SelectItem value="chargers">Cargadores moto</SelectItem>
+                        <SelectItem value="both">Mixto</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Tipo</Label>
-                  <Select value={editing.location_type} onValueChange={(v) => setEditing({ ...editing, location_type: v })}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="electronics">Electrónica</SelectItem>
-                      <SelectItem value="chargers">Cargadores moto</SelectItem>
-                      <SelectItem value="both">Mixto</SelectItem>
-                    </SelectContent>
-                  </Select>
+                  <Label>Dirección *</Label>
+                  <Input className="h-11" value={editing.address} onChange={(e) => setEditing({ ...editing, address: e.target.value })} />
                 </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Dirección *</Label>
-                <Input value={editing.address} onChange={(e) => setEditing({ ...editing, address: e.target.value })} />
-              </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="space-y-2">
-                  <Label>Teléfono</Label>
-                  <Input value={editing.phone ?? ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} />
+              </fieldset>
+
+              <fieldset className="space-y-3 rounded-2xl border border-border/60 p-4">
+                <legend className="px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Contacto y horario
+                </legend>
+                <div className="grid gap-3 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Teléfono</Label>
+                    <Input className="h-11" value={editing.phone ?? ""} onChange={(e) => setEditing({ ...editing, phone: e.target.value })} inputMode="tel" />
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Horario</Label>
+                    <Input className="h-11" value={editing.hours ?? ""} onChange={(e) => setEditing({ ...editing, hours: e.target.value })} placeholder="Lun-Sáb 9am-7pm" />
+                  </div>
                 </div>
-                <div className="space-y-2">
-                  <Label>Horario</Label>
-                  <Input value={editing.hours ?? ""} onChange={(e) => setEditing({ ...editing, hours: e.target.value })} placeholder="Lun-Sáb 9am-7pm" />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <Label>Ubicación GPS</Label>
+              </fieldset>
+
+              <fieldset className="space-y-3 rounded-2xl border border-border/60 p-4">
+                <legend className="px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Ubicación
+                </legend>
                 <div className="grid grid-cols-2 gap-2">
-                  <Input type="number" step="any" placeholder="Latitud" value={editing.latitude ?? ""} onChange={(e) => setEditing({ ...editing, latitude: e.target.value ? Number(e.target.value) : null })} />
-                  <Input type="number" step="any" placeholder="Longitud" value={editing.longitude ?? ""} onChange={(e) => setEditing({ ...editing, longitude: e.target.value ? Number(e.target.value) : null })} />
+                  <Input className="h-11" type="number" step="any" inputMode="decimal" placeholder="Latitud" value={editing.latitude ?? ""} onChange={(e) => setEditing({ ...editing, latitude: e.target.value ? Number(e.target.value) : null })} />
+                  <Input className="h-11" type="number" step="any" inputMode="decimal" placeholder="Longitud" value={editing.longitude ?? ""} onChange={(e) => setEditing({ ...editing, longitude: e.target.value ? Number(e.target.value) : null })} />
                 </div>
-                <Button type="button" variant="outline" size="sm" onClick={captureCurrentLocation}>
-                  <Navigation className="w-4 h-4" /> Usar mi ubicación actual
+                <Button type="button" variant="outline" className="h-11 w-full sm:w-auto" onClick={captureCurrentLocation}>
+                  <Navigation className="h-4 w-4" /> Usar mi ubicación actual
                 </Button>
-              </div>
-              <div className="space-y-2">
-                <Label>Link de Google Maps (opcional)</Label>
-                <Input value={editing.map_link ?? ""} onChange={(e) => setEditing({ ...editing, map_link: e.target.value })} placeholder="https://maps.google.com/..." />
-              </div>
-              <div className="space-y-2">
-                <Label>Notas internas</Label>
-                <Textarea value={editing.notes ?? ""} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} className="min-h-[60px]" />
-              </div>
-              <div className="flex items-center gap-3">
-                <Switch checked={editing.is_active} onCheckedChange={(v) => setEditing({ ...editing, is_active: v })} />
-                <Label>Activo (visible para clientes)</Label>
-              </div>
+                <div className="space-y-2">
+                  <Label>Link de Google Maps (opcional)</Label>
+                  <Input className="h-11" value={editing.map_link ?? ""} onChange={(e) => setEditing({ ...editing, map_link: e.target.value })} placeholder="https://maps.google.com/..." inputMode="url" />
+                </div>
+              </fieldset>
+
+              <fieldset className="space-y-3 rounded-2xl border border-border/60 p-4">
+                <legend className="px-2 text-[11px] font-bold uppercase tracking-wider text-muted-foreground">
+                  Notas y visibilidad
+                </legend>
+                <div className="space-y-2">
+                  <Label>Notas internas</Label>
+                  <Textarea value={editing.notes ?? ""} onChange={(e) => setEditing({ ...editing, notes: e.target.value })} className="min-h-[60px]" />
+                </div>
+                <div className="flex items-center gap-3">
+                  <Switch checked={editing.is_active} onCheckedChange={(v) => setEditing({ ...editing, is_active: v })} />
+                  <Label>Activo (visible para clientes)</Label>
+                </div>
+              </fieldset>
             </div>
           )}
-          <DialogFooter>
-            <Button variant="ghost" onClick={() => setOpen(false)}>Cancelar</Button>
-            <Button variant="hero" onClick={save}>Guardar</Button>
+          <DialogFooter className="flex-col gap-2 sm:flex-row sm:justify-end">
+            <Button variant="ghost" className="h-11 w-full sm:w-auto" onClick={() => setOpen(false)}>Cancelar</Button>
+            <Button variant="hero" className="h-11 w-full sm:w-auto" onClick={save}>Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

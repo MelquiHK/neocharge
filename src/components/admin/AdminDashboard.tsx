@@ -2,10 +2,29 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { useAdminSales } from "@/hooks/admin/use-admin-sales";
-import { computeSalesTotalsBySeller } from "@/lib/sales";
+import { computeOwnerSalesSummary, computeSalesTotalsBySeller } from "@/lib/sales";
+import { useCashbox } from "@/hooks/admin/use-cashbox";
+import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useAuth } from "@/hooks/use-auth";
-import { Package, ShoppingBag, Users, DollarSign, TrendingUp, AlertTriangle, Eye } from "lucide-react";
+import {
+  Package, ShoppingBag, Users, DollarSign, TrendingUp, AlertTriangle, Eye,
+  LayoutDashboard, UserCheck, BarChart3, HandCoins, Globe, History, Wallet,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
+import {
+  AdminCard,
+  AdminCardTitle,
+  AdminEmptyState,
+  AdminLoading,
+  AdminSectionHeader,
+  AdminStat,
+  AdminTable,
+  AdminTableHead,
+  StatusBadge,
+  adminTd,
+  adminTh,
+  adminTr,
+} from "./ui";
 
 interface Stats {
   products: number;
@@ -48,8 +67,32 @@ interface OrderItem {
   quantity?: number | string | null;
 }
 
+/** Mapa puramente visual: estado del pedido -> tono del badge. */
+function orderStatusTone(status?: string | null): "success" | "warning" | "danger" | "info" | "neutral" | "primary" {
+  switch ((status ?? "").toLowerCase()) {
+    case "pending":
+    case "pendiente":
+      return "warning";
+    case "confirmed":
+    case "confirmado":
+      return "info";
+    case "completed":
+    case "completado":
+    case "delivered":
+    case "entregado":
+      return "success";
+    case "cancelled":
+    case "canceled":
+    case "cancelado":
+      return "danger";
+    default:
+      return "neutral";
+  }
+}
+
 export function AdminDashboard() {
   const { permissions } = useAuth();
+  const [loaded, setLoaded] = useState(false);
   const [stats, setStats] = useState<Stats>({
     products: 0, lowStock: 0, ordersToday: 0, ordersPending: 0,
     revenueMonth: 0, costsMonth: 0, customers: 0,
@@ -116,6 +159,7 @@ export function AdminDashboard() {
       setTopPages((top.data ?? []) as TopPageRow[]);
       setRecentViews((recentV.data ?? []) as RecentViewRow[]);
       setRateMissing(!todayRate.data);
+      setLoaded(true);
     };
     load();
   }, []);
@@ -125,82 +169,142 @@ export function AdminDashboard() {
 
   const { sales } = useAdminSales();
   const salesTotals = computeSalesTotalsBySeller(sales ?? []);
+  const { cashbox } = useCashbox();
+  const { rate } = useExchangeRate();
+  const rateValue = rate?.usd_to_cup ?? 0;
+
+  const summaryGlobal = computeOwnerSalesSummary(sales ?? [], rateValue);
+  const monthStart = new Date();
+  monthStart.setDate(1);
+  monthStart.setHours(0, 0, 0, 0);
+  const monthSales = (sales ?? []).filter(
+    (s) => s.created_at && new Date(s.created_at) >= monthStart
+  );
+  const summaryMonth = computeOwnerSalesSummary(monthSales, rateValue);
 
   const cards = [
-    { icon: Package, label: "Productos activos", value: stats.products, color: "text-primary" },
-    { icon: AlertTriangle, label: "Stock bajo", value: stats.lowStock, color: "text-warning" },
-    { icon: ShoppingBag, label: "Pedidos hoy", value: stats.ordersToday, color: "text-accent" },
-    { icon: AlertTriangle, label: "Pedidos pendientes", value: stats.ordersPending, color: "text-destructive" },
-    { icon: Users, label: "Clientes registrados", value: stats.customers, color: "text-primary" },
-    { icon: Eye, label: "Visitas hoy", value: stats.visitsToday, color: "text-accent" },
-    { icon: Eye, label: "Visitantes únicos (7d)", value: stats.unique7d, color: "text-primary" },
-    { icon: Eye, label: "Visitas (7d)", value: stats.visits7d, color: "text-muted-foreground" },
+    { icon: Package, label: "Productos activos", value: stats.products, tone: "blue" as const, sub: "En catálogo" },
+    { icon: AlertTriangle, label: "Stock bajo", value: stats.lowStock, tone: "amber" as const, sub: "Necesitan reposición" },
+    { icon: ShoppingBag, label: "Pedidos hoy", value: stats.ordersToday, tone: "blue" as const, sub: "Recibidos en el día" },
+    { icon: AlertTriangle, label: "Pedidos pendientes", value: stats.ordersPending, tone: "rose" as const, sub: "Por atender" },
+    { icon: Users, label: "Clientes registrados", value: stats.customers, tone: "violet" as const, sub: "En la plataforma" },
+    { icon: Eye, label: "Visitas hoy", value: stats.visitsToday, tone: "sky" as const, sub: "Tráfico del día" },
+    { icon: UserCheck, label: "Visitantes únicos (7d)", value: stats.unique7d, tone: "slate" as const, sub: "Últimos 7 días" },
+    { icon: BarChart3, label: "Visitas (7d)", value: stats.visits7d, tone: "emerald" as const, sub: "Últimos 7 días" },
   ];
 
+  if (!loaded) {
+    return <AdminLoading label="Cargando resumen…" />;
+  }
+
   return (
-    <div className="space-y-8">
-      <div className="grid sm:grid-cols-2 lg:grid-cols-4 xl:grid-cols-8 gap-4">
-        {cards.map((c, i) => (
-          <div key={i} className="card-elevated p-5">
-            <c.icon className={`w-5 h-5 mb-3 ${c.color}`} />
-            <p className="font-display text-3xl font-bold">{c.value}</p>
-            <p className="text-xs text-muted-foreground mt-1">{c.label}</p>
-          </div>
+    <div className="animate-fade-in space-y-6">
+      <AdminSectionHeader
+        icon={LayoutDashboard}
+        title="Resumen"
+        description="El pulso de tu negocio: ventas, pedidos y stock de un vistazo."
+      />
+
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        {cards.map((c) => (
+          <AdminStat
+            key={c.label}
+            icon={c.icon}
+            label={c.label}
+            value={c.value}
+            sub={c.sub}
+            tone={c.tone}
+          />
         ))}
       </div>
 
       {permissions.can_view_finances && (
-        <div className="grid md:grid-cols-3 gap-4">
-          <div className="card-elevated p-5 bg-gradient-to-br from-primary/5 to-transparent border-primary/20">
-            <DollarSign className="w-5 h-5 mb-3 text-primary" />
-            <p className="text-xs text-muted-foreground">Ingresos del mes</p>
-            <p className="font-display text-2xl font-bold">{formatPrice(stats.revenueMonth)}</p>
+        <>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <AdminStat
+              icon={DollarSign}
+              label="Ingresos del mes"
+              value={formatPrice(stats.revenueMonth)}
+              sub="Mes en curso (USD)"
+              tone="emerald"
+            />
+            <AdminStat
+              icon={Package}
+              label="Costos del mes"
+              value={formatPrice(stats.costsMonth)}
+              sub="Mercancía vendida"
+              tone="slate"
+            />
+            <AdminStat
+              icon={TrendingUp}
+              label="Ganancia"
+              value={formatPrice(profit)}
+              sub={`Margen ${margin.toFixed(1)}%`}
+              tone="emerald"
+            />
           </div>
-          <div className="card-elevated p-5">
-            <Package className="w-5 h-5 mb-3 text-muted-foreground" />
-            <p className="text-xs text-muted-foreground">Costos del mes</p>
-            <p className="font-display text-2xl font-bold">{formatPrice(stats.costsMonth)}</p>
+          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+            <AdminStat
+              icon={ShoppingBag}
+              label="Ventas del mes"
+              value={monthSales.length}
+              sub={`${formatPrice(summaryMonth.totalUSD)} · ${formatCUP(summaryMonth.totalCUP)}`}
+              tone="blue"
+            />
+            <AdminStat
+              icon={HandCoins}
+              label="Comisiones pendientes"
+              value={formatCUP(summaryGlobal.pendingCUP)}
+              sub="Por pagar a gestores"
+              tone="amber"
+            />
+            <AdminStat
+              icon={Wallet}
+              label="Caja actual"
+              value={`${formatPrice(cashbox.cash_usd)} · ${formatCUP(cashbox.cash_cup)}`}
+              sub="Dinero en caja"
+              tone="emerald"
+            />
           </div>
-          <div className="card-elevated p-5 bg-gradient-to-br from-success/5 to-transparent border-success/20">
-            <TrendingUp className="w-5 h-5 mb-3 text-success" />
-            <p className="text-xs text-muted-foreground">Ganancia · Margen {margin.toFixed(1)}%</p>
-            <p className="font-display text-2xl font-bold text-success">{formatPrice(profit)}</p>
-          </div>
-        </div>
+        </>
       )}
 
       {permissions.can_view_finances && (
-        <section className="card-elevated p-6">
-          <h2 className="font-display text-xl font-bold mb-4">Ventas registradas (gestores)</h2>
+        <AdminCard>
+          <AdminCardTitle icon={HandCoins} title="Ventas registradas (gestores)" />
           {salesTotals.totalCount === 0 ? (
-            <p className="text-sm text-muted-foreground">No hay ventas registradas aún.</p>
+            <AdminEmptyState
+              icon={HandCoins}
+              title="No hay ventas registradas aún."
+              description="Las ventas de los gestores aparecerán aquí."
+            />
           ) : (
             <div className="space-y-4">
-              <div className="flex items-center justify-between">
+              <div className="flex items-center justify-between gap-3">
                 <div className="text-sm text-muted-foreground">Ventas totales</div>
                 <div className="font-semibold">{salesTotals.totalCount} ventas</div>
               </div>
-              <div className="grid sm:grid-cols-2 gap-3">
-                <div className="p-4 rounded-lg border">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <div className="rounded-2xl border border-border/60 p-4">
                   <div className="text-xs text-muted-foreground">Total USD</div>
                   <div className="font-display text-2xl font-bold">{formatPrice(salesTotals.totalUSD)}</div>
                 </div>
-                <div className="p-4 rounded-lg border">
+                <div className="rounded-2xl border border-border/60 p-4">
                   <div className="text-xs text-muted-foreground">Total CUP</div>
                   <div className="font-display text-2xl font-bold">{formatCUP(salesTotals.totalCUP)}</div>
                 </div>
               </div>
 
               <div>
-                <h3 className="font-semibold mb-2">Por gestor</h3>
+                <h3 className="mb-2 font-semibold">Por gestor</h3>
                 <div className="space-y-2">
                   {salesTotals.bySeller.map((s) => (
-                    <div key={s.seller_user_id ?? s.seller_name} className="flex items-center justify-between p-3 rounded-lg border">
-                      <div>
-                        <div className="font-medium">{s.seller_name || "(sin nombre)"}</div>
+                    <div key={s.seller_user_id ?? s.seller_name} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 p-3 transition-colors hover:bg-muted/40">
+                      <div className="min-w-0">
+                        <div className="truncate font-medium">{s.seller_name || "(sin nombre)"}</div>
                         <div className="text-xs text-muted-foreground">{s.count} ventas</div>
                       </div>
-                      <div className="text-right">
+                      <div className="shrink-0 text-right">
                         <div className="font-semibold">{s.totalUSD > 0 ? formatPrice(s.totalUSD) : formatCUP(s.totalCUP)}</div>
                         <div className="text-xs text-muted-foreground">Comisión Pendiente: {formatCUP(s.pendingCommission || 0)}</div>
                       </div>
@@ -210,101 +314,112 @@ export function AdminDashboard() {
               </div>
             </div>
           )}
-        </section>
+        </AdminCard>
       )}
 
-      <section className="card-elevated p-6">
-        <h2 className="font-display text-xl font-bold mb-4">Pedidos recientes</h2>
+      <AdminCard>
+        <AdminCardTitle icon={ShoppingBag} title="Pedidos recientes" />
         {recent.length === 0 ? (
-          <p className="text-muted-foreground text-sm">No hay pedidos todavía.</p>
+          <AdminEmptyState
+            icon={ShoppingBag}
+            title="No hay pedidos todavía."
+            description="Los pedidos nuevos aparecerán aquí en cuanto lleguen."
+          />
         ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-sm">
-              <thead>
-                <tr className="text-left text-xs uppercase text-muted-foreground border-b border-border">
-                  <th className="py-3 pr-4">Cliente</th>
-                  <th className="py-3 pr-4">Teléfono</th>
-                  <th className="py-3 pr-4">Total</th>
-                  <th className="py-3 pr-4">Estado</th>
-                  <th className="py-3">Fecha</th>
+          <AdminTable>
+            <AdminTableHead>
+              <tr>
+                <th className={adminTh}>Cliente</th>
+                <th className={adminTh}>Teléfono</th>
+                <th className={adminTh}>Total</th>
+                <th className={adminTh}>Estado</th>
+                <th className={adminTh}>Fecha</th>
+              </tr>
+            </AdminTableHead>
+            <tbody>
+              {recent.map((o) => (
+                <tr key={o.id} className={adminTr}>
+                  <td className={`${adminTd} font-medium`}>{o.customer_name}</td>
+                  <td className={`${adminTd} text-muted-foreground`}>{o.customer_phone}</td>
+                  <td className={`${adminTd} font-bold text-primary`}>
+                    {o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
+                  </td>
+                  <td className={adminTd}>
+                    <StatusBadge tone={orderStatusTone(o.status)}>{o.status}</StatusBadge>
+                  </td>
+                  <td className={`${adminTd} whitespace-nowrap text-xs text-muted-foreground`}>
+                    {new Date(o.created_at).toLocaleString("es-CU")}
+                  </td>
                 </tr>
-              </thead>
+              ))}
+            </tbody>
+          </AdminTable>
+        )}
+      </AdminCard>
+
+      <div className="grid gap-4 lg:grid-cols-2">
+        <AdminCard>
+          <AdminCardTitle
+            icon={Globe}
+            title="Top páginas (7d)"
+            action={rateMissing ? (
+              <Button asChild size="sm" variant="secondary" className="min-h-9">
+                <a href="/admin" title="Ve a Tasa USD en el panel">Falta tasa USD hoy</a>
+              </Button>
+            ) : undefined}
+          />
+          {topPages.length === 0 ? (
+            <AdminEmptyState
+              icon={Globe}
+              title="Aún no hay datos de tráfico."
+              description="Las páginas más visitadas de los últimos 7 días aparecerán aquí."
+            />
+          ) : (
+            <AdminTable>
+              <AdminTableHead>
+                <tr>
+                  <th className={adminTh}>Ruta</th>
+                  <th className={adminTh}>Visitas</th>
+                  <th className={adminTh}>Únicos</th>
+                </tr>
+              </AdminTableHead>
               <tbody>
-                {recent.map((o) => (
-                  <tr key={o.id} className="border-b border-border last:border-0">
-                    <td className="py-3 pr-4 font-medium">{o.customer_name}</td>
-                    <td className="py-3 pr-4 text-muted-foreground">{o.customer_phone}</td>
-                    <td className="py-3 pr-4 font-bold text-primary">
-                      {o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
-                    </td>
-                    <td className="py-3 pr-4">
-                      <span className="px-2 py-0.5 rounded-full bg-secondary text-xs capitalize">{o.status}</span>
-                    </td>
-                    <td className="py-3 text-muted-foreground text-xs">{new Date(o.created_at).toLocaleString("es-CU")}</td>
+                {topPages.map((r) => (
+                  <tr key={r.path} className={adminTr}>
+                    <td className={`${adminTd} font-medium`}>{r.path}</td>
+                    <td className={adminTd}>{r.views}</td>
+                    <td className={adminTd}>{r.unique_visitors}</td>
                   </tr>
                 ))}
               </tbody>
-            </table>
-          </div>
-        )}
-      </section>
-
-      <div className="grid lg:grid-cols-2 gap-4">
-        <section className="card-elevated p-6">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="font-display text-xl font-bold">Top páginas (7d)</h2>
-            {rateMissing && (
-              <Button asChild size="sm" variant="secondary">
-                <a href="/admin" title="Ve a Tasa USD en el panel">Falta tasa USD hoy</a>
-              </Button>
-            )}
-          </div>
-          {topPages.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aún no hay datos de tráfico.</p>
-          ) : (
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="text-left text-xs uppercase text-muted-foreground border-b border-border">
-                    <th className="py-2 pr-4">Ruta</th>
-                    <th className="py-2 pr-4">Visitas</th>
-                    <th className="py-2">Únicos</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {topPages.map((r) => (
-                    <tr key={r.path} className="border-b border-border last:border-0">
-                      <td className="py-2 pr-4 font-medium">{r.path}</td>
-                      <td className="py-2 pr-4">{r.views}</td>
-                      <td className="py-2">{r.unique_visitors}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </table>
-            </div>
+            </AdminTable>
           )}
-        </section>
+        </AdminCard>
 
-        <section className="card-elevated p-6">
-          <h2 className="font-display text-xl font-bold mb-4">Últimas visitas</h2>
+        <AdminCard>
+          <AdminCardTitle icon={History} title="Últimas visitas" />
           {recentViews.length === 0 ? (
-            <p className="text-sm text-muted-foreground">Aún no hay datos de tráfico.</p>
+            <AdminEmptyState
+              icon={History}
+              title="Aún no hay datos de tráfico."
+              description="Las visitas recientes aparecerán aquí."
+            />
           ) : (
-            <div className="space-y-2">
+            <div className="max-h-80 space-y-2 overflow-y-auto pr-1">
               {recentViews.map((v) => (
-                <div key={`${v.created_at}-${v.visitor_id}`} className="flex items-center justify-between text-sm bg-muted/30 rounded-xl p-3">
+                <div key={`${v.created_at}-${v.visitor_id}`} className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 p-3 transition-colors hover:bg-muted/40">
                   <div className="min-w-0">
-                    <p className="font-semibold truncate">{v.path}</p>
-                    <p className="text-xs text-muted-foreground truncate">{v.visitor_id}</p>
+                    <p className="truncate font-semibold">{v.path}</p>
+                    <p className="truncate text-xs text-muted-foreground">{v.visitor_id}</p>
                   </div>
-                  <span className="text-xs text-muted-foreground shrink-0">
+                  <span className="shrink-0 text-xs text-muted-foreground">
                     {new Date(v.created_at).toLocaleString("es-CU")}
                   </span>
                 </div>
               ))}
             </div>
           )}
-        </section>
+        </AdminCard>
       </div>
     </div>
   );
