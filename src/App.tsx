@@ -32,6 +32,7 @@ const Blog = lazy(() => import("./pages/Blog.tsx"));
 const BlogPost = lazy(() => import("./pages/BlogPost.tsx"));
 const Admin = lazy(() => import("./pages/Admin.tsx"));
 const Services = lazy(() => import("./pages/Services.tsx"));
+const ServiceDetail = lazy(() => import("./pages/ServiceDetail.tsx"));
 const Messenger = lazy(() => import("./pages/Messenger.tsx"));
 const Garantia = lazy(() => import("./pages/Garantia.tsx"));
 const FAQ = lazy(() => import("./pages/FAQ.tsx"));
@@ -73,6 +74,7 @@ const App = () => (
                   <Route path="/blog" element={<Suspense fallback={<LoadingPlaceholder />}><Blog /></Suspense>} />
                   <Route path="/blog/:slug" element={<Suspense fallback={<LoadingPlaceholder />}><BlogPost /></Suspense>} />
                   <Route path="/servicios" element={<Suspense fallback={<LoadingPlaceholder />}><Services /></Suspense>} />
+                  <Route path="/servicios/:slug" element={<Suspense fallback={<LoadingPlaceholder />}><ServiceDetail /></Suspense>} />
                   <Route path="/mensajeria" element={<Suspense fallback={<LoadingPlaceholder />}><Messenger /></Suspense>} />
                   <Route path="/admin" element={<Suspense fallback={<LoadingPlaceholder />}><Admin /></Suspense>} />
                   <Route path="/garantia" element={<Suspense fallback={<LoadingPlaceholder />}><Garantia /></Suspense>} />

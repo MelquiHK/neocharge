@@ -157,11 +157,18 @@ export default function Services() {
               const isSelected = selectedService?.id === service.id;
 
               return (
-                <button
+                <div
                   key={service.id}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setSelectedServiceId(service.id)}
-                  className={`text-left rounded-[28px] border p-7 transition-all duration-200 ${
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedServiceId(service.id);
+                    }
+                  }}
+                  className={`text-left rounded-[28px] border p-7 transition-all duration-200 cursor-pointer ${
                     isSelected
                       ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
                       : "border-border bg-white/80 hover:border-primary/40 hover:bg-primary/[0.03]"
@@ -184,9 +191,13 @@ export default function Services() {
                       <p className="text-sm text-muted-foreground">Precio</p>
                       <p className="text-2xl font-bold">{service.currency === "CUP" ? `${service.price} CUP` : `${service.price} USD`}</p>
                     </div>
-                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    <Link
+                      to={`/servicios/${service.slug}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:gap-3 transition-all"
+                    >
                       Ver detalles <ArrowRight className="h-4 w-4" />
-                    </span>
+                    </Link>
                   </div>
 
                   {service.features && service.features.length > 0 && (
@@ -199,7 +210,7 @@ export default function Services() {
                       ))}
                     </div>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>
