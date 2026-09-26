@@ -29,6 +29,17 @@
 }
 .nc-wave-a { animation: nc-wave-slide 16s linear infinite; }
 .nc-wave-b { animation: nc-wave-slide 26s linear infinite; animation-delay: -9s; }
+/* Pausa de animaciones decorativas cuando el hero sale del viewport
+   (lo activa Hero.tsx con IntersectionObserver). */
+.nc-anim-paused .nc-text-shimmer,
+.nc-anim-paused .nc-wave-a,
+.nc-anim-paused .nc-wave-b,
+.nc-anim-paused .nc-wash-a,
+.nc-anim-paused .nc-wash-b,
+.nc-anim-paused .animate-float {
+  animation-play-state: paused;
+}
+
 @keyframes nc-wave-slide {
   from { transform: translateX(0); }
   to { transform: translateX(-50%); } /* el path es periódico: -50% = 2 ondas exactas */

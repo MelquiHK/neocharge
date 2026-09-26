@@ -146,9 +146,9 @@ const ShopPage = () => {
         </p>
       </header>
 
-      {/* Filters bar */}
+      {/* Filters bar — glass-static: sin backdrop-filter para no repintar en cada frame de scroll */}
       <div className="sticky top-24 z-40 mb-8">
-        <div className="glass rounded-2xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center shadow-soft">
+        <div className="glass-static rounded-2xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center shadow-soft">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
@@ -272,12 +272,13 @@ const ShopPage = () => {
         </div>
       ) : (
         <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered.map((p) => (
+          {filtered.map((p, i) => (
             <ProductCard
               key={p.id}
               product={p}
               isFavorite={isFavorite(p.id)}
               onToggleFavorite={() => toggleFavorite(p.id)}
+              eager={i < 4}
             />
           ))}
         </div>

@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, MessageCircle, ShieldCheck, Star, Truck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -32,6 +32,22 @@ const WAVE_PATH =
 export function Hero() {
   const [spotlight, setSpotlight] = useState<SpotlightProduct | null>(null);
   const [productCount, setProductCount] = useState<number | null>(null);
+  const sectionRef = useRef<HTMLElement>(null);
+
+  // Pausa las animaciones decorativas (shimmer, olas) cuando el hero sale
+  // del viewport: evita trabajo de GPU/pintura mientras el usuario hace scroll.
+  useEffect(() => {
+    const el = sectionRef.current;
+    if (!el) return;
+    const io = new IntersectionObserver(
+      ([entry]) => {
+        el.classList.toggle("nc-anim-paused", !entry.isIntersecting);
+      },
+      { threshold: 0 },
+    );
+    io.observe(el);
+    return () => io.disconnect();
+  }, []);
 
   useEffect(() => {
     let cancelled = false;
@@ -73,7 +89,7 @@ export function Hero() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-[#070d20] text-white">
+    <section ref={sectionRef} className="relative overflow-hidden bg-[#070d20] text-white">
       {/* Fondo: azul noche refinado */}
       <div className="absolute inset-0 bg-gradient-to-b from-[#0a1430] via-[#0a1128] to-[#070d20]" aria-hidden />
       <div

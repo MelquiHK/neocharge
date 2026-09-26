@@ -17,9 +17,11 @@ interface ProductCardProps {
   variant?: "default" | "featured";
   isFavorite?: boolean;
   onToggleFavorite?: (event: MouseEvent<HTMLButtonElement>) => void;
+  /** Las primeras tarjetas (sobre el pliegue) cargan su imagen con prioridad alta. */
+  eager?: boolean;
 }
 
-function ProductCardComponent({ product, variant = "default", isFavorite: propIsFavorite, onToggleFavorite: propOnToggleFavorite }: ProductCardProps) {
+function ProductCardComponent({ product, variant = "default", isFavorite: propIsFavorite, onToggleFavorite: propOnToggleFavorite, eager = false }: ProductCardProps) {
   const { addItem } = useCart();
   const { rate } = useExchangeRate();
   const { isFavorite: checkFavorite, toggleFavorite } = useUnifiedFavorites();
@@ -81,7 +83,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
   return (
     <div
       className={cn(
-        "group relative rounded-3xl overflow-hidden transition-all duration-700 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/30 dark:hover:border-primary/30 hover:shadow-2xl dark:hover:shadow-primary/5 hover:-translate-y-3 flex flex-col h-full",
+        "group relative rounded-3xl overflow-hidden cv-auto transition-[transform,border-color,box-shadow] duration-300 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/30 dark:hover:border-primary/30 hover:shadow-2xl dark:hover:shadow-primary/5 hover:-translate-y-3 flex flex-col h-full",
         variant === "featured" && "lg:col-span-2",
       )}
     >
@@ -109,10 +111,11 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                     srcSet={ri.srcSet}
                     sizes={ri.sizes}
                     alt={product.name}
-                    loading="lazy"
+                    loading={eager ? "eager" : "lazy"}
+                    fetchPriority={eager ? "high" : "auto"}
                     decoding="async"
                     className={cn(
-                      "absolute inset-0 w-full h-full object-cover transition-all duration-700",
+                      "absolute inset-0 w-full h-full object-cover transition-[transform,opacity] duration-500",
                       "group-hover:scale-120",
                       hoverImage && "group-hover:opacity-0",
                     )}
