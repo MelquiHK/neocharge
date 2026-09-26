@@ -1,161 +1,246 @@
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { ArrowRight, Sparkles, ShieldCheck, Truck, Zap, Star } from "lucide-react";
+import { ArrowRight, MessageCircle, ShieldCheck, Star, Truck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { supabase } from "@/integrations/supabase/client";
+import { formatPrice } from "@/lib/format";
+import { cn } from "@/lib/utils";
+
+interface SpotlightProduct {
+  id: string;
+  name: string;
+  slug: string;
+  price: number;
+  currency: string | null;
+  images: unknown;
+  main_image_index: number | null;
+}
+
+/** El 72V/5A es el más vendido de la tienda: se prioriza como protagonista del hero. */
+const BEST_SELLER_SLUG = "cargador-de-72v-5a";
+
+const checklist = [
+  { icon: ShieldCheck, text: "Garantía real y prueba al entregar" },
+  { icon: Truck, text: "Mensajería en toda La Habana" },
+  { icon: Zap, text: "Te asesoramos por WhatsApp" },
+];
+
+/** Onda periódica (periodo 720u): el -50% del slide equivale a 2 ondas exactas. */
+const WAVE_PATH =
+  "M0 64 C120 96 240 96 360 64 C480 32 600 32 720 64 C840 96 960 96 1080 64 C1200 32 1320 32 1440 64 C1560 96 1680 96 1800 64 C1920 32 2040 32 2160 64 C2280 96 2400 96 2520 64 C2640 32 2760 32 2880 64 L2880 120 L0 120 Z";
 
 export function Hero() {
+  const [spotlight, setSpotlight] = useState<SpotlightProduct | null>(null);
+  const [productCount, setProductCount] = useState<number | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    const load = async () => {
+      try {
+        const [featuredRes, countRes] = await Promise.all([
+          supabase
+            .from("products")
+            .select("id,name,slug,price,currency,images,main_image_index")
+            .eq("is_active", true)
+            .eq("is_featured", true)
+            .limit(8),
+          supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true),
+        ]);
+        if (cancelled) return;
+        const featured = (featuredRes.data ?? []) as SpotlightProduct[];
+        setSpotlight(featured.find((p) => p.slug === BEST_SELLER_SLUG) ?? featured[0] ?? null);
+        if (typeof countRes.count === "number") setProductCount(countRes.count);
+      } catch {
+        /* el hero funciona igual sin los datos en vivo */
+      }
+    };
+    load();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const images = Array.isArray(spotlight?.images)
+    ? (spotlight.images as string[]).filter((u) => typeof u === "string")
+    : [];
+  const spotlightImage = images[spotlight?.main_image_index ?? 0] ?? images[0];
+  const isBestSeller = spotlight?.slug === BEST_SELLER_SLUG;
+
+  const stats = [
+    { value: productCount !== null ? String(productCount) : "···", label: "Productos disponibles" },
+    { value: "8am–8pm", label: "Atención por WhatsApp" },
+    { value: "USD · CUP", label: "Pagas al recibir" },
+  ];
+
   return (
-    <section className="relative overflow-hidden">
-      {/* Dynamic gradient background */}
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900" />
-      
-      {/* Animated gradient blobs */}
-      <div className="absolute -top-40 -right-40 w-80 h-80 bg-blue-500/30 rounded-full mix-blend-screen filter blur-3xl animate-blob"></div>
-      <div className="absolute -bottom-40 -left-40 w-80 h-80 bg-purple-500/30 rounded-full mix-blend-screen filter blur-3xl animate-blob animation-delay-2000"></div>
-      <div className="absolute top-1/2 left-1/2 w-80 h-80 bg-pink-500/20 rounded-full mix-blend-screen filter blur-3xl animate-blob animation-delay-4000"></div>
+    <section className="relative overflow-hidden bg-[#070d20] text-white">
+      {/* Fondo: azul noche refinado */}
+      <div className="absolute inset-0 bg-gradient-to-b from-[#0a1430] via-[#0a1128] to-[#070d20]" aria-hidden />
+      <div
+        className="absolute inset-0 opacity-[0.05] pointer-events-none"
+        aria-hidden
+        style={{
+          backgroundImage:
+            "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+          backgroundSize: "44px 44px",
+        }}
+      />
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-600/20 rounded-full filter blur-3xl animate-blob pointer-events-none" aria-hidden />
+      <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full filter blur-3xl animate-blob animation-delay-2000 pointer-events-none" aria-hidden />
+      <div className="absolute inset-0 bg-radial-gradient opacity-60 pointer-events-none" aria-hidden />
+      <div className="nc-wash-a" aria-hidden />
+      <div className="nc-wash-b" aria-hidden />
 
-      {/* Grid overlay */}
-      <div className="absolute inset-0 bg-[linear-gradient(rgba(59,130,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(59,130,246,0.03)_1px,transparent_1px)] bg-[size:40px_40px] pointer-events-none" />
-
-      {/* Radial gradient overlay */}
-      <div className="absolute inset-0 bg-radial-gradient opacity-50 pointer-events-none" />
-
-      <div className="container-page relative py-20 md:py-32 lg:py-40">
-        <div className="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
-          {/* Left Content */}
-          <div className="space-y-8 animate-fade-in-up" style={{ animationDelay: "0.1s" }}>
-            {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md bg-white/5 border border-white/10 hover:border-blue-500/30 transition-all duration-300">
-              <div className="relative flex items-center gap-2">
-                <Sparkles className="w-4 h-4 text-blue-400 animate-spin-slow" />
-                <span className="text-sm font-semibold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-purple-400">
-                  Bienvenido a NeoCharge
-                </span>
-                <div className="w-2 h-2 rounded-full bg-green-400 animate-pulse"></div>
-              </div>
+      <div className="container-page relative py-16 md:py-24 lg:py-28">
+        <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-center">
+          {/* Columna izquierda */}
+          <div className="space-y-7 animate-fade-in-up">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
+              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
+              <span className="text-sm font-semibold text-slate-200">Tienda de electrónica · La Habana</span>
             </div>
 
-            {/* Main Headline */}
             <div className="space-y-4">
-              <h1 className="text-5xl md:text-7xl lg:text-8xl font-display font-bold tracking-tight leading-[1.05]">
-                <span className="block text-white">Tienda de</span>
-                <span className="block text-gradient-accent animate-glow-pulse">
-                  Electronica en La Habana
+              <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight leading-[1.05]">
+                <span className="block text-white">Electrónica de verdad</span>
+                <span className="block nc-text-shimmer">
+                  para La Habana
                 </span>
               </h1>
-              <p className="text-lg md:text-xl text-slate-300 max-w-2xl leading-relaxed font-light">
-                Elevamos tu experiencia tecnológica con productos premium, garantía total y entrega rapida en toda La Habana. 
-                NeoCharge: Productos y tecnología sin límites.
+              <p className="text-lg md:text-xl text-slate-300 max-w-xl leading-relaxed font-light">
+                Cargadores para motos eléctricas, audio y piezas. Garantía real, entrega a domicilio
+                y pago en USD o CUP cuando el producto está en tus manos.
               </p>
             </div>
 
-            {/* CTA Buttons */}
-            <div className="flex flex-col sm:flex-row gap-5 pt-4">
-              <Button asChild size="xl" className="group relative overflow-hidden bg-gradient-to-r from-blue-600 to-blue-400 hover:from-blue-500 hover:to-blue-300 text-white font-bold rounded-2xl shadow-glow transition-all duration-500 hover:scale-105">
-                <Link to="/tienda" className="flex items-center gap-3">
-                  Explorar Tienda
-                  <ArrowRight className="w-6 h-6 group-hover:translate-x-2 transition-transform" />
+            <div className="flex flex-col sm:flex-row gap-4 pt-1">
+              <Button
+                asChild
+                size="xl"
+                className="btn-shine group bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-2xl glow-primary transition-all duration-300 hover:-translate-y-0.5"
+              >
+                <Link to="/tienda" className="flex items-center gap-2.5">
+                  Explorar la tienda
+                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-300" />
                 </Link>
               </Button>
               <Button
                 asChild
                 variant="outline"
                 size="xl"
-                className="border-white/20 bg-white/5 text-white backdrop-blur-xl hover:bg-white/10 hover:border-blue-400/40 rounded-2xl transition-all duration-500"
+                className="border-white/20 bg-white/5 text-white backdrop-blur-md hover:bg-white/10 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
               >
-                <Link to="/sobre-nosotros">Nuestra Historia</Link>
+                <a
+                  href="https://wa.me/5363180910"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="flex items-center gap-2.5"
+                >
+                  <MessageCircle className="w-5 h-5 text-emerald-400" />
+                  WhatsApp directo
+                </a>
               </Button>
             </div>
 
-            {/* Stats */}
-            <div className="grid grid-cols-3 gap-4 pt-8 border-t border-white/10">
-              {[
-                { number: "50+", label: "Productos" },
-                { number: "24/7", label: "Soporte" },
-                { number: "100%", label: "Garantía" },
-              ].map((stat, i) => (
-                <div key={i} className="animate-fade-in-up" style={{ animationDelay: `${0.2 + i * 0.1}s` }}>
-                  <p className="text-2xl md:text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-cyan-400">
-                    {stat.number}
+            {/* Stats honestos */}
+            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/10">
+              {stats.map((stat, i) => (
+                <div key={stat.label} className="animate-fade-in-up" style={{ animationDelay: `${0.15 + i * 0.1}s` }}>
+                  <p className="text-2xl md:text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300">
+                    {stat.value}
                   </p>
-                  <p className="text-xs md:text-sm text-slate-400 font-medium">{stat.label}</p>
+                  <p className="text-xs md:text-sm text-slate-400 font-medium mt-1">{stat.label}</p>
                 </div>
               ))}
             </div>
 
-            {/* Features List */}
-            <div className="space-y-3 pt-4">
-              {[
-                { icon: ShieldCheck, text: "Garantía 100% segura" },
-                { icon: Truck, text: "Envío en 24 horas" },
-                { icon: Zap, text: "Soporte inmediato" },
-              ].map((feature, i) => (
-                <div key={i} className="flex items-center gap-3 animate-fade-in-left" style={{ animationDelay: `${0.3 + i * 0.1}s` }}>
-                  <div className="flex-shrink-0 w-10 h-10 rounded-lg bg-gradient-to-br from-blue-500/20 to-purple-500/20 flex items-center justify-center border border-blue-500/30">
-                    <feature.icon className="w-5 h-5 text-blue-400" />
-                  </div>
-                  <span className="text-slate-300 font-medium">{feature.text}</span>
-                </div>
+            <ul className="space-y-2.5 pt-2">
+              {checklist.map((item, i) => (
+                <li
+                  key={item.text}
+                  className="flex items-center gap-3 animate-fade-in-left"
+                  style={{ animationDelay: `${0.3 + i * 0.1}s` }}
+                >
+                  <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-400/25 flex items-center justify-center">
+                    <item.icon className="w-4 h-4 text-blue-300" />
+                  </span>
+                  <span className="text-slate-300 font-medium text-[15px]">{item.text}</span>
+                </li>
               ))}
-            </div>
+            </ul>
           </div>
 
-          {/* Right Visual - Premium Display */}
-          <div className="relative h-full min-h-[500px] hidden lg:flex items-center justify-center perspective">
-            {/* Main gradient orb */}
-            <div className="animate-fade-in-right" style={{ animationDelay: "0.2s" }}>
-              <div className="relative w-full max-w-md aspect-square">
-                {/* Background glow */}
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/40 via-purple-500/20 to-pink-500/40 rounded-full filter blur-3xl opacity-60 animate-pulse-glow"></div>
-                
-                {/* Animated rings */}
-                <div className="absolute inset-0 rounded-full border border-blue-500/30 animate-spin-slow"></div>
-                <div className="absolute inset-8 rounded-full border border-purple-500/30 animate-spin-slower" style={{ animationDirection: "reverse" }}></div>
-                <div className="absolute inset-16 rounded-full border border-cyan-500/20"></div>
-
-                {/* Center glass card */}
-                <div className="absolute inset-0 flex items-center justify-center">
-                  <div className="relative w-4/5 h-4/5 rounded-3xl glass bg-gradient-to-br from-white/10 to-white/5 backdrop-blur-xl border border-white/20 shadow-lifted flex items-center justify-center overflow-hidden group hover:shadow-card-hover transition-all duration-500">
-                    {/* Animated gradient border */}
-                    <div className="absolute inset-0 rounded-3xl bg-gradient-to-r from-blue-500/0 via-purple-500/50 to-cyan-500/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500" style={{
-                      background: "linear-gradient(45deg, rgba(59,130,246,0) 0%, rgba(168,85,247,0.3) 50%, rgba(34,211,238,0) 100%)",
-                      animation: "gradient-shift 3s ease infinite"
-                    }}></div>
-
-                    {/* Content */}
-                    <div className="relative z-10 text-center space-y-4">
-                      <div className="text-6xl md:text-7xl font-display font-bold">
-                        <span className="text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300">
-                          Neo
-                        </span>
-                        <span className="text-white">charge</span>
-                      </div>
-                      <p className="text-sm text-slate-300 font-medium">Calidad. Precio. Confianza.</p>
-                      <div className="flex justify-center gap-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        ))}
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                {/* Floating badges */}
-                <div className="absolute -top-4 -right-4 glass rounded-2xl px-4 py-3 shadow-elevated animate-float border border-white/10">
-                  <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Productos</p>
-                  <p className="text-xl font-display font-bold text-blue-400">50+</p>
-                </div>
-                <div className="absolute -bottom-4 -left-4 glass rounded-2xl px-4 py-3 shadow-elevated animate-float border border-white/10" style={{ animationDelay: "1.5s" }}>
-                  <p className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">Rating</p>
-                  <p className="text-xl font-display font-bold text-purple-400">4.9★</p>
-                </div>
+          {/* Columna derecha: producto protagonista real */}
+          <div className="relative animate-fade-in-right" style={{ animationDelay: "0.25s" }}>
+            <div className="absolute -inset-6 bg-blue-600/15 blur-3xl rounded-full pointer-events-none" aria-hidden />
+            <div className="relative rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-4 sm:p-5 hover:border-white/40 transition-colors duration-500">
+              <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-slate-800/60 nc-ripple">
+                {spotlightImage ? (
+                  <img
+                    src={spotlightImage}
+                    alt={spotlight?.name ?? "Producto destacado de NeoCharge"}
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="eager"
+                    decoding="async"
+                    fetchPriority="high"
+                  />
+                ) : (
+                  <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-700/60 to-slate-800/60" aria-hidden />
+                )}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none" aria-hidden />
+                <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/95 text-slate-950 text-xs font-bold uppercase tracking-wider shadow-lg">
+                  <Star className="w-3.5 h-3.5 fill-current" />
+                  {isBestSeller ? "El más vendido" : "Destacado"}
+                </span>
               </div>
+
+              <div className="flex items-center justify-between gap-4 px-2 pt-4 pb-1.5">
+                <div className="min-w-0">
+                  <p className="text-white font-display font-bold text-lg leading-tight truncate">
+                    {spotlight?.name ?? "Cargando…"}
+                  </p>
+                  <p className="text-cyan-300 font-bold text-xl mt-0.5">
+                    {spotlight ? formatPrice(spotlight.price, spotlight.currency ?? "USD") : "···"}
+                  </p>
+                </div>
+                {spotlight && (
+                  <Button
+                    asChild
+                    className="shrink-0 rounded-xl bg-white text-slate-950 hover:bg-blue-50 font-bold transition-all duration-300 hover:-translate-y-0.5"
+                  >
+                    <Link to={`/producto/${encodeURIComponent(spotlight.slug)}`} className="flex items-center gap-2">
+                      Ver <ArrowRight className="w-4 h-4" />
+                    </Link>
+                  </Button>
+                )}
+              </div>
+            </div>
+
+            {/* Chips flotantes */}
+            <div className="absolute -top-4 -right-2 sm:-right-4 flex items-center gap-2 rounded-2xl border border-white/25 nc-liquid px-3.5 py-2.5 animate-float">
+              <ShieldCheck className="w-4 h-4 text-emerald-400" />
+              <span className="text-xs font-bold text-slate-200">Garantía incluida</span>
+            </div>
+            <div
+              className="absolute -bottom-4 -left-2 sm:-left-4 flex items-center gap-2 rounded-2xl border border-white/25 nc-liquid px-3.5 py-2.5 animate-float"
+              style={{ animationDelay: "1.4s" }}
+            >
+              <Truck className="w-4 h-4 text-blue-300" />
+              <span className="text-xs font-bold text-slate-200">Entrega en La Habana</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bottom gradient fade */}
-      <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-slate-900 via-slate-900/50 to-transparent pointer-events-none"></div>
+      {/* Divisor de ondas de agua hacia la sección clara siguiente */}
+      <div className="nc-waves" aria-hidden>
+        <svg className="nc-wave nc-wave-b" viewBox="0 0 2880 120" preserveAspectRatio="none">
+          <path d={WAVE_PATH} fill="#bfdbfe" opacity="0.5" />
+        </svg>
+        <svg className="nc-wave nc-wave-a" viewBox="0 0 2880 120" preserveAspectRatio="none">
+          <path d={WAVE_PATH} fill="#ffffff" />
+        </svg>
+      </div>
     </section>
   );
 }

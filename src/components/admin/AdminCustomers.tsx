@@ -10,14 +10,29 @@ import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
 import { toast } from "sonner";
 import { formatPrice, formatCUP } from "@/lib/format";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
+  Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
   AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { Eye, Trash2, Shield, ShoppingBag, UserCog, Map } from "lucide-react";
+import { Eye, Trash2, Shield, ShoppingBag, UserCog, Map, Users, Search, Wallet } from "lucide-react";
 import { UserRole } from "@/types";
+import {
+  AdminCard,
+  AdminSectionHeader,
+  AdminCardTitle,
+  AdminStat,
+  AdminEmptyState,
+  StatusBadge,
+  AdminTable,
+  AdminTableHead,
+  adminTh,
+  adminTd,
+  adminTr,
+  AdminFilters,
+  AdminLoading,
+} from "./ui";
 
 interface Customer {
   id: string;
@@ -47,6 +62,29 @@ interface MessengerProfile {
   vehicle_type?: string | null;
 }
 
+type BadgeTone = "success" | "warning" | "danger" | "info" | "neutral" | "primary";
+
+/** Tono del badge según el rol real del usuario (solo presentación). */
+function roleTone(role?: UserRole): BadgeTone {
+  switch (role) {
+    case "owner":
+    case "admin":
+      return "primary";
+    case "gestor":
+      return "success";
+    case "mensajero":
+      return "warning";
+    default:
+      return "neutral";
+  }
+}
+
+/** Inicial para el avatar a partir del nombre o el usuario. */
+function initialOf(c: Customer): string {
+  const base = (c.full_name?.trim() || c.username || "?").trim();
+  return base.charAt(0).toUpperCase();
+}
+
 export function AdminCustomers() {
   const { permissions } = useAuth();
   const [customers, setCustomers] = useState<Customer[]>([]);
@@ -54,8 +92,11 @@ export function AdminCustomers() {
   const [viewing, setViewing] = useState<Customer | null>(null);
   const [perms, setPerms] = useState<AdminPerms | null>(null);
   const [messengerProfile, setMessengerProfile] = useState<MessengerProfile | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [query, setQuery] = useState("");
 
   const load = async () => {
+    setLoading(true);
     const [{ data: profiles }, { data: roles }] = await Promise.all([
       supabase.from("profiles").select("id,full_name,username,phone,created_at").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role")
@@ -67,6 +108,7 @@ export function AdminCustomers() {
     }));
     
     setCustomers(combined as Customer[]);
+    setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
@@ -177,83 +219,130 @@ export function AdminCustomers() {
     can_manage_admins: "Gestionar otros admins",
   };
 
+  const filtered = customers.filter((c) => {
+    const q = query.trim().toLowerCase();
+    if (!q) return true;
+    return [c.full_name, c.username, c.phone, c.role].some((v) =>
+      (v ?? "").toLowerCase().includes(q)
+    );
+  });
+
   return (
     <div className="space-y-6">
-      <p className="text-sm text-muted-foreground">{customers.length} clientes registrados</p>
+      <AdminSectionHeader
+        icon={Users}
+        title="Clientes"
+        description="Tu base de clientes e historial de compras."
+      />
 
-      <div className="card-elevated p-0 overflow-hidden">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="bg-muted/50">
-              <tr className="text-left text-xs uppercase text-muted-foreground">
-                <th className="py-3 px-4">Nombre</th>
-                <th className="py-3 px-4">Usuario / Rol</th>
-                <th className="py-3 px-4">Teléfono</th>
-                <th className="py-3 px-4">Registrado</th>
-                <th className="py-3 px-4 text-right">Acciones</th>
+      <AdminFilters>
+        <div className="relative flex-1">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+          <Input
+            placeholder="Buscar por nombre, usuario o teléfono…"
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            className="h-11 pl-9"
+          />
+        </div>
+        <p className="shrink-0 text-sm text-muted-foreground">
+          {filtered.length} de {customers.length} clientes
+        </p>
+      </AdminFilters>
+
+      <section className="overflow-hidden rounded-3xl border border-border/60 bg-card shadow-soft">
+        {loading ? (
+          <AdminLoading label="Cargando clientes…" />
+        ) : filtered.length === 0 ? (
+          <div className="p-4 sm:p-6">
+            <AdminEmptyState
+              icon={Users}
+              title={query ? "Sin resultados" : "Aún no hay clientes"}
+              description={
+                query
+                  ? `No encontramos clientes que coincidan con "${query}".`
+                  : "Cuando alguien se registre en la tienda aparecerá aquí."
+              }
+            />
+          </div>
+        ) : (
+          <AdminTable className="rounded-none border-0">
+            <AdminTableHead>
+              <tr>
+                <th className={adminTh}>Cliente</th>
+                <th className={adminTh}>Rol</th>
+                <th className={adminTh}>Teléfono</th>
+                <th className={adminTh}>Registrado</th>
+                <th className={`${adminTh} text-right`}>Acciones</th>
               </tr>
-            </thead>
+            </AdminTableHead>
             <tbody>
-              {customers.map((c) => (
-                <tr key={c.id} className="border-t border-border">
-                  <td className="py-3 px-4 font-semibold">{c.full_name ?? "—"}</td>
-                  <td className="py-3 px-4">
-                    <div className="flex flex-col">
-                      <span className="text-muted-foreground">@{c.username}</span>
-                      <span className={`text-[10px] font-bold uppercase px-1.5 py-0.5 rounded-full w-fit mt-1 ${
-                        c.role === "owner" ? "bg-purple-100 text-purple-700" :
-                        c.role === "admin" ? "bg-blue-100 text-blue-700" :
-                        c.role === "gestor" ? "bg-emerald-100 text-emerald-700" :
-                        c.role === "mensajero" ? "bg-amber-100 text-amber-700" :
-                        "bg-gray-100 text-gray-700"
-                      }`}>
-                        {c.role || "user"}
-                      </span>
+              {filtered.map((c) => (
+                <tr key={c.id} className={adminTr}>
+                  <td className={adminTd}>
+                    <div className="flex items-center gap-3">
+                      <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/10 text-sm font-bold text-primary">
+                        {initialOf(c)}
+                      </div>
+                      <div className="flex min-w-0 flex-col">
+                        <span className="truncate font-semibold">{c.full_name ?? "—"}</span>
+                        <span className="truncate text-xs text-muted-foreground">@{c.username}</span>
+                      </div>
                     </div>
                   </td>
-                  <td className="py-3 px-4">{c.phone ?? "—"}</td>
-                  <td className="py-3 px-4 text-xs text-muted-foreground">{new Date(c.created_at).toLocaleDateString("es-CU")}</td>
-                  <td className="py-3 px-4 text-right">
-                    <Button size="sm" variant="ghost" onClick={() => openCustomer(c)}><Eye className="w-4 h-4" /> Ver</Button>
+                  <td className={adminTd}>
+                    <StatusBadge tone={roleTone(c.role)}>{c.role || "user"}</StatusBadge>
+                  </td>
+                  <td className={adminTd}>{c.phone ?? "—"}</td>
+                  <td className={adminTd}>
+                    <span className="text-xs text-muted-foreground">
+                      {new Date(c.created_at).toLocaleDateString("es-CU")}
+                    </span>
+                  </td>
+                  <td className={`${adminTd} text-right`}>
+                    <Button size="sm" variant="ghost" onClick={() => openCustomer(c)} className="h-9">
+                      <Eye className="w-4 h-4" /> Ver
+                    </Button>
                   </td>
                 </tr>
               ))}
-              {customers.length === 0 && (
-                <tr><td colSpan={5} className="py-8 text-center text-muted-foreground">Aún no hay clientes registrados.</td></tr>
-              )}
             </tbody>
-          </table>
-        </div>
-      </div>
+          </AdminTable>
+        )}
+      </section>
 
       <Dialog open={!!viewing} onOpenChange={(v) => !v && setViewing(null)}>
-        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto p-4 sm:p-6">
           <DialogHeader>
-            <DialogTitle>{viewing?.full_name ?? viewing?.username}</DialogTitle>
-            <DialogDescription>@{viewing?.username} · {viewing?.phone ?? "Sin teléfono"}</DialogDescription>
+            <div className="flex items-center gap-3 text-left">
+              {viewing && (
+                <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-bold text-primary">
+                  {initialOf(viewing)}
+                </div>
+              )}
+              <div className="min-w-0">
+                <DialogTitle className="truncate">{viewing?.full_name ?? viewing?.username}</DialogTitle>
+                <DialogDescription className="truncate">
+                  @{viewing?.username} · {viewing?.phone ?? "Sin teléfono"}
+                </DialogDescription>
+              </div>
+            </div>
           </DialogHeader>
 
           {viewing && (
             <div className="space-y-5">
               <div className="grid grid-cols-2 gap-3">
-                <div className="card-elevated p-4">
-                  <ShoppingBag className="w-5 h-5 text-primary mb-2" />
-                  <p className="text-xs text-muted-foreground">Pedidos</p>
-                  <p className="font-display text-2xl font-bold">{history.length}</p>
-                </div>
-                <div className="card-elevated p-4">
-                  <p className="text-xs text-muted-foreground">Total gastado</p>
-                  <p className="font-display text-2xl font-bold text-primary">{formatPrice(totalSpentUSD)}</p>
-                </div>
+                <AdminStat icon={ShoppingBag} label="Pedidos" value={history.length} tone="blue" />
+                <AdminStat icon={Wallet} label="Total gastado" value={formatPrice(totalSpentUSD)} tone="emerald" />
               </div>
 
               <div className="space-y-2">
-                <div className="flex items-center justify-between">
-                  <h3 className="font-semibold">Historial de compras</h3>
+                <div className="flex items-center justify-between gap-2">
+                  <h3 className="font-display text-sm font-bold">Historial de compras</h3>
                   {history.length > 0 && (
                     <AlertDialog>
                       <AlertDialogTrigger asChild>
-                        <Button size="sm" variant="ghost" className="text-destructive"><Trash2 className="w-4 h-4" /> Borrar historial</Button>
+                        <Button size="sm" variant="ghost" className="h-9 text-destructive"><Trash2 className="w-4 h-4" /> Borrar historial</Button>
                       </AlertDialogTrigger>
                       <AlertDialogContent>
                         <AlertDialogHeader>
@@ -269,29 +358,31 @@ export function AdminCustomers() {
                   )}
                 </div>
                 {history.length === 0 ? (
-                  <p className="text-sm text-muted-foreground">Sin pedidos.</p>
+                  <AdminEmptyState
+                    icon={ShoppingBag}
+                    title="Sin pedidos"
+                    description="Este cliente aún no ha realizado compras."
+                    className="py-8"
+                  />
                 ) : (
-                  <div className="space-y-2 max-h-60 overflow-y-auto">
+                  <div className="max-h-60 space-y-2 overflow-y-auto">
                     {history.map((o) => (
-                      <div key={o.id} className="flex items-center justify-between text-sm bg-muted/30 rounded-xl p-3">
-                        <div>
-                          <p className="font-semibold">
+                      <div key={o.id} className="flex items-center justify-between gap-3 rounded-2xl border border-border/60 bg-muted/40 p-3 text-sm">
+                        <div className="min-w-0">
+                          <p className="font-bold">
                             {o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
                           </p>
                           <p className="text-xs text-muted-foreground">{new Date(o.created_at).toLocaleString("es-CU")}</p>
                         </div>
-                        <span className="text-xs px-2 py-1 rounded-full bg-secondary capitalize">{o.status}</span>
+                        <StatusBadge tone="neutral" className="capitalize">{o.status}</StatusBadge>
                       </div>
                     ))}
                   </div>
                 )}
               </div>
 
-              <div className="card-elevated p-4 space-y-4">
-                <div className="flex items-center gap-2 border-b border-border pb-2 mb-2">
-                  <UserCog className="w-5 h-5 text-primary" />
-                  <h3 className="font-semibold">Asignar Rol</h3>
-                </div>
+              <AdminCard className="p-4 sm:p-5">
+                <AdminCardTitle icon={UserCog} title="Asignar Rol" />
                 <div className="space-y-2">
                   <Label>Seleccionar Rol Principal</Label>
                   <Select value={viewing.role || "user"} onValueChange={(v) => updateRole(v as UserRole)}>
@@ -311,15 +402,12 @@ export function AdminCustomers() {
                     * Cambiar el rol reseteará los roles previos del usuario.
                   </p>
                 </div>
-              </div>
+              </AdminCard>
 
               {viewing.role === "mensajero" && (
-                <div className="card-elevated p-4 space-y-4">
-                  <div className="flex items-center gap-2 border-b border-border pb-2 mb-2">
-                    <Map className="w-5 h-5 text-primary" />
-                    <h3 className="font-semibold">Configuración de Mensajero</h3>
-                  </div>
-                  <div className="grid grid-cols-2 gap-4">
+                <AdminCard className="p-4 sm:p-5">
+                  <AdminCardTitle icon={Map} title="Configuración de Mensajero" />
+                  <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="space-y-2">
                       <Label>Tarifa por KM (CUP)</Label>
                       <Input 
@@ -360,7 +448,7 @@ export function AdminCustomers() {
                       </Select>
                     </div>
                   </div>
-                </div>
+                </AdminCard>
               )}
 
               {permissions.can_manage_admins && (viewing.role === "admin" || viewing.role === "owner" || viewing.role === "gestor") && (
@@ -407,7 +495,7 @@ export function AdminCustomers() {
               )}
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="w-full">Eliminar Cliente</Button>
+                <Button variant="destructive" className="w-full h-11">Eliminar Cliente</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>

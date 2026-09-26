@@ -5,7 +5,21 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { toast } from "sonner";
-import { TrendingUp, Calendar } from "lucide-react";
+import { TrendingUp, Calendar, History } from "lucide-react";
+import {
+  AdminCard,
+  AdminSectionHeader,
+  AdminCardTitle,
+  AdminStat,
+  AdminEmptyState,
+  StatusBadge,
+  AdminTable,
+  AdminTableHead,
+  adminTh,
+  adminTd,
+  adminTr,
+  AdminLoading,
+} from "./ui";
 
 interface Rate {
   id: string;
@@ -20,8 +34,10 @@ export function AdminRates() {
   const [todayRate, setTodayRate] = useState<string>("");
   const [extra, setExtra] = useState<string>("10");
   const [notes, setNotes] = useState("");
+  const [loading, setLoading] = useState(true);
 
   const load = async () => {
+    setLoading(true);
     const { data } = await supabase.from("exchange_rates").select("*").order("rate_date", { ascending: false }).limit(30);
     setRates((data ?? []) as Rate[]);
     if (data && data.length > 0) {
@@ -36,6 +52,7 @@ export function AdminRates() {
         setExtra(String(data[0].extra_cup_chargers));
       }
     }
+    setLoading(false);
   };
 
   useEffect(() => { load(); }, []);
@@ -55,69 +72,118 @@ export function AdminRates() {
     load();
   };
 
-  const current = rates.find((r) => r.rate_date === new Date().toISOString().split("T")[0]) ?? rates[0];
+  const todayStr = new Date().toISOString().split("T")[0];
+  const current = rates.find((r) => r.rate_date === todayStr) ?? rates[0];
+  const isToday = !!current && current.rate_date === todayStr;
 
   return (
     <div className="space-y-6 max-w-3xl">
-      <div className="card-elevated p-6 space-y-4 bg-gradient-to-br from-primary/5 to-transparent border-primary/30">
-        <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center">
-            <TrendingUp className="w-5 h-5 text-primary-foreground" />
-          </div>
-          <div>
-            <h2 className="font-display font-bold text-lg">Tasa de cambio de hoy</h2>
-            <p className="text-xs text-muted-foreground">Define en cuánto está el USD para los productos en CUP</p>
-          </div>
-        </div>
+      <AdminSectionHeader
+        icon={TrendingUp}
+        title="Tasa USD"
+        description="Actualiza la tasa de cambio USD/CUP de la tienda."
+      />
 
-        <div className="grid sm:grid-cols-2 gap-3">
-          <div className="space-y-2">
-            <Label>1 USD = ___ CUP</Label>
-            <Input type="number" step="0.01" value={todayRate} onChange={(e) => setTodayRate(e.target.value)} className="text-2xl font-bold h-14" placeholder="440" />
-          </div>
-          <div className="space-y-2">
-            <Label>Extra CUP/USD para cargadores</Label>
-            <Input type="number" step="0.01" value={extra} onChange={(e) => setExtra(e.target.value)} className="h-14" placeholder="10" />
-            <p className="text-xs text-muted-foreground">Se suman a la tasa base para cargadores</p>
-          </div>
-        </div>
+      {loading ? (
+        <AdminLoading label="Cargando tasas…" />
+      ) : (
+        <>
+          <AdminCard className="space-y-5 border-primary/30 bg-gradient-to-br from-primary/5 to-transparent">
+            <AdminCardTitle
+              icon={TrendingUp}
+              title="Tasa de cambio de hoy"
+              action={isToday ? <StatusBadge tone="success">Actualizada hoy</StatusBadge> : undefined}
+            />
 
-        <div className="space-y-2">
-          <Label>Notas (opcional)</Label>
-          <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej: subió por la mañana, esperando estabilización..." className="min-h-[60px]" />
-        </div>
-
-        <Button variant="hero" size="lg" onClick={saveToday} className="w-full">
-          Guardar tasa de hoy
-        </Button>
-
-        {current && (
-          <div className="rounded-xl bg-muted p-4 text-sm space-y-1">
-            <p className="font-semibold">Vista previa:</p>
-            <p>• Producto en USD: precio × {Number(todayRate || 0)} CUP</p>
-            <p>• Cargador (USD → CUP): precio × {Number(todayRate || 0) + Number(extra || 0)} CUP</p>
-          </div>
-        )}
-      </div>
-
-      <div className="card-elevated p-5">
-        <h3 className="font-display font-bold mb-4 flex items-center gap-2"><Calendar className="w-4 h-4" /> Historial (30 días)</h3>
-        <div className="space-y-2 max-h-80 overflow-y-auto">
-          {rates.map((r) => (
-            <div key={r.id} className="flex items-center justify-between bg-muted/30 rounded-xl p-3 text-sm">
-              <div>
-                <p className="font-semibold">{new Date(r.rate_date).toLocaleDateString("es-CU", { weekday: "short", day: "numeric", month: "short" })}</p>
-                {r.notes && <p className="text-xs text-muted-foreground">{r.notes}</p>}
+            <div className="grid gap-4 sm:grid-cols-2">
+              <div className="space-y-2">
+                <Label>1 USD = ___ CUP</Label>
+                <Input type="number" step="0.01" value={todayRate} onChange={(e) => setTodayRate(e.target.value)} className="h-14 text-2xl font-bold" placeholder="440" />
               </div>
-              <div className="text-right">
-                <p className="font-bold">1 USD = {r.usd_to_cup} CUP</p>
-                <p className="text-xs text-muted-foreground">+{r.extra_cup_chargers} cargadores</p>
+              <div className="space-y-2">
+                <Label>Extra CUP/USD para cargadores</Label>
+                <Input type="number" step="0.01" value={extra} onChange={(e) => setExtra(e.target.value)} className="h-14 text-lg font-semibold" placeholder="10" />
+                <p className="text-xs text-muted-foreground">Se suman a la tasa base para cargadores</p>
               </div>
             </div>
-          ))}
-          {rates.length === 0 && <p className="text-sm text-muted-foreground text-center py-4">Sin historial.</p>}
-        </div>
-      </div>
+
+            <div className="space-y-2">
+              <Label>Notas (opcional)</Label>
+              <Textarea value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Ej: subió por la mañana, esperando estabilización..." className="min-h-[60px]" />
+            </div>
+
+            <Button variant="hero" size="lg" onClick={saveToday} className="w-full h-12 text-base">
+              Guardar tasa de hoy
+            </Button>
+
+            {current && (
+              <div className="space-y-1 rounded-2xl border border-border/60 bg-muted/50 p-4 text-sm">
+                <p className="font-bold">Vista previa:</p>
+                <p>• Producto en USD: precio × {Number(todayRate || 0)} CUP</p>
+                <p>• Cargador (USD → CUP): precio × {Number(todayRate || 0) + Number(extra || 0)} CUP</p>
+              </div>
+            )}
+          </AdminCard>
+
+          {current && (
+            <AdminStat
+              icon={TrendingUp}
+              label="Última tasa registrada"
+              value={`1 USD = ${current.usd_to_cup} CUP`}
+              sub={`${new Date(current.rate_date).toLocaleDateString("es-CU", { weekday: "long", day: "numeric", month: "long" })}${current.extra_cup_chargers ? ` · +${current.extra_cup_chargers} CUP cargadores` : ""}`}
+              tone="emerald"
+            />
+          )}
+
+          <section className="overflow-hidden rounded-3xl border border-border/60 bg-card shadow-soft">
+            <div className="p-5 pb-4 sm:p-6 sm:pb-4">
+              <AdminCardTitle icon={Calendar} title="Historial (30 días)" className="mb-0" />
+            </div>
+            {rates.length === 0 ? (
+              <div className="px-5 pb-5 sm:px-6 sm:pb-6">
+                <AdminEmptyState
+                  icon={History}
+                  title="Sin historial de tasas"
+                  description="Todavía no hay tasas registradas. Guarda la primera con el formulario de arriba."
+                />
+              </div>
+            ) : (
+              <AdminTable className="rounded-none border-0">
+                <AdminTableHead>
+                  <tr>
+                    <th className={adminTh}>Fecha</th>
+                    <th className={adminTh}>Tasa</th>
+                    <th className={adminTh}>Extra cargadores</th>
+                  </tr>
+                </AdminTableHead>
+                <tbody>
+                  {rates.map((r, i) => (
+                    <tr key={r.id} className={adminTr}>
+                      <td className={adminTd}>
+                        <div className="flex flex-col gap-1">
+                          <span className="flex flex-wrap items-center gap-2 font-bold">
+                            {new Date(r.rate_date).toLocaleDateString("es-CU", { weekday: "short", day: "numeric", month: "short" })}
+                            {i === 0 && <StatusBadge tone="success">Última</StatusBadge>}
+                          </span>
+                          {r.notes && <span className="text-xs text-muted-foreground">{r.notes}</span>}
+                        </div>
+                      </td>
+                      <td className={adminTd}>
+                        <span className="font-display text-base font-bold whitespace-nowrap">
+                          1 USD = {r.usd_to_cup} CUP
+                        </span>
+                      </td>
+                      <td className={adminTd}>
+                        <span className="whitespace-nowrap text-muted-foreground">+{r.extra_cup_chargers} CUP</span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </AdminTable>
+            )}
+          </section>
+        </>
+      )}
     </div>
   );
 }

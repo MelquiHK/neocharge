@@ -36,7 +36,7 @@ const FAQ = () => {
           con tu duda.
         </p>
         <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
-          <Button asChild size="lg" className="rounded-full">
+          <Button asChild size="lg" className="rounded-full fx-shine">
             <a href={getWhatsAppLink("Hola NeoCharge, tengo una duda")} target="_blank" rel="noopener noreferrer">
               <MessageCircle className="w-5 h-5" /> WhatsApp
             </a>

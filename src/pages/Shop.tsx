@@ -1,11 +1,13 @@
 import { useEffect, useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import { Search, SlidersHorizontal, X, MessageCircle } from "lucide-react";
+import { Search, SlidersHorizontal, X, MessageCircle, Zap } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
+import { displayCategoryName } from "@/lib/format";
+import { ensureNcFx } from "@/lib/fly-to-cart";
 import { useSEO } from "@/hooks/use-seo";
 import { useAuth } from "@/hooks/use-auth";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
@@ -30,6 +32,30 @@ const sortOptions = [
 
 type Sort = ProductSortValue;
 
+/** Skeleton elegante con barrido de brillo (nada de cuadros grises muertos). */
+function ProductCardSkeleton() {
+  return (
+    <div
+      aria-hidden
+      className="rounded-3xl overflow-hidden bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 flex flex-col"
+    >
+      <div className="aspect-square nc-water-shine bg-gradient-to-br from-slate-100 via-slate-200/70 to-slate-100 dark:from-slate-800 dark:via-slate-700/60 dark:to-slate-800" />
+      <div className="p-4 flex flex-col flex-1 gap-3">
+        <div className="h-5 rounded-lg bg-slate-200/70 dark:bg-slate-700/50 animate-pulse w-11/12" />
+        <div className="h-5 rounded-lg bg-slate-200/70 dark:bg-slate-700/50 animate-pulse w-2/3" />
+        <div className="mt-auto space-y-2">
+          <div className="h-6 rounded-lg bg-slate-200/70 dark:bg-slate-700/50 animate-pulse w-1/3" />
+          <div className="space-y-1">
+            <div className="h-1.5 rounded-full bg-slate-200/60 dark:bg-slate-700/40 animate-pulse" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+const emptySuggestions = ["Cargador 72V", "Audífonos", "72V/5A"];
+
 const ShopPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const [products, setProducts] = useState<(Product & { category_id: string | null; category_name?: string | null; created_at?: string | null })[]>([]);
@@ -44,6 +70,10 @@ const ShopPage = () => {
   const activeCat = searchParams.get("cat") ?? "all";
 
   useSEO("shop");
+
+  useEffect(() => {
+    ensureNcFx();
+  }, []);
 
   useEffect(() => {
     const load = async () => {
@@ -117,7 +147,7 @@ const ShopPage = () => {
       </header>
 
       {/* Filters bar */}
-      <div className="sticky top-24 z-30 mb-8">
+      <div className="sticky top-24 z-40 mb-8">
         <div className="glass rounded-2xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center shadow-soft">
           <div className="relative flex-1">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
@@ -189,7 +219,7 @@ const ShopPage = () => {
                 : "bg-secondary text-foreground hover:bg-muted",
             )}
           >
-            {c.name}
+            {displayCategoryName(c.name)}
           </button>
         ))}
       </div>
@@ -201,18 +231,34 @@ const ShopPage = () => {
         </div>
       )}
       {loading ? (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6" aria-label="Cargando productos">
           {Array.from({ length: 8 }).map((_, i) => (
-            <div key={i} className="aspect-[3/4] rounded-3xl bg-muted animate-pulse" />
+            <ProductCardSkeleton key={i} />
           ))}
         </div>
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 space-y-4">
-          <div className="w-20 h-20 rounded-full bg-secondary mx-auto flex items-center justify-center">
-            <Search className="w-9 h-9 text-muted-foreground" />
+          <div className="relative w-24 h-24 mx-auto">
+            <div className="absolute inset-0 -m-3 rounded-full bg-gradient-to-br from-primary/25 via-cyan-400/15 to-transparent blur-2xl" aria-hidden />
+            <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-secondary to-muted mx-auto flex items-center justify-center border border-border/50 shadow-soft">
+              <Search className="w-10 h-10 text-muted-foreground" />
+            </div>
           </div>
-          <h3 className="font-display text-xl font-bold">No encontramos productos</h3>
-          <p className="text-muted-foreground">Prueba con otra búsqueda o categoría.</p>
+          <h3 className="font-display text-2xl font-bold">No encontramos productos</h3>
+          <p className="text-muted-foreground max-w-md mx-auto">
+            Prueba con otra búsqueda o categoría. Esto es lo que más buscan nuestros clientes:
+          </p>
+          <div className="flex flex-wrap gap-2 justify-center pt-1">
+            {emptySuggestions.map((s) => (
+              <button
+                key={s}
+                onClick={() => { setSearch(s); setCat("all"); }}
+                className="px-4 py-1.5 rounded-full text-sm font-medium bg-secondary hover:bg-primary hover:text-primary-foreground transition-colors inline-flex items-center gap-1.5"
+              >
+                <Zap className="w-3.5 h-3.5" /> {s}
+              </button>
+            ))}
+          </div>
           <div className="flex flex-col sm:flex-row gap-3 justify-center pt-2">
             <Button variant="outline" onClick={() => { setSearch(""); setCat("all"); }}>
               Limpiar filtros

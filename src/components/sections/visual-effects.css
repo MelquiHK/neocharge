@@ -1,0 +1,240 @@
+/* ============================================================
+   NeoCharge · Efectos visuales premium de la portada
+   Autocontenido para las sections/ de la home. Sin dependencias.
+   Reglas de rendimiento:
+   - Solo se animan transform y opacity (GPU-friendly).
+   - Sin blur animado en áreas grandes (los blur son estáticos).
+   - Todo se apaga con prefers-reduced-motion.
+   ============================================================ */
+
+/* ---------- Ondas de agua (divisor animado del hero) ---------- */
+.nc-waves {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -1px;
+  height: 72px;
+  overflow: hidden;
+  pointer-events: none;
+}
+@media (min-width: 768px) {
+  .nc-waves { height: 112px; }
+}
+.nc-wave {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 200%;
+  height: 100%;
+}
+.nc-wave-a { animation: nc-wave-slide 16s linear infinite; }
+.nc-wave-b { animation: nc-wave-slide 26s linear infinite; animation-delay: -9s; }
+@keyframes nc-wave-slide {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); } /* el path es periódico: -50% = 2 ondas exactas */
+}
+
+/* ---------- Lavados de gradiente suaves (solo opacity) ---------- */
+.nc-wash-a, .nc-wash-b {
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+}
+.nc-wash-a {
+  background: radial-gradient(60% 50% at 72% 18%, rgba(59, 130, 246, 0.20), transparent 70%);
+  animation: nc-wash-pulse 9s ease-in-out infinite;
+}
+.nc-wash-b {
+  background: radial-gradient(50% 45% at 18% 82%, rgba(34, 211, 238, 0.13), transparent 70%);
+  animation: nc-wash-pulse 13s ease-in-out infinite reverse;
+}
+@keyframes nc-wash-pulse {
+  0%, 100% { opacity: 0.45; }
+  50% { opacity: 1; }
+}
+
+/* ---------- Shimmer líquido en el titular del hero ---------- */
+.nc-text-shimmer {
+  background: linear-gradient(110deg, #93c5fd 20%, #67e8f9 40%, #f0f9ff 50%, #67e8f9 60%, #93c5fd 80%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: nc-text-shine 7s linear infinite;
+}
+@keyframes nc-text-shine {
+  to { background-position: 220% center; }
+}
+
+/* ---------- Liquid Glass estilo iPhone (vidrio translúcido premium) ----------
+   Transparencia real con blur fuerte y brillo especular en el borde,
+   como las superficies de iOS. Estático (sin animar el blur). */
+.nc-liquid {
+  background: linear-gradient(150deg,
+    rgba(255, 255, 255, 0.18),
+    rgba(255, 255, 255, 0.06) 45%,
+    rgba(255, 255, 255, 0.12));
+  backdrop-filter: blur(30px) saturate(180%);
+  -webkit-backdrop-filter: blur(30px) saturate(180%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.38),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.08),
+    inset 1px 0 1px rgba(255, 255, 255, 0.10),
+    0 20px 50px rgba(2, 8, 30, 0.45);
+}
+.nc-liquid-soft {
+  background: linear-gradient(150deg,
+    rgba(255, 255, 255, 0.55),
+    rgba(255, 255, 255, 0.28) 50%,
+    rgba(255, 255, 255, 0.42));
+  backdrop-filter: blur(26px) saturate(190%);
+  -webkit-backdrop-filter: blur(26px) saturate(190%);
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.9),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.3),
+    0 16px 40px rgba(15, 30, 70, 0.14);
+}
+.dark .nc-liquid-soft {
+  background: linear-gradient(150deg,
+    rgba(51, 65, 85, 0.5),
+    rgba(15, 23, 42, 0.32) 50%,
+    rgba(30, 41, 59, 0.45));
+  box-shadow:
+    inset 0 1px 1px rgba(255, 255, 255, 0.22),
+    inset 0 -1px 1px rgba(255, 255, 255, 0.06),
+    0 16px 40px rgba(0, 0, 0, 0.35);
+}
+
+/* ---------- Glassmorphism avanzado (estático, sin animar el blur) ---------- */
+.nc-glass {
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.03) 42%, rgba(255, 255, 255, 0.07));
+  backdrop-filter: blur(18px) saturate(140%);
+  -webkit-backdrop-filter: blur(18px) saturate(140%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.20),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.06),
+    0 24px 60px rgba(2, 8, 30, 0.50);
+}
+.nc-glass-chip {
+  background: linear-gradient(150deg, rgba(32, 48, 96, 0.88), rgba(13, 21, 48, 0.92));
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    0 12px 30px rgba(2, 8, 30, 0.45);
+}
+
+/* ---------- Shine sweep periódico (tarjeta protagonista) ---------- */
+.nc-sheen { position: relative; overflow: hidden; }
+.nc-sheen::before {
+  content: "";
+  position: absolute;
+  inset: -20%;
+  background: linear-gradient(115deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.10) 44%,
+    rgba(186, 230, 253, 0.22) 50%,
+    rgba(255, 255, 255, 0.10) 56%,
+    transparent 68%);
+  transform: translateX(-65%) skewX(-12deg);
+  opacity: 0;
+  animation: nc-sheen-sweep 7s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes nc-sheen-sweep {
+  0% { transform: translateX(-65%) skewX(-12deg); opacity: 0; }
+  12% { opacity: 1; }
+  48% { transform: translateX(65%) skewX(-12deg); opacity: 1; }
+  62%, 100% { transform: translateX(65%) skewX(-12deg); opacity: 0; }
+}
+
+/* ---------- Shine sweep al hover (cards de productos/categorías) ---------- */
+.nc-shine-hover { position: relative; }
+.nc-shine-hover::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: linear-gradient(105deg, transparent 42%, rgba(255, 255, 255, 0.35) 50%, transparent 58%);
+  transform: translateX(-130%) skewX(-8deg);
+  opacity: 0;
+  transition: transform 0.9s ease, opacity 0.3s ease;
+  pointer-events: none;
+}
+.nc-shine-hover:hover::after {
+  transform: translateX(130%) skewX(-8deg);
+  opacity: 1;
+}
+
+/* ---------- Ripples de agua sobre la imagen protagonista ---------- */
+.nc-ripple { position: relative; }
+.nc-ripple::before, .nc-ripple::after {
+  content: "";
+  position: absolute;
+  inset: 14%;
+  border-radius: 9999px;
+  border: 1px solid rgba(186, 230, 253, 0.35);
+  opacity: 0;
+  animation: nc-ripple-ring 6s ease-out infinite;
+  pointer-events: none;
+}
+.nc-ripple::after { animation-delay: 3s; }
+@keyframes nc-ripple-ring {
+  0% { transform: scale(0.62); opacity: 0; }
+  22% { opacity: 0.85; }
+  100% { transform: scale(1.28); opacity: 0; }
+}
+
+/* ---------- Haz de luz barriendo el panel CTA ---------- */
+.nc-beam-host { position: relative; overflow: hidden; }
+.nc-beam {
+  position: absolute;
+  top: -12%;
+  bottom: -12%;
+  left: -35%;
+  width: 35%;
+  background: linear-gradient(100deg,
+    transparent 0%,
+    rgba(147, 197, 253, 0) 18%,
+    rgba(186, 230, 253, 0.22) 42%,
+    rgba(255, 255, 255, 0.38) 50%,
+    rgba(186, 230, 253, 0.22) 58%,
+    rgba(147, 197, 253, 0) 82%,
+    transparent 100%);
+  transform: skewX(-14deg);
+  opacity: 0;
+  animation: nc-beam-sweep 8s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes nc-beam-sweep {
+  0% { transform: translateX(0) skewX(-14deg); opacity: 0; }
+  10% { opacity: 1; }
+  46% { transform: translateX(485%) skewX(-14deg); opacity: 1; }
+  62%, 100% { transform: translateX(485%) skewX(-14deg); opacity: 0; }
+}
+
+/* ---------- Lavado decorativo estático para secciones claras ---------- */
+.nc-section-wash {
+  background:
+    radial-gradient(42% 60% at 88% 12%, rgba(59, 130, 246, 0.06), transparent 70%),
+    radial-gradient(36% 55% at 8% 88%, rgba(34, 211, 238, 0.05), transparent 70%);
+}
+
+/* ---------- Movimiento reducido: todo quieto ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .nc-wave-a, .nc-wave-b,
+  .nc-wash-a, .nc-wash-b,
+  .nc-text-shimmer,
+  .nc-sheen::before,
+  .nc-ripple::before, .nc-ripple::after,
+  .nc-beam {
+    animation: none !important;
+  }
+  .nc-shine-hover::after { transition: none; }
+  .nc-text-shimmer {
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+    color: #93c5fd;
+  }
+}

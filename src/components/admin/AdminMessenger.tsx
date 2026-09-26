@@ -5,9 +5,20 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { toast } from "sonner";
 import { formatCUP } from "@/lib/format";
-import { MapPin, Plus, Trash2, CheckCircle, XCircle, Store, Wallet, User, Clock, Navigation } from "lucide-react";
-import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { MapPin, Plus, Trash2, CheckCircle, XCircle, Store, Wallet, User, Navigation, Truck } from "lucide-react";
+import {
+  AdminCard,
+  AdminSectionHeader,
+  AdminCardTitle,
+  AdminEmptyState,
+  AdminLoading,
+  StatusBadge,
+  AdminTable,
+  AdminTableHead,
+  adminTh,
+  adminTd,
+  adminTr,
+} from "./ui";
 
 export function AdminMessenger() {
   interface SalePointRow {
@@ -117,32 +128,63 @@ export function AdminMessenger() {
     }
   };
 
+  const statusTone = (s?: string | null): "warning" | "info" | "success" | "danger" =>
+    s === "pending" ? "warning" : s === "approved" ? "info" : s === "paid" ? "success" : "danger";
+  const statusLabel = (s?: string | null) =>
+    s === "pending" ? "Pendiente" : s === "paid" ? "Pagado" : s === "approved" ? "Aprobado" : "Rechazado";
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <AdminSectionHeader
+          icon={Truck}
+          title="Mensajería"
+          description="Tarifa de envío, puntos de despacho y pagos de gestores."
+        />
+        <AdminLoading label="Cargando mensajería…" />
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
+    <div className="space-y-6">
+      <AdminSectionHeader
+        icon={Truck}
+        title="Mensajería"
+        description="Tarifa de envío, puntos de despacho y pagos de gestores."
+      />
+
       {/* Tarifa pública de envío (calculadora /calcular-envio + bot de WhatsApp) */}
-      <Card className="p-6 rounded-3xl border-border/50 shadow-soft">
-        <h3 className="font-display text-lg font-bold flex items-center gap-2 mb-2">
-          <Navigation className="w-5 h-5 text-primary" /> Tarifa de envío para clientes
-        </h3>
-        <p className="text-xs text-muted-foreground mb-4">
+      <AdminCard>
+        <AdminCardTitle icon={Navigation} title="Tarifa de envío para clientes" />
+        <p className="-mt-2 mb-4 text-xs text-muted-foreground">
           Esta tarifa la usan la calculadora pública (/calcular-envio) y el bot de WhatsApp.
         </p>
-        <div className="grid sm:grid-cols-3 gap-3">
-          <div className="space-y-1">
-            <Label>Precio por km (CUP)</Label>
-            <Input
-              type="number"
-              min={0}
-              value={deliveryPrice}
-              onChange={(e) => setDeliveryPrice(Number(e.target.value))}
-            />
+        <div className="grid gap-4 sm:grid-cols-2">
+          <div className="space-y-2">
+            <Label htmlFor="delivery-price">Precio por km (CUP)</Label>
+            <div className="relative">
+              <Input
+                id="delivery-price"
+                type="number"
+                min={0}
+                inputMode="decimal"
+                value={deliveryPrice}
+                onChange={(e) => setDeliveryPrice(Number(e.target.value))}
+                className="h-14 pr-16 text-2xl font-bold tracking-tight"
+              />
+              <span className="pointer-events-none absolute right-4 top-1/2 -translate-y-1/2 text-sm font-semibold text-muted-foreground">
+                CUP/km
+              </span>
+            </div>
           </div>
-          <div className="space-y-1 sm:col-span-2">
-            <Label>Local origen de los envíos</Label>
+          <div className="space-y-2">
+            <Label htmlFor="delivery-origin">Local origen de los envíos</Label>
             <select
+              id="delivery-origin"
               value={deliveryOriginId}
               onChange={(e) => setDeliveryOriginId(e.target.value)}
-              className="w-full rounded-xl border border-input bg-background px-3 py-2 text-sm"
+              className="h-14 w-full rounded-xl border border-input bg-background px-3 text-sm"
             >
               <option value="">Automático (Vedado o el primero)</option>
               {salePoints.map((p) => (
@@ -153,150 +195,160 @@ export function AdminMessenger() {
             </select>
           </div>
         </div>
-        <Button onClick={saveDeliveryConfig} disabled={savingDelivery} className="mt-4 rounded-xl">
+        <Button variant="hero" onClick={saveDeliveryConfig} disabled={savingDelivery} className="mt-5 h-11 w-full rounded-xl sm:w-auto sm:px-8">
           {savingDelivery ? "Guardando…" : "Guardar tarifa"}
         </Button>
-      </Card>
+      </AdminCard>
 
       {/* Sale Points Management */}
-      <div className="grid md:grid-cols-3 gap-6">
-        <div className="md:col-span-1 space-y-4">
-          <Card className="p-6 rounded-3xl border-border/50 shadow-soft">
-            <h3 className="font-display text-lg font-bold flex items-center gap-2 mb-4">
-              <Plus className="w-5 h-5 text-primary" /> Nuevo Punto de Venta
-            </h3>
-            <div className="space-y-3">
-              <div className="space-y-1">
-                <Label>Nombre del Local</Label>
-                <Input value={newPoint.name} onChange={e => setNewPoint({...newPoint, name: e.target.value})} placeholder="Ej: Almacén Central" />
-              </div>
-              <div className="space-y-1">
-                <Label>Dirección</Label>
-                <Input value={newPoint.address} onChange={e => setNewPoint({...newPoint, address: e.target.value})} placeholder="Ej: Calle 10 #5..." />
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="space-y-1">
-                  <Label>Latitud</Label>
-                  <Input type="number" value={newPoint.lat} onChange={e => setNewPoint({...newPoint, lat: Number(e.target.value)})} />
-                </div>
-                <div className="space-y-1">
-                  <Label>Longitud</Label>
-                  <Input type="number" value={newPoint.lng} onChange={e => setNewPoint({...newPoint, lng: Number(e.target.value)})} />
-                </div>
-              </div>
-              <Button onClick={addPoint} className="w-full mt-4 rounded-xl">Añadir Punto</Button>
+      <div className="grid gap-4 lg:grid-cols-3">
+        <AdminCard>
+          <AdminCardTitle icon={Plus} title="Nuevo punto de venta" />
+          <div className="space-y-3">
+            <div className="space-y-2">
+              <Label>Nombre del local</Label>
+              <Input className="h-11" value={newPoint.name} onChange={e => setNewPoint({...newPoint, name: e.target.value})} placeholder="Ej: Almacén Central" />
             </div>
-          </Card>
-        </div>
+            <div className="space-y-2">
+              <Label>Dirección</Label>
+              <Input className="h-11" value={newPoint.address} onChange={e => setNewPoint({...newPoint, address: e.target.value})} placeholder="Ej: Calle 10 #5..." />
+            </div>
+            <div className="grid grid-cols-2 gap-2">
+              <div className="space-y-2">
+                <Label>Latitud</Label>
+                <Input className="h-11" type="number" inputMode="decimal" value={newPoint.lat} onChange={e => setNewPoint({...newPoint, lat: Number(e.target.value)})} />
+              </div>
+              <div className="space-y-2">
+                <Label>Longitud</Label>
+                <Input className="h-11" type="number" inputMode="decimal" value={newPoint.lng} onChange={e => setNewPoint({...newPoint, lng: Number(e.target.value)})} />
+              </div>
+            </div>
+            <Button variant="hero" onClick={addPoint} className="mt-1 h-11 w-full rounded-xl">Añadir punto</Button>
+          </div>
+        </AdminCard>
 
-        <div className="md:col-span-2">
-          <Card className="p-6 rounded-3xl border-border/50 shadow-soft h-full">
-            <h3 className="font-display text-lg font-bold flex items-center gap-2 mb-6">
-              <Store className="w-5 h-5 text-primary" /> Puntos de Venta Activos
-            </h3>
-            <div className="grid sm:grid-cols-2 gap-4">
+        <AdminCard className="lg:col-span-2">
+          <AdminCardTitle
+            icon={Store}
+            title="Puntos de venta activos"
+            action={<StatusBadge tone="neutral">{salePoints.length}</StatusBadge>}
+          />
+          {salePoints.length === 0 ? (
+            <AdminEmptyState
+              icon={Store}
+              title="No hay puntos de venta"
+              description="Añade el primero con el formulario."
+              className="py-8"
+            />
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2">
               {salePoints.map(p => (
-                <div key={p.id} className="p-4 rounded-2xl bg-secondary/30 border border-border/50 flex items-start justify-between group">
-                  <div className="space-y-1">
-                    <p className="font-bold text-sm">{p.name}</p>
-                    <p className="text-xs text-muted-foreground flex items-center gap-1">
-                      <MapPin className="w-3 h-3" /> {p.address}
-                    </p>
-                    <p className="text-[10px] text-muted-foreground font-mono">
+                <div key={p.id} className="flex items-start justify-between gap-2 rounded-2xl border border-border/60 bg-muted/30 p-4">
+                  <div className="min-w-0 space-y-1">
+                    <p className="text-sm font-bold">{p.name}</p>
+                    {p.address && (
+                      <p className="flex items-start gap-1 text-xs text-muted-foreground">
+                        <MapPin className="mt-0.5 h-3 w-3 shrink-0" />
+                        <span>{p.address}</span>
+                      </p>
+                    )}
+                    <p className="font-mono text-[10px] text-muted-foreground">
                       {Number(p.lat ?? 0).toFixed(4)}, {Number(p.lng ?? 0).toFixed(4)}
                     </p>
                   </div>
-                  <Button variant="ghost" size="icon" onClick={() => deletePoint(p.id)} className="opacity-0 group-hover:opacity-100 transition-opacity">
-                    <Trash2 className="w-4 h-4 text-destructive" />
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    onClick={() => deletePoint(p.id)}
+                    className="h-10 w-10 shrink-0 text-destructive hover:text-destructive"
+                    aria-label={`Eliminar ${p.name}`}
+                  >
+                    <Trash2 className="h-4 w-4" />
                   </Button>
                 </div>
               ))}
-              {salePoints.length === 0 && (
-                <div className="col-span-full py-12 text-center text-muted-foreground italic border-2 border-dashed border-border rounded-2xl">
-                  No hay puntos de venta registrados.
-                </div>
-              )}
             </div>
-          </Card>
-        </div>
+          )}
+        </AdminCard>
       </div>
 
       {/* Payment Requests */}
-      <Card className="p-6 rounded-3xl border-border/50 shadow-soft">
-        <h3 className="font-display text-lg font-bold flex items-center gap-2 mb-6">
-          <Wallet className="w-5 h-5 text-primary" /> Solicitudes de Pago de Gestores
-        </h3>
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm text-left">
-            <thead className="bg-secondary/30 text-xs font-bold uppercase text-muted-foreground">
+      <AdminCard>
+        <AdminCardTitle
+          icon={Wallet}
+          title="Solicitudes de pago de gestores"
+          action={<StatusBadge tone="neutral">{paymentRequests.length}</StatusBadge>}
+        />
+        {paymentRequests.length === 0 ? (
+          <AdminEmptyState
+            icon={Wallet}
+            title="Sin solicitudes de pago"
+            description="No hay solicitudes de pago de gestores por ahora."
+            className="py-8"
+          />
+        ) : (
+          <AdminTable className="border-0">
+            <AdminTableHead>
               <tr>
-                <th className="px-4 py-3">Gestor</th>
-                <th className="px-4 py-3">Monto</th>
-                <th className="px-4 py-3">Fecha</th>
-                <th className="px-4 py-3">Estado</th>
-                <th className="px-4 py-3 text-right">Acciones</th>
+                <th className={adminTh}>Gestor</th>
+                <th className={adminTh}>Monto</th>
+                <th className={adminTh}>Fecha</th>
+                <th className={adminTh}>Estado</th>
+                <th className={`${adminTh} text-right`}>Acciones</th>
               </tr>
-            </thead>
-            <tbody className="divide-y divide-border">
+            </AdminTableHead>
+            <tbody>
               {paymentRequests.map(r => (
-                <tr key={r.id} className="hover:bg-secondary/10 transition-colors">
-                  <td className="px-4 py-3">
+                <tr key={r.id} className={adminTr}>
+                  <td className={adminTd}>
                     <div className="flex items-center gap-2">
-                      <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
-                        <User className="w-4 h-4 text-primary" />
+                      <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-primary/10">
+                        <User className="h-4 w-4 text-primary" />
                       </div>
-                      <div>
-                        <p className="font-semibold">{r.profiles?.full_name || r.profiles?.username}</p>
-                        <p className="text-[10px] text-muted-foreground">@{r.profiles?.username}</p>
+                      <div className="min-w-0">
+                        <p className="truncate font-semibold">{r.profiles?.full_name || r.profiles?.username}</p>
+                        {r.profiles?.username && (
+                          <p className="text-[10px] text-muted-foreground">@{r.profiles?.username}</p>
+                        )}
                       </div>
                     </div>
                   </td>
-                  <td className="px-4 py-3 font-bold text-primary">{formatCUP(Number(r.amount ?? 0))}</td>
-                  <td className="px-4 py-3 text-xs text-muted-foreground">
-                    {new Date(r.created_at).toLocaleString("es-CU")}
+                  <td className={adminTd}>
+                    <span className="whitespace-nowrap font-bold text-primary">{formatCUP(Number(r.amount ?? 0))}</span>
                   </td>
-                  <td className="px-4 py-3">
-                    <Badge variant={
-                      r.status === 'paid' ? 'default' :
-                      r.status === 'pending' ? 'outline' :
-                      r.status === 'approved' ? 'default' : 'destructive'
-                    } className="text-[10px] uppercase font-bold px-2 py-0.5">
-                      {r.status === 'pending' ? 'Pendiente' : 
-                       r.status === 'paid' ? 'Pagado' : 
-                       r.status === 'approved' ? 'Aprobado' : 'Rechazado'}
-                    </Badge>
+                  <td className={adminTd}>
+                    <span className="whitespace-nowrap text-xs text-muted-foreground">
+                      {new Date(r.created_at).toLocaleString("es-CU")}
+                    </span>
                   </td>
-                  <td className="px-4 py-3 text-right space-x-2">
-                    {r.status === 'pending' && (
-                      <>
-                        <Button size="sm" variant="outline" className="h-8 px-2 text-emerald-600 hover:text-emerald-700 hover:bg-emerald-50" onClick={() => updateRequestStatus(r.id, 'approved')}>
-                          <CheckCircle className="w-4 h-4 mr-1" /> Aprobar
+                  <td className={adminTd}>
+                    <StatusBadge tone={statusTone(r.status)}>{statusLabel(r.status)}</StatusBadge>
+                  </td>
+                  <td className={adminTd}>
+                    <div className="flex items-center justify-end gap-2">
+                      {r.status === 'pending' && (
+                        <>
+                          <Button size="sm" variant="outline" className="h-10 px-3 text-emerald-600 hover:text-emerald-700 dark:text-emerald-400 dark:hover:bg-emerald-500/10 dark:hover:text-emerald-300" onClick={() => updateRequestStatus(r.id, 'approved')}>
+                            <CheckCircle className="mr-1 h-4 w-4" /> Aprobar
+                          </Button>
+                          <Button size="sm" variant="outline" className="h-10 px-3 text-destructive hover:bg-destructive/10" onClick={() => updateRequestStatus(r.id, 'rejected')}>
+                            <XCircle className="mr-1 h-4 w-4" /> Rechazar
+                          </Button>
+                        </>
+                      )}
+                      {r.status === 'approved' && (
+                        <Button size="sm" variant="hero" className="h-10 px-3" onClick={() => updateRequestStatus(r.id, 'paid')}>
+                          Marcar pagado
                         </Button>
-                        <Button size="sm" variant="outline" className="h-8 px-2 text-destructive hover:bg-destructive/10" onClick={() => updateRequestStatus(r.id, 'rejected')}>
-                          <XCircle className="w-4 h-4 mr-1" /> Rechazar
-                        </Button>
-                      </>
-                    )}
-                    {r.status === 'approved' && (
-                      <Button size="sm" variant="hero" className="h-8 px-2" onClick={() => updateRequestStatus(r.id, 'paid')}>
-                        Marcar como Pagado
-                      </Button>
-                    )}
+                      )}
+                    </div>
                   </td>
                 </tr>
               ))}
-              {paymentRequests.length === 0 && (
-                <tr>
-                  <td colSpan={5} className="py-12 text-center text-muted-foreground italic">
-                    No hay solicitudes de pago pendientes.
-                  </td>
-                </tr>
-              )}
             </tbody>
-          </table>
-        </div>
-      </Card>
+          </AdminTable>
+        )}
+      </AdminCard>
     </div>
   );
 }
-

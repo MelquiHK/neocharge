@@ -77,15 +77,17 @@ export default function Services() {
           <p className="text-muted-foreground">Cargando servicios...</p>
         </div>
       ) : services.length === 0 ? (
-        <div className="rounded-3xl border border-border bg-secondary/50 p-12 text-center">
+        <div className="rounded-3xl border border-border bg-secondary/50 p-12 text-center space-y-4">
           <h2 className="font-display text-3xl font-bold">No hay servicios publicados aún</h2>
-          <p className="mt-3 text-muted-foreground">Pronto podrás ver aquí las opciones de mantenimiento, programación y soporte que ofrecemos.</p>
-          <Button asChild variant="hero"><Link to="/contacto">Contáctanos</Link></Button>
+          <p className="text-muted-foreground max-w-xl mx-auto">Pronto podrás ver aquí las opciones de mantenimiento, programación y soporte que ofrecemos.</p>
+          <div className="pt-2">
+            <Button asChild variant="hero"><Link to="/contacto">Contáctanos</Link></Button>
+          </div>
         </div>
       ) : (
         <>
           {selectedService && (
-            <section className="mb-10 overflow-hidden rounded-[28px] border border-border bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white shadow-2xl">
+            <section className="mb-10 overflow-hidden rounded-[28px] border border-border bg-gradient-to-br from-slate-950 via-slate-900 to-slate-800 text-white shadow-2xl fx-water">
               <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[1.2fr_0.8fr]">
                 <div>
                   <div className="mb-4 flex flex-wrap items-center gap-3">
@@ -155,11 +157,18 @@ export default function Services() {
               const isSelected = selectedService?.id === service.id;
 
               return (
-                <button
+                <div
                   key={service.id}
-                  type="button"
+                  role="button"
+                  tabIndex={0}
                   onClick={() => setSelectedServiceId(service.id)}
-                  className={`text-left rounded-[28px] border p-7 transition-all duration-200 ${
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" || e.key === " ") {
+                      e.preventDefault();
+                      setSelectedServiceId(service.id);
+                    }
+                  }}
+                  className={`text-left rounded-[28px] border p-7 transition-all duration-200 cursor-pointer ${
                     isSelected
                       ? "border-primary bg-primary/5 shadow-lg shadow-primary/10"
                       : "border-border bg-white/80 hover:border-primary/40 hover:bg-primary/[0.03]"
@@ -182,9 +191,13 @@ export default function Services() {
                       <p className="text-sm text-muted-foreground">Precio</p>
                       <p className="text-2xl font-bold">{service.currency === "CUP" ? `${service.price} CUP` : `${service.price} USD`}</p>
                     </div>
-                    <span className="inline-flex items-center gap-2 text-sm font-semibold text-primary">
+                    <Link
+                      to={`/servicios/${service.slug}`}
+                      onClick={(e) => e.stopPropagation()}
+                      className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:gap-3 transition-all"
+                    >
                       Ver detalles <ArrowRight className="h-4 w-4" />
-                    </span>
+                    </Link>
                   </div>
 
                   {service.features && service.features.length > 0 && (
@@ -197,7 +210,7 @@ export default function Services() {
                       ))}
                     </div>
                   )}
-                </button>
+                </div>
               );
             })}
           </div>

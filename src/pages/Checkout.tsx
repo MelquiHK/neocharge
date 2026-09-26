@@ -11,7 +11,7 @@ import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { useDeliveryQuote } from "@/hooks/use-delivery-quote";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPrice, formatCUP } from "@/lib/format";
+import { formatMoney, formatCUP } from "@/lib/format";
 import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { toast } from "sonner";
@@ -662,10 +662,10 @@ const Checkout = () => {
                 <span>Total a pagar</span>
                 <div className="text-right">
                   <span className="text-primary text-base block">
-                    USD {completeUSD ? formatPrice(totalUSD + shippingUSD) : "—"}
+                    {completeUSD ? formatMoney(totalUSD + shippingUSD, "USD") : "—"}
                   </span>
                   <span className="text-[10px] text-muted-foreground block">
-                    CUP {completeCUP ? formatCUP(totalCUP + shippingCUP) : "—"}
+                    {completeCUP ? formatMoney(totalCUP + shippingCUP, "CUP") : "—"}
                   </span>
                 </div>
               </div>

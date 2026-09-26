@@ -4,12 +4,76 @@ export function formatPrice(value: number, currency = "USD") {
   return new Intl.NumberFormat("es-CU", {
     style: "currency",
     currency,
+    currencyDisplay: "narrowSymbol",
     maximumFractionDigits: 2,
   }).format(value);
 }
 
 export function formatCUP(value: number) {
   return `${new Intl.NumberFormat("es-CU", { maximumFractionDigits: 0 }).format(Math.round(value))} CUP`;
+}
+
+/**
+ * Formatea un monto en la moneda del producto.
+ * NOTA: `formatPrice` (Intl es-CU, USD, narrowSymbol) ya incluye el símbolo
+ * "$" en la propia cadena ("$55.00"). Nunca se debe anteponer ni posponer otro
+ * indicador de moneda (p. ej. "US$ " + formatPrice(x) o formatPrice(x) + " USD"),
+ * porque eso produce el doble símbolo. Usa esta función cuando la moneda
+ * puede variar por producto.
+ */
+export function formatMoney(value: number, currency?: string | null) {
+  return (currency ?? "USD").toUpperCase() === "CUP" ? formatCUP(value) : formatPrice(value);
+}
+
+/**
+ * ¿Es razonable mostrar el compare_price como "precio anterior"?
+ * Se oculta cuando el descuento implicado es absurdo (>90%) o incoherente
+ * (compare_price menor o igual al precio). Así un dato mal cargado en el
+ * panel no se convierte en un "-97%" imposible en la tienda.
+ */
+export function hasSaneDiscount(price: number, comparePrice: number | null | undefined): boolean {
+  const p = Number(price);
+  const c = Number(comparePrice);
+  if (!Number.isFinite(p) || !Number.isFinite(c) || c <= 0 || p < 0) return false;
+  if (c <= p) return false;
+  const discountPct = ((c - p) / c) * 100;
+  return discountPct <= 90;
+}
+
+/**
+ * Etiqueta legible en español para los valores de `warranty_type` de la
+ * tabla products. Nunca se muestra el valor crudo al cliente.
+ */
+export function warrantyTypeLabel(warrantyType: string | null | undefined): string {
+  switch ((warrantyType ?? "").toLowerCase()) {
+    case "charger":
+      return "Garantía del cargador";
+    case "electronics":
+      return "Garantía de electrónica";
+    default:
+      return "Garantía incluida";
+  }
+}
+
+/**
+ * Nombres de categorías corregidos para mostrar al cliente.
+ * La tabla `categories` trae tildes y capitalización inconsistentes
+ * ("Cargador 48v", "Audifonos", "Energia Casa"); se normaliza aquí sin
+ * tocar los datos.
+ */
+const CATEGORY_DISPLAY_NAMES: Record<string, string> = {
+  "cargadores 72v": "Cargadores 72V",
+  "cargador 48v": "Cargador 48V",
+  "audio": "Audio",
+  "piezas": "Piezas",
+  "accesorios": "Accesorios",
+  "audifonos": "Audífonos",
+  "energia casa": "Energía para el hogar",
+};
+
+export function displayCategoryName(name: string | null | undefined): string {
+  const raw = (name ?? "").trim();
+  return CATEGORY_DISPLAY_NAMES[raw.toLowerCase()] ?? raw;
 }
 
 export function slugify(input: string) {
