@@ -16,6 +16,7 @@ import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { DeliveryRouteMap } from "@/components/DeliveryRouteMap";
 
 interface Loc {
   id: string;
@@ -43,7 +44,7 @@ const Checkout = () => {
   const [notes, setNotes] = useState("");
   // El costo de envío YA NO se escribe a mano: se cotiza automáticamente por km
   // con la ubicación GPS del cliente (misma tarifa que /calcular-envio).
-  const { configError, quote, quotedCoords, quoting, quoteError, quoteFor, clearQuote } = useDeliveryQuote();
+  const { configError, quote, quotedCoords, quoting, quoteError, quoteFor, clearQuote, origin } = useDeliveryQuote();
   const shippingCUP = delivery === "delivery" ? quote?.priceCUP ?? 0 : 0;
   const shippingUSD = 0;
 
@@ -562,12 +563,17 @@ const Checkout = () => {
                     </p>
                   )}
                   {!quoting && quote && quoteValid && (
-                    <div className="rounded-xl bg-primary text-primary-foreground p-4 flex items-center justify-between gap-2 shadow-soft">
-                      <span className="text-sm font-semibold">
-                        Mensajería ({quote.km.toFixed(1)} km × {formatCUP(quote.pricePerKm)}/km)
-                      </span>
-                      <span className="font-display text-xl font-bold whitespace-nowrap">= {formatCUP(quote.priceCUP)}</span>
-                    </div>
+                    <>
+                      <div className="rounded-xl bg-primary text-primary-foreground p-4 flex items-center justify-between gap-2 shadow-soft">
+                        <span className="text-sm font-semibold">
+                          Mensajería ({quote.km.toFixed(1)} km × {formatCUP(quote.pricePerKm)}/km)
+                        </span>
+                        <span className="font-display text-xl font-bold whitespace-nowrap">= {formatCUP(quote.priceCUP)}</span>
+                      </div>
+                      {quotedCoords && (
+                        <DeliveryRouteMap origin={origin} dest={quotedCoords} />
+                      )}
+                    </>
                   )}
                   {!quoting && quoteError && (
                     <div className="flex items-start justify-between gap-2 rounded-xl bg-destructive/10 text-destructive p-3 text-xs">
