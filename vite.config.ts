@@ -95,4 +95,18 @@ export default defineConfig(({ mode }) => ({
       "@tanstack/query-core"
     ],
   },
+  build: {
+    // Divide el bundle principal (684KB) en trozos cacheables por separado:
+    // el navegador los descarga en paralelo y solo re-descarga el que cambie.
+    rollupOptions: {
+      output: {
+        manualChunks: {
+          "vendor-react": ["react", "react-dom", "react-router-dom"],
+          "vendor-supabase": ["@supabase/supabase-js"],
+          "vendor-query": ["@tanstack/react-query"],
+          "vendor-ui": ["lucide-react", "sonner"],
+        },
+      },
+    },
+  },
 }));

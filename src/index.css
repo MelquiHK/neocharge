@@ -160,6 +160,37 @@
       0 12px 32px hsl(222 30% 11% / 0.10);
   }
 
+  /* Vidrio "estático" para elementos fixed/sticky durante el scroll.
+     Mantiene el look esmerilado claro pero SIN backdrop-filter: el blur
+     sobre contenido en movimiento obliga a repintar cada frame (jank).
+     Con fondo casi opaco el compositor solo mezcla capas (barato). */
+  .glass-static {
+    background: linear-gradient(155deg, hsl(0 0% 100% / 0.94), hsl(0 0% 100% / 0.88) 55%, hsl(0 0% 100% / 0.92));
+    border: 1px solid hsl(0 0% 100% / 0.65);
+    box-shadow:
+      inset 0 1px 1px hsl(0 0% 100% / 0.85),
+      inset 0 -1px 1px hsl(0 0% 100% / 0.25),
+      0 12px 32px hsl(222 30% 11% / 0.10);
+  }
+  .dark .glass-static {
+    background: linear-gradient(155deg, rgba(51, 65, 85, 0.94), rgba(15, 23, 42, 0.92) 55%, rgba(30, 41, 59, 0.93));
+    border: 1px solid rgba(255, 255, 255, 0.16);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.22),
+      inset 0 -1px 1px rgba(255, 255, 255, 0.06),
+      0 12px 32px rgba(0, 0, 0, 0.35);
+  }
+
+  /* Tarjetas fuera de pantalla: el navegador salta su render (layout/paint)
+     hasta que se acercan al viewport. Acelera el scroll en listas largas. */
+  .cv-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 420px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .cv-auto { content-visibility: visible; }
+  }
+
   .text-gradient {
     background: var(--gradient-primary);
     -webkit-background-clip: text;
@@ -226,11 +257,35 @@
   .reveal {
     opacity: 0;
     transform: translateY(24px);
-    transition: opacity 0.7s var(--transition-base), transform 0.7s var(--transition-base);
+    transition: opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1), transform 0.7s cubic-bezier(0.22, 1, 0.36, 1);
+    will-change: opacity, transform;
   }
   .reveal.is-visible {
     opacity: 1;
     transform: translateY(0);
+    will-change: auto;
+  }
+
+  /* Entrada de página: fade + elevación sutil al cambiar de ruta.
+     Solo transform/opacity (GPU). Se reaplica con key={pathname}. */
+  .page-in {
+    animation: page-in 0.45s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  @keyframes page-in {
+    from { opacity: 0; transform: translateY(12px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  /* Entrada de la burbuja de la app: rebote sutil tipo spring (solo transform/opacity). */
+  .banner-in {
+    animation: banner-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  @keyframes banner-in {
+    from { opacity: 0; transform: translateY(24px) scale(0.9); }
+    to { opacity: 1; transform: translateY(0) scale(1); }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .page-in, .banner-in { animation: none; }
+    .reveal { transition: none; opacity: 1; transform: none; }
   }
 
   .animate-glow-pulse {

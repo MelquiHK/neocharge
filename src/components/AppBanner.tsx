@@ -65,11 +65,11 @@ export function AppBanner() {
       aria-label="Descarga la app de NeoCharge"
       className="fixed bottom-4 right-4 left-4 sm:left-auto z-50 flex justify-center sm:justify-end pointer-events-none"
     >
-      <div className="pointer-events-auto relative w-full sm:w-auto sm:max-w-xs">
+      <div className="pointer-events-auto relative w-full sm:w-auto sm:max-w-xs banner-in">
         {/* Tarjeta expandida con detalles */}
         <div
           className={cn(
-            "absolute bottom-full right-0 mb-3 w-full sm:w-80 origin-bottom-right transition-all duration-300",
+            "absolute bottom-full right-0 mb-3 w-full sm:w-80 origin-bottom-right transition-[opacity,transform] duration-300",
             expanded
               ? "opacity-100 scale-100 translate-y-0"
               : "opacity-0 scale-95 translate-y-2 pointer-events-none"
@@ -136,7 +136,7 @@ export function AppBanner() {
           }}
           aria-expanded={expanded}
           aria-label="Más información sobre la app de NeoCharge"
-          className="w-full sm:w-auto flex items-center gap-2 sm:gap-3 rounded-full pl-2 pr-2 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white shadow-2xl shadow-blue-900/40 border border-white/25 backdrop-blur-xl hover:shadow-blue-900/60 active:scale-[0.98] transition-all cursor-pointer"
+          className="w-full sm:w-auto flex items-center gap-2 sm:gap-3 rounded-full pl-2 pr-2 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white shadow-2xl shadow-blue-900/40 border border-white/25 backdrop-blur-xl hover:shadow-blue-900/60 active:scale-[0.98] transition-[transform,box-shadow] duration-300 cursor-pointer"
         >
           <span className="w-9 h-9 shrink-0 rounded-full bg-white flex items-center justify-center shadow">
             <Zap className="w-5 h-5 text-blue-600" fill="currentColor" />

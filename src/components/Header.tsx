@@ -60,7 +60,7 @@ export function Header({ className }: { className?: string }) {
   return (
     <header
       className={cn(
-        "fixed left-0 right-0 z-50 transition-all duration-500",
+        "fixed left-0 right-0 z-50 [transform:translateZ(0)] transition-[padding] duration-500",
         scrolled ? "py-2" : "py-4",
         className || "top-0",
       )}
@@ -68,7 +68,7 @@ export function Header({ className }: { className?: string }) {
       <div className="container-page">
         <div
           className={cn(
-            "flex items-center justify-between rounded-full transition-all duration-500 px-4 sm:px-6",
+            "flex items-center justify-between rounded-full transition-[height,background-color,border-color,box-shadow] duration-500 px-4 sm:px-6",
             scrolled
               ? "glass shadow-xl h-16 border-white/20"
               : "bg-white/5 backdrop-blur-md border border-white/10 h-20",

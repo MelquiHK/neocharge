@@ -2,12 +2,13 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartSheet } from "@/components/CartSheet";
 import { AppBanner } from "@/components/AppBanner";
-import { Outlet } from "react-router-dom";
+import { Outlet, useLocation } from "react-router-dom";
 import { useCart } from "@/hooks/use-cart";
 import { Info } from "lucide-react";
 
 export function SiteLayout() {
   const { paymentCurrency } = useCart();
+  const location = useLocation();
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -23,7 +24,9 @@ export function SiteLayout() {
 
       <Header className="top-0 md:top-10" />
       <main className="flex-1 pt-24 md:pt-36">
-        <Outlet />
+        <div key={location.pathname} className="page-in">
+          <Outlet />
+        </div>
       </main>
       <Footer />
       <CartSheet />
