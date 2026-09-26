@@ -11,7 +11,7 @@ import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { useDeliveryQuote } from "@/hooks/use-delivery-quote";
 import { supabase } from "@/integrations/supabase/client";
-import { formatMoney, formatCUP } from "@/lib/format";
+import { formatMoney, formatCUP, formatPrice } from "@/lib/format";
 import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { toast } from "sonner";
