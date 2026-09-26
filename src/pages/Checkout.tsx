@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ArrowLeft, MessageCircle, MapPin, Store, Truck, Loader2, Navigation } from "lucide-react";
+import { ArrowLeft, MessageCircle, MapPin, Store, Truck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -57,6 +57,9 @@ const Checkout = () => {
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
   const [geoError, setGeoError] = useState<string | null>(null);
+  // Geocodificación de la dirección escrita (Nominatim) para cotizar sin GPS.
+  const [geocoding, setGeocoding] = useState(false);
+  const [geocodeError, setGeocodeError] = useState<string | null>(null);
 
   // La cotización solo es válida si corresponde a las coordenadas actuales.
   const quoteValid =
@@ -241,6 +244,44 @@ const Checkout = () => {
       },
       { enableHighAccuracy: true, timeout: 10000 },
     );
+  };
+
+  // Geocodifica la dirección escrita con Nominatim (OpenStreetMap) y cotiza
+  // el envío con esas coordenadas, sin necesidad de GPS.
+  const geocodeAddress = async () => {
+    if (!address.trim()) {
+      setGeocodeError("Escribe tu dirección primero.");
+      return;
+    }
+    setGeocoding(true);
+    setGeocodeError(null);
+    try {
+      const q = encodeURIComponent(`${address.trim()}, La Habana, Cuba`);
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&limit=1&countrycodes=cu&q=${q}`,
+        { headers: { Accept: "application/json" } },
+      );
+      const data: unknown = await res.json();
+      const first = Array.isArray(data) ? (data[0] as { lat?: string; lon?: string } | undefined) : undefined;
+      const lat = Number(first?.lat);
+      const lng = Number(first?.lon);
+      if (Number.isFinite(lat) && Number.isFinite(lng)) {
+        // El efecto de abajo cotiza automáticamente al cambiar coords.
+        setCoords({ lat, lng });
+        toast.success("Dirección localizada, calculando envío…");
+      } else {
+        setGeocodeError("No encontramos esa dirección. Revisa el texto o usa tu ubicación GPS.");
+      }
+    } catch {
+      setGeocodeError("No pudimos buscar la dirección. Inténtalo de nuevo.");
+    } finally {
+      setGeocoding(false);
+    }
+  };
+
+  // Reintenta la cotización con las coordenadas actuales.
+  const retryQuote = () => {
+    if (coords) void quoteFor(coords.lat, coords.lng);
   };
 
   if (items.length === 0) {
@@ -428,41 +469,115 @@ const Checkout = () => {
 
             {delivery === "delivery" && (
               <div className="space-y-4 animate-fade-in">
-                <div className="space-y-2">
-                  <Label htmlFor="address">Dirección exacta *</Label>
-                  <Textarea
-                    id="address"
-                    value={address}
-                    onChange={(e) => setAddress(e.target.value)}
-                    required
-                    placeholder="Calle, número, apto, municipio, referencias..."
-                    className="min-h-[80px] rounded-xl"
-                  />
-                </div>
-
-                <div className="rounded-2xl border-2 border-dashed border-primary/30 bg-primary/5 p-4 space-y-3">
-                  <div className="flex items-start gap-3">
-                    <Navigation className="w-5 h-5 text-primary mt-0.5 shrink-0" />
-                    <div className="flex-1">
-                      <h4 className="font-semibold text-sm">Comparte tu ubicación exacta (recomendado)</h4>
-                      <p className="text-xs text-muted-foreground mt-1">
-                        Al darle clic, tu navegador te pedirá permiso para acceder a tu ubicación. Acepta para que el mensajero llegue más rápido y sin confusiones.
-                      </p>
-                    </div>
+                {/* Panel inline: todo el cálculo de envío en un solo lugar */}
+                <div className="rounded-2xl border-2 border-primary/20 bg-gradient-to-b from-primary/[0.07] to-transparent p-4 sm:p-5 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <Truck className="w-5 h-5 text-primary" />
+                    <h3 className="font-display text-base font-bold">Calcula tu envío</h3>
                   </div>
+
+                  {/* 1. Ubicación GPS */}
                   {coords ? (
                     <div className="flex items-center justify-between bg-success/10 text-success rounded-xl p-3 text-sm font-semibold">
                       <span>✓ Ubicación capturada</span>
-                      <button type="button" onClick={requestLocation} className="text-xs underline">
+                      <button type="button" onClick={requestLocation} className="text-xs underline underline-offset-2">
                         Volver a capturar
                       </button>
                     </div>
                   ) : (
-                    <Button type="button" onClick={requestLocation} variant="outline" className="w-full" disabled={geoLoading}>
-                      {geoLoading ? <><Loader2 className="w-4 h-4 animate-spin" /> Obteniendo...</> : <><Navigation className="w-4 h-4" /> Compartir mi ubicación</>}
+                    <Button
+                      type="button"
+                      onClick={requestLocation}
+                      variant="hero"
+                      size="lg"
+                      className="w-full text-base"
+                      disabled={geoLoading}
+                    >
+                      {geoLoading ? (
+                        <>
+                          <Loader2 className="w-5 h-5 animate-spin" /> Obteniendo ubicación…
+                        </>
+                      ) : (
+                        <>📍 Compartir mi ubicación</>
+                      )}
                     </Button>
                   )}
-                  {geoError && <p className="text-xs text-destructive">{geoError}</p>}
+                  {geoError && (
+                    <div className="flex items-start justify-between gap-2 rounded-xl bg-destructive/10 text-destructive p-3 text-xs">
+                      <span>{geoError}</span>
+                      <button type="button" onClick={requestLocation} className="font-bold underline underline-offset-2 shrink-0">
+                        Reintentar
+                      </button>
+                    </div>
+                  )}
+
+                  {/* 2. Dirección escrita */}
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="h-px flex-1 bg-border" />
+                    <span>o escribe tu dirección</span>
+                    <span className="h-px flex-1 bg-border" />
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="address">Dirección exacta *</Label>
+                    <Textarea
+                      id="address"
+                      value={address}
+                      onChange={(e) => setAddress(e.target.value)}
+                      required
+                      placeholder="Calle, número, apto, municipio, referencias..."
+                      className="min-h-[80px] rounded-xl bg-background"
+                    />
+                    <Button
+                      type="button"
+                      onClick={geocodeAddress}
+                      variant="outline"
+                      className="w-full"
+                      disabled={geocoding || quoting || !address.trim()}
+                    >
+                      {geocoding ? (
+                        <>
+                          <Loader2 className="w-4 h-4 animate-spin" /> Buscando dirección…
+                        </>
+                      ) : (
+                        <>
+                          <MapPin className="w-4 h-4" /> Calcular envío con esta dirección
+                        </>
+                      )}
+                    </Button>
+                    {geocodeError && (
+                      <div className="flex items-start justify-between gap-2 rounded-xl bg-destructive/10 text-destructive p-3 text-xs">
+                        <span>{geocodeError}</span>
+                        <button type="button" onClick={geocodeAddress} className="font-bold underline underline-offset-2 shrink-0">
+                          Reintentar
+                        </button>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* 3. Resultado de la cotización */}
+                  {quoting && (
+                    <p className="flex items-center gap-2 text-sm text-muted-foreground">
+                      <Loader2 className="w-4 h-4 animate-spin" /> Calculando envío…
+                    </p>
+                  )}
+                  {!quoting && quote && quoteValid && (
+                    <div className="rounded-xl bg-primary text-primary-foreground p-4 flex items-center justify-between gap-2 shadow-soft">
+                      <span className="text-sm font-semibold">
+                        Mensajería ({quote.km.toFixed(1)} km × {formatCUP(quote.pricePerKm)}/km)
+                      </span>
+                      <span className="font-display text-xl font-bold whitespace-nowrap">= {formatCUP(quote.priceCUP)}</span>
+                    </div>
+                  )}
+                  {!quoting && quoteError && (
+                    <div className="flex items-start justify-between gap-2 rounded-xl bg-destructive/10 text-destructive p-3 text-xs">
+                      <span>{quoteError}</span>
+                      <button type="button" onClick={retryQuote} className="font-bold underline underline-offset-2 shrink-0">
+                        Reintentar
+                      </button>
+                    </div>
+                  )}
+                  {configError && <p className="text-xs text-amber-600">{configError}</p>}
                 </div>
               </div>
             )}
@@ -648,7 +763,7 @@ const Checkout = () => {
                 ) : (
                   <div className="text-sm space-y-2">
                     <p className="text-muted-foreground">
-                      Comparte tu ubicación en el formulario y calculamos el envío automáticamente.
+                      Calcula tu envío en el panel de mensajería de arriba y aquí verás el costo.
                     </p>
                     <Link to="/calcular-envio" className="text-primary underline text-xs font-semibold">
                       O calcúlalo aquí con tu ubicación →
