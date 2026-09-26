@@ -1,12 +1,1 @@
-{
-  "framework": "vite",
-  "regions": ["iad1"],
-  "buildCommand": "npm run build",
-  "outputDirectory": "dist",
-  "rewrites": [
-    {
-      "source": "/((?!assets/|favicon\\.ico|robots\\.txt|manifest\\.webmanifest|registerSW\\.js|sw\\.js).*)",
-      "destination": "/index.html"
-    }
-  ]
-}
+{"buildCommand":"npm run build","framework":"vite","outputDirectory":"dist","redirects":[{"destination":"/NeoCharge.apk","permanent":false,"source":"/descargar-app.apk"}],"regions":["iad1"],"rewrites":[{"destination":"/index.html","source":"/((?!assets/|favicon\\.ico|robots\\.txt|manifest\\.webmanifest|registerSW\\.js|sw\\.js).*)"}]}
