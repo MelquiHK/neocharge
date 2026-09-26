@@ -136,14 +136,14 @@ export function AppBanner() {
           }}
           aria-expanded={expanded}
           aria-label="Más información sobre la app de NeoCharge"
-          className="w-full sm:w-auto flex items-center gap-3 rounded-full pl-2 pr-2 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white shadow-2xl shadow-blue-900/40 border border-white/25 backdrop-blur-xl hover:shadow-blue-900/60 active:scale-[0.98] transition-all cursor-pointer"
+          className="w-full sm:w-auto flex items-center gap-2 sm:gap-3 rounded-full pl-2 pr-2 py-2 bg-gradient-to-r from-blue-700 via-blue-600 to-blue-700 text-white shadow-2xl shadow-blue-900/40 border border-white/25 backdrop-blur-xl hover:shadow-blue-900/60 active:scale-[0.98] transition-all cursor-pointer"
         >
           <span className="w-9 h-9 shrink-0 rounded-full bg-white flex items-center justify-center shadow">
             <Zap className="w-5 h-5 text-blue-600" fill="currentColor" />
           </span>
           <span className="flex-1 sm:flex-none text-left leading-tight min-w-0">
-            <span className="block text-sm font-extrabold truncate">App NeoCharge</span>
-            <span className="block text-[11px] text-white/80">Toca para ver detalles</span>
+            <span className="block text-sm font-extrabold whitespace-nowrap">App NeoCharge</span>
+            <span className="block text-[11px] text-white/80 whitespace-nowrap">Toca para ver detalles</span>
           </span>
           <Link
             to="/descargar-app"
@@ -156,7 +156,7 @@ export function AppBanner() {
               }
               setVisible(false);
             }}
-            className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-white text-blue-700 text-sm font-bold px-4 py-2 shadow hover:bg-blue-50 transition-colors"
+            className="shrink-0 inline-flex items-center gap-1.5 rounded-full bg-white text-blue-700 text-sm font-bold px-3 sm:px-4 py-2 shadow hover:bg-blue-50 transition-colors"
           >
             <Download className="w-4 h-4" /> Descargar
           </Link>
