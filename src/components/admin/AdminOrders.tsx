@@ -131,16 +131,16 @@ export function AdminOrders() {
 
     const paymentCurrency = viewing.payment_currency || "USD";
     const subtotalFormatted = paymentCurrency === "USD"
-      ? `USD ${formatPrice(Number(viewing.subtotal || 0))}`
-      : `CUP ${formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0))}`;
+      ? `${formatPrice(Number(viewing.subtotal || 0))}`
+      : `${formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0))}`;
     const shippingFormatted = viewing.delivery_method === "delivery" && Number(deliveryFee) > 0
       ? `Mensajería en CUP: ${formatCUP(Number(deliveryFee))}`
       : viewing.delivery_method === "pickup"
         ? "Recogida en local"
         : "Sin mensajería";
     const totalFormatted = paymentCurrency === "USD"
-      ? `USD ${formatPrice(Number(viewing.subtotal || 0))}`
-      : `CUP ${formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0) + Number(deliveryFee))}`;
+      ? `${formatPrice(Number(viewing.subtotal || 0))}`
+      : `${formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0) + Number(deliveryFee))}`;
 
     const msg = `🛍️ *VALE DE PEDIDO — NeoCharge*\n\n` +
       `Hola ${viewing.customer_name}, te confirmamos tu pedido:\n\n` +
@@ -360,16 +360,16 @@ export function AdminOrders() {
                     <>
                       <div className="flex justify-between gap-2 text-sm">
                         <span className="text-muted-foreground">Producto</span>
-                        <span className="text-right">USD {formatPrice(Number(viewing.subtotal || 0))} / CUP {formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0))}</span>
+                        <span className="text-right">{formatPrice(Number(viewing.subtotal || 0))} / {formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0))}</span>
                       </div>
                       <div className="flex justify-between gap-2 text-sm">
                         <span className="text-muted-foreground">Envío</span>
-                        <span>{Number(deliveryFee) > 0 ? `CUP ${formatCUP(Number(deliveryFee))}` : "Sin mensajería"}</span>
+                        <span>{Number(deliveryFee) > 0 ? `${formatCUP(Number(deliveryFee))}` : "Sin mensajería"}</span>
                       </div>
                       <div className="flex justify-between gap-2 border-t border-border pt-2 font-display text-lg font-bold">
                         <span>TOTAL</span>
                         <span className="text-right text-primary">
-                          USD {formatPrice(Number(viewing.subtotal || 0))} / CUP {formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0) + Number(deliveryFee))}
+                          {formatPrice(Number(viewing.subtotal || 0))} / {formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0) + Number(deliveryFee))}
                         </span>
                       </div>
                     </>
