@@ -143,8 +143,8 @@ export default function DescargarApp() {
             <Reveal delay={3}>
               <div className="mt-8 flex flex-col sm:flex-row items-center gap-4 justify-center lg:justify-start">
                 <a
-                  href="/descargar-app.apk"
-                  download
+                  href="/NeoCharge.apk"
+                  download="NeoCharge.apk"
                   className="inline-flex items-center gap-3 px-8 py-4 text-lg rounded-full bg-blue-600 text-white font-bold shadow-xl shadow-blue-600/25 hover:bg-blue-700 hover:-translate-y-0.5 transition-all"
                 >
                   <Download className="w-5 h-5" /> Descargar APK
@@ -281,8 +281,8 @@ export default function DescargarApp() {
             </p>
             <div className="relative mt-8">
               <a
-                href="/descargar-app.apk"
-                download
+                href="/NeoCharge.apk"
+                  download="NeoCharge.apk"
                 className="inline-flex items-center gap-3 px-10 py-4 text-lg rounded-full bg-blue-600 text-white font-bold shadow-xl shadow-blue-600/25 hover:bg-blue-700 hover:-translate-y-0.5 transition-all"
               >
                 <Download className="w-5 h-5" /> Descargar APK
