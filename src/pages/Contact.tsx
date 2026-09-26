@@ -10,7 +10,7 @@ import { useSEO } from "@/hooks/use-seo";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
-import "@/components/sections/visual-effects.css";
+import "@/components/sections/crystal.css";
 
 const Contact = () => {
   useSEO("contact");
@@ -59,30 +59,23 @@ const Contact = () => {
   ];
 
   return (
-    <div className="relative overflow-hidden bg-[#070d20]">
-      {/* Lavados de color + orbes */}
-      <div className="nc-wash-a" aria-hidden />
-      <div className="nc-wash-b" aria-hidden />
-      <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-blue-600/20 blur-[130px] pointer-events-none"
-        aria-hidden
-      />
-      <div
-        className="absolute top-1/3 -right-40 w-[480px] h-[480px] rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none"
-        aria-hidden
-      />
+    <div className="cr-page">
+      {/* Orbes pastel */}
+      <div className="cr-orb cr-orb-a" aria-hidden />
+      <div className="cr-orb cr-orb-b" aria-hidden />
+      <div className="cr-orb cr-orb-c" aria-hidden />
 
       <div ref={ref} className={cn("relative container-page py-14 md:py-24 reveal", visible && "is-visible")}>
         {/* Hero */}
         <header className="text-center max-w-3xl mx-auto mb-14 md:mb-20 space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/25 nc-liquid text-cyan-200 text-xs font-bold uppercase tracking-[0.2em]">
+          <div className="cr-chip">
             Contacto Directo
           </div>
-          <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight text-white">
+          <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight cr-shimmer-text">
             Hablemos
           </h1>
-          <p className="text-xl text-slate-300 font-light leading-relaxed">
-            Estamos disponibles <span className="font-semibold text-white">24 horas</span> para resolver tus dudas. <br className="hidden md:block" />
+          <p className="text-xl text-slate-600 font-light leading-relaxed">
+            Estamos disponibles <span className="font-semibold text-slate-900">24 horas</span> para resolver tus dudas. <br className="hidden md:block" />
             Elige el canal que prefieras y te responderemos al instante.
           </p>
         </header>
@@ -95,21 +88,21 @@ const Contact = () => {
               href={whatsappUrl}
               target="_blank"
               rel="noopener noreferrer"
-              className="group block p-5 sm:p-6 rounded-[1.75rem] border border-emerald-300/30 nc-liquid hover:border-emerald-300/60 transition-all duration-300 hover:-translate-y-1"
+              className="group block p-5 sm:p-6 rounded-[1.75rem] cr-glass cr-lift border border-emerald-200/70"
             >
               <div className="flex items-center gap-4">
-                <div className="w-13 h-13 p-3 rounded-2xl flex items-center justify-center shrink-0 bg-emerald-400/20 border border-emerald-300/30 text-emerald-300">
+                <div className="w-13 h-13 p-3 rounded-2xl flex items-center justify-center shrink-0 bg-emerald-100 border border-emerald-200 text-emerald-600">
                   <MessageCircle className="w-6 h-6" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs uppercase tracking-[0.18em] text-slate-300 font-bold">
+                  <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-bold">
                     WhatsApp / Teléfono
                   </p>
-                  <p className="font-bold text-white text-lg mt-0.5">
+                  <p className="font-bold text-slate-900 text-lg mt-0.5">
                     {phone}
                   </p>
                 </div>
-                <span className="text-xs font-bold text-emerald-200 bg-emerald-400/15 border border-emerald-300/25 rounded-full px-4 py-2 whitespace-nowrap group-hover:bg-emerald-400/25 transition-colors">
+                <span className="text-xs font-bold text-emerald-700 bg-emerald-100 border border-emerald-200 rounded-full px-4 py-2 whitespace-nowrap group-hover:bg-emerald-200 transition-colors">
                   Escríbenos
                 </span>
               </div>
@@ -118,12 +111,12 @@ const Contact = () => {
             {cards.map((c, i) => {
               const inner = (
                 <div className="flex items-center gap-4">
-                  <div className="w-13 h-13 p-3 rounded-2xl flex items-center justify-center shrink-0 bg-white/10 border border-white/20 text-cyan-300">
+                  <div className="w-13 h-13 p-3 rounded-2xl flex items-center justify-center shrink-0 bg-blue-100/70 border border-blue-200/60 text-blue-600">
                     <c.icon className="w-6 h-6" />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-xs uppercase tracking-[0.18em] text-slate-300 font-bold">{c.title}</p>
-                    <p className="font-semibold text-white mt-0.5 break-words">{c.value}</p>
+                    <p className="text-xs uppercase tracking-[0.18em] text-slate-500 font-bold">{c.title}</p>
+                    <p className="font-semibold text-slate-900 mt-0.5 break-words">{c.value}</p>
                   </div>
                 </div>
               );
@@ -131,14 +124,14 @@ const Contact = () => {
                 <a
                   key={i}
                   href={c.href}
-                  className="block p-5 sm:p-6 rounded-[1.75rem] border border-white/20 nc-liquid hover:border-white/40 transition-all duration-300 hover:-translate-y-1"
+                  className="block p-5 sm:p-6 rounded-[1.75rem] cr-glass cr-lift"
                 >
                   {inner}
                 </a>
               ) : (
                 <div
                   key={i}
-                  className="block p-5 sm:p-6 rounded-[1.75rem] border border-white/20 nc-liquid"
+                  className="block p-5 sm:p-6 rounded-[1.75rem] cr-glass"
                 >
                   {inner}
                 </div>
@@ -149,16 +142,16 @@ const Contact = () => {
           {/* Formulario */}
           <form
             onSubmit={handleSubmit}
-            className="rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-7 sm:p-9 space-y-5 shadow-2xl"
+            className="rounded-[2rem] cr-glass-strong cr-sheen p-7 sm:p-9 space-y-5"
           >
             <div>
-              <h2 className="font-display text-2xl font-bold text-white tracking-tight">Envíanos un mensaje</h2>
-              <p className="text-sm text-slate-300 mt-1.5 font-light">
+              <h2 className="font-display text-2xl font-bold text-slate-900 tracking-tight">Envíanos un mensaje</h2>
+              <p className="text-sm text-slate-600 mt-1.5 font-light">
                 Te llevamos directo a nuestro WhatsApp con tu mensaje listo.
               </p>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cn" className="text-slate-200 font-medium">Nombre</Label>
+              <Label htmlFor="cn" className="text-slate-700 font-medium">Nombre</Label>
               <Input
                 id="cn"
                 value={name}
@@ -166,11 +159,11 @@ const Contact = () => {
                 required
                 placeholder="Tu nombre"
                 autoComplete="name"
-                className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                className="cr-input h-12 rounded-2xl"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="ce" className="text-slate-200 font-medium">Correo</Label>
+              <Label htmlFor="ce" className="text-slate-700 font-medium">Correo</Label>
               <Input
                 id="ce"
                 type="email"
@@ -178,17 +171,17 @@ const Contact = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="opcional"
                 autoComplete="email"
-                className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                className="cr-input h-12 rounded-2xl"
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="cm" className="text-slate-200 font-medium">Mensaje</Label>
+              <Label htmlFor="cm" className="text-slate-700 font-medium">Mensaje</Label>
               <Textarea
                 id="cm"
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 required
-                className="min-h-[140px] rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                className="cr-input min-h-[140px] rounded-2xl"
                 placeholder="¿En qué te ayudamos?"
               />
             </div>
@@ -196,7 +189,7 @@ const Contact = () => {
               type="submit"
               variant="whatsapp"
               size="lg"
-              className="w-full h-13 rounded-2xl text-base font-bold nc-btn-shine"
+              className="w-full h-13 rounded-2xl text-base font-bold"
             >
               <Send className="w-4 h-4 mr-2" /> Enviar por WhatsApp
             </Button>

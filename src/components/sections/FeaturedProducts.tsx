@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
 import { useReveal } from "@/hooks/use-reveal";
@@ -33,38 +32,39 @@ export function FeaturedProducts() {
   }, []);
 
   return (
-    <section ref={ref} className={cn("py-12 md:py-16 bg-white reveal", visible && "is-visible")}>
+    <section ref={ref} className={cn("py-12 md:py-16 reveal", visible && "is-visible")}>
       <div className="container-page">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 md:mb-12">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <span className="cr-chip">
+              <span className="w-1.5 h-1.5 rounded-full bg-blue-600 cr-pulse-soft" aria-hidden />
               Nuestros productos
-            </div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight">
-              Productos <span className="text-gradient-accent">destacados</span>
+            </span>
+            <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight text-slate-900">
+              Productos <span className="cr-shimmer-text">destacados</span>
             </h2>
-            <p className="text-muted-foreground text-lg font-light">
+            <p className="text-slate-500 text-lg font-light">
               Cargadores, audio y piezas con garantía, listos para entrega en La Habana.
             </p>
           </div>
-          <Button asChild variant="outline" className="self-start md:self-end rounded-xl hover:-translate-y-0.5 transition-transform duration-300">
-            <Link to="/tienda" className="flex items-center gap-2">
-              Ver todo <ArrowRight className="w-4 h-4" />
-            </Link>
-          </Button>
+          <Link
+            to="/tienda"
+            className="cr-btn-ghost self-start md:self-end inline-flex items-center justify-center gap-2 px-6 py-3 text-sm"
+          >
+            Ver todo <ArrowRight className="w-4 h-4" />
+          </Link>
         </div>
 
         {loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] rounded-3xl bg-muted animate-pulse" />
+              <div key={i} className="aspect-[3/4] rounded-3xl cr-glass-soft animate-pulse" />
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="rounded-3xl border border-border bg-card p-12 text-center">
-            <p className="font-display text-2xl font-bold">Estamos actualizando el catálogo</p>
-            <p className="text-muted-foreground mt-2">
+          <div className="rounded-3xl cr-glass cr-sheen p-12 text-center">
+            <p className="font-display text-2xl font-bold text-slate-900">Estamos actualizando el catálogo</p>
+            <p className="text-slate-500 mt-2">
               Escríbenos por WhatsApp al +53 6318-0910 y te mostramos lo disponible hoy.
             </p>
           </div>
@@ -73,7 +73,7 @@ export function FeaturedProducts() {
             {products.map((p, i) => (
               <div
                 key={p.id}
-                className={cn("h-full [&>*]:h-full relative overflow-hidden rounded-3xl nc-shine-hover reveal", visible && "is-visible")}
+                className={cn("h-full [&>*]:h-full relative overflow-hidden rounded-3xl cr-glass cr-sheen cr-lift reveal", visible && "is-visible")}
                 style={{ transitionDelay: `${i * 90}ms` }}
               >
                 <ProductCard product={p} />

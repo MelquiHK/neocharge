@@ -6,23 +6,46 @@ import { Features } from "@/components/sections/Features";
 import { HowToBuy } from "@/components/sections/HowToBuy";
 import { FAQ } from "@/components/sections/FAQ";
 import { CTA } from "@/components/sections/CTA";
+import { Reveal } from "@/components/Reveal";
 import { useSEO } from "@/hooks/use-seo";
 import "@/components/sections/visual-effects.css";
+import "@/components/sections/crystal.css";
 
 const Index = () => {
   useSEO("home");
 
   return (
-    <>
-      <Hero />
-      <TrustStrip />
-      <FeaturedProducts />
-      <Categories />
-      <Features />
-      <HowToBuy />
-      <FAQ />
-      <CTA />
-    </>
+    <div className="cr-page">
+      {/* Orbes pastel flotantes de la página */}
+      <div className="cr-orb cr-orb-a" aria-hidden />
+      <div className="cr-orb cr-orb-b" aria-hidden />
+      <div className="cr-orb cr-orb-c" aria-hidden />
+
+      <Reveal delay={0}>
+        <Hero />
+      </Reveal>
+      <Reveal delay={1}>
+        <TrustStrip />
+      </Reveal>
+      <Reveal delay={1}>
+        <FeaturedProducts />
+      </Reveal>
+      <Reveal delay={2}>
+        <Categories />
+      </Reveal>
+      <Reveal delay={2}>
+        <Features />
+      </Reveal>
+      <Reveal delay={3}>
+        <HowToBuy />
+      </Reveal>
+      <Reveal delay={4}>
+        <FAQ />
+      </Reveal>
+      <Reveal delay={5}>
+        <CTA />
+      </Reveal>
+    </div>
   );
 };
 

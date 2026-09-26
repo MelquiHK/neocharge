@@ -5,7 +5,6 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from "@/components/ui/accordion";
-import { Button } from "@/components/ui/button";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
@@ -47,14 +46,12 @@ const faqs = [
 export function FAQ() {
   const { ref, visible } = useReveal();
   return (
-    <section ref={ref} className={cn("py-12 md:py-16 bg-white nc-section-wash reveal", visible && "is-visible")}>
+    <section ref={ref} className={cn("py-12 md:py-16 reveal", visible && "is-visible")}>
       <div className="container-page max-w-4xl">
         <div className="text-center mb-10 md:mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
-            Centro de ayuda
-          </div>
-          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight">
-            Resolvemos <span className="text-gradient-accent">tus dudas</span>
+          <span className="cr-chip">Centro de ayuda</span>
+          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight text-slate-900">
+            Resolvemos <span className="cr-shimmer-text">tus dudas</span>
           </h2>
         </div>
 
@@ -64,16 +61,16 @@ export function FAQ() {
               key={f.q}
               value={`item-${i}`}
               className={cn(
-                "border border-border bg-card rounded-2xl px-5 hover:border-primary/30 transition-all duration-300 data-[state=open]:border-primary/50 data-[state=open]:shadow-soft",
+                "cr-glass-soft cr-sheen rounded-2xl px-5 data-[state=open]:shadow-soft",
                 "reveal",
                 visible && "is-visible",
               )}
               style={{ transitionDelay: `${Math.min(i, 5) * 60}ms` }}
             >
-              <AccordionTrigger className="text-left font-display font-semibold text-base py-5 hover:no-underline">
+              <AccordionTrigger className="text-left font-display font-semibold text-base py-5 hover:no-underline text-slate-900">
                 {f.q}
               </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
+              <AccordionContent className="text-slate-500 leading-relaxed pb-5">
                 {f.a}
               </AccordionContent>
             </AccordionItem>
@@ -81,21 +78,15 @@ export function FAQ() {
         </Accordion>
 
         <div className="mt-8 text-center">
-          <p className="text-muted-foreground mb-4">¿Otra duda? Te la resolvemos al momento.</p>
-          <Button
-            asChild
-            size="lg"
-            className="btn-shine rounded-2xl font-bold hover:-translate-y-0.5 transition-transform duration-300"
+          <p className="text-slate-500 mb-4">¿Otra duda? Te la resolvemos al momento.</p>
+          <a
+            href="https://wa.me/5363180910?text=Hola%2C%20tengo%20una%20duda%20sobre%20NeoCharge"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="cr-btn inline-flex items-center justify-center gap-2 px-8 py-4 text-base"
           >
-            <a
-              href="https://wa.me/5363180910?text=Hola%2C%20tengo%20una%20duda%20sobre%20NeoCharge"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2"
-            >
-              <MessageCircle className="w-5 h-5" /> Preguntar por WhatsApp
-            </a>
-          </Button>
+            <MessageCircle className="w-5 h-5" /> Preguntar por WhatsApp
+          </a>
         </div>
       </div>
     </section>

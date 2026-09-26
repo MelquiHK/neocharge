@@ -9,8 +9,8 @@ const WHATSAPP_URL =
 
 export function Footer() {
   return (
-    <footer className="relative mt-32 border-t border-border bg-secondary/30">
-      <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+    <footer className="relative mt-32 border-t border-blue-100/70 bg-white/70 backdrop-blur-xl">
+      <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-blue-300/70 to-transparent" />
 
       {/* Banda de contacto directo por WhatsApp.
           (Antes había un "newsletter" que no guardaba los correos en ningún lado:
@@ -117,7 +117,7 @@ export function Footer() {
           </div>
         </div>
 
-        <div className="mt-12 pt-8 border-t border-border flex flex-col sm:flex-row items-center justify-between gap-4">
+        <div className="mt-12 pt-8 border-t border-blue-100/60 flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-muted-foreground">
             © {new Date().getFullYear()} NeoCharge · Hecho con amor en La Habana 🇨🇺
           </p>

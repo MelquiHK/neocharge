@@ -70,8 +70,8 @@ export function Header({ className }: { className?: string }) {
           className={cn(
             "flex items-center justify-between rounded-full transition-all duration-500 px-4 sm:px-6",
             scrolled
-              ? "glass shadow-xl h-16 border-white/20"
-              : "bg-white/5 backdrop-blur-md border border-white/10 h-20",
+              ? "cr-glass-strong shadow-xl h-16"
+              : "cr-glass-soft h-20",
           )}
         >
           <Logo />
@@ -141,7 +141,7 @@ export function Header({ className }: { className?: string }) {
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex rounded-full">
+              <Button asChild variant="ghost" size="sm" className="cr-btn-ghost hidden sm:inline-flex rounded-full">
                 <Link to="/auth">Iniciar sesión</Link>
               </Button>
             )}
@@ -179,7 +179,7 @@ export function Header({ className }: { className?: string }) {
 
         {/* Mobile menu panel */}
         {mobileOpen && (
-          <div className="lg:hidden mt-3 glass rounded-3xl p-4 shadow-lifted animate-fade-in">
+          <div className="lg:hidden mt-3 cr-glass rounded-3xl p-4 shadow-lifted animate-fade-in">
             <nav className="flex flex-col gap-1" aria-label="Móvil">
               {links.map((l) => (
                 <NavLink

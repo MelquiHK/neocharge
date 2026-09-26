@@ -1,10 +1,10 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, MessageCircle, ShieldCheck, Star, Truck, Zap } from "lucide-react";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { Reveal } from "@/components/Reveal";
+import { useCountUp } from "@/components/useCountUp";
 
 interface SpotlightProduct {
   id: string;
@@ -32,6 +32,7 @@ const WAVE_PATH =
 export function Hero() {
   const [spotlight, setSpotlight] = useState<SpotlightProduct | null>(null);
   const [productCount, setProductCount] = useState<number | null>(null);
+  const animatedCount = useCountUp(productCount ?? 0, 1400, productCount !== null);
 
   useEffect(() => {
     let cancelled = false;
@@ -67,114 +68,84 @@ export function Hero() {
   const isBestSeller = spotlight?.slug === BEST_SELLER_SLUG;
 
   const stats = [
-    { value: productCount !== null ? String(productCount) : "···", label: "Productos disponibles" },
+    { value: productCount !== null ? String(animatedCount) : "···", label: "Productos disponibles" },
     { value: "8am–8pm", label: "Atención por WhatsApp" },
     { value: "USD · CUP", label: "Pagas al recibir" },
   ];
 
   return (
-    <section className="relative overflow-hidden bg-[#070d20] text-white">
-      {/* Fondo: azul noche refinado */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a1430] via-[#0a1128] to-[#070d20]" aria-hidden />
-      <div
-        className="absolute inset-0 opacity-[0.05] pointer-events-none"
-        aria-hidden
-        style={{
-          backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
-          backgroundSize: "44px 44px",
-        }}
-      />
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-600/20 rounded-full filter blur-3xl animate-blob pointer-events-none" aria-hidden />
-      <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full filter blur-3xl animate-blob animation-delay-2000 pointer-events-none" aria-hidden />
-      <div className="absolute inset-0 bg-radial-gradient opacity-60 pointer-events-none" aria-hidden />
-      <div className="nc-wash-a" aria-hidden />
-      <div className="nc-wash-b" aria-hidden />
+    <section className="relative overflow-hidden">
+      {/* Orbes pastel flotantes del hero */}
+      <div className="cr-orb cr-orb-a" aria-hidden />
+      <div className="cr-orb cr-orb-b" aria-hidden />
 
       <div className="container-page relative py-16 md:py-24 lg:py-28">
         <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-center">
           {/* Columna izquierda */}
-          <div className="space-y-7 animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
-              <span className="text-sm font-semibold text-slate-200">Tienda de electrónica · La Habana</span>
-            </div>
+          <div className="space-y-7">
+            <span className="cr-chip">
+              <span className="w-2 h-2 rounded-full bg-emerald-500 cr-pulse-soft" aria-hidden />
+              Tienda de electrónica · La Habana
+            </span>
 
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight leading-[1.05]">
-                <span className="block text-white">Electrónica de verdad</span>
-                <span className="block nc-text-shimmer">
-                  para La Habana
-                </span>
+                <span className="block text-slate-900">Electrónica de verdad</span>
+                <span className="block cr-shimmer-text">para La Habana</span>
               </h1>
-              <p className="text-lg md:text-xl text-slate-300 max-w-xl leading-relaxed font-light">
+              <p className="text-lg md:text-xl text-slate-600 max-w-xl leading-relaxed font-light">
                 Cargadores para motos eléctricas, audio y piezas. Garantía real, entrega a domicilio
                 y pago en USD o CUP cuando el producto está en tus manos.
               </p>
             </div>
 
             <div className="flex flex-col sm:flex-row gap-4 pt-1">
-              <Button
-                asChild
-                size="xl"
-                className="btn-shine group bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-2xl glow-primary transition-all duration-300 hover:-translate-y-0.5"
+              <Link
+                to="/tienda"
+                className="cr-btn group inline-flex items-center justify-center gap-2.5 px-8 py-4 text-base"
               >
-                <Link to="/tienda" className="flex items-center gap-2.5">
-                  Explorar la tienda
-                  <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-300" />
-                </Link>
-              </Button>
-              <Button
-                asChild
-                variant="outline"
-                size="xl"
-                className="border-white/20 bg-white/5 text-white backdrop-blur-md hover:bg-white/10 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
+                Explorar la tienda
+                <ArrowRight className="w-5 h-5 group-hover:translate-x-1.5 transition-transform duration-300" />
+              </Link>
+              <a
+                href="https://wa.me/5363180910"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="cr-btn-ghost inline-flex items-center justify-center gap-2.5 px-8 py-4 text-base"
               >
-                <a
-                  href="https://wa.me/5363180910"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="flex items-center gap-2.5"
-                >
-                  <MessageCircle className="w-5 h-5 text-emerald-400" />
-                  WhatsApp directo
-                </a>
-              </Button>
+                <MessageCircle className="w-5 h-5 text-emerald-600" />
+                WhatsApp directo
+              </a>
             </div>
 
             {/* Stats honestos */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/10">
-              {stats.map((stat, i) => (
-                <div key={stat.label} className="animate-fade-in-up" style={{ animationDelay: `${0.15 + i * 0.1}s` }}>
-                  <p className="text-2xl md:text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300">
+            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-blue-100">
+              {stats.map((stat) => (
+                <div key={stat.label}>
+                  <p className="cr-shimmer-text text-2xl md:text-3xl font-display font-bold tabular-nums">
                     {stat.value}
                   </p>
-                  <p className="text-xs md:text-sm text-slate-400 font-medium mt-1">{stat.label}</p>
+                  <p className="text-xs md:text-sm text-slate-500 font-medium mt-1">{stat.label}</p>
                 </div>
               ))}
             </div>
 
             <ul className="space-y-2.5 pt-2">
-              {checklist.map((item, i) => (
-                <li
-                  key={item.text}
-                  className="flex items-center gap-3 animate-fade-in-left"
-                  style={{ animationDelay: `${0.3 + i * 0.1}s` }}
-                >
-                  <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-400/25 flex items-center justify-center">
-                    <item.icon className="w-4 h-4 text-blue-300" />
+              {checklist.map((item) => (
+                <li key={item.text} className="flex items-center gap-3">
+                  <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-blue-100 border border-blue-200/70 flex items-center justify-center">
+                    <item.icon className="w-4 h-4 text-blue-700" />
                   </span>
-                  <span className="text-slate-300 font-medium text-[15px]">{item.text}</span>
+                  <span className="text-slate-700 font-medium text-[15px]">{item.text}</span>
                 </li>
               ))}
             </ul>
           </div>
 
           {/* Columna derecha: producto protagonista real */}
-          <div className="relative animate-fade-in-right" style={{ animationDelay: "0.25s" }}>
-            <div className="absolute -inset-6 bg-blue-600/15 blur-3xl rounded-full pointer-events-none" aria-hidden />
-            <div className="relative rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-4 sm:p-5 hover:border-white/40 transition-colors duration-500">
-              <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-slate-800/60 nc-ripple">
+          <div className="relative">
+            <div className="relative rounded-[2rem] cr-glass cr-sheen cr-lift p-4 sm:p-5">
+              <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-gradient-to-br from-blue-100 via-slate-100 to-cyan-100">
                 {spotlightImage ? (
                   <img
                     src={spotlightImage}
@@ -185,9 +156,9 @@ export function Hero() {
                     fetchPriority="high"
                   />
                 ) : (
-                  <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-700/60 to-slate-800/60" aria-hidden />
+                  <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-blue-100 to-slate-200" aria-hidden />
                 )}
-                <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none" aria-hidden />
+                <div className="absolute inset-0 bg-gradient-to-t from-slate-900/25 via-transparent to-transparent pointer-events-none" aria-hidden />
                 <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/95 text-slate-950 text-xs font-bold uppercase tracking-wider shadow-lg">
                   <Star className="w-3.5 h-3.5 fill-current" />
                   {isBestSeller ? "El más vendido" : "Destacado"}
@@ -196,43 +167,38 @@ export function Hero() {
 
               <div className="flex items-center justify-between gap-4 px-2 pt-4 pb-1.5">
                 <div className="min-w-0">
-                  <p className="text-white font-display font-bold text-lg leading-tight truncate">
+                  <p className="text-slate-900 font-display font-bold text-lg leading-tight truncate">
                     {spotlight?.name ?? "Cargando…"}
                   </p>
-                  <p className="text-cyan-300 font-bold text-xl mt-0.5">
+                  <p className="text-blue-700 font-bold text-xl mt-0.5">
                     {spotlight ? formatPrice(spotlight.price, spotlight.currency ?? "USD") : "···"}
                   </p>
                 </div>
                 {spotlight && (
-                  <Button
-                    asChild
-                    className="shrink-0 rounded-xl bg-white text-slate-950 hover:bg-blue-50 font-bold transition-all duration-300 hover:-translate-y-0.5"
+                  <Link
+                    to={`/producto/${encodeURIComponent(spotlight.slug)}`}
+                    className="cr-btn shrink-0 inline-flex items-center gap-2 px-5 py-2.5 text-sm"
                   >
-                    <Link to={`/producto/${encodeURIComponent(spotlight.slug)}`} className="flex items-center gap-2">
-                      Ver <ArrowRight className="w-4 h-4" />
-                    </Link>
-                  </Button>
+                    Ver <ArrowRight className="w-4 h-4" />
+                  </Link>
                 )}
               </div>
             </div>
 
             {/* Chips flotantes */}
-            <div className="absolute -top-4 -right-2 sm:-right-4 flex items-center gap-2 rounded-2xl border border-white/25 nc-liquid px-3.5 py-2.5 animate-float">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-bold text-slate-200">Garantía incluida</span>
+            <div className="absolute -top-4 -right-2 sm:-right-4 flex items-center gap-2 rounded-2xl cr-glass-soft px-3.5 py-2.5 cr-float-slow">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span className="text-xs font-bold text-slate-700">Garantía incluida</span>
             </div>
-            <div
-              className="absolute -bottom-4 -left-2 sm:-left-4 flex items-center gap-2 rounded-2xl border border-white/25 nc-liquid px-3.5 py-2.5 animate-float"
-              style={{ animationDelay: "1.4s" }}
-            >
-              <Truck className="w-4 h-4 text-blue-300" />
-              <span className="text-xs font-bold text-slate-200">Entrega en La Habana</span>
+            <div className="absolute -bottom-4 -left-2 sm:-left-4 flex items-center gap-2 rounded-2xl cr-glass-soft px-3.5 py-2.5 cr-float-slow" style={{ animationDelay: "1.4s" }}>
+              <Truck className="w-4 h-4 text-blue-600" />
+              <span className="text-xs font-bold text-slate-700">Entrega en La Habana</span>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Divisor de ondas de agua hacia la sección clara siguiente */}
+      {/* Divisor de ondas de agua hacia la sección siguiente */}
       <div className="nc-waves" aria-hidden>
         <svg className="nc-wave nc-wave-b" viewBox="0 0 2880 120" preserveAspectRatio="none">
           <path d={WAVE_PATH} fill="#bfdbfe" opacity="0.5" />

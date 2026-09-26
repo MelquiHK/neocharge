@@ -393,7 +393,7 @@ export function DeliveryOrderForm({
                   >
                     Nombre completo *
                   </Label>
-                  <Input
+                  <Input className="cr-input"
                     id="dof-name"
                     value={customerName}
                     onChange={(e) => setCustomerName(e.target.value)}
@@ -410,7 +410,7 @@ export function DeliveryOrderForm({
                   >
                     <Phone className="w-3 h-3" /> Tu teléfono *
                   </Label>
-                  <Input
+                  <Input className="cr-input"
                     id="dof-phone"
                     value={customerPhone}
                     onChange={(e) => setCustomerPhone(e.target.value)}
@@ -428,7 +428,7 @@ export function DeliveryOrderForm({
                   >
                     Otro teléfono (opcional)
                   </Label>
-                  <Input
+                  <Input className="cr-input"
                     id="dof-altphone"
                     value={altPhone}
                     onChange={(e) => setAltPhone(e.target.value)}
@@ -461,7 +461,7 @@ export function DeliveryOrderForm({
                     >
                       Calle *
                     </Label>
-                    <Input
+                    <Input className="cr-input"
                       id="dof-street"
                       value={street}
                       onChange={(e) => setStreet(e.target.value)}
@@ -478,7 +478,7 @@ export function DeliveryOrderForm({
                     >
                       No. *
                     </Label>
-                    <Input
+                    <Input className="cr-input"
                       id="dof-number"
                       value={houseNumber}
                       onChange={(e) => setHouseNumber(e.target.value)}
@@ -496,7 +496,7 @@ export function DeliveryOrderForm({
                   >
                     Entre calles
                   </Label>
-                  <Input
+                  <Input className="cr-input"
                     id="dof-between"
                     value={betweenStreets}
                     onChange={(e) => setBetweenStreets(e.target.value)}
@@ -511,7 +511,7 @@ export function DeliveryOrderForm({
                   >
                     Municipio
                   </Label>
-                  <Input
+                  <Input className="cr-input"
                     id="dof-muni"
                     value={municipality}
                     onChange={(e) => setMunicipality(e.target.value)}
@@ -551,7 +551,7 @@ export function DeliveryOrderForm({
             <div className="flex gap-2 mb-4">
               <div className="relative flex-1">
                 <Search className="w-4 h-4 absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground pointer-events-none" />
-                <Input
+                <Input className="cr-input"
                   id="dof-search"
                   aria-label="Buscar producto"
                   value={productSearch}

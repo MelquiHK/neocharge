@@ -363,7 +363,7 @@ export function DeliveryCalculator() {
                 <Search className="w-3 h-3" /> Buscar dirección
               </Label>
               <div className="flex gap-2 min-w-0">
-                <Input
+                <Input className="cr-input"
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   placeholder="Ej: Calle 23 y M, Vedado"
@@ -435,7 +435,7 @@ export function DeliveryCalculator() {
                 <Link2 className="w-3 h-3" /> Pegar coordenadas o enlace
               </Label>
               <div className="flex gap-2 min-w-0">
-                <Input
+                <Input className="cr-input"
                   value={linkInput}
                   onChange={(e) => setLinkInput(e.target.value)}
                   placeholder="23.13, -82.39 o enlace de Maps / MAPS.ME / WhatsApp"

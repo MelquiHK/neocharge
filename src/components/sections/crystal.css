@@ -1,0 +1,247 @@
+/* ============================================================
+   NEOCHARGE — "CRISTAL": sistema de diseño claro estilo iPhone
+   Superficies de vidrio blanco translúcido, brillos de agua,
+   acento azul de marca (#2563eb / #3b82f6), animaciones suaves.
+   Solo transform/opacity en animaciones (performante en móvil).
+   ============================================================ */
+
+/* ---------- Página clara con lavados pastel ---------- */
+.cr-page {
+  position: relative;
+  overflow: hidden;
+  background:
+    radial-gradient(60% 45% at 85% 0%, rgba(59, 130, 246, 0.10), transparent 70%),
+    radial-gradient(50% 40% at 8% 12%, rgba(167, 139, 250, 0.10), transparent 70%),
+    linear-gradient(180deg, #f8fafc 0%, #ffffff 42%, #eff6ff 100%);
+  color: #0f172a;
+}
+
+/* ---------- Orbes pastel flotantes ---------- */
+.cr-orb {
+  position: absolute;
+  border-radius: 9999px;
+  pointer-events: none;
+  filter: blur(90px);
+}
+.cr-orb-a {
+  width: 520px; height: 520px;
+  top: -160px; right: -120px;
+  background: radial-gradient(circle, rgba(59, 130, 246, 0.20), transparent 70%);
+  animation: cr-float 11s ease-in-out infinite;
+}
+.cr-orb-b {
+  width: 440px; height: 440px;
+  top: 32%; left: -160px;
+  background: radial-gradient(circle, rgba(167, 139, 250, 0.16), transparent 70%);
+  animation: cr-float 14s ease-in-out infinite reverse;
+}
+.cr-orb-c {
+  width: 380px; height: 380px;
+  bottom: -140px; right: 12%;
+  background: radial-gradient(circle, rgba(34, 211, 238, 0.14), transparent 70%);
+  animation: cr-float 17s ease-in-out infinite;
+}
+@keyframes cr-float {
+  0%, 100% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(0, -26px, 0) scale(1.06); }
+}
+
+/* ---------- Vidrio claro ---------- */
+.cr-glass {
+  background: rgba(255, 255, 255, 0.65);
+  -webkit-backdrop-filter: blur(20px) saturate(1.5);
+  backdrop-filter: blur(20px) saturate(1.5);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    0 8px 32px rgba(37, 99, 235, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+.cr-glass-soft {
+  background: rgba(255, 255, 255, 0.45);
+  -webkit-backdrop-filter: blur(16px) saturate(1.4);
+  backdrop-filter: blur(16px) saturate(1.4);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  box-shadow: 0 4px 20px rgba(37, 99, 235, 0.06);
+}
+.cr-glass-strong {
+  background: rgba(255, 255, 255, 0.85);
+  -webkit-backdrop-filter: blur(24px) saturate(1.6);
+  backdrop-filter: blur(24px) saturate(1.6);
+  border: 1px solid rgba(255, 255, 255, 0.9);
+  box-shadow:
+    0 12px 44px rgba(37, 99, 235, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 1);
+}
+
+/* ---------- Brillo "de agua" que barre la tarjeta ---------- */
+.cr-sheen { position: relative; overflow: hidden; }
+.cr-sheen::after {
+  content: "";
+  position: absolute;
+  inset: -40%;
+  background: linear-gradient(115deg,
+    transparent 32%,
+    rgba(255, 255, 255, 0.55) 46%,
+    rgba(191, 219, 254, 0.35) 52%,
+    transparent 68%);
+  background-size: 250% 250%;
+  animation: cr-sheen-sweep 7s ease-in-out infinite;
+  pointer-events: none;
+}
+@keyframes cr-sheen-sweep {
+  0% { background-position: 120% 0; opacity: 0; }
+  12% { opacity: 1; }
+  45% { background-position: -20% 0; opacity: 1; }
+  60%, 100% { background-position: -20% 0; opacity: 0; }
+}
+
+/* ---------- Titular con shimmer azul ---------- */
+.cr-shimmer-text {
+  background: linear-gradient(110deg, #1d4ed8 15%, #3b82f6 35%, #93c5fd 50%, #3b82f6 65%, #1d4ed8 85%);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: cr-shimmer-pan 5.5s linear infinite;
+}
+@keyframes cr-shimmer-pan {
+  to { background-position: 220% center; }
+}
+
+/* ---------- Píldora / chip de vidrio ---------- */
+.cr-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.375rem 0.875rem;
+  border-radius: 9999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: #1d4ed8;
+  background: rgba(219, 234, 254, 0.55);
+  -webkit-backdrop-filter: blur(12px);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  box-shadow: 0 2px 10px rgba(37, 99, 235, 0.08);
+}
+
+/* ---------- Botones ---------- */
+.cr-btn {
+  position: relative;
+  overflow: hidden;
+  border-radius: 1.1rem;
+  background: linear-gradient(135deg, #2563eb, #3b82f6);
+  color: #fff;
+  font-weight: 700;
+  box-shadow: 0 10px 28px rgba(37, 99, 235, 0.32), inset 0 1px 0 rgba(255,255,255,0.35);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s;
+}
+.cr-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 16px 38px rgba(37, 99, 235, 0.42), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+.cr-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 35%, rgba(255,255,255,0.5) 50%, transparent 65%);
+  background-size: 250% 100%;
+  background-position: 120% 0;
+  transition: background-position 0.9s ease;
+  pointer-events: none;
+}
+.cr-btn:hover::before { background-position: -40% 0; }
+.cr-btn-ghost {
+  border-radius: 1.1rem;
+  background: rgba(255, 255, 255, 0.6);
+  -webkit-backdrop-filter: blur(14px);
+  backdrop-filter: blur(14px);
+  border: 1px solid rgba(37, 99, 235, 0.18);
+  color: #1d4ed8;
+  font-weight: 700;
+  box-shadow: 0 4px 16px rgba(37, 99, 235, 0.08);
+  transition: transform 0.35s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.35s, background 0.35s;
+}
+.cr-btn-ghost:hover {
+  transform: translateY(-2px);
+  background: rgba(255, 255, 255, 0.85);
+  box-shadow: 0 10px 26px rgba(37, 99, 235, 0.16);
+}
+
+/* ---------- Inputs translúcidos claros ---------- */
+.cr-input {
+  background: rgba(255, 255, 255, 0.7) !important;
+  border: 1px solid rgba(37, 99, 235, 0.16) !important;
+  color: #0f172a !important;
+  -webkit-backdrop-filter: blur(10px);
+  backdrop-filter: blur(10px);
+  transition: border-color 0.3s, box-shadow 0.3s;
+}
+.cr-input::placeholder { color: #94a3b8 !important; }
+.cr-input:focus {
+  border-color: rgba(59, 130, 246, 0.55) !important;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.14) !important;
+  outline: none;
+}
+
+/* ---------- Hover: elevación + resplandor ---------- */
+.cr-lift {
+  transition: transform 0.45s cubic-bezier(0.22, 1, 0.36, 1), box-shadow 0.45s;
+}
+.cr-lift:hover {
+  transform: translateY(-6px);
+  box-shadow:
+    0 20px 48px rgba(37, 99, 235, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.9);
+}
+
+/* ---------- Reveal al hacer scroll (lo activa <Reveal/>) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition:
+    opacity 0.9s ease,
+    transform 0.9s cubic-bezier(0.22, 1, 0.36, 1);
+  will-change: opacity, transform;
+}
+.reveal-visible { opacity: 1; transform: none; }
+.reveal-d1 { transition-delay: 0.08s; }
+.reveal-d2 { transition-delay: 0.16s; }
+.reveal-d3 { transition-delay: 0.24s; }
+.reveal-d4 { transition-delay: 0.32s; }
+.reveal-d5 { transition-delay: 0.40s; }
+
+/* ---------- Marquesina ---------- */
+.cr-marquee { overflow: hidden; }
+.cr-marquee-track {
+  display: flex;
+  align-items: center;
+  gap: 2.5rem;
+  width: max-content;
+  animation: cr-marquee 26s linear infinite;
+}
+@keyframes cr-marquee {
+  to { transform: translateX(-50%); }
+}
+
+/* ---------- Pulso suave para badges/dots ---------- */
+.cr-pulse-soft { animation: cr-pulse-soft 2.6s ease-in-out infinite; }
+@keyframes cr-pulse-soft {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.65; transform: scale(0.92); }
+}
+
+/* ---------- Flotación lenta para ilustraciones ---------- */
+.cr-float-slow { animation: cr-float 9s ease-in-out infinite; }
+
+/* ---------- Movimiento reducido ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .cr-sheen::after,
+  .cr-shimmer-text,
+  .cr-orb-a, .cr-orb-b, .cr-orb-c,
+  .cr-marquee-track,
+  .cr-float-slow, .cr-pulse-soft { animation: none !important; }
+  .reveal { opacity: 1; transform: none; transition: none; }
+}

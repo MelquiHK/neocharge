@@ -25,7 +25,7 @@ export default defineConfig(({ mode }) => ({
         short_name: 'NeoCharge',
         description: 'Tu tienda de electrónica de confianza en La Habana. Calidad premium, garantía y entrega 24h.',
         theme_color: '#3b82f6',
-        background_color: '#0f172a',
+        background_color: '#f8fafc',
         display: 'standalone', // Obligatorio para que abra sin barra de navegador
         start_url: '/',        // Obligatorio para definir dónde empieza la app
         icons: [
