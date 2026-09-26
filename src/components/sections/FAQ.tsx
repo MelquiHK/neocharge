@@ -6,8 +6,8 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { Button } from "@/components/ui/button";
-import { useReveal } from "@/hooks/use-reveal";
-import { cn } from "@/lib/utils";
+import { Reveal } from "@/components/Reveal";
+import "@/components/sections/visual-effects.css";
 
 const faqs = [
   {
@@ -45,58 +45,55 @@ const faqs = [
 ];
 
 export function FAQ() {
-  const { ref, visible } = useReveal();
   return (
-    <section ref={ref} className={cn("py-12 md:py-16 bg-white nc-section-wash reveal", visible && "is-visible")}>
+    <section className="py-12 md:py-16 bg-[#08080d]">
       <div className="container-page max-w-4xl">
-        <div className="text-center mb-10 md:mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+        <Reveal className="text-center mb-10 md:mb-12 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#a3e635]/15 border border-[#a3e635]/30 text-lime-200 text-xs font-bold uppercase tracking-widest">
             Centro de ayuda
           </div>
-          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight">
-            Resolvemos <span className="text-gradient-accent">tus dudas</span>
+          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight text-white">
+            Resolvemos <span className="text-volt-gradient">tus dudas</span>
           </h2>
-        </div>
+        </Reveal>
 
         <Accordion type="single" collapsible className="space-y-3">
           {faqs.map((f, i) => (
-            <AccordionItem
-              key={f.q}
-              value={`item-${i}`}
-              className={cn(
-                "border border-border bg-card rounded-2xl px-5 hover:border-primary/30 transition-all duration-300 data-[state=open]:border-primary/50 data-[state=open]:shadow-soft",
-                "reveal",
-                visible && "is-visible",
-              )}
-              style={{ transitionDelay: `${Math.min(i, 5) * 60}ms` }}
-            >
-              <AccordionTrigger className="text-left font-display font-semibold text-base py-5 hover:no-underline">
-                {f.q}
-              </AccordionTrigger>
-              <AccordionContent className="text-muted-foreground leading-relaxed pb-5">
-                {f.a}
-              </AccordionContent>
-            </AccordionItem>
+            <Reveal key={f.q} delay={Math.min(i, 5) * 60}>
+              <AccordionItem
+                value={`item-${i}`}
+                className="border border-white/15 bg-white/5 rounded-[1.25rem] px-5 hover:border-[#a3e635]/40 transition-all duration-300 data-[state=open]:border-[#a3e635]/50 data-[state=open]:shadow-soft"
+              >
+                <AccordionTrigger className="text-left font-display font-semibold text-base text-white py-5 hover:no-underline">
+                  {f.q}
+                </AccordionTrigger>
+                <AccordionContent className="text-slate-400 leading-relaxed pb-5">
+                  {f.a}
+                </AccordionContent>
+              </AccordionItem>
+            </Reveal>
           ))}
         </Accordion>
 
-        <div className="mt-8 text-center">
-          <p className="text-muted-foreground mb-4">¿Otra duda? Te la resolvemos al momento.</p>
-          <Button
-            asChild
-            size="lg"
-            className="btn-shine rounded-2xl font-bold hover:-translate-y-0.5 transition-transform duration-300"
-          >
-            <a
-              href="https://wa.me/5363180910?text=Hola%2C%20tengo%20una%20duda%20sobre%20NeoCharge"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center gap-2"
+        <Reveal>
+          <div className="mt-8 text-center">
+            <p className="text-slate-400 mb-4">¿Otra duda? Te la resolvemos al momento.</p>
+            <Button
+              asChild
+              size="lg"
+              className="btn-shine bg-[#a3e635] text-[#0c0c14] hover:bg-[#bef264] rounded-2xl font-bold glow-volt hover:-translate-y-0.5 transition-transform duration-300"
             >
-              <MessageCircle className="w-5 h-5" /> Preguntar por WhatsApp
-            </a>
-          </Button>
-        </div>
+              <a
+                href="https://wa.me/5363180910?text=Hola%2C%20tengo%20una%20duda%20sobre%20NeoCharge"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center gap-2"
+              >
+                <MessageCircle className="w-5 h-5" /> Preguntar por WhatsApp
+              </a>
+            </Button>
+          </div>
+        </Reveal>
       </div>
     </section>
   );

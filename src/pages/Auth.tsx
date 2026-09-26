@@ -92,16 +92,16 @@ const Auth = () => {
   };
 
   return (
-    <div className="relative overflow-hidden bg-[#070d20]">
+    <div className="relative overflow-hidden bg-[#08080d]">
       {/* Lavados de color + orbes */}
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
       <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-blue-600/20 blur-[130px] pointer-events-none"
+        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-violet-600/20 blur-[130px] pointer-events-none animate-orb-drift"
         aria-hidden
       />
       <div
-        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none"
+        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-fuchsia-500/10 blur-[120px] pointer-events-none animate-orb-drift"
         aria-hidden
       />
 
@@ -144,7 +144,7 @@ const Auth = () => {
                 className={cn(
                   "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
                   mode === "login"
-                    ? "bg-white text-slate-950 shadow-lg"
+                    ? "bg-[#a3e635] text-[#0c0c14] hover:bg-[#bef264] shadow-lg"
                     : "text-slate-300 hover:text-white",
                 )}
               >
@@ -158,7 +158,7 @@ const Auth = () => {
                 className={cn(
                   "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
                   mode === "signup"
-                    ? "bg-white text-slate-950 shadow-lg"
+                    ? "bg-[#a3e635] text-[#0c0c14] hover:bg-[#bef264] shadow-lg"
                     : "text-slate-300 hover:text-white",
                 )}
               >
@@ -177,7 +177,7 @@ const Auth = () => {
                     required
                     placeholder="Juan Pérez"
                     autoComplete="name"
-                    className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                    className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-[#a3e635]/60 focus-visible:border-[#a3e635]/60"
                   />
                 </div>
               )}
@@ -191,7 +191,7 @@ const Auth = () => {
                   required
                   placeholder="tu@correo.com"
                   autoComplete="email"
-                  className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                  className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-[#a3e635]/60 focus-visible:border-[#a3e635]/60"
                 />
               </div>
               <div className="space-y-2">
@@ -205,14 +205,14 @@ const Auth = () => {
                   minLength={6}
                   placeholder="Mínimo 6 caracteres"
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                  className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-[#a3e635]/60 focus-visible:border-[#a3e635]/60"
                 />
               </div>
 
               <Button
                 type="submit"
                 size="lg"
-                className="w-full h-13 rounded-2xl bg-white text-slate-950 hover:bg-blue-50 font-bold text-base nc-btn-shine shadow-xl transition-all duration-300 hover:-translate-y-0.5 disabled:translate-y-0"
+                className="w-full h-13 rounded-2xl bg-[#a3e635] text-[#0c0c14] hover:bg-[#bef264] font-bold text-base nc-btn-shine shadow-xl transition-all duration-300 hover:-translate-y-0.5 disabled:translate-y-0"
                 disabled={loading}
               >
                 {loading ? "Procesando..." : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}

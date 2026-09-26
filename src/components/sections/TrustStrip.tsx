@@ -1,6 +1,6 @@
 import { BadgeCheck, Banknote, MessageCircle, ShieldCheck, Truck } from "lucide-react";
-import { useReveal } from "@/hooks/use-reveal";
-import { cn } from "@/lib/utils";
+import { Reveal } from "@/components/Reveal";
+import "@/components/sections/visual-effects.css";
 
 const props = [
   { icon: ShieldCheck, text: "Garantía en productos" },
@@ -11,31 +11,31 @@ const props = [
 ];
 
 export function TrustStrip() {
-  const { ref, visible } = useReveal();
   return (
-    <section
-      ref={ref}
-      className={cn("py-10 md:py-12 border-b border-border bg-white reveal overflow-hidden", visible && "is-visible")}
-    >
+    <section className="py-10 md:py-12 border-b border-white/10 bg-[#08080d] overflow-hidden">
       <div className="container-page">
-        <p className="text-center text-xs font-bold uppercase tracking-[0.22em] text-primary/70 mb-7">
-          Compra con confianza
-        </p>
-        <div className="marquee" aria-label="Ventajas de comprar en NeoCharge">
-          <div className="marquee-track items-center">
+        <Reveal>
+          <p className="text-center mb-7">
+            <span className="inline-flex items-center px-4 py-1.5 rounded-full bg-[#a3e635]/15 border border-[#a3e635]/30 text-lime-200 text-xs font-bold uppercase tracking-[0.22em]">
+              Compra con confianza
+            </span>
+          </p>
+        </Reveal>
+        <div className="marquee-mask overflow-hidden" aria-label="Ventajas de comprar en NeoCharge">
+          <div className="animate-marquee flex w-max items-center gap-12">
             {[...props, ...props].map((p, i) => (
               <div
                 key={i}
                 aria-hidden={i >= props.length}
                 className="flex items-center gap-3 whitespace-nowrap group"
               >
-                <span className="w-10 h-10 rounded-2xl bg-primary/10 text-primary flex items-center justify-center group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                <span className="w-10 h-10 rounded-2xl bg-[#a3e635]/15 border border-[#a3e635]/30 text-lime-300 flex items-center justify-center group-hover:bg-[#a3e635] group-hover:text-[#0c0c14] transition-colors duration-300">
                   <p.icon className="w-5 h-5" />
                 </span>
-                <span className="font-display text-lg md:text-xl font-bold text-slate-700 uppercase tracking-tight">
+                <span className="font-display text-lg md:text-xl font-bold text-white uppercase tracking-tight">
                   {p.text}
                 </span>
-                <span className="text-primary/25 mx-2 text-2xl leading-none" aria-hidden>
+                <span className="text-[#a3e635]/30 mx-2 text-2xl leading-none" aria-hidden>
                   •
                 </span>
               </div>

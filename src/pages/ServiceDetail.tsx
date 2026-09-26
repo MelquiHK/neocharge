@@ -28,7 +28,7 @@ const serviceTypeLabels = {
   },
   request: {
     label: "Pedido / Solicitud",
-    badgeClass: "bg-blue-400/15 text-blue-200 ring-blue-300/30",
+    badgeClass: "bg-violet-400/15 text-violet-200 ring-violet-300/30",
     action: "Pedir servicio",
     hint: "Solicita este servicio por WhatsApp y te contactaremos para confirmar detalles, tiempos y coordinación.",
   },
@@ -88,33 +88,36 @@ export default function ServiceDetail() {
     : "";
 
   return (
-    <div className="relative overflow-hidden">
-      {/* Fondo claro con lavados suaves */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pointer-events-none" aria-hidden />
-      <div className="nc-section-wash absolute inset-0 pointer-events-none" aria-hidden />
+    <div className="relative overflow-hidden bg-[#08080d]">
+      {/* Fondo VOLT oscuro con lavados y orbes */}
+      <div className="nc-wash-a" aria-hidden />
+      <div className="nc-wash-b" aria-hidden />
+      <div className="absolute -top-32 -left-32 w-[400px] h-[400px] rounded-full bg-violet-600/20 blur-[120px] animate-orb-drift pointer-events-none" aria-hidden />
+      <div className="absolute top-1/4 -right-32 w-[380px] h-[380px] rounded-full bg-fuchsia-500/10 blur-[120px] animate-orb-drift pointer-events-none" aria-hidden />
+      <div className="absolute bottom-0 left-1/4 w-[340px] h-[340px] rounded-full bg-lime-400/10 blur-[120px] animate-orb-drift pointer-events-none" aria-hidden />
 
       <div ref={ref} className={cn("relative container-page py-10 md:py-16 reveal", visible && "is-visible")}>
         <Link
           to="/servicios"
-          className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary mb-8 transition-colors"
+          className="inline-flex items-center gap-2 text-sm text-slate-400 hover:text-lime-300 mb-8 transition-colors"
         >
           <ArrowLeft className="w-4 h-4" /> Volver a servicios
         </Link>
 
         {loading ? (
-          <div className="rounded-[2rem] border border-border bg-card p-16 text-center">
-            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
-            <p className="text-muted-foreground">Cargando servicio...</p>
+          <div className="rounded-[2rem] border border-white/15 bg-white/5 p-16 text-center">
+            <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-lime-300" />
+            <p className="text-slate-400">Cargando servicio...</p>
           </div>
         ) : notFound || !service ? (
-          <div className="max-w-xl mx-auto text-center rounded-[2.5rem] border border-border bg-card p-12 md:p-16 shadow-xl space-y-6">
-            <div className="mx-auto w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center">
-              <SearchX className="w-8 h-8 text-primary" />
+          <div className="max-w-xl mx-auto text-center rounded-[2.5rem] border border-white/15 bg-white/5 nc-liquid p-12 md:p-16 shadow-xl space-y-6">
+            <div className="mx-auto w-16 h-16 rounded-3xl bg-lime-400/10 border border-lime-300/25 flex items-center justify-center">
+              <SearchX className="w-8 h-8 text-lime-300" />
             </div>
-            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight">
+            <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight text-white">
               Servicio no encontrado
             </h1>
-            <p className="text-muted-foreground leading-relaxed">
+            <p className="text-slate-400 leading-relaxed">
               El servicio que buscas no existe o ya no está disponible. Revisa el catálogo
               de servicios activos o escríbenos y te ayudamos.
             </p>
@@ -122,7 +125,7 @@ export default function ServiceDetail() {
               <Button asChild variant="hero">
                 <Link to="/servicios">Ver servicios</Link>
               </Button>
-              <Button asChild variant="outline">
+              <Button asChild variant="outline" className="border-white/20 bg-transparent text-white hover:bg-white/10">
                 <a href={getWhatsAppLink("Hola, busco información sobre sus servicios.")} target="_blank" rel="noopener noreferrer">
                   <MessageCircle className="w-4 h-4 mr-2" /> WhatsApp
                 </a>
@@ -131,18 +134,18 @@ export default function ServiceDetail() {
           </div>
         ) : (
           <>
-            {/* Hero del servicio: panel oscuro con vidrio líquido */}
-            <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#0a1430] via-[#0d1b4d] to-[#070d20] text-white shadow-2xl nc-beam-host">
+            {/* Hero del servicio: panel oscuro VOLT con vidrio líquido */}
+            <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#121218] via-[#0c0c13] to-[#08080d] border border-white/15 text-white shadow-2xl nc-liquid nc-beam-host">
               <div className="nc-beam" aria-hidden />
               <div className="nc-wash-a" aria-hidden />
               <div
-                className="absolute -top-32 -right-32 w-[380px] h-[380px] rounded-full bg-blue-500/20 blur-[100px] pointer-events-none"
+                className="absolute -top-32 -right-32 w-[380px] h-[380px] rounded-full bg-lime-400/10 blur-[120px] animate-orb-drift pointer-events-none"
                 aria-hidden
               />
               <div className="relative p-8 md:p-12 lg:p-14">
                 <div className="flex flex-wrap items-center gap-3 mb-6">
                   <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 nc-liquid px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-100">
-                    <Tag className="w-3.5 h-3.5" /> {service.category ?? "General"}
+                    <Tag className="w-3.5 h-3.5 text-lime-300" /> {service.category ?? "General"}
                   </span>
                   <span className={cn("rounded-full px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] ring-1 backdrop-blur-md", typeMeta.badgeClass)}>
                     {typeMeta.label}
@@ -163,28 +166,28 @@ export default function ServiceDetail() {
             <div className="grid lg:grid-cols-[1fr_380px] gap-8 mt-8">
               <div className="space-y-8">
                 {service.description && (
-                  <section className="rounded-[2rem] border border-border bg-card p-8 md:p-10 shadow-sm">
-                    <h2 className="font-display text-2xl font-bold tracking-tight mb-4">
+                  <section className="rounded-[2rem] border border-white/15 bg-white/5 nc-liquid p-8 md:p-10 shadow-sm">
+                    <h2 className="font-display text-2xl font-bold tracking-tight mb-4 text-white">
                       Descripción del servicio
                     </h2>
-                    <p className="text-muted-foreground leading-relaxed whitespace-pre-line text-[17px]">
+                    <p className="text-slate-300 leading-relaxed whitespace-pre-line text-[17px]">
                       {service.description}
                     </p>
                   </section>
                 )}
 
                 {service.features && service.features.length > 0 && (
-                  <section className="rounded-[2rem] border border-border bg-card p-8 md:p-10 shadow-sm">
-                    <h2 className="font-display text-2xl font-bold tracking-tight mb-6">
+                  <section className="rounded-[2rem] border border-white/15 bg-white/5 nc-liquid p-8 md:p-10 shadow-sm">
+                    <h2 className="font-display text-2xl font-bold tracking-tight mb-6 text-white">
                       Qué incluye
                     </h2>
                     <ul className="space-y-4">
                       {service.features.map((feature, idx) => (
                         <li key={idx} className="flex items-start gap-3 text-[16px]">
-                          <span className="mt-0.5 w-7 h-7 rounded-full bg-emerald-500/10 flex items-center justify-center shrink-0">
-                            <CheckCircle2 className="w-4 h-4 text-emerald-500" />
+                          <span className="mt-0.5 w-7 h-7 rounded-full bg-lime-400/15 flex items-center justify-center shrink-0">
+                            <CheckCircle2 className="w-4 h-4 text-lime-300" />
                           </span>
-                          <span className="text-foreground/90 leading-relaxed">{feature}</span>
+                          <span className="text-slate-200 leading-relaxed">{feature}</span>
                         </li>
                       ))}
                     </ul>
@@ -194,21 +197,21 @@ export default function ServiceDetail() {
 
               {/* Tarjeta de contratación con vidrio */}
               <aside className="lg:sticky lg:top-28 h-fit">
-                <div className="rounded-[2rem] border border-white/40 nc-liquid-soft p-7 md:p-8 shadow-xl space-y-6">
+                <div className="rounded-[2rem] border border-white/15 nc-liquid nc-sheen bg-white/5 p-7 md:p-8 shadow-xl space-y-6">
                   <div>
-                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-bold">Precio</p>
-                    <p className="mt-2 font-display text-4xl font-bold tracking-tight">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold">Precio</p>
+                    <p className="mt-2 font-display text-4xl font-bold tracking-tight text-lime-300">
                       {formatServicePrice(service)}
                     </p>
                   </div>
 
-                  <div className="h-px bg-border" aria-hidden />
+                  <div className="h-px bg-white/10" aria-hidden />
 
                   <div>
-                    <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-bold mb-2">
+                    <p className="text-xs uppercase tracking-[0.2em] text-slate-400 font-bold mb-2">
                       {typeMeta.action}
                     </p>
-                    <p className="text-sm text-muted-foreground leading-relaxed">
+                    <p className="text-sm text-slate-400 leading-relaxed">
                       {typeMeta.hint}
                     </p>
                   </div>
@@ -225,13 +228,13 @@ export default function ServiceDetail() {
                     </a>
                   </Button>
 
-                  <Button asChild variant="outline" className="w-full rounded-2xl">
+                  <Button asChild variant="outline" className="w-full rounded-2xl border-white/20 bg-transparent text-white hover:bg-white/10">
                     <Link to="/servicios">
                       Ver otros servicios <ArrowRight className="w-4 h-4 ml-2" />
                     </Link>
                   </Button>
 
-                  <p className="text-xs text-muted-foreground text-center leading-relaxed">
+                  <p className="text-xs text-slate-500 text-center leading-relaxed">
                     <ShoppingBag className="w-3.5 h-3.5 inline mr-1 -mt-0.5" />
                     Atención directa con NeoCharge · La Habana
                   </p>

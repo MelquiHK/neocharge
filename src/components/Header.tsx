@@ -6,6 +6,7 @@ import { Logo } from "@/components/Logo";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
+import "@/components/sections/visual-effects.css";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -68,10 +69,10 @@ export function Header({ className }: { className?: string }) {
       <div className="container-page">
         <div
           className={cn(
-            "flex items-center justify-between rounded-full transition-all duration-500 px-4 sm:px-6",
+            "flex items-center justify-between rounded-full transition-all duration-500 px-4 sm:px-6 bg-[#08080d]/80 backdrop-blur-xl border-b border-white/10",
             scrolled
-              ? "glass shadow-xl h-16 border-white/20"
-              : "bg-white/5 backdrop-blur-md border border-white/10 h-20",
+              ? "border border-white/10 shadow-[0_8px_40px_rgba(0,0,0,0.55)] h-16"
+              : "border border-white/10 h-20",
           )}
         >
           <Logo />
@@ -84,19 +85,22 @@ export function Header({ className }: { className?: string }) {
                 end={l.to === "/"}
                 className={({ isActive }) =>
                   cn(
-                    "px-4 py-2 rounded-full text-sm font-medium transition-all duration-300 relative",
+                    "group px-4 py-2 rounded-full text-sm font-medium transition-colors duration-300 relative",
                     isActive
-                      ? "text-primary"
-                      : "text-foreground/80 hover:text-foreground hover:bg-secondary/60",
+                      ? "text-[#a3e635]"
+                      : "text-slate-300 hover:text-white",
                   )
                 }
               >
                 {({ isActive }) => (
                   <>
                     {l.label}
-                    {isActive && (
-                      <span className="absolute -bottom-0.5 left-1/2 -translate-x-1/2 w-1.5 h-1.5 rounded-full bg-primary" />
-                    )}
+                    <span
+                      className={cn(
+                        "absolute -bottom-0.5 left-1/2 -translate-x-1/2 h-[3px] w-8 rounded-full bg-[#a3e635] shadow-[0_0_12px_rgba(163,230,53,0.9)] transition-all duration-300 origin-center",
+                        isActive ? "scale-x-100" : "scale-x-0 group-hover:scale-x-100",
+                      )}
+                    />
                   </>
                 )}
               </NavLink>
@@ -108,40 +112,53 @@ export function Header({ className }: { className?: string }) {
             {user ? (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
-                  <Button variant="ghost" size="icon" className="rounded-full" aria-label="Cuenta">
+                  <Button
+                    variant="ghost"
+                    size="icon"
+                    className="rounded-full text-slate-200 hover:text-lime-300 hover:bg-white/10"
+                    aria-label="Cuenta"
+                  >
                     <User className="w-5 h-5" />
                   </Button>
                 </DropdownMenuTrigger>
-                <DropdownMenuContent align="end" className="w-56 rounded-2xl">
+                <DropdownMenuContent
+                  align="end"
+                  className="w-56 rounded-2xl bg-[#0c0c14]/95 backdrop-blur-xl border-white/10 text-slate-200"
+                >
                   <DropdownMenuLabel className="font-normal">
                     <div className="flex flex-col">
                       <span className="text-sm font-semibold truncate">{user.email}</span>
                       {isAdmin && (
-                        <span className="text-xs text-accent font-semibold mt-0.5">Administrador</span>
+                        <span className="text-xs text-[#a3e635] font-semibold mt-0.5">Administrador</span>
                       )}
                     </div>
                   </DropdownMenuLabel>
-                  <DropdownMenuSeparator />
+                  <DropdownMenuSeparator className="bg-white/10" />
                   <DropdownMenuItem asChild>
-                    <Link to="/cuenta" className="cursor-pointer">
+                    <Link to="/cuenta" className="cursor-pointer focus:bg-white/10 focus:text-lime-300">
                       <User className="w-4 h-4 mr-2" /> Mi cuenta
                     </Link>
                   </DropdownMenuItem>
                   {isAdmin && (
                     <DropdownMenuItem asChild>
-                      <Link to="/admin" className="cursor-pointer">
+                      <Link to="/admin" className="cursor-pointer focus:bg-white/10 focus:text-lime-300">
                         <LayoutDashboard className="w-4 h-4 mr-2" /> Panel admin
                       </Link>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuSeparator />
-                  <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer">
+                  <DropdownMenuSeparator className="bg-white/10" />
+                  <DropdownMenuItem onClick={signOut} className="text-destructive cursor-pointer focus:bg-white/10">
                     <LogOut className="w-4 h-4 mr-2" /> Cerrar sesión
                   </DropdownMenuItem>
                 </DropdownMenuContent>
               </DropdownMenu>
             ) : (
-              <Button asChild variant="ghost" size="sm" className="hidden sm:inline-flex rounded-full">
+              <Button
+                asChild
+                variant="ghost"
+                size="sm"
+                className="hidden sm:inline-flex rounded-full text-slate-200 hover:text-lime-300 hover:bg-white/10"
+              >
                 <Link to="/auth">Iniciar sesión</Link>
               </Button>
             )}
@@ -149,14 +166,14 @@ export function Header({ className }: { className?: string }) {
             {/* Cart */}
             <button
               onClick={openCart}
-              className="relative rounded-full h-10 w-10 flex items-center justify-center hover:bg-secondary transition-colors"
+              className="relative rounded-full h-10 w-10 flex items-center justify-center text-slate-200 hover:text-lime-300 hover:bg-white/10 transition-colors"
               aria-label={`Carrito (${itemCount} productos)`}
             >
               <ShoppingBag className="w-5 h-5" />
               {itemCount > 0 && (
                 <span
                   className={cn(
-                    "absolute -top-0.5 -right-0.5 min-w-[20px] h-5 px-1 rounded-full bg-gradient-accent text-accent-foreground text-[10px] font-bold flex items-center justify-center shadow-glow-accent",
+                    "absolute -top-0.5 -right-0.5 min-w-[20px] h-5 px-1 rounded-full bg-[#a3e635] text-[#0c0c14] text-[10px] font-bold flex items-center justify-center shadow-[0_0_12px_rgba(163,230,53,0.8)]",
                     bump && "animate-bump",
                   )}
                 >
@@ -168,7 +185,7 @@ export function Header({ className }: { className?: string }) {
             {/* Mobile menu */}
             <button
               onClick={() => setMobileOpen((v) => !v)}
-              className="lg:hidden rounded-full h-10 w-10 flex items-center justify-center hover:bg-secondary transition-colors"
+              className="lg:hidden rounded-full h-10 w-10 flex items-center justify-center text-slate-200 hover:text-lime-300 hover:bg-white/10 transition-colors"
               aria-label="Abrir menú"
               aria-expanded={mobileOpen}
             >
@@ -179,7 +196,7 @@ export function Header({ className }: { className?: string }) {
 
         {/* Mobile menu panel */}
         {mobileOpen && (
-          <div className="lg:hidden mt-3 glass rounded-3xl p-4 shadow-lifted animate-fade-in">
+          <div className="lg:hidden mt-3 rounded-3xl p-4 shadow-[0_16px_50px_rgba(0,0,0,0.6)] animate-fade-in bg-[#08080d]/90 backdrop-blur-xl border border-white/10">
             <nav className="flex flex-col gap-1" aria-label="Móvil">
               {links.map((l) => (
                 <NavLink
@@ -189,7 +206,9 @@ export function Header({ className }: { className?: string }) {
                   className={({ isActive }) =>
                     cn(
                       "px-4 py-3 rounded-xl text-base font-medium transition-colors",
-                      isActive ? "bg-primary/10 text-primary" : "hover:bg-secondary",
+                      isActive
+                        ? "bg-[#a3e635]/10 text-[#a3e635]"
+                        : "text-slate-300 hover:bg-white/10 hover:text-white",
                     )
                   }
                 >
@@ -199,7 +218,7 @@ export function Header({ className }: { className?: string }) {
               {!user && (
                 <NavLink
                   to="/auth"
-                  className="px-4 py-3 rounded-xl text-base font-medium hover:bg-secondary"
+                  className="px-4 py-3 rounded-xl text-base font-medium text-slate-300 hover:bg-white/10 hover:text-white"
                 >
                   Iniciar sesión
                 </NavLink>
@@ -211,4 +230,3 @@ export function Header({ className }: { className?: string }) {
     </header>
   );
 }
-

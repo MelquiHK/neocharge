@@ -204,7 +204,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
 
   if (loading) {
     return (
-      <div className="relative overflow-hidden bg-[#070d20]">
+      <div className="relative overflow-hidden bg-[#08080d]">
         <div className="nc-wash-a" aria-hidden />
         <div className="nc-wash-b" aria-hidden />
         <div className="relative container-page py-20 space-y-4">
@@ -222,23 +222,23 @@ Por favor, revisa mis pagos. ¡Gracias!`;
   if (!user) return <Navigate to="/auth" replace />;
 
   return (
-    <div className="relative overflow-hidden bg-[#070d20]">
+    <div className="relative overflow-hidden bg-[#08080d]">
       {/* Lavados de color + orbes */}
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
       <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-blue-600/20 blur-[130px] pointer-events-none"
+        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-violet-600/20 blur-[130px] pointer-events-none animate-orb-drift"
         aria-hidden
       />
       <div
-        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none"
+        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-fuchsia-500/10 blur-[120px] pointer-events-none animate-orb-drift"
         aria-hidden
       />
 
       <div className="relative container-page py-12 space-y-8">
         <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-white/10 pb-10">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-cyan-200 text-xs font-bold uppercase tracking-widest backdrop-blur-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-lime-200 text-xs font-bold uppercase tracking-widest backdrop-blur-xl">
               {role === "owner" ? "Dueño Supremo" : role === "admin" ? "Administrador" : role === "gestor" ? "Gestor de Ventas" : role === "mensajero" ? "Mensajero" : "Perfil de Cliente"}
             </div>
             <h1 className="font-display text-5xl font-bold tracking-tight text-white">Mi cuenta</h1>
@@ -251,7 +251,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
               </Button>
             )}
             {isMensajero && (
-              <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-blue-50 font-bold">
+              <Button asChild className="rounded-full bg-[#a3e635] text-[#0c0c14] hover:bg-[#bef264] font-bold">
                 <Link to="/mensajeria"><Map className="w-4 h-4" /> Panel Mensajero</Link>
               </Button>
             )}
@@ -283,11 +283,11 @@ Por favor, revisa mis pagos. ¡Gracias!`;
 
               <div className="space-y-3 pt-4 border-t border-white/10">
                 <div className="flex items-center gap-2 text-sm text-slate-200">
-                  <Phone className="w-4 h-4 text-cyan-300" />
+                  <Phone className="w-4 h-4 text-lime-300" />
                   <span>{profile?.phone || "Sin teléfono"}</span>
                 </div>
                 <div className="flex items-start gap-2 text-sm">
-                  <Info className="w-4 h-4 text-cyan-300 mt-1" />
+                  <Info className="w-4 h-4 text-lime-300 mt-1" />
                   <p className="text-slate-400 italic">{(profile as ProfileWithBio | null)?.bio || "Sin biografía"}</p>
                 </div>
               </div>
@@ -299,15 +299,15 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                 <div className="space-y-3">
                   <div className="space-y-1">
                     <Label className="text-slate-200 font-medium">Nombre Completo</Label>
-                    <Input value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60" />
+                    <Input value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-[#a3e635]/60 focus-visible:border-[#a3e635]/60" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-slate-200 font-medium">Nombre de Usuario</Label>
-                    <Input value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60" />
+                    <Input value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-[#a3e635]/60 focus-visible:border-[#a3e635]/60" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-slate-200 font-medium">Teléfono</Label>
-                    <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60" />
+                    <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-[#a3e635]/60 focus-visible:border-[#a3e635]/60" />
                   </div>
                   <div className="space-y-1">
                     <Label className="text-slate-200 font-medium">Foto de Perfil</Label>
@@ -345,9 +345,9 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                   </div>
                   <div className="space-y-1">
                     <Label className="text-slate-200 font-medium">Biografía</Label>
-                    <Textarea value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60" />
+                    <Textarea value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-[#a3e635]/60 focus-visible:border-[#a3e635]/60" />
                   </div>
-                  <Button onClick={handleSaveProfile} disabled={saving || uploading} className="w-full mt-4 h-12 rounded-2xl bg-white text-slate-950 hover:bg-blue-50 font-bold">
+                  <Button onClick={handleSaveProfile} disabled={saving || uploading} className="w-full mt-4 h-12 rounded-2xl bg-[#a3e635] text-[#0c0c14] hover:bg-[#bef264] font-bold">
                     {uploading ? "Subiendo imagen..." : saving ? "Guardando..." : "Guardar Cambios"}
                   </Button>
                 </div>
@@ -360,13 +360,13 @@ Por favor, revisa mis pagos. ¡Gracias!`;
               <section className="rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-6">
                 <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
                   <h2 className="font-display text-2xl font-bold flex items-center gap-2 text-white">
-                    <Wallet className="w-6 h-6 text-cyan-300" /> Resumen de Gestor
+                    <Wallet className="w-6 h-6 text-lime-300" /> Resumen de Gestor
                   </h2>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={sendToWhatsApp} className="rounded-full bg-green-500/20 border border-green-400/30 text-green-200 hover:bg-green-500/30">
                       <MessageSquare className="w-4 h-4 mr-2" /> WhatsApp Admin
                     </Button>
-                    <Button size="sm" onClick={handleRequestPayment} disabled={requestingPayment} className="rounded-full bg-white text-slate-950 hover:bg-blue-50 font-bold">
+                    <Button size="sm" onClick={handleRequestPayment} disabled={requestingPayment} className="rounded-full bg-[#a3e635] text-[#0c0c14] hover:bg-[#bef264] font-bold">
                       <Send className="w-4 h-4 mr-2" /> Pedir Pago
                     </Button>
                   </div>
@@ -389,7 +389,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                     <div className="flex items-center gap-2 text-xs font-medium uppercase text-slate-400 mb-1">
                       <Package className="w-3 h-3" /> Ventas
                     </div>
-                    <div className="text-2xl font-bold text-cyan-200">{gestorStats.bySeller[0]?.count || 0}</div>
+                    <div className="text-2xl font-bold text-lime-300">{gestorStats.bySeller[0]?.count || 0}</div>
                   </div>
                 </div>
               </section>
@@ -397,12 +397,12 @@ Por favor, revisa mis pagos. ¡Gracias!`;
 
             <section className="rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-6">
               <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2 text-white">
-                <Package className="w-5 h-5 text-cyan-300" /> Mis pedidos
+                <Package className="w-5 h-5 text-lime-300" /> Mis pedidos
               </h2>
               {orders.length === 0 ? (
                 <div className="text-center py-12 space-y-3">
                   <p className="text-slate-400">No tienes pedidos todavía.</p>
-                  <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-blue-50 font-bold px-6 h-12"><Link to="/tienda">Empezar a comprar</Link></Button>
+                  <Button asChild className="rounded-full bg-[#a3e635] text-[#0c0c14] hover:bg-[#bef264] font-bold px-6 h-12"><Link to="/tienda">Empezar a comprar</Link></Button>
                 </div>
               ) : (
                 <div className="divide-y divide-white/10">
@@ -415,7 +415,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-display font-bold text-cyan-200">{formatPrice(o.total)}</p>
+                        <p className="font-display font-bold text-lime-200">{formatPrice(o.total)}</p>
                         <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-slate-300 capitalize">{o.status}</span>
                       </div>
                     </div>

@@ -50,7 +50,7 @@ export function OrderNotificationsWidget({ inline }: OrderNotificationsWidgetPro
     <div className={wrapperClasses}>
       <div className="flex items-center justify-between gap-3">
         <div className="flex items-start gap-3">
-          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-blue-500/10 text-blue-600 dark:text-blue-400">
+          <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-lime-400/10 text-lime-500 dark:text-lime-300">
             <Bell className="h-4 w-4" />
           </div>
           <div>

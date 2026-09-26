@@ -4,13 +4,12 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
-import { useReveal } from "@/hooks/use-reveal";
-import { cn } from "@/lib/utils";
+import { Reveal } from "@/components/Reveal";
+import "@/components/sections/visual-effects.css";
 
 export function FeaturedProducts() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
-  const { ref, visible } = useReveal();
 
   useEffect(() => {
     let cancelled = false;
@@ -33,51 +32,53 @@ export function FeaturedProducts() {
   }, []);
 
   return (
-    <section ref={ref} className={cn("py-12 md:py-16 bg-white reveal", visible && "is-visible")}>
+    <section className="py-12 md:py-16 bg-[#08080d]">
       <div className="container-page">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 md:mb-12">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+          <Reveal className="space-y-3 max-w-2xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-[#a3e635]/15 border border-[#a3e635]/30 text-lime-200 text-xs font-bold uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-lime-300 animate-pulse" />
               Nuestros productos
             </div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight">
-              Productos <span className="text-gradient-accent">destacados</span>
+            <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight text-white">
+              Productos <span className="text-volt-gradient">destacados</span>
             </h2>
-            <p className="text-muted-foreground text-lg font-light">
+            <p className="text-slate-400 text-lg font-light">
               Cargadores, audio y piezas con garantía, listos para entrega en La Habana.
             </p>
-          </div>
-          <Button asChild variant="outline" className="self-start md:self-end rounded-xl hover:-translate-y-0.5 transition-transform duration-300">
-            <Link to="/tienda" className="flex items-center gap-2">
-              Ver todo <ArrowRight className="w-4 h-4" />
-            </Link>
-          </Button>
+          </Reveal>
+          <Reveal delay={150}>
+            <Button asChild variant="outline" className="self-start md:self-end rounded-xl border-white/20 bg-white/5 text-white hover:bg-white/10 hover:border-[#a3e635]/40 hover:-translate-y-0.5 transition-all duration-300">
+              <Link to="/tienda" className="flex items-center gap-2">
+                Ver todo <ArrowRight className="w-4 h-4" />
+              </Link>
+            </Button>
+          </Reveal>
         </div>
 
         {loading ? (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
             {Array.from({ length: 4 }).map((_, i) => (
-              <div key={i} className="aspect-[3/4] rounded-3xl bg-muted animate-pulse" />
+              <div key={i} className="aspect-[3/4] rounded-3xl bg-white/5 animate-pulse" />
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="rounded-3xl border border-border bg-card p-12 text-center">
-            <p className="font-display text-2xl font-bold">Estamos actualizando el catálogo</p>
-            <p className="text-muted-foreground mt-2">
-              Escríbenos por WhatsApp al +53 6318-0910 y te mostramos lo disponible hoy.
-            </p>
-          </div>
+          <Reveal>
+            <div className="rounded-[2rem] border border-white/15 nc-liquid p-12 text-center">
+              <p className="font-display text-2xl font-bold text-white">Estamos actualizando el catálogo</p>
+              <p className="text-slate-400 mt-2">
+                Escríbenos por WhatsApp al +53 6318-0910 y te mostramos lo disponible hoy.
+              </p>
+            </div>
+          </Reveal>
         ) : (
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6 items-stretch">
             {products.map((p, i) => (
-              <div
-                key={p.id}
-                className={cn("h-full [&>*]:h-full relative overflow-hidden rounded-3xl nc-shine-hover reveal", visible && "is-visible")}
-                style={{ transitionDelay: `${i * 90}ms` }}
-              >
-                <ProductCard product={p} />
-              </div>
+              <Reveal key={p.id} delay={i * 90} className="h-full [&>*]:h-full">
+                <div className="h-full [&>*]:h-full relative overflow-hidden rounded-3xl nc-shine-hover">
+                  <ProductCard product={p} />
+                </div>
+              </Reveal>
             ))}
           </div>
         )}

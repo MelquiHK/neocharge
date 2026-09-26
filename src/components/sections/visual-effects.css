@@ -1,6 +1,8 @@
 /* ============================================================
-   NeoCharge · Efectos visuales premium de la portada
-   Autocontenido para las sections/ de la home. Sin dependencias.
+   NeoCharge · Efectos visuales VOLT
+   Dirección de diseño "energía": lima volt + violeta + fucsia
+   sobre negro #08080d. Adiós al azul dominante.
+   Autocontenido para las sections/ y páginas. Sin dependencias.
    Reglas de rendimiento:
    - Solo se animan transform y opacity (GPU-friendly).
    - Sin blur animado en áreas grandes (los blur son estáticos).
@@ -41,11 +43,12 @@
   pointer-events: none;
 }
 .nc-wash-a {
-  background: radial-gradient(60% 50% at 72% 18%, rgba(59, 130, 246, 0.20), transparent 70%);
+  background: radial-gradient(60% 50% at 72% 18%, rgba(139, 92, 246, 0.22), transparent 70%);
   animation: nc-wash-pulse 9s ease-in-out infinite;
 }
 .nc-wash-b {
-  background: radial-gradient(50% 45% at 18% 82%, rgba(34, 211, 238, 0.13), transparent 70%);
+  background: radial-gradient(50% 45% at 18% 82%, rgba(217, 70, 239, 0.12), transparent 70%),
+    radial-gradient(30% 28% at 85% 85%, rgba(163, 230, 53, 0.08), transparent 70%);
   animation: nc-wash-pulse 13s ease-in-out infinite reverse;
 }
 @keyframes nc-wash-pulse {
@@ -53,9 +56,9 @@
   50% { opacity: 1; }
 }
 
-/* ---------- Shimmer líquido en el titular del hero ---------- */
+/* ---------- Shimmer lima/violeta en titulares ---------- */
 .nc-text-shimmer {
-  background: linear-gradient(110deg, #93c5fd 20%, #67e8f9 40%, #f0f9ff 50%, #67e8f9 60%, #93c5fd 80%);
+  background: linear-gradient(110deg, #bef264 15%, #a3e635 32%, #f7fee7 50%, #c4b5fd 66%, #d946ef 85%);
   background-size: 220% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -116,7 +119,7 @@
     0 24px 60px rgba(2, 8, 30, 0.50);
 }
 .nc-glass-chip {
-  background: linear-gradient(150deg, rgba(32, 48, 96, 0.88), rgba(13, 21, 48, 0.92));
+  background: linear-gradient(150deg, rgba(52, 30, 100, 0.88), rgba(12, 10, 26, 0.92));
   backdrop-filter: blur(12px);
   -webkit-backdrop-filter: blur(12px);
   box-shadow:
@@ -133,7 +136,7 @@
   background: linear-gradient(115deg,
     transparent 32%,
     rgba(255, 255, 255, 0.10) 44%,
-    rgba(186, 230, 253, 0.22) 50%,
+    rgba(190, 242, 100, 0.20) 50%,
     rgba(255, 255, 255, 0.10) 56%,
     transparent 68%);
   transform: translateX(-65%) skewX(-12deg);
@@ -173,7 +176,7 @@
   position: absolute;
   inset: 14%;
   border-radius: 9999px;
-  border: 1px solid rgba(186, 230, 253, 0.35);
+  border: 1px solid rgba(190, 242, 100, 0.35);
   opacity: 0;
   animation: nc-ripple-ring 6s ease-out infinite;
   pointer-events: none;
@@ -195,11 +198,11 @@
   width: 35%;
   background: linear-gradient(100deg,
     transparent 0%,
-    rgba(147, 197, 253, 0) 18%,
-    rgba(186, 230, 253, 0.22) 42%,
+    rgba(139, 92, 246, 0) 18%,
+    rgba(190, 242, 100, 0.20) 42%,
     rgba(255, 255, 255, 0.38) 50%,
-    rgba(186, 230, 253, 0.22) 58%,
-    rgba(147, 197, 253, 0) 82%,
+    rgba(190, 242, 100, 0.20) 58%,
+    rgba(139, 92, 246, 0) 82%,
     transparent 100%);
   transform: skewX(-14deg);
   opacity: 0;
@@ -213,11 +216,11 @@
   62%, 100% { transform: translateX(485%) skewX(-14deg); opacity: 0; }
 }
 
-/* ---------- Lavado decorativo estático para secciones claras ---------- */
+/* ---------- Lavado decorativo para secciones oscuras ---------- */
 .nc-section-wash {
   background:
-    radial-gradient(42% 60% at 88% 12%, rgba(59, 130, 246, 0.06), transparent 70%),
-    radial-gradient(36% 55% at 8% 88%, rgba(34, 211, 238, 0.05), transparent 70%);
+    radial-gradient(42% 60% at 88% 12%, rgba(139, 92, 246, 0.07), transparent 70%),
+    radial-gradient(36% 55% at 8% 88%, rgba(163, 230, 53, 0.05), transparent 70%);
 }
 
 /* ---------- Movimiento reducido: todo quieto ---------- */
@@ -235,6 +238,132 @@
     background: none;
     -webkit-background-clip: initial;
     background-clip: initial;
-    color: #93c5fd;
+    color: #bef264;
+  }
+}
+
+/* ============================================================
+   VOLT · Librería de movimiento (transform/opacity únicamente)
+   ============================================================ */
+@keyframes volt-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-12px); }
+}
+@keyframes volt-float-slow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  50% { transform: translateY(-18px) rotate(2deg); }
+}
+@keyframes volt-pulse-glow {
+  0%, 100% { box-shadow: 0 0 22px rgba(163, 230, 53, 0.22), 0 0 60px rgba(163, 230, 53, 0.07); }
+  50% { box-shadow: 0 0 42px rgba(163, 230, 53, 0.48), 0 0 110px rgba(163, 230, 53, 0.16); }
+}
+@keyframes volt-gradient-pan {
+  to { background-position: 220% center; }
+}
+@keyframes volt-marquee {
+  from { transform: translateX(0); }
+  to { transform: translateX(-50%); }
+}
+@keyframes volt-shimmer {
+  from { background-position: 200% 0; }
+  to { background-position: -200% 0; }
+}
+@keyframes volt-rise-in {
+  from { opacity: 0; transform: translateY(28px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+@keyframes volt-pop-in {
+  from { opacity: 0; transform: scale(0.9); }
+  to { opacity: 1; transform: scale(1); }
+}
+@keyframes volt-spin-slow {
+  to { transform: rotate(360deg); }
+}
+@keyframes volt-orb-drift {
+  0%, 100% { transform: translate(0, 0) scale(1); }
+  33% { transform: translate(42px, -32px) scale(1.08); }
+  66% { transform: translate(-32px, 26px) scale(0.94); }
+}
+@keyframes volt-flicker {
+  0%, 100% { opacity: 1; }
+  92% { opacity: 1; }
+  93% { opacity: 0.6; }
+  94% { opacity: 1; }
+  97% { opacity: 0.75; }
+  98% { opacity: 1; }
+}
+
+.animate-float { animation: volt-float 6s ease-in-out infinite; }
+.animate-float-slow { animation: volt-float-slow 9s ease-in-out infinite; }
+.animate-pulse-glow { animation: volt-pulse-glow 3.2s ease-in-out infinite; }
+.animate-marquee { animation: volt-marquee 30s linear infinite; }
+.animate-shimmer { background-size: 200% auto; animation: volt-shimmer 2.8s linear infinite; }
+.animate-spin-slow { animation: volt-spin-slow 16s linear infinite; }
+.animate-orb-drift { animation: volt-orb-drift 18s ease-in-out infinite; }
+.animate-flicker { animation: volt-flicker 5s linear infinite; }
+.rise-in { animation: volt-rise-in 0.8s cubic-bezier(0.22, 0.8, 0.32, 1) both; }
+.pop-in { animation: volt-pop-in 0.55s cubic-bezier(0.22, 0.8, 0.32, 1) both; }
+.d1 { animation-delay: 0.1s; }
+.d2 { animation-delay: 0.2s; }
+.d3 { animation-delay: 0.3s; }
+.d4 { animation-delay: 0.45s; }
+.d5 { animation-delay: 0.6s; }
+
+/* Hover con elevación + halo lima */
+.lift {
+  transition: transform 0.35s cubic-bezier(0.22, 0.8, 0.32, 1),
+    box-shadow 0.35s ease, border-color 0.35s ease;
+}
+.lift:hover {
+  transform: translateY(-6px);
+  box-shadow: 0 24px 60px rgba(0, 0, 0, 0.55), 0 0 44px rgba(163, 230, 53, 0.12);
+  border-color: rgba(163, 230, 53, 0.35);
+}
+/* Halo lima permanente (botones/elementos protagonistas) */
+.glow-volt {
+  box-shadow: 0 0 28px rgba(163, 230, 53, 0.35), 0 10px 34px rgba(0, 0, 0, 0.45);
+}
+/* Texto con degradado lima → violeta → fucsia (animado) */
+.text-volt-gradient {
+  background: linear-gradient(100deg, #bef264, #a3e635 35%, #c4b5fd 70%, #d946ef);
+  background-size: 220% auto;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: volt-gradient-pan 8s linear infinite;
+}
+/* Contenedor de marquesina (el hijo .animate-marquee debe tener w-max y contenido duplicado) */
+.marquee-mask {
+  mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+  -webkit-mask-image: linear-gradient(90deg, transparent, black 8%, black 92%, transparent);
+}
+
+/* ---------- Reveal on scroll (lo activa el componente Reveal) ---------- */
+.reveal {
+  opacity: 0;
+  transform: translateY(30px);
+  transition: opacity 0.8s ease, transform 0.8s cubic-bezier(0.22, 0.8, 0.32, 1);
+  will-change: opacity, transform;
+}
+.reveal-scale { transform: scale(0.94); }
+.reveal-left { transform: translateX(-38px); }
+.reveal-right { transform: translateX(38px); }
+.reveal.is-visible { opacity: 1; transform: none; }
+
+/* ---------- Movimiento reducido: todo quieto ---------- */
+@media (prefers-reduced-motion: reduce) {
+  .animate-float, .animate-float-slow, .animate-pulse-glow,
+  .animate-marquee, .animate-shimmer, .animate-spin-slow,
+  .animate-orb-drift, .animate-flicker,
+  .rise-in, .pop-in, .text-volt-gradient {
+    animation: none !important;
+  }
+  .reveal { opacity: 1; transform: none; transition: none; }
+  .lift, .lift:hover { transform: none; transition: none; }
+  .text-volt-gradient {
+    background: none;
+    -webkit-background-clip: initial;
+    background-clip: initial;
+    color: #bef264;
   }
 }

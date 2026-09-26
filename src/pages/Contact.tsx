@@ -59,23 +59,23 @@ const Contact = () => {
   ];
 
   return (
-    <div className="relative overflow-hidden bg-[#070d20]">
+    <div className="relative overflow-hidden bg-[#08080d]">
       {/* Lavados de color + orbes */}
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
       <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-blue-600/20 blur-[130px] pointer-events-none"
+        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-violet-600/20 blur-[130px] pointer-events-none animate-orb-drift"
         aria-hidden
       />
       <div
-        className="absolute top-1/3 -right-40 w-[480px] h-[480px] rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none"
+        className="absolute top-1/3 -right-40 w-[480px] h-[480px] rounded-full bg-fuchsia-500/10 blur-[120px] pointer-events-none animate-orb-drift"
         aria-hidden
       />
 
       <div ref={ref} className={cn("relative container-page py-14 md:py-24 reveal", visible && "is-visible")}>
         {/* Hero */}
         <header className="text-center max-w-3xl mx-auto mb-14 md:mb-20 space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/25 nc-liquid text-cyan-200 text-xs font-bold uppercase tracking-[0.2em]">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full border border-white/25 nc-liquid text-lime-200 text-xs font-bold uppercase tracking-[0.2em]">
             Contacto Directo
           </div>
           <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight text-white">
@@ -118,7 +118,7 @@ const Contact = () => {
             {cards.map((c, i) => {
               const inner = (
                 <div className="flex items-center gap-4">
-                  <div className="w-13 h-13 p-3 rounded-2xl flex items-center justify-center shrink-0 bg-white/10 border border-white/20 text-cyan-300">
+                  <div className="w-13 h-13 p-3 rounded-2xl flex items-center justify-center shrink-0 bg-white/10 border border-white/20 text-lime-300">
                     <c.icon className="w-6 h-6" />
                   </div>
                   <div className="min-w-0">
@@ -166,7 +166,7 @@ const Contact = () => {
                 required
                 placeholder="Tu nombre"
                 autoComplete="name"
-                className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-[#a3e635]/60 focus-visible:border-[#a3e635]/60"
               />
             </div>
             <div className="space-y-2">
@@ -178,7 +178,7 @@ const Contact = () => {
                 onChange={(e) => setEmail(e.target.value)}
                 placeholder="opcional"
                 autoComplete="email"
-                className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-[#a3e635]/60 focus-visible:border-[#a3e635]/60"
               />
             </div>
             <div className="space-y-2">
@@ -188,7 +188,7 @@ const Contact = () => {
                 value={message}
                 onChange={(e) => setMessage(e.target.value)}
                 required
-                className="min-h-[140px] rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                className="min-h-[140px] rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-[#a3e635]/60 focus-visible:border-[#a3e635]/60"
                 placeholder="¿En qué te ayudamos?"
               />
             </div>

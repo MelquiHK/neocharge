@@ -1,4 +1,5 @@
 import { Hero } from "@/components/sections/Hero";
+import { AppBanner } from "@/components/AppBanner";
 import { TrustStrip } from "@/components/sections/TrustStrip";
 import { FeaturedProducts } from "@/components/sections/FeaturedProducts";
 import { Categories } from "@/components/sections/Categories";
@@ -22,6 +23,7 @@ const Index = () => {
       <HowToBuy />
       <FAQ />
       <CTA />
+      <AppBanner />
     </>
   );
 };
