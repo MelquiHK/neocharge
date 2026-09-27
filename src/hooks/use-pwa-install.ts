@@ -10,10 +10,26 @@ let deferredPrompt: BeforeInstallPromptEvent | null = null;
 
 function detectInstalled(): boolean {
   if (typeof window === "undefined") return false;
-  return (
-    window.matchMedia("(display-mode: standalone)").matches ||
-    (window.navigator as unknown as { standalone?: boolean }).standalone === true
-  );
+  // PWA instalada (Android/escritorio)
+  if (window.matchMedia("(display-mode: standalone)").matches) return true;
+  // iOS "Añadir a pantalla de inicio"
+  if ((window.navigator as unknown as { standalone?: boolean }).standalone === true)
+    return true;
+  // App nativa (APK Capacitor): el WebView no reporta display-mode,
+  // pero el puente de Capacitor sí sabe que corre en nativo.
+  const cap = (
+    window as unknown as { Capacitor?: { isNativePlatform?: () => boolean } }
+  ).Capacitor;
+  if (cap && typeof cap.isNativePlatform === "function") {
+    try {
+      if (cap.isNativePlatform()) return true;
+    } catch {
+      /* noop */
+    }
+  }
+  // Cinturón y tirantes: WebView de Android
+  if (/; wv\)/i.test(navigator.userAgent)) return true;
+  return false;
 }
 
 /**
