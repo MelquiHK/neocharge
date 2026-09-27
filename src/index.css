@@ -64,15 +64,15 @@
     --shadow-md: 0 8px 32px rgba(31, 41, 55, 0.08), 0 2px 4px hsl(222 30% 11% / 0.04);
     --shadow-lg: 0 12px 40px rgba(31, 41, 55, 0.12), 0 4px 12px hsl(222 30% 11% / 0.05);
     --shadow-xl: 0 20px 60px rgba(31, 41, 55, 0.16), 0 8px 24px hsl(222 30% 11% / 0.06);
-    --shadow-glow: 0 0 24px hsl(78 82% 40% / 0.45);
-    --shadow-accent-glow: 0 0 24px hsl(78 85% 55% / 0.40);
+    --shadow-glow: 0 0 24px hsl(222 89% 55% / 0.45);
+    --shadow-accent-glow: 0 0 24px hsl(222 100% 70% / 0.40);
 
     --transition-base: cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Sidebar (legacy shadcn) */
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 35% 14%;
-    --sidebar-primary: 78 82% 40%;
+    --sidebar-primary: 222 89% 55%;
     --sidebar-primary-foreground: 222 35% 14%;
     --sidebar-accent: 220 20% 93%;
     --sidebar-accent-foreground: 222 30% 22%;
@@ -224,8 +224,98 @@
     @apply my-4 h-px bg-gradient-to-r from-transparent via-slate-300/70 to-transparent;
   }
 
+  /* =========================================
+     PREMIUM — utilidades de composición (2026-09-27)
+     Jerarquía expresiva sin romper el lenguaje vidrio+azul
+     ========================================= */
+
+  /* Eyebrow refinada: píldora de vidrio con punto pulsante */
+  .nc-eyebrow {
+    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.18em];
+    @apply border border-brand-400/30 bg-white/60 text-brand-800 backdrop-blur-xl;
+    box-shadow: 0 4px 16px hsl(222 89% 55% / 0.10);
+  }
+  .nc-eyebrow .nc-eyebrow-dot {
+    @apply w-1.5 h-1.5 rounded-full bg-brand-600 animate-pulse shrink-0;
+  }
+
+  /* Titular display expresivo */
+  .nc-display {
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+    @apply font-bold tracking-[-0.03em] leading-[1.02] text-balance;
+  }
+  .nc-display-xl {
+    font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
+    @apply font-bold tracking-[-0.04em] leading-[0.98] text-balance;
+    font-size: clamp(2.75rem, 7vw, 5.5rem);
+  }
+
+  /* Degradado de titular premium: tinta → azul profundo */
+  .nc-title-premium {
+    @apply bg-gradient-to-br from-slate-950 via-slate-800 to-brand-700 bg-clip-text text-transparent;
+  }
+
+  /* Espaciado generoso de sección */
+  .nc-section {
+    @apply py-16 md:py-24;
+  }
+
+  /* Chip de vidrio flotante */
+  .nc-chip {
+    @apply inline-flex items-center gap-2 rounded-2xl border border-white/60 bg-white/70 backdrop-blur-xl px-4 py-2.5;
+    box-shadow: 0 12px 32px rgba(31, 41, 55, 0.12);
+  }
+
+  /* Tarjeta premium: vidrio con borde luminoso superior y hover elevado */
+  .nc-card-premium {
+    @apply relative rounded-[1.75rem] border border-white/70 bg-white/65 backdrop-blur-2xl overflow-hidden;
+    box-shadow: 0 8px 32px rgba(31, 41, 55, 0.08);
+    transition: transform 0.5s var(--transition-base), box-shadow 0.5s var(--transition-base), border-color 0.5s;
+  }
+  .nc-card-premium::before {
+    content: '';
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 1px;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
+    pointer-events: none;
+  }
+  .nc-card-premium:hover {
+    transform: translateY(-6px);
+    border-color: hsl(222 89% 55% / 0.35);
+    box-shadow: 0 24px 64px rgba(31, 41, 55, 0.14), 0 0 32px hsl(222 89% 55% / 0.12);
+  }
+
+  /* Número fantasma decorativo */
+  .nc-ghost-num {
+    font-family: 'Space Grotesk', sans-serif;
+    @apply font-bold select-none leading-none text-transparent;
+    -webkit-text-stroke: 1.5px hsl(222 89% 55% / 0.22);
+  }
+
+  /* Subrayado animado para enlaces de navegación */
+  .nc-link-underline {
+    @apply relative;
+  }
+  .nc-link-underline::after {
+    content: '';
+    position: absolute;
+    left: 1rem;
+    right: 1rem;
+    bottom: 4px;
+    height: 2px;
+    border-radius: 2px;
+    background: linear-gradient(90deg, hsl(222 89% 55%), hsl(222 100% 70%));
+    transform: scaleX(0);
+    transform-origin: left;
+    transition: transform 0.35s var(--transition-base);
+  }
+  .nc-link-underline:hover::after {
+    transform: scaleX(1);
+  }
+
   .text-gradient {
-    background: linear-gradient(120deg, #0f172a 0%, #334155 55%, #678d12 100%);
+    background: linear-gradient(120deg, #0f172a 0%, #334155 55%, #1d4ed8 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

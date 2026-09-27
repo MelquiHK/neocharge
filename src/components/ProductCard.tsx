@@ -81,7 +81,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
   return (
     <div
       className={cn(
-        "group relative rounded-3xl overflow-hidden transition-all duration-500 glass border-white/70 hover:border-brand-400/60 hover:shadow-glow-brand-sm hover:-translate-y-1.5 flex flex-col h-full",
+        "group nc-card-premium flex flex-col h-full",
         variant === "featured" && "lg:col-span-2",
       )}
     >
@@ -113,7 +113,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                     decoding="async"
                     className={cn(
                       "absolute inset-0 w-full h-full object-cover transition-all duration-700",
-                      "group-hover:scale-120",
+                      "group-hover:scale-110",
                       hoverImage && "group-hover:opacity-0",
                     )}
                   />
@@ -140,12 +140,12 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
               {/* Top Badges */}
               <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
                 {discount && (
-                  <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold shadow-lifted animate-bounce-in">
+                  <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold shadow-lifted animate-bounce-in">
                     -{discount}%
                   </div>
                 )}
                 {product.is_featured && !discount && (
-                  <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-brand-500 to-brand-700 text-white text-xs font-bold shadow-lifted animate-bounce-in">
+                  <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 text-white text-xs font-bold shadow-glow-brand-sm animate-bounce-in">
                     ⭐ Destacado
                   </div>
                 )}
@@ -221,25 +221,25 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
           </div>
 
           {/* Price Section — mt-auto la pega al fondo para parejar las cards */}
-          <div className="space-y-1.5 mt-auto">
+          <div className="space-y-1 mt-auto pt-1 border-t border-slate-900/5">
             <div className="flex items-baseline gap-2 flex-wrap">
               {display.primary === "USD" ? (
-                <span className="text-xl font-display font-bold text-gray-900 dark:text-white">
+                <span className="text-[1.35rem] font-display font-bold text-slate-950 tracking-tight">
                   {formatPrice(display.usd!)}
                 </span>
               ) : (
-                <span className="text-xl font-display font-bold text-gray-900 dark:text-white">
+                <span className="text-[1.35rem] font-display font-bold text-slate-950 tracking-tight">
                   {formatCUP(display.cup!)}
                 </span>
               )}
               {showCompare && (
-                <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
+                <span className="text-sm text-slate-400 line-through">
                   {formatMoney(product.compare_price!, product.currency)}
                 </span>
               )}
             </div>
             {display.primary === "USD" && display.cup != null && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">≈ {formatCUP(display.cup)}</p>
+              <p className="text-xs text-slate-500">≈ {formatCUP(display.cup)}</p>
             )}
           </div>
 

@@ -419,16 +419,17 @@ const Checkout = () => {
             <Link to="/tienda" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-2">
               <ArrowLeft className="w-4 h-4" /> Volver a la tienda
             </Link>
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
-              Checkout Seguro
-            </div>
-            <h1 className="font-display text-5xl font-bold tracking-tight nc-title-gradient">Finalizar pedido</h1>
-            <p className="text-xl text-muted-foreground font-light max-w-2xl">
+            <span className="nc-eyebrow">
+              <span className="nc-eyebrow-dot" />
+              Checkout seguro
+            </span>
+            <h1 className="nc-display text-5xl md:text-6xl nc-title-premium">Finalizar pedido</h1>
+            <p className="text-lg md:text-xl text-slate-500 font-light max-w-2xl leading-relaxed">
               Recibimos tu pedido directamente. Te contactaremos por WhatsApp para coordinar el envío y el pago.
             </p>
           </header>
 
-          <section className="nc-card p-6 space-y-4 hover-lift">
+          <section className="nc-card-premium !rounded-3xl p-6 md:p-7 space-y-5">
             <h2 className="font-display text-lg font-bold">Tus datos</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -442,7 +443,7 @@ const Checkout = () => {
             </div>
           </section>
 
-          <section className="nc-card p-6 space-y-4 hover-lift">
+          <section className="nc-card-premium !rounded-3xl p-6 md:p-7 space-y-5">
             <h2 className="font-display text-lg font-bold">Método de entrega</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               <button
@@ -714,7 +715,7 @@ const Checkout = () => {
             )}
           </section>
 
-          <section className="nc-card p-6 space-y-3 hover-lift">
+          <section className="nc-card-premium !rounded-3xl p-6 md:p-7 space-y-4">
             <Label htmlFor="notes" className="font-display text-lg font-bold">Notas (opcional)</Label>
             <Textarea
               id="notes"
@@ -735,7 +736,7 @@ const Checkout = () => {
         </form>
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <div className="nc-card p-6 space-y-4 hover-lift">
+          <div className="nc-card-premium !rounded-3xl p-6 md:p-7 space-y-5">
             <h2 className="font-display text-lg font-bold">Resumen del pedido</h2>
 
             <div className="flex items-center justify-between bg-white/70 backdrop-blur p-1.5 rounded-2xl border border-slate-200/70 shadow-inner">

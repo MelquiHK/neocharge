@@ -10,6 +10,7 @@ import { computeDisplayPrice, formatPrice, formatCUP, formatMoney, hasSaneDiscou
 import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { responsiveImage } from "@/lib/responsive-image";
 import { Button } from "@/components/ui/button";
+import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock, Truck } from "lucide-react";
 import { toast } from "sonner";
@@ -311,45 +312,50 @@ export default function ProductDetail() {
       </div>
 
       {/* Main Product Section */}
-      <div className="grid lg:grid-cols-2 gap-12 mb-16">
+      <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 mb-16">
         {/* Images */}
         <div className="space-y-4">
-          <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted">
-            {mainImage ? (
-              (() => {
-                const ri = responsiveImage(mainImage, "(max-width: 1024px) 100vw, 600px");
-                return (
-                  <img
-                    src={ri.src}
-                    srcSet={ri.srcSet}
-                    sizes={ri.sizes}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
-                );
-              })()
-            ) : (
-              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                Sin imagen
-              </div>
-            )}
-            {discount && (
-              <div className="absolute top-4 right-4 bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-sm font-semibold">
-                -{discount}%
-              </div>
-            )}
+          <div className="nc-card-premium !p-3">
+            <div className="relative aspect-square rounded-[1.4rem] overflow-hidden bg-gradient-to-br from-brand-100/60 to-slate-200/60">
+              {mainImage ? (
+                (() => {
+                  const ri = responsiveImage(mainImage, "(max-width: 1024px) 100vw, 600px");
+                  return (
+                    <img
+                      src={ri.src}
+                      srcSet={ri.srcSet}
+                      sizes={ri.sizes}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  );
+                })()
+              ) : (
+                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                  Sin imagen
+                </div>
+              )}
+              {discount && (
+                <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-orange-500 text-white px-3.5 py-1.5 rounded-full text-sm font-bold shadow-lifted">
+                  -{discount}%
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Thumbnails */}
           {images.length > 1 && (
-            <div className="flex gap-2">
+            <div className="flex gap-3">
               {images.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveImage(idx)}
-                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
-                    activeImage === idx ? "border-primary" : "border-transparent"
-                  }`}
+                  className={cn(
+                    "w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 bg-white/60 backdrop-blur",
+                    activeImage === idx
+                      ? "border-brand-500 shadow-glow-brand-sm scale-105"
+                      : "border-white/70 hover:border-brand-400/50 opacity-70 hover:opacity-100",
+                  )}
                 >
                   {(() => {
                     const ri = responsiveImage(img, "64px");
@@ -374,36 +380,40 @@ export default function ProductDetail() {
         {/* Product Info */}
         <div className="space-y-6">
           <div>
-            <h1 className="font-display text-4xl font-bold mb-2">{product.name}</h1>
+            <h1 className="nc-display text-4xl md:text-5xl text-slate-950 mb-3">{product.name}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-              <span className="flex items-center gap-1">
-                ⭐ 4.9 (127 reseñas)
+              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/80 border border-amber-200/70 text-amber-800 font-semibold text-xs">
+                ⭐ 4.9 · 127 reseñas
               </span>
             </div>
           </div>
 
-          {/* Price */}
-          <div className="space-y-2">
-            <div className="flex items-baseline gap-3">
-              <span className="font-display text-3xl font-bold">
+          {/* Price — panel de cristal */}
+          <div className="nc-card-premium !rounded-3xl p-6 space-y-2">
+            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Precio</p>
+            <div className="flex items-baseline gap-3 flex-wrap">
+              <span className="nc-display text-4xl md:text-5xl nc-title-premium">
                 {displayPriceLabel(display)}
               </span>
               {showCompare && (
-                <span className="text-lg text-muted-foreground line-through">
+                <span className="text-lg text-slate-400 line-through">
                   {formatMoney(Number(product.compare_price), product.currency)}
                 </span>
               )}
             </div>
             {displayConvertedLine(display) && (
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-slate-500">
                 {displayConvertedLine(display)}
               </p>
             )}
-          </div>
-
-          {/* Stock Status */}
-          <div className={`text-sm font-semibold ${outOfStock ? "text-destructive" : "text-green-600"}`}>
-            {outOfStock ? "Agotado" : `${product.stock} disponibles`}
+            <div className={cn("text-sm font-semibold pt-1", outOfStock ? "text-destructive" : "text-emerald-600")}>
+              {outOfStock ? "Agotado" : (
+                <span className="inline-flex items-center gap-1.5">
+                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
+                  {product.stock} disponibles
+                </span>
+              )}
+            </div>
           </div>
 
           {/* Description */}

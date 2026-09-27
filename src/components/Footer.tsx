@@ -16,22 +16,35 @@ export function Footer() {
           (Antes había un "newsletter" que no guardaba los correos en ningún lado:
           se reemplazó por un CTA honesto al WhatsApp del negocio.) */}
       <div className="container-page pt-16 pb-12">
-        <div className="rounded-3xl bg-gradient-primary p-8 md:p-12 shadow-glow text-primary-foreground overflow-hidden relative">
-          <div className="absolute -top-20 -right-20 w-64 h-64 rounded-full bg-accent/30 blur-3xl" />
-          <div className="absolute -bottom-20 -left-20 w-64 h-64 rounded-full bg-primary-glow/40 blur-3xl" />
-          <div className="relative grid md:grid-cols-2 gap-8 items-center">
-            <div>
-              <h3 className="font-display text-3xl md:text-4xl font-bold mb-2">
-                Novedades y Ofertas
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-8 md:p-12 shadow-glow-brand text-white">
+          <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/20 blur-3xl" aria-hidden />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-brand-300/40 blur-3xl" aria-hidden />
+          <div
+            className="absolute inset-0 opacity-[0.08] pointer-events-none"
+            aria-hidden
+            style={{
+              backgroundImage:
+                "linear-gradient(rgba(255,255,255,0.9) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.9) 1px, transparent 1px)",
+              backgroundSize: "44px 44px",
+            }}
+          />
+          <div className="relative grid md:grid-cols-[1.4fr_1fr] gap-8 items-center">
+            <div className="space-y-3">
+              <span className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-white/15 border border-white/25 text-[11px] font-bold uppercase tracking-[0.18em] backdrop-blur-sm">
+                <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" />
+                Ofertas directas
+              </span>
+              <h3 className="nc-display text-3xl md:text-[2.75rem] text-white">
+                Novedades y ofertas, sin spam
               </h3>
-              <p className="text-primary-foreground/85 text-base md:text-lg">
+              <p className="text-white/85 text-base md:text-lg font-light max-w-lg">
                 Escríbenos por WhatsApp y te avisamos de ofertas exclusivas,
                 nuevos productos y consejos.
               </p>
             </div>
             <div className="flex md:justify-end">
-              <Button asChild variant="electric" size="lg" className="h-12 rounded-full px-6">
-                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer">
+              <Button asChild size="lg" className="rounded-2xl px-7 py-4 bg-white text-brand-700 font-bold shadow-xl hover:bg-brand-50 hover:-translate-y-0.5 transition-all duration-300 text-base">
+                <a href={WHATSAPP_URL} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
                   <MessageCircle className="w-5 h-5" /> Escríbenos por WhatsApp
                 </a>
               </Button>

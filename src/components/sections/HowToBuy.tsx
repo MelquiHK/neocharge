@@ -1,6 +1,7 @@
 import { Link } from "react-router-dom";
 import { ArrowRight, Banknote, MessageCircle, ShieldCheck, ShoppingBag } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { SectionHeading } from "@/components/sections/SectionHeading";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
@@ -27,17 +28,11 @@ export function HowToBuy() {
   return (
     <section ref={ref} className={cn("py-12 md:py-16 nc-section-wash reveal", visible && "is-visible")}>
       <div className="container-page">
-        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-200/70 text-brand-800 border border-brand-400/30 text-xs font-bold uppercase tracking-widest">
-            Compra fácil
-          </div>
-          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
-            Comprar es así de simple
-          </h2>
-          <p className="text-muted-foreground text-lg font-light">
-            Sin cuentas complicadas ni pagos por adelantado. En tres pasos lo tienes en tus manos.
-          </p>
-        </div>
+        <SectionHeading
+          eyebrow="Compra fácil"
+          title="Comprar es así de simple"
+          description="Sin cuentas complicadas ni pagos por adelantado. En tres pasos lo tienes en tus manos."
+        />
 
         <div className="relative grid md:grid-cols-3 gap-6">
           {/* línea conectora en desktop */}

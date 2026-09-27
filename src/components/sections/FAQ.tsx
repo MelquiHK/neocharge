@@ -8,6 +8,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
+import { SectionHeading } from "@/components/sections/SectionHeading";
 
 const faqs = [
   {
@@ -49,14 +50,7 @@ export function FAQ() {
   return (
     <section ref={ref} className={cn("py-12 md:py-16 nc-section-wash reveal", visible && "is-visible")}>
       <div className="container-page max-w-4xl">
-        <div className="text-center mb-10 md:mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-200/70 text-brand-800 border border-brand-400/30 text-xs font-bold uppercase tracking-widest">
-            Centro de ayuda
-          </div>
-          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
-            Resolvemos tus dudas
-          </h2>
-        </div>
+        <SectionHeading eyebrow="Centro de ayuda" title="Resolvemos tus dudas" />
 
         <Accordion type="single" collapsible className="space-y-3">
           {faqs.map((f, i) => (

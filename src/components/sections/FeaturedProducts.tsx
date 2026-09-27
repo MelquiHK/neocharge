@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard, type Product } from "@/components/ProductCard";
+import { SectionHeading } from "@/components/sections/SectionHeading";
 import { supabase } from "@/integrations/supabase/client";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
@@ -36,18 +37,13 @@ export function FeaturedProducts() {
     <section ref={ref} className={cn("py-12 md:py-16 reveal", visible && "is-visible")}>
       <div className="container-page">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 md:mb-12">
-          <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-200/70 text-brand-800 border border-brand-400/30 text-xs font-bold uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-brand-600 animate-pulse" />
-              Nuestros productos
-            </div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
-              Productos destacados
-            </h2>
-            <p className="text-muted-foreground text-lg font-light">
-              Cargadores, audio y piezas con garantía, listos para entrega en La Habana.
-            </p>
-          </div>
+          <SectionHeading
+            align="left"
+            eyebrow="Nuestros productos"
+            title="Productos destacados"
+            description="Cargadores, audio y piezas con garantía, listos para entrega en La Habana."
+            className="!mb-0"
+          />
           <Button asChild variant="outline" className="self-start md:self-end rounded-xl hover:-translate-y-0.5 transition-transform duration-300">
             <Link to="/tienda" className="flex items-center gap-2">
               Ver todo <ArrowRight className="w-4 h-4" />
