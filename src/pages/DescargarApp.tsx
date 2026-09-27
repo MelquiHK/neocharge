@@ -15,7 +15,7 @@ import { Button } from "@/components/ui/button";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
 
 const APK_URL = "/descargas/neocharge-tienda.apk";
-const APK_VERSION = "1.0.9";
+const APK_VERSION = "1.0.10";
 const APK_SIZE = "6.0 MB";
 
 /**
