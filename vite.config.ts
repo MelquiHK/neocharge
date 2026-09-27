@@ -53,7 +53,7 @@ export default defineConfig(({ mode }) => ({
         // se sirven con caché en tiempo de ejecución más abajo.
         globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest}'],
         cleanupOutdatedCaches: true,
-        maximumFileSizeToCacheInBytes: 1024 * 1024,
+        maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         runtimeCaching: [
           {
             urlPattern: ({ request }) => request.destination === 'image',
