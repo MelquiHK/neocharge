@@ -92,5 +92,5 @@ export function useDeliveryQuote() {
     [origin, pricePerKm],
   );
 
-  return { pricePerKm, configError, quote, quotedCoords, quoting, quoteError, quoteFor, clearQuote };
+  return { origin, pricePerKm, configError, quote, quotedCoords, quoting, quoteError, quoteFor, clearQuote };
 }
