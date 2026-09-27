@@ -2,7 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Map as MlMap, Marker as MlMarker, NavigationControl } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 import { Button } from "@/components/ui/button";
-import { MapPin, Check } from "lucide-react";
+import { MapPin, Check, Loader2, RefreshCw } from "lucide-react";
 
 interface LatLng {
   lat: number;
@@ -35,12 +35,19 @@ export function LocationPickerMap({ center, initialPoint = null, onPick }: Props
   const containerRef = useRef<HTMLDivElement>(null);
   const mapRef = useRef<MlMap | null>(null);
   const markerRef = useRef<MlMarker | null>(null);
+  const readyRef = useRef(false);
   const [picked, setPicked] = useState<LatLng | null>(initialPoint);
+  const [mapReady, setMapReady] = useState(false);
+  const [mapError, setMapError] = useState(false);
+  /** Cambia para forzar el reintento si el estilo no carga. */
+  const [attempt, setAttempt] = useState(0);
   const onPickRef = useRef(onPick);
   onPickRef.current = onPick;
 
   useEffect(() => {
     if (!containerRef.current || mapRef.current) return;
+    let cancelled = false;
+    readyRef.current = false;
     const map = new MlMap({
       container: containerRef.current,
       style: MAP_STYLE,
@@ -50,6 +57,19 @@ export function LocationPickerMap({ center, initialPoint = null, onPick }: Props
     // Sin zoom con la rueda para no atrapar el scroll de la página
     map.scrollZoom.disable();
     map.addControl(new NavigationControl({ showCompass: false }), "top-right");
+
+    map.on("load", () => {
+      if (cancelled) return;
+      readyRef.current = true;
+      setMapReady(true);
+    });
+    map.on("error", (e) => {
+      // Los fallos de tiles sueltos son normales (reintenta solo); solo el
+      // fallo del estilo/fuente es fatal: e.tile viene vacío en ese caso.
+      const fatal = !e.tile && !readyRef.current;
+      console.error("Error del mapa:", e?.error?.message || e);
+      if (!cancelled && fatal) setMapError(true);
+    });
 
     map.on("click", (e) => {
       const p = { lat: e.lngLat.lat, lng: e.lngLat.lng };
@@ -72,20 +92,45 @@ export function LocationPickerMap({ center, initialPoint = null, onPick }: Props
 
     mapRef.current = map;
     return () => {
+      cancelled = true;
       map.remove();
       mapRef.current = null;
       markerRef.current = null;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [attempt]);
+
+  const retry = () => {
+    setMapError(false);
+    setMapReady(false);
+    setAttempt((a) => a + 1);
+  };
 
   return (
     <div className="space-y-2">
       <div
-        ref={containerRef}
-        className="rounded-xl overflow-hidden border-2 border-border"
+        className="rounded-xl overflow-hidden border-2 border-border relative"
         style={{ height: 280 }}
-      />
+      >
+        <div ref={containerRef} style={{ height: "100%", width: "100%" }} />
+        {!mapReady && !mapError && (
+          <div className="absolute inset-0 flex items-center justify-center bg-[#f2efe9]">
+            <span className="text-xs text-muted-foreground font-semibold flex items-center gap-2">
+              <Loader2 className="w-4 h-4 animate-spin" /> Cargando mapa…
+            </span>
+          </div>
+        )}
+        {mapError && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center gap-2 bg-[#f2efe9] p-4 text-center">
+            <span className="text-xs text-muted-foreground font-semibold">
+              El mapa tardó demasiado en cargar (revisa tu conexión).
+            </span>
+            <Button type="button" variant="outline" size="sm" onClick={retry}>
+              <RefreshCw className="w-3.5 h-3.5" /> Reintentar
+            </Button>
+          </div>
+        )}
+      </div>
       <p className="text-xs text-muted-foreground flex items-center gap-1">
         <MapPin className="w-3.5 h-3.5" />
         {picked ? "Pin colocado. Tócalo de nuevo en el mapa para moverlo." : "Toca el mapa donde vives para colocar el pin."}
