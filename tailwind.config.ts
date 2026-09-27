@@ -19,18 +19,18 @@ export default {
         display: ['"Space Grotesk"', '"Plus Jakarta Sans"', 'sans-serif'],
       },
       colors: {
-        // NeoCharge — verde lima "volt" (acento de marca, heredado de la app Staff) + dorado
-        volt: {
-          50: '#f9fee7',
-          100: '#f0fccd',
-          200: '#e2f99e',
-          300: '#d2f56d',
-          400: '#c2ec3f',
-          500: '#a9d91f',
-          600: '#86b814',
-          700: '#678d12',
-          800: '#557016',
-          900: '#485d16',
+        // NeoCharge — azul característico de la tienda (222 89% 55%) + dorado
+        brand: {
+          50: '#eff6ff',
+          100: '#dbeafe',
+          200: '#bfdbfe',
+          300: '#93c5fd',
+          400: '#60a5fa',
+          500: '#3b82f6',
+          600: '#2663f2',
+          700: '#1d4ed8',
+          800: '#1e40af',
+          900: '#1e3a8a',
         },
         gold: {
           300: '#fcd34d',
@@ -101,10 +101,10 @@ export default {
         'elevated': '0 12px 40px rgba(31, 41, 55, 0.12)',
         'lifted': '0 20px 60px rgba(31, 41, 55, 0.16)',
         'dramatic': '0 20px 40px rgba(0, 0, 0, 0.16)',
-        'glow': '0 0 24px rgba(169, 217, 31, 0.45)',
-        'glow-volt': '0 0 24px rgba(169, 217, 31, 0.45)',
-        'glow-volt-sm': '0 0 12px rgba(169, 217, 31, 0.35)',
-        'glow-accent': '0 0 40px rgba(194, 236, 63, 0.45)',
+        'glow': '0 0 24px rgba(102, 148, 255, 0.45)',
+        'glow-brand': '0 0 24px rgba(102, 148, 255, 0.45)',
+        'glow-brand-sm': '0 0 12px rgba(102, 148, 255, 0.35)',
+        'glow-accent': '0 0 40px rgba(96, 165, 250, 0.45)',
         'card-hover': '0 20px 50px rgba(0, 0, 0, 0.15)',
       },
       spacing: {

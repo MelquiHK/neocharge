@@ -70,7 +70,7 @@ export function Header({ className }: { className?: string }) {
           className={cn(
             "flex items-center justify-between rounded-full transition-all duration-500 px-4 sm:px-6",
             scrolled
-              ? "glass-strong shadow-xl shadow-volt-400/10 h-16 border-white/70"
+              ? "glass-strong shadow-xl shadow-brand-400/10 h-16 border-white/70"
               : "glass h-20",
           )}
         >
@@ -156,7 +156,7 @@ export function Header({ className }: { className?: string }) {
               {itemCount > 0 && (
                 <span
                   className={cn(
-                    "absolute -top-0.5 -right-0.5 min-w-[20px] h-5 px-1 rounded-full bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 text-[10px] font-bold flex items-center justify-center shadow-glow-volt-sm",
+                    "absolute -top-0.5 -right-0.5 min-w-[20px] h-5 px-1 rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white text-[10px] font-bold flex items-center justify-center shadow-glow-brand-sm",
                     bump && "animate-bump",
                   )}
                 >

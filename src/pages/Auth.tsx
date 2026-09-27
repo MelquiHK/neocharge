@@ -97,11 +97,11 @@ const Auth = () => {
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
       <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-volt-300/30 blur-[130px] pointer-events-none"
+        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-brand-300/30 blur-[130px] pointer-events-none"
         aria-hidden
       />
       <div
-        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-volt-200/25 blur-[120px] pointer-events-none"
+        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-brand-200/25 blur-[120px] pointer-events-none"
         aria-hidden
       />
 
@@ -109,7 +109,7 @@ const Auth = () => {
         <div className="max-w-md mx-auto">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-volt-700 mb-8 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-brand-700 mb-8 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Volver al inicio
           </Link>
@@ -144,8 +144,8 @@ const Auth = () => {
                 className={cn(
                   "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
                   mode === "login"
-                    ? "bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm"
-                    : "text-muted-foreground hover:text-volt-800",
+                    ? "bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-glow-brand-sm"
+                    : "text-muted-foreground hover:text-brand-800",
                 )}
               >
                 <LogIn className="w-4 h-4" /> Iniciar
@@ -158,8 +158,8 @@ const Auth = () => {
                 className={cn(
                   "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
                   mode === "signup"
-                    ? "bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm"
-                    : "text-muted-foreground hover:text-volt-800",
+                    ? "bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-glow-brand-sm"
+                    : "text-muted-foreground hover:text-brand-800",
                 )}
               >
                 <UserPlus className="w-4 h-4" /> Crear cuenta

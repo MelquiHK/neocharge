@@ -60,7 +60,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
       const isChunkError = this.state.error ? this.isChunkLoadError(this.state.error) : false;
       return (
         <div className="min-h-screen flex items-center justify-center">
-          <div className="container-page max-w-md text-center space-y-6 glass-strong rounded-3xl p-8 border border-white/70 shadow-glow-volt-sm">
+          <div className="container-page max-w-md text-center space-y-6 glass-strong rounded-3xl p-8 border border-white/70 shadow-glow-brand-sm">
             <div className="flex justify-center">
               <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
                 <AlertCircle className="w-8 h-8 text-destructive" />

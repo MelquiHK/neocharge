@@ -54,7 +54,7 @@ export default function DescargarApp() {
       </Link>
 
       <div className="text-center space-y-4">
-        <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 flex items-center justify-center shadow-glow-volt">
+        <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-brand-300 via-brand-400 to-brand-500 flex items-center justify-center shadow-glow-brand">
           <Smartphone className="w-10 h-10 text-slate-900" />
         </div>
         <h1 className="text-3xl font-extrabold tracking-tight nc-title-gradient">
@@ -87,7 +87,7 @@ export default function DescargarApp() {
         </div>
       </div>
 
-      <div className="mt-8 p-6 glass rounded-3xl border-volt-300/50 text-center space-y-4 shadow-glow-volt-sm">
+      <div className="mt-8 p-6 glass rounded-3xl border-brand-300/50 text-center space-y-4 shadow-glow-brand-sm">
         {installed || accepted ? (
           <p className="flex items-center justify-center gap-2 font-bold text-green-600">
             <CheckCircle2 className="w-5 h-5" /> ¡Ya tienes la app instalada!

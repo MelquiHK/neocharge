@@ -246,7 +246,7 @@ const Blog = () => {
 
       <header className="max-w-3xl mb-12 md:mb-16 space-y-5">
         {newPost && (
-          <div className="glass rounded-3xl border-volt-300/50 p-4">
+          <div className="glass rounded-3xl border-brand-300/50 p-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />

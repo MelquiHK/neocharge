@@ -39,7 +39,7 @@ function ProductCardSkeleton() {
       aria-hidden
       className="rounded-3xl overflow-hidden glass border border-white/60 flex flex-col"
     >
-      <div className="aspect-square nc-water-shine bg-gradient-to-br from-volt-100/70 via-slate-200/60 to-volt-100/70" />
+      <div className="aspect-square nc-water-shine bg-gradient-to-br from-brand-100/70 via-slate-200/60 to-brand-100/70" />
       <div className="p-4 flex flex-col flex-1 gap-3">
         <div className="h-5 rounded-lg bg-slate-200/70 animate-pulse w-11/12" />
         <div className="h-5 rounded-lg bg-slate-200/70 animate-pulse w-2/3" />
@@ -189,7 +189,7 @@ const ShopPage = () => {
           className={cn(
             "px-4 py-2 rounded-full text-sm font-semibold transition-all",
             activeCat === "all"
-              ? "bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm"
+              ? "bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-glow-brand-sm"
               : "bg-secondary text-foreground hover:bg-muted",
           )}
         >
@@ -201,7 +201,7 @@ const ShopPage = () => {
             className={cn(
               "px-4 py-2 rounded-full text-sm font-semibold transition-all",
               activeCat === "favorites"
-                ? "bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm"
+                ? "bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-glow-brand-sm"
                 : "bg-secondary text-foreground hover:bg-muted",
             )}
           >
@@ -215,7 +215,7 @@ const ShopPage = () => {
             className={cn(
               "px-4 py-2 rounded-full text-sm font-semibold transition-all",
               activeCat === c.slug
-                ? "bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm"
+                ? "bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-glow-brand-sm"
                 : "bg-secondary text-foreground hover:bg-muted",
             )}
           >
@@ -226,7 +226,7 @@ const ShopPage = () => {
 
       {/* Grid */}
       {isChargerCategory && !loading && (
-        <div className="mb-6 rounded-3xl border border-volt-300/60 bg-volt-100/60 backdrop-blur p-4 text-sm text-volt-900">
+        <div className="mb-6 rounded-3xl border border-brand-300/60 bg-brand-100/60 backdrop-blur p-4 text-sm text-brand-900">
           La calculadora de compatibilidad sólo aparece en productos de cargadores. Si quieres un cargador ideal, usa esta categoría y valida el modelo que mejor se adapta a tu batería.
         </div>
       )}
@@ -239,7 +239,7 @@ const ShopPage = () => {
       ) : filtered.length === 0 ? (
         <div className="text-center py-20 space-y-4">
           <div className="relative w-24 h-24 mx-auto">
-            <div className="absolute inset-0 -m-3 rounded-full bg-gradient-to-br from-volt-400/30 via-volt-200/20 to-transparent blur-2xl" aria-hidden />
+            <div className="absolute inset-0 -m-3 rounded-full bg-gradient-to-br from-brand-400/30 via-brand-200/20 to-transparent blur-2xl" aria-hidden />
             <div className="relative w-24 h-24 rounded-full bg-gradient-to-br from-secondary to-muted mx-auto flex items-center justify-center border border-border/50 shadow-soft">
               <Search className="w-10 h-10 text-muted-foreground" />
             </div>

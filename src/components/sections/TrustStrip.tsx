@@ -18,7 +18,7 @@ export function TrustStrip() {
       className={cn("py-10 md:py-12 border-b border-white/60 reveal overflow-hidden", visible && "is-visible")}
     >
       <div className="container-page">
-        <p className="text-center text-xs font-bold uppercase tracking-[0.22em] text-volt-700 mb-7">
+        <p className="text-center text-xs font-bold uppercase tracking-[0.22em] text-brand-700 mb-7">
           Compra con confianza
         </p>
         <div className="marquee" aria-label="Ventajas de comprar en NeoCharge">

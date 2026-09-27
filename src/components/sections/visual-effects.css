@@ -41,7 +41,7 @@
   pointer-events: none;
 }
 .nc-wash-a {
-  background: radial-gradient(60% 50% at 72% 18%, rgba(169, 217, 31, 0.28), transparent 70%);
+  background: radial-gradient(60% 50% at 72% 18%, rgba(102, 148, 255, 0.28), transparent 70%);
   animation: nc-wash-pulse 9s ease-in-out infinite;
 }
 .nc-wash-b {
@@ -53,9 +53,9 @@
   50% { opacity: 1; }
 }
 
-/* ---------- Shimmer líquido en el titular (modo claro, volt) ---------- */
+/* ---------- Shimmer líquido en el titular (modo claro, azul) ---------- */
 .nc-text-shimmer {
-  background: linear-gradient(110deg, #65a30d 20%, #a9d91f 40%, #f7fee7 50%, #a9d91f 60%, #65a30d 80%);
+  background: linear-gradient(110deg, #1d4ed8 20%, #3b82f6 40%, #dbeafe 50%, #3b82f6 60%, #1d4ed8 80%);
   background-size: 220% auto;
   -webkit-background-clip: text;
   background-clip: text;

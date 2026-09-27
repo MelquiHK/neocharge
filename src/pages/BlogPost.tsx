@@ -233,7 +233,7 @@ const BlogPost = () => {
               <Link
                 key={r.id}
                 to={`/blog/${r.slug}`}
-                className="group glass rounded-3xl overflow-hidden hover-lift hover:border-volt-300"
+                className="group glass rounded-3xl overflow-hidden hover-lift hover:border-brand-300"
               >
                 {r.image_url ? (
                   <div className="aspect-[16/9] overflow-hidden bg-secondary">

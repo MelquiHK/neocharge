@@ -35,7 +35,7 @@ export function Features() {
     <section ref={ref} className={cn("py-12 md:py-16 reveal", visible && "is-visible")}>
       <div className="container-page">
         <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-volt-200/70 text-volt-800 border border-volt-400/30 text-xs font-bold uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-200/70 text-brand-800 border border-brand-400/30 text-xs font-bold uppercase tracking-widest">
             Por qué NeoCharge
           </div>
           <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
@@ -51,7 +51,7 @@ export function Features() {
             <div
               key={f.title}
               className={cn(
-                "group relative p-7 rounded-3xl overflow-hidden glass border-white/70 hover:border-volt-400/60 hover:shadow-glow-volt-sm transition-all duration-500 hover:-translate-y-1.5 nc-shine-hover",
+                "group relative p-7 rounded-3xl overflow-hidden glass border-white/70 hover:border-brand-400/60 hover:shadow-glow-brand-sm transition-all duration-500 hover:-translate-y-1.5 nc-shine-hover",
                 "reveal",
                 visible && "is-visible",
               )}

@@ -50,7 +50,7 @@ export function FAQ() {
     <section ref={ref} className={cn("py-12 md:py-16 nc-section-wash reveal", visible && "is-visible")}>
       <div className="container-page max-w-4xl">
         <div className="text-center mb-10 md:mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-volt-200/70 text-volt-800 border border-volt-400/30 text-xs font-bold uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-200/70 text-brand-800 border border-brand-400/30 text-xs font-bold uppercase tracking-widest">
             Centro de ayuda
           </div>
           <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
@@ -64,7 +64,7 @@ export function FAQ() {
               key={f.q}
               value={`item-${i}`}
               className={cn(
-                "border border-white/70 glass rounded-2xl px-5 hover:border-volt-400/50 transition-all duration-300 data-[state=open]:border-volt-400/60 data-[state=open]:shadow-glow-volt-sm",
+                "border border-white/70 glass rounded-2xl px-5 hover:border-brand-400/50 transition-all duration-300 data-[state=open]:border-brand-400/60 data-[state=open]:shadow-glow-brand-sm",
                 "reveal",
                 visible && "is-visible",
               )}

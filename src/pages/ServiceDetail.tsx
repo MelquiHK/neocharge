@@ -28,7 +28,7 @@ const serviceTypeLabels = {
   },
   request: {
     label: "Pedido / Solicitud",
-    badgeClass: "bg-volt-200/60 text-volt-900 ring-volt-300/60",
+    badgeClass: "bg-brand-200/60 text-brand-900 ring-brand-300/60",
     action: "Pedir servicio",
     hint: "Solicita este servicio por WhatsApp y te contactaremos para confirmar detalles, tiempos y coordinación.",
   },
@@ -135,12 +135,12 @@ export default function ServiceDetail() {
               <div className="nc-beam" aria-hidden />
               <div className="nc-wash-a" aria-hidden />
               <div
-                className="absolute -top-32 -right-32 w-[380px] h-[380px] rounded-full bg-volt-300/40 blur-[100px] pointer-events-none"
+                className="absolute -top-32 -right-32 w-[380px] h-[380px] rounded-full bg-brand-300/40 blur-[100px] pointer-events-none"
                 aria-hidden
               />
               <div className="relative p-8 md:p-12 lg:p-14">
                 <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <span className="inline-flex items-center gap-1.5 rounded-full glass border-volt-300/50 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-volt-800">
+                  <span className="inline-flex items-center gap-1.5 rounded-full glass border-brand-300/50 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-brand-800">
                     <Tag className="w-3.5 h-3.5" /> {service.category ?? "General"}
                   </span>
                   <span className={cn("rounded-full px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] ring-1 backdrop-blur-md", typeMeta.badgeClass)}>

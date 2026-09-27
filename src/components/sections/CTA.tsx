@@ -9,7 +9,7 @@ export function CTA() {
   return (
     <section ref={ref} className={cn("py-12 md:py-16 nc-section-wash reveal", visible && "is-visible")}>
       <div className="container-page">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-volt-200 via-volt-300 to-volt-400 p-10 md:p-16 lg:p-20 text-center text-slate-900 shadow-glow-volt border border-volt-400/40 nc-beam-host">
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-200 via-brand-300 to-brand-400 p-10 md:p-16 lg:p-20 text-center text-slate-900 shadow-glow-brand border border-brand-400/40 nc-beam-host">
           <div className="nc-beam" aria-hidden />
           <div
             className="absolute inset-0 opacity-[0.10] pointer-events-none"
@@ -21,10 +21,10 @@ export function CTA() {
             }}
           />
           <div className="absolute -top-40 -right-40 w-[420px] h-[420px] rounded-full bg-white/50 blur-[100px] animate-pulse-glow pointer-events-none" aria-hidden />
-          <div className="absolute -bottom-40 -left-40 w-[420px] h-[420px] rounded-full bg-volt-100/60 blur-[100px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "2s" }} aria-hidden />
+          <div className="absolute -bottom-40 -left-40 w-[420px] h-[420px] rounded-full bg-brand-100/60 blur-[100px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "2s" }} aria-hidden />
 
           <div className="relative max-w-3xl mx-auto space-y-6 md:space-y-7">
-            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-white/60 text-volt-900 text-xs font-bold uppercase tracking-[0.18em]">
+            <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass border-white/60 text-brand-900 text-xs font-bold uppercase tracking-[0.18em]">
               <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" aria-hidden />
               NeoCharge · La Habana
             </div>
@@ -52,7 +52,7 @@ export function CTA() {
                 asChild
                 variant="outline"
                 size="xl"
-                className="border-slate-900/20 bg-white/50 text-slate-900 backdrop-blur-md hover:bg-white/70 hover:border-volt-600/50 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
+                className="border-slate-900/20 bg-white/50 text-slate-900 backdrop-blur-md hover:bg-white/70 hover:border-brand-600/50 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
               >
                 <a
                   href="https://wa.me/5363180910?text=Hola%2C%20quiero%20asesor%C3%ADa%20sobre%20un%20producto%20de%20NeoCharge"

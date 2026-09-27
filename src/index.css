@@ -3,9 +3,9 @@
 @tailwind utilities;
 
 /* =========================================
-   NEOCHARGE — Sistema de diseño "vidrio y volt"
+   NEOCHARGE — Sistema de diseño "vidrio" (glassmorphism)
    Tienda de electrónica · La Habana, Cuba
-   Estilo: claro, glassmorphism, acento verde volt/lima
+   Estilo: claro, glassmorphism, acento azul característico
    (lenguaje visual heredado de la app NeoCharge Staff)
    Todos los colores en HSL
    ========================================= */
@@ -22,15 +22,15 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 35% 14%;
 
-    /* Marca: verde volt/lima (como la app Staff) */
-    --primary: 78 82% 40%;           /* volt-600 #86b814 */
-    --primary-foreground: 222 35% 14%;
-    --primary-glow: 78 82% 59%;      /* volt-400 #c2ec3f */
+    /* Marca: azul característico de la tienda */
+    --primary: 222 89% 55%;            /* #2663f2 */
+    --primary-foreground: 0 0% 100%;
+    --primary-glow: 222 100% 70%;      /* #6694ff */
 
-    /* Acento: tinte volt suave */
-    --accent: 78 80% 90%;
-    --accent-foreground: 78 72% 26%;
-    --accent-glow: 78 85% 60%;
+    /* Acento: tinte azul suave */
+    --accent: 222 90% 94%;
+    --accent-foreground: 222 72% 30%;
+    --accent-glow: 222 95% 68%;
 
     /* Secundarios suaves */
     --secondary: 220 20% 93%;
@@ -42,20 +42,20 @@
     --destructive: 0 84% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 78 72% 34%;
+    --success: 142 71% 45%;
     --warning: 38 92% 50%;
 
     --border: 220 18% 88%;
     --input: 220 18% 92%;
-    --ring: 78 75% 42%;
+    --ring: 222 89% 55%;
 
     --radius: 1.25rem;
 
     /* Gradientes */
-    --gradient-primary: linear-gradient(135deg, #c2ec3f 0%, #86b814 100%);
-    --gradient-accent: linear-gradient(135deg, #e2f99e 0%, #d2f56d 100%);
-    --gradient-hero: linear-gradient(160deg, #fbfdff 0%, #f1f5fb 45%, #eef7e4 100%);
-    --gradient-glow: radial-gradient(circle, hsl(78 82% 40% / 0.35) 0%, transparent 70%);
+    --gradient-primary: linear-gradient(135deg, #60a5fa 0%, #2663f2 100%);
+    --gradient-accent: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
+    --gradient-hero: linear-gradient(160deg, #fbfdff 0%, #f1f5fb 45%, #e8f0fe 100%);
+    --gradient-glow: radial-gradient(circle, hsl(222 89% 55% / 0.35) 0%, transparent 70%);
     --gradient-shine: linear-gradient(120deg, transparent 30%, hsl(0 0% 100% / 0.7) 50%, transparent 70%);
 
     /* Sombras suaves multicapa estilo Staff */
@@ -98,12 +98,12 @@
   body {
     @apply text-foreground antialiased;
     /* Fondo claro elegante estilo Staff: base gris-azulada muy clara con
-       resplandores sutiles de volt (lima) y azul, fijos al hacer scroll */
+       resplandores sutiles azules, fijos al hacer scroll */
     background:
-      radial-gradient(600px 400px at 15% 0%, rgba(210, 245, 109, 0.35), transparent 70%),
+      radial-gradient(600px 400px at 15% 0%, rgba(147, 197, 253, 0.35), transparent 70%),
       radial-gradient(700px 500px at 90% 10%, rgba(147, 197, 253, 0.30), transparent 70%),
-      radial-gradient(800px 600px at 50% 110%, rgba(210, 245, 109, 0.22), transparent 70%),
-      linear-gradient(160deg, #fbfdff 0%, #f1f5fb 45%, #eef7e4 100%);
+      radial-gradient(800px 600px at 50% 110%, rgba(96, 165, 250, 0.22), transparent 70%),
+      linear-gradient(160deg, #fbfdff 0%, #f1f5fb 45%, #e8f0fe 100%);
     background-attachment: fixed;
     color: #1e293b;
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
@@ -127,10 +127,10 @@
     outline-offset: 2px;
   }
   ::selection {
-    background: rgba(194, 236, 63, 0.55);
+    background: rgba(96, 165, 250, 0.45);
     color: #1e293b;
   }
-  /* Scrollbar con degradado volt estilo Staff */
+  /* Scrollbar con degradado azul estilo Staff */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -139,13 +139,13 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #c2ec3f, #86b814);
+    background: linear-gradient(180deg, #60a5fa, #2663f2);
     border-radius: 8px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #a9d91f, #678d12);
+    background: linear-gradient(180deg, #3b82f6, #1d4ed8);
     background-clip: content-box;
     border: 2px solid transparent;
   }
@@ -180,7 +180,7 @@
 
   /* ---- Inputs estilo Staff ---- */
   .nc-input {
-    @apply w-full rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 text-slate-800 shadow-inner outline-none backdrop-blur transition placeholder:text-slate-400 focus:border-volt-500 focus:bg-white focus:ring-4 focus:ring-volt-400/25;
+    @apply w-full rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 text-slate-800 shadow-inner outline-none backdrop-blur transition placeholder:text-slate-400 focus:border-brand-500 focus:bg-white focus:ring-4 focus:ring-brand-400/25;
   }
   .nc-label {
     @apply mb-1.5 block text-sm font-semibold text-slate-600;
@@ -191,7 +191,7 @@
     @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-bold transition-all duration-200 active:scale-[0.97] disabled:opacity-50;
   }
   .nc-btn-primary {
-    @apply nc-btn bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm hover:shadow-glow-volt hover:brightness-[1.03];
+    @apply nc-btn bg-gradient-to-br from-brand-300 via-brand-400 to-brand-500 text-white shadow-glow-brand-sm hover:shadow-glow-brand hover:brightness-[1.03];
   }
   .nc-btn-gold {
     @apply nc-btn bg-gradient-to-br from-gold-300 to-gold-500 text-slate-900 shadow-lg shadow-gold-500/30;
@@ -205,12 +205,12 @@
 
   /* ---- Títulos de sección con degradado de texto ---- */
   .nc-title-gradient {
-    @apply bg-gradient-to-r from-slate-900 via-slate-700 to-volt-700 bg-clip-text font-extrabold text-transparent;
+    @apply bg-gradient-to-r from-slate-900 via-slate-700 to-brand-700 bg-clip-text font-extrabold text-transparent;
   }
 
-  /* ---- Mosaico de icono con degradado volt ---- */
+  /* ---- Mosaico de icono con degradado brand ---- */
   .nc-icon-tile {
-    @apply flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-volt-300 to-volt-600 text-slate-900 shadow-lg shadow-volt-400/40;
+    @apply flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-brand-300 to-brand-600 text-white shadow-lg shadow-brand-400/40;
   }
   .nc-icon-tile-sm {
     @apply nc-icon-tile h-9 w-9;
@@ -238,7 +238,7 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    filter: drop-shadow(0 0 10px rgba(169, 217, 31, 0.35));
+    filter: drop-shadow(0 0 10px rgba(102, 148, 255, 0.35));
   }
 
   .glow-primary {
@@ -308,8 +308,8 @@
   }
 
   @keyframes glow-pulse {
-    0%, 100% { filter: drop-shadow(0 0 5px rgba(169, 217, 31, 0.4)); }
-    50% { filter: drop-shadow(0 0 20px rgba(169, 217, 31, 0.8)); }
+    0%, 100% { filter: drop-shadow(0 0 5px rgba(102, 148, 255, 0.4)); }
+    50% { filter: drop-shadow(0 0 20px rgba(102, 148, 255, 0.8)); }
   }
 
   /* Marquee */
@@ -416,7 +416,7 @@
 
 /* Radial gradient overlay */
 .bg-radial-gradient {
-  background: radial-gradient(circle at 50% 50%, rgba(169, 217, 31, 0.10), transparent);
+  background: radial-gradient(circle at 50% 50%, rgba(102, 148, 255, 0.10), transparent);
 }
 
 /* Perspective for 3D effects */
@@ -427,7 +427,7 @@
 /* Light gradient for text */
 @layer utilities {
   .text-glow {
-    filter: drop-shadow(0 0 8px rgba(169, 217, 31, 0.4));
+    filter: drop-shadow(0 0 8px rgba(102, 148, 255, 0.4));
   }
 
   .animate-cart-pop {
@@ -435,7 +435,7 @@
   }
 
   .text-glow-lg {
-    filter: drop-shadow(0 0 16px rgba(169, 217, 31, 0.6));
+    filter: drop-shadow(0 0 16px rgba(102, 148, 255, 0.6));
   }
 
   .backdrop-blur-xl {
@@ -472,7 +472,7 @@
 
   .hover-lift:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 50px rgba(169, 217, 31, 0.2);
+    box-shadow: 0 20px 50px rgba(102, 148, 255, 0.2);
   }
 
   .shine {
