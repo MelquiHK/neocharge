@@ -7,7 +7,6 @@ import { HowToBuy } from "@/components/sections/HowToBuy";
 import { FAQ } from "@/components/sections/FAQ";
 import { CTA } from "@/components/sections/CTA";
 import { useSEO } from "@/hooks/use-seo";
-import "@/components/sections/visual-effects.css";
 
 const Index = () => {
   useSEO("home");

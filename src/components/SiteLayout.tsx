@@ -2,7 +2,6 @@ import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartSheet } from "@/components/CartSheet";
 import { InstallAppBubble } from "@/components/InstallAppBubble";
-import { AmbientBackground } from "@/components/AmbientBackground";
 import { Outlet } from "react-router-dom";
 import { useCart } from "@/hooks/use-cart";
 import { Info } from "lucide-react";
@@ -12,9 +11,6 @@ export function SiteLayout() {
 
   return (
     <div className="min-h-screen flex flex-col">
-      {/* Fondo blanco pero vivo: aurora, blobs y burbujas de cristal */}
-      <AmbientBackground />
-      <div className="nc-content-above min-h-screen flex flex-col">
       {/* Global Currency Notice */}
       <div className="nc-glasswater border-x-0 border-t-0 py-2 hidden md:block">
         <div className="container-page flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-brand-800">
@@ -30,7 +26,6 @@ export function SiteLayout() {
       <Footer />
       <CartSheet />
       <InstallAppBubble />
-      </div>
     </div>
   );
 }

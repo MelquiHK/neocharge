@@ -72,7 +72,7 @@ export function CartSheet() {
               {items.map((item, index) => (
                 <div
                   key={item.id}
-                  className="nc-rise flex gap-5 p-4 rounded-[1.5rem] glass border-white/70 hover:border-brand-400/60 transition-all duration-300 hover:shadow-glow-brand-sm group"
+                  className="animate-fade-in-up flex gap-5 p-4 rounded-[1.5rem] glass border-white/70 hover:border-brand-400/60 transition-all duration-300 hover:shadow-glow-brand-sm group"
                   style={{ animationDelay: `${Math.min(index * 60, 360)}ms` }}
                 >
                   <div className="w-20 h-20 rounded-xl overflow-hidden bg-secondary shrink-0">

@@ -9,8 +9,7 @@ export function CTA() {
   return (
     <section ref={ref} className={cn("py-12 md:py-16 nc-section-wash reveal", visible && "is-visible")}>
       <div className="container-page">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-700 via-grape-800 to-brand-950 p-10 md:p-16 lg:p-20 text-center text-white shadow-glow-brand nc-beam-host">
-          <div className="nc-beam" aria-hidden />
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-700 via-grape-800 to-brand-950 p-10 md:p-16 lg:p-20 text-center text-white shadow-glow-brand">
           <div
             className="absolute inset-0 opacity-[0.07] pointer-events-none"
             aria-hidden
@@ -20,12 +19,10 @@ export function CTA() {
               backgroundSize: "44px 44px",
             }}
           />
-          <div className="absolute -top-40 -right-40 w-[420px] h-[420px] rounded-full bg-grape-400/40 blur-[100px] animate-pulse-glow pointer-events-none" aria-hidden />
-          <div className="absolute -bottom-40 -left-40 w-[420px] h-[420px] rounded-full bg-white/15 blur-[100px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "2s" }} aria-hidden />
 
           <div className="relative max-w-3xl mx-auto space-y-6 md:space-y-7">
             <span className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full bg-white/12 border border-white/25 text-white text-[11px] font-bold uppercase tracking-[0.18em] backdrop-blur-sm">
-              <span className="w-1.5 h-1.5 rounded-full bg-white animate-pulse" aria-hidden />
+              <span className="w-1.5 h-1.5 rounded-full bg-white" aria-hidden />
               NeoCharge · La Habana
             </span>
             <h2 className="nc-display text-4xl md:text-6xl text-white">

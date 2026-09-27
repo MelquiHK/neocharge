@@ -95,10 +95,6 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
             )}>
               {/* Reflejo suave estático tipo "agua" sobre la foto */}
               <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/20 via-white/5 to-transparent dark:from-white/10 pointer-events-none z-[5]" />
-              {/* Animated background glow */}
-              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                <div className="absolute inset-0 bg-gradient-to-br from-brand-400/15 via-transparent to-brand-600/15"></div>
-              </div>
 
               {/* Main Image */}
               {mainImage && (() => {
@@ -164,7 +160,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
           </Link>
 
           {/* Quick Add Button — visible en táctil, revelado en hover en escritorio */}
-          <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/50 nc-liquid-soft p-2 translate-y-[130%] group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500 z-30 pointer-events-auto shadow-xl">
+          <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/50 nc-glasswater p-2 translate-y-[130%] group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500 z-30 pointer-events-auto shadow-xl">
             <Button
               type="button"
               onClick={handleAdd}

@@ -15,33 +15,24 @@ export function TrustStrip() {
   return (
     <section
       ref={ref}
-      className={cn("py-10 md:py-12 border-b border-white/60 reveal overflow-hidden", visible && "is-visible")}
+      className={cn("py-10 md:py-12 border-b border-slate-900/[0.07] reveal", visible && "is-visible")}
     >
       <div className="container-page">
         <p className="text-center text-xs font-bold uppercase tracking-[0.22em] text-brand-700 mb-7">
           Compra con confianza
         </p>
-        <div className="marquee" aria-label="Ventajas de comprar en NeoCharge">
-          <div className="marquee-track items-center">
-            {[...props, ...props].map((p, i) => (
-              <div
-                key={i}
-                aria-hidden={i >= props.length}
-                className="flex items-center gap-3 whitespace-nowrap group"
-              >
-                <span className="nc-icon-tile-sm group-hover:brightness-[1.05] transition-all duration-300">
-                  <p.icon className="w-5 h-5" />
-                </span>
-                <span className="font-display text-lg md:text-xl font-bold text-slate-700 uppercase tracking-tight">
-                  {p.text}
-                </span>
-                <span className="text-primary/25 mx-2 text-2xl leading-none" aria-hidden>
-                  •
-                </span>
-              </div>
-            ))}
-          </div>
-        </div>
+        <ul className="flex flex-wrap items-center justify-center gap-x-10 gap-y-5">
+          {props.map((p) => (
+            <li key={p.text} className="flex items-center gap-3">
+              <span className="nc-icon-tile-sm">
+                <p.icon className="w-5 h-5" />
+              </span>
+              <span className="font-display text-base md:text-lg font-bold text-slate-700 uppercase tracking-tight">
+                {p.text}
+              </span>
+            </li>
+          ))}
+        </ul>
       </div>
     </section>
   );

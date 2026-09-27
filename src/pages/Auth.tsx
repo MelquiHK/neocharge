@@ -10,7 +10,6 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { ArrowLeft, LogIn, UserPlus } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
-import "@/components/sections/visual-effects.css";
 
 const Auth = () => {
   const navigate = useNavigate();
@@ -93,17 +92,8 @@ const Auth = () => {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Lavados de color + orbes */}
+      {/* Un único lavado estático tenuísimo en la parte alta. Nada animado. */}
       <div className="nc-wash-a" aria-hidden />
-      <div className="nc-wash-b" aria-hidden />
-      <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-brand-300/30 blur-[130px] pointer-events-none"
-        aria-hidden
-      />
-      <div
-        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-brand-200/25 blur-[120px] pointer-events-none"
-        aria-hidden
-      />
 
       <div className="relative container-page py-10 md:py-16">
         <div className="max-w-md mx-auto">

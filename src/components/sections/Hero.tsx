@@ -18,10 +18,6 @@ interface SpotlightProduct {
 /** El 72V/5A es el más vendido de la tienda: se prioriza como protagonista del hero. */
 const BEST_SELLER_SLUG = "cargador-de-72v-5a";
 
-/** Onda periódica (periodo 720u): el -50% del slide equivale a 2 ondas exactas. */
-const WAVE_PATH =
-  "M0 64 C120 96 240 96 360 64 C480 32 600 32 720 64 C840 96 960 96 1080 64 C1200 32 1320 32 1440 64 C1560 96 1680 96 1800 64 C1920 32 2040 32 2160 64 C2280 96 2400 96 2520 64 C2640 32 2760 32 2880 64 L2880 120 L0 120 Z";
-
 export function Hero() {
   const [spotlight, setSpotlight] = useState<SpotlightProduct | null>(null);
   const [productCount, setProductCount] = useState<number | null>(null);
@@ -67,7 +63,7 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden text-slate-900">
-      {/* Fondo: lavados azules sobre el pastel del body + retícula sutil */}
+      {/* Fondo: un único degradado estático tenuísimo + retícula sutil. Nada animado. */}
       <div className="absolute inset-0 bg-gradient-to-b from-brand-100/70 via-transparent to-transparent" aria-hidden />
       <div
         className="absolute inset-0 opacity-[0.05] pointer-events-none"
@@ -78,11 +74,6 @@ export function Hero() {
           backgroundSize: "44px 44px",
         }}
       />
-      <div className="absolute -top-32 -right-32 w-[28rem] h-[28rem] bg-brand-400/30 rounded-full filter blur-3xl animate-blob pointer-events-none" aria-hidden />
-      <div className="absolute -bottom-40 -left-32 w-[26rem] h-[26rem] bg-brand-300/25 rounded-full filter blur-3xl animate-blob animation-delay-2000 pointer-events-none" aria-hidden />
-      <div className="absolute inset-0 bg-radial-glow opacity-60 pointer-events-none" aria-hidden />
-      <div className="nc-wash-a" aria-hidden />
-      <div className="nc-wash-b" aria-hidden />
 
       <div className="container-page relative pt-14 pb-20 md:pt-20 md:pb-28 lg:pt-24">
         <div className="grid lg:grid-cols-[1.08fr_0.92fr] gap-14 lg:gap-10 items-center">
@@ -96,7 +87,7 @@ export function Hero() {
             <div className="space-y-5">
               <h1 className="nc-display-xl">
                 <span className="block text-slate-950">Energía para tu moto.</span>
-                <span className="block nc-text-shimmer pb-2">
+                <span className="block pb-2 text-transparent bg-clip-text bg-gradient-to-r from-brand-600 via-brand-500 to-grape-600">
                   Confianza para ti.
                 </span>
               </h1>
@@ -151,9 +142,14 @@ export function Hero() {
 
           {/* Columna derecha: producto protagonista en tarjeta de cristal */}
           <div className="relative animate-fade-in-right" style={{ animationDelay: "0.25s" }}>
-            <div className="absolute -inset-8 bg-brand-400/25 blur-3xl rounded-full pointer-events-none" aria-hidden />
+            {/* Resplandor estático tras la tarjeta: degradado radial simple, sin blur animado */}
+            <div
+              className="absolute -inset-10 pointer-events-none"
+              aria-hidden
+              style={{ background: "radial-gradient(closest-side, hsl(222 89% 55% / 0.14), transparent)" }}
+            />
             <div className="nc-card-premium p-4 sm:p-5">
-              <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-brand-100/70 nc-ripple">
+              <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-brand-100/70">
                 {spotlightImage ? (
                   <img
                     src={spotlightImage}
@@ -203,26 +199,20 @@ export function Hero() {
               </div>
             </div>
 
-            {/* Chips flotantes de confianza */}
-            <div className="absolute -top-5 -right-2 sm:-right-5 nc-chip animate-float z-10">
+            {/* Chips flotantes de confianza (cristal de agua, estáticos) */}
+            <div className="absolute -top-5 -right-2 sm:-right-5 nc-chip z-10">
               <span className="nc-icon-tile-sm !h-8 !w-8">
                 <ShieldCheck className="w-4 h-4" />
               </span>
               <span className="text-xs font-bold text-slate-700">Garantía incluida</span>
             </div>
-            <div
-              className="absolute -bottom-5 -left-2 sm:-left-5 nc-chip animate-float z-10"
-              style={{ animationDelay: "1.4s" }}
-            >
+            <div className="absolute -bottom-5 -left-2 sm:-left-5 nc-chip z-10">
               <span className="nc-icon-tile-sm !h-8 !w-8">
                 <Truck className="w-4 h-4" />
               </span>
               <span className="text-xs font-bold text-slate-700">Entrega en La Habana</span>
             </div>
-            <div
-              className="absolute top-1/2 -left-4 sm:-left-8 nc-chip animate-float z-10 hidden md:inline-flex"
-              style={{ animationDelay: "2.2s" }}
-            >
+            <div className="absolute top-1/2 -left-4 sm:-left-8 nc-chip z-10 hidden md:inline-flex">
               <BadgeCheck className="w-4 h-4 text-brand-600" />
               <span className="text-xs font-bold text-slate-700">Prueba al recibir</span>
             </div>
@@ -251,16 +241,6 @@ export function Hero() {
             </div>
           ))}
         </div>
-      </div>
-
-      {/* Divisor de ondas de agua hacia la sección clara siguiente */}
-      <div className="nc-waves" aria-hidden>
-        <svg className="nc-wave nc-wave-b" viewBox="0 0 2880 120" preserveAspectRatio="none">
-          <path d={WAVE_PATH} fill="#ddd6fe" opacity="0.55" />
-        </svg>
-        <svg className="nc-wave nc-wave-a" viewBox="0 0 2880 120" preserveAspectRatio="none">
-          <path d={WAVE_PATH} fill="#ffffff" />
-        </svg>
       </div>
     </section>
   );

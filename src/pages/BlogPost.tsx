@@ -33,7 +33,7 @@ export function PostCoverFallback({
       role="img"
       aria-label={title}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-primary/80 to-accent/70 fx-gradient-pan" />
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-primary/80 to-accent/70" />
       <div className="absolute inset-0 bg-grid opacity-40" />
       <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/10 blur-3xl" />
       <div className="absolute -bottom-12 -left-12 w-56 h-56 rounded-full bg-accent/30 blur-3xl" />

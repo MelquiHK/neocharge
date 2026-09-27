@@ -14,13 +14,11 @@ const NotFound = () => {
   return (
     <div className="container-page py-20 md:py-28">
       <div className="relative max-w-xl mx-auto text-center space-y-6">
-        <div className="absolute inset-x-0 top-0 -z-10 h-64 bg-radial-glow opacity-60" aria-hidden />
-
-        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest fx-float">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
           <Zap className="w-3 h-3" /> Error 404
         </div>
 
-        <div className="font-display font-black leading-none text-gradient-accent fx-gradient-pan text-8xl sm:text-9xl md:text-[10rem]">
+        <div className="font-display font-black leading-none text-gradient-accent text-8xl sm:text-9xl md:text-[10rem]">
           404
         </div>
 

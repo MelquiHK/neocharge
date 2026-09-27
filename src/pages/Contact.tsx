@@ -10,7 +10,6 @@ import { useSEO } from "@/hooks/use-seo";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
-import "@/components/sections/visual-effects.css";
 
 const Contact = () => {
   useSEO("contact");
@@ -60,17 +59,8 @@ const Contact = () => {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Lavados de color + orbes */}
+      {/* Un único lavado estático tenuísimo en la parte alta. Nada animado. */}
       <div className="nc-wash-a" aria-hidden />
-      <div className="nc-wash-b" aria-hidden />
-      <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-brand-300/30 blur-[130px] pointer-events-none"
-        aria-hidden
-      />
-      <div
-        className="absolute top-1/3 -right-40 w-[480px] h-[480px] rounded-full bg-brand-200/25 blur-[120px] pointer-events-none"
-        aria-hidden
-      />
 
       <div ref={ref} className={cn("relative container-page py-14 md:py-24 reveal", visible && "is-visible")}>
         {/* Hero */}

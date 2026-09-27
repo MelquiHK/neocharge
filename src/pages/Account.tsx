@@ -9,7 +9,6 @@ import { Textarea } from "@/components/ui/textarea";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { Package, LogOut, LayoutDashboard, User, Phone, Info, Save, MessageSquare, Wallet, CheckCircle, Clock, Map, Calculator, Send } from "lucide-react";
 import { toast } from "sonner";
-import "@/components/sections/visual-effects.css";
 import { computeSalesTotalsBySeller, type SellerSale } from "@/lib/sales";
 
 interface Order {
@@ -206,7 +205,6 @@ Por favor, revisa mis pagos. ¡Gracias!`;
     return (
       <div className="relative overflow-hidden">
         <div className="nc-wash-a" aria-hidden />
-        <div className="nc-wash-b" aria-hidden />
         <div className="relative container-page py-20 space-y-4">
           <div className="h-8 bg-slate-200/70 rounded animate-pulse w-1/3" />
           <div className="h-4 bg-slate-200/70 rounded animate-pulse w-1/2" />
@@ -223,17 +221,8 @@ Por favor, revisa mis pagos. ¡Gracias!`;
 
   return (
     <div className="relative overflow-hidden">
-      {/* Lavados de color + orbes */}
+      {/* Un único lavado estático tenuísimo en la parte alta. Nada animado. */}
       <div className="nc-wash-a" aria-hidden />
-      <div className="nc-wash-b" aria-hidden />
-      <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-brand-300/30 blur-[130px] pointer-events-none"
-        aria-hidden
-      />
-      <div
-        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-brand-200/25 blur-[120px] pointer-events-none"
-        aria-hidden
-      />
 
       <div className="relative container-page py-12 space-y-8">
         <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-slate-200/70 pb-10">

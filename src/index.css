@@ -80,11 +80,11 @@
     --sidebar-background: 0 0% 100%;
     --sidebar-foreground: 222 35% 14%;
     --sidebar-primary: 222 89% 55%;
-    --sidebar-primary-foreground: 222 35% 14%;
+    --sidebar-primary-foreground: 0 0% 100%;
     --sidebar-accent: 220 20% 93%;
     --sidebar-accent-foreground: 222 30% 22%;
     --sidebar-border: 220 18% 88%;
-    --sidebar-ring: 78 75% 42%;
+    --sidebar-ring: 222 89% 55%;
   }
 }
 
@@ -104,9 +104,8 @@
   }
   body {
     @apply text-foreground antialiased;
-    /* Fondo BLANCO pero vivo: la decoración animada (burbujas de cristal,
-       blobs de color, patrón de puntos) la pone <AmbientBackground /> fijo
-       detrás del contenido. El body queda blanco puro. */
+    /* Fondo BLANCO limpio: sin decoraciones animadas. El cristal de agua
+       (glassmorphism) vive solo en los elementos flotantes de UI. */
     background: #ffffff;
     color: #1e293b;
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
@@ -357,23 +356,24 @@
   }
 
   /* Tarjeta premium: vidrio con borde luminoso superior y hover elevado */
+  /* Tarjeta premium NeoCharge: blanca y limpia, con sombra suave multicapa.
+     Sin backdrop-blur: el cristal de agua vive solo en la UI flotante
+     (navbar, búsqueda, desplegables, carrito, burbujas, chips). */
   .nc-card-premium {
-    @apply relative rounded-[1.75rem] border border-white/70 bg-white/65 backdrop-blur-2xl overflow-hidden;
-    box-shadow: 0 8px 32px rgba(31, 41, 55, 0.08);
-    transition: transform 0.5s var(--transition-base), box-shadow 0.5s var(--transition-base), border-color 0.5s;
-  }
-  .nc-card-premium::before {
-    content: '';
-    position: absolute;
-    inset: 0 0 auto 0;
-    height: 1px;
-    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.9), transparent);
-    pointer-events: none;
+    @apply relative rounded-[1.75rem] border border-slate-900/[0.07] bg-white overflow-hidden;
+    box-shadow:
+      0 1px 2px rgba(15, 23, 42, 0.04),
+      0 10px 28px -12px rgba(15, 23, 42, 0.12),
+      0 28px 56px -32px rgba(38, 99, 242, 0.16);
+    transition: transform 0.35s var(--transition-base), box-shadow 0.35s var(--transition-base), border-color 0.35s var(--transition-base);
   }
   .nc-card-premium:hover {
-    transform: translateY(-6px);
-    border-color: hsl(222 89% 55% / 0.35);
-    box-shadow: 0 24px 64px rgba(31, 41, 55, 0.14), 0 0 32px hsl(222 89% 55% / 0.12);
+    transform: translateY(-4px);
+    border-color: hsl(222 89% 55% / 0.30);
+    box-shadow:
+      0 2px 4px rgba(15, 23, 42, 0.05),
+      0 18px 44px -12px rgba(15, 23, 42, 0.16),
+      0 36px 72px -32px rgba(38, 99, 242, 0.28);
   }
 
   /* Número fantasma decorativo */
@@ -446,11 +446,11 @@
     transform: translateY(-2px);
   }
 
-  .btn-shine {
+  .btn-shine, .nc-btn-shine {
     position: relative;
     overflow: hidden;
   }
-  .btn-shine::after {
+  .btn-shine::after, .nc-btn-shine::after {
     content: '';
     position: absolute;
     inset: 0;
@@ -458,8 +458,42 @@
     transform: translateX(-100%);
     transition: transform 0.8s var(--transition-base);
   }
-  .btn-shine:hover::after {
+  .btn-shine:hover::after, .nc-btn-shine:hover::after {
     transform: translateX(100%);
+  }
+
+  /* Barrido de brillo AL HOVER para tarjetas (transitorio, nada perpetuo).
+     nc-water-shine es el alias usado en fotos de producto. */
+  .nc-shine-hover, .nc-water-shine {
+    position: relative;
+  }
+  .nc-shine-hover::after, .nc-water-shine::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+    background: linear-gradient(115deg, transparent 42%, hsl(0 0% 100% / 0.32) 50%, transparent 58%);
+    transform: translateX(-130%);
+    pointer-events: none;
+    z-index: 1;
+  }
+  .nc-shine-hover:hover::after, .nc-water-shine:hover::after {
+    animation: fx-shine-sweep 0.9s var(--transition-base);
+  }
+
+  /* Lavado estático tenuísimo para la parte alta de páginas interiores.
+     Un solo degradado quieto: nada animado, nada literal. */
+  .nc-wash-a {
+    position: absolute;
+    inset: 0 0 auto 0;
+    height: 32rem;
+    background: linear-gradient(180deg, hsl(222 89% 55% / 0.055), transparent 72%);
+    pointer-events: none;
+  }
+
+  /* Tinte de sección estático y sutil (alternancia de ritmo visual) */
+  .nc-section-wash {
+    background: linear-gradient(180deg, transparent, hsl(222 89% 55% / 0.035) 55%, transparent);
   }
 
   .ring-focus {
@@ -476,8 +510,19 @@
     transform: translateY(0);
   }
 
-  .animate-glow-pulse {
-    animation: glow-pulse 3s infinite ease-in-out;
+
+  /* Entradas transitorias (se disparan una vez al montar / al hacer reveal) */
+  @keyframes fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  @keyframes fade-in-up {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  @keyframes fade-in-right {
+    from { opacity: 0; transform: translateX(32px); }
+    to { opacity: 1; transform: translateX(0); }
   }
 
   .animate-fade-in {
@@ -486,26 +531,19 @@
   .animate-fade-in-up {
     animation: fade-in-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
-
-  @keyframes glow-pulse {
-    0%, 100% { filter: drop-shadow(0 0 5px rgba(102, 148, 255, 0.4)); }
-    50% { filter: drop-shadow(0 0 20px rgba(102, 148, 255, 0.8)); }
+  .animate-fade-in-right {
+    animation: fade-in-right 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
   }
 
-  /* Marquee */
-  .marquee {
-    display: flex;
-    overflow: hidden;
-    -webkit-mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
-            mask-image: linear-gradient(90deg, transparent, #000 10%, #000 90%, transparent);
+
+  /* Pop del corazón de favoritos (transitorio, al alternar) */
+  @keyframes nc-heart-pop {
+    0% { transform: scale(0.4); }
+    55% { transform: scale(1.25); }
+    100% { transform: scale(1); }
   }
-  .marquee-track {
-    display: flex;
-    gap: 3rem;
-    animation: marquee 32s linear infinite;
-    flex-shrink: 0;
-    min-width: 100%;
-  }
+
+
 }
 
 @layer utilities {
@@ -526,15 +564,7 @@
 }
 
 /* Keyframes */
-@keyframes marquee {
-  0% { transform: translateX(0); }
-  100% { transform: translateX(-50%); }
-}
 
-@keyframes float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-12px); }
-}
 
 @keyframes cart-pop {
   0% { transform: scale(0.5); }
@@ -542,45 +572,9 @@
   100% { transform: scale(1); }
 }
 
-@keyframes pulse-glow {
-  0%, 100% { opacity: 0.5; transform: scale(1); }
-  50% { opacity: 0.85; transform: scale(1.05); }
-}
 
-@keyframes spin-slow {
-  from { transform: rotate(0deg); }
-  to { transform: rotate(360deg); }
-}
 
-@keyframes shimmer {
-  0% { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
 
-/* Elevated blob animations for hero */
-@keyframes blob {
-  0%, 100% { 
-    transform: translate(0, 0) scale(1);
-  }
-  33% {
-    transform: translate(30px, -50px) scale(1.1);
-  }
-  66% {
-    transform: translate(-20px, 20px) scale(0.9);
-  }
-}
-
-.animate-blob {
-  animation: blob 7s infinite;
-}
-
-.animation-delay-2000 {
-  animation-delay: 2s;
-}
-
-.animation-delay-4000 {
-  animation-delay: 4s;
-}
 
 /* Premium glassmorphism for dark mode */
 .dark .glass {
@@ -645,166 +639,16 @@
     @apply bg-current text-background transform scale-105;
   }
 
-  .hover-lift {
-    transition: transform 0.3s cubic-bezier(0.22, 1, 0.36, 1), 
-                box-shadow 0.3s cubic-bezier(0.22, 1, 0.36, 1);
-  }
 
-  .hover-lift:hover {
-    transform: translateY(-8px);
-    box-shadow: 0 20px 50px rgba(102, 148, 255, 0.2);
-  }
-
-  .shine {
-    position: relative;
-    overflow: hidden;
-  }
-
-  .shine::after {
-    content: '';
-    position: absolute;
-    top: -50%;
-    left: -50%;
-    width: 200%;
-    height: 200%;
-    background: linear-gradient(45deg, transparent, rgba(255, 255, 255, 0.3), transparent);
-    animation: shine 3s infinite;
-  }
-
-  @keyframes shine {
-    0% {
-      transform: translate(-100%, -100%) rotate(45deg);
-    }
-    100% {
-      transform: translate(100%, 100%) rotate(45deg);
-    }
-  }
 }
 
 /* =========================================
-   NEOCHARGE AMBIENT — fondo blanco pero vivo
-   Burbujas flotantes de cristal, blobs de degradado suaves animados,
-   patrón de puntos sutil y aurora tenue. Solo transform/opacity
-   animados (GPU). Todo se apaga con prefers-reduced-motion.
-   El componente <AmbientBackground /> monta estas capas.
-   ========================================= */
+   NEOCHARGE FX — utilidades visuales (versión limpia)
+   Solo lo que se usa y aporta; nada de animaciones
+   decorativas perpetuas.
 
-.nc-ambient {
-  position: fixed;
-  inset: 0;
-  z-index: 0;
-  overflow: hidden;
-  pointer-events: none;
-  background: #ffffff;
-}
-
-/* Patrón de puntos sutil */
-.nc-ambient-dots {
-  position: absolute;
-  inset: 0;
-  background-image: radial-gradient(rgba(38, 99, 242, 0.10) 1.2px, transparent 1.2px);
-  background-size: 30px 30px;
-  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 20%, transparent 85%);
-          mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 20%, transparent 85%);
-}
-
-/* Aurora tenue superior: azul → morado */
-.nc-ambient-aurora {
-  position: absolute;
-  left: -10%;
-  right: -10%;
-  top: -22%;
-  height: 52%;
-  background:
-    radial-gradient(45% 70% at 30% 40%, rgba(147, 197, 253, 0.35), transparent 70%),
-    radial-gradient(40% 65% at 68% 55%, rgba(196, 181, 253, 0.38), transparent 70%),
-    radial-gradient(30% 55% at 50% 20%, rgba(165, 243, 252, 0.28), transparent 70%);
-  animation: nc-aurora-sway 18s ease-in-out infinite alternate;
-  will-change: transform;
-}
-@keyframes nc-aurora-sway {
-  from { transform: translate3d(-3%, 0, 0) scale(1); }
-  to { transform: translate3d(3%, 2%, 0) scale(1.06); }
-}
-
-/* Blobs de degradado suaves (blur estático, se anima el transform) */
-.nc-ambient-blob {
-  position: absolute;
-  border-radius: 9999px;
-  filter: blur(90px);
-  animation: nc-blob-drift 22s ease-in-out infinite alternate;
-  will-change: transform;
-}
-@keyframes nc-blob-drift {
-  from { transform: translate3d(-6%, -4%, 0) scale(1); }
-  to { transform: translate3d(6%, 5%, 0) scale(1.12); }
-}
-
-/* Burbujas de cristal flotantes */
-.nc-bubble {
-  position: absolute;
-  border-radius: 9999px;
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.12) 42%, transparent 60%),
-    linear-gradient(150deg, rgba(147, 197, 253, 0.20), rgba(196, 181, 253, 0.16) 55%, rgba(255, 255, 255, 0.06));
-  border: 1px solid rgba(255, 255, 255, 0.75);
-  box-shadow:
-    inset 0 2px 6px rgba(255, 255, 255, 0.65),
-    inset 0 -3px 8px rgba(38, 99, 242, 0.08),
-    0 10px 30px rgba(38, 99, 242, 0.10);
-  backdrop-filter: blur(2px);
-  -webkit-backdrop-filter: blur(2px);
-  animation: nc-bubble-float 11s ease-in-out infinite;
-  will-change: transform;
-}
-.nc-bubble-violet {
-  background:
-    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.12) 42%, transparent 60%),
-    linear-gradient(150deg, rgba(196, 181, 253, 0.22), rgba(147, 197, 253, 0.14) 55%, rgba(255, 255, 255, 0.06));
-  box-shadow:
-    inset 0 2px 6px rgba(255, 255, 255, 0.65),
-    inset 0 -3px 8px rgba(124, 58, 237, 0.10),
-    0 10px 30px rgba(124, 58, 237, 0.12);
-}
-@keyframes nc-bubble-float {
-  0%, 100% { transform: translate3d(0, 0, 0); }
-  50% { transform: translate3d(14px, -34px, 0); }
-}
-
-/* Contenido por encima del ambiente */
-.nc-content-above {
-  position: relative;
-  z-index: 1;
-}
-
-@media (prefers-reduced-motion: reduce) {
-  .nc-ambient-aurora,
-  .nc-ambient-blob,
-  .nc-bubble {
-    animation: none !important;
-  }
-}
-
-/* =========================================
-   NEOCHARGE FX — utilidades visuales premium
-   -----------------------------------------
-   Clases opt-in (no se aplican solas): añádelas donde quieras
-   un acabado llamativo sin tocar el resto del diseño.
-   Reglas: solo transform/opacity en las animaciones (nada de
-   blur animado ni filtros costosos). Todo respeta
-   prefers-reduced-motion (ver guarda al final del archivo).
-
-   .fx-glass          → glassmorphism claro (badges, pills)
-   .fx-shine          → barrido de brillo al hover (CTAs, tarjetas)
-   .fx-float          → flotación suave vertical (iconos, badges)
-   .fx-wave           → deriva horizontal suave (capas decorativas)
-   .fx-gradient-pan   → gradiente animado (SUPERFICIES PEQUEÑAS:
-                        texto, badges; no en secciones enteras)
-   .fx-water          → "efecto agua": luz líquida a la deriva tras
-                        el contenido (fondos de sección/paneles).
-                        El contenedor necesita position:relative
-                        (la clase ya lo pone) y overflow-hidden.
-   .fx-delay-1/2/3    → desfases para animaciones escalonadas
+   .fx-glass  → glassmorphism claro (badges, pills)
+   .fx-shine  → barrido de brillo AL HOVER (transitorio)
    ========================================= */
 
 .fx-glass {
@@ -835,77 +679,11 @@
   to { transform: translateX(130%); }
 }
 
-@keyframes fx-float {
-  0%, 100% { transform: translateY(0); }
-  50% { transform: translateY(-10px); }
-}
-.fx-float {
-  animation: fx-float 6s ease-in-out infinite;
-  will-change: transform;
-}
-
-@keyframes fx-wave {
-  0%, 100% { transform: translateX(0); }
-  50% { transform: translateX(-26px); }
-}
-.fx-wave {
-  animation: fx-wave 7s ease-in-out infinite;
-  will-change: transform;
-}
-
-@keyframes fx-gradient-pan {
-  0%, 100% { background-position: 0% 50%; }
-  50% { background-position: 100% 50%; }
-}
-.fx-gradient-pan {
-  background-size: 220% 220%;
-  animation: fx-gradient-pan 9s ease-in-out infinite;
-}
-
-/* Efecto agua: dos focos de luz a la deriva tras el contenido. */
-.fx-water {
-  position: relative;
-  isolation: isolate;
-}
-.fx-water::before {
-  content: "";
-  position: absolute;
-  inset: -35%;
-  z-index: 0;
-  background:
-    radial-gradient(closest-side, hsl(var(--primary) / 0.22), transparent 70%),
-    radial-gradient(closest-side, hsl(var(--accent) / 0.20), transparent 70%);
-  background-repeat: no-repeat;
-  background-size: 55% 55%, 48% 48%;
-  background-position: 18% 28%, 82% 72%;
-  animation: fx-water-drift 16s ease-in-out infinite alternate;
-  pointer-events: none;
-}
-.fx-water > * {
-  position: relative;
-  z-index: 1;
-}
-@keyframes fx-water-drift {
-  from { transform: translate3d(-7%, -5%, 0); }
-  to { transform: translate3d(7%, 6%, 0); }
-}
-
-.fx-delay-1 { animation-delay: 1.4s; }
-.fx-delay-2 { animation-delay: 2.8s; }
-.fx-delay-3 { animation-delay: 4.2s; }
-
 @media (prefers-reduced-motion: reduce) {
-  /* Guarda global FX: desactiva las animaciones decorativas */
-  .fx-float,
-  .fx-wave,
-  .fx-gradient-pan,
-  .fx-shine:hover::after,
-  .fx-water::before {
-    animation: none !important;
-  }
+  /* Guarda global: animaciones y transiciones casi instantáneas */
   *, *::before, *::after {
     animation-duration: 0.01ms !important;
     transition-duration: 0.01ms !important;
   }
-  .marquee-track { animation: none; }
+  html { scroll-behavior: auto; }
 }

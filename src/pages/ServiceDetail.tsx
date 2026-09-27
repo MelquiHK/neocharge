@@ -17,7 +17,6 @@ import {
   ShoppingBag,
   Tag,
 } from "lucide-react";
-import "@/components/sections/visual-effects.css";
 
 const serviceTypeLabels = {
   purchase: {
@@ -132,8 +131,6 @@ export default function ServiceDetail() {
           <>
             {/* Hero del servicio: panel oscuro con vidrio líquido */}
             <section className="relative overflow-hidden rounded-[2.5rem] glass-strong shadow-xl hover-lift">
-              <div className="nc-beam" aria-hidden />
-              <div className="nc-wash-a" aria-hidden />
               <div
                 className="absolute -top-32 -right-32 w-[380px] h-[380px] rounded-full bg-brand-300/40 blur-[100px] pointer-events-none"
                 aria-hidden
