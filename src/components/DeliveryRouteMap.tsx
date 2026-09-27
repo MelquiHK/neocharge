@@ -101,8 +101,8 @@ export function DeliveryRouteMap({ origin, dest, originLabel = "NeoCharge" }: Pr
     <div className="relative rounded-2xl overflow-hidden border border-border/60 shadow-soft" style={{ height: 250 }}>
       <MapContainer center={center} zoom={13} style={{ height: "100%", width: "100%" }} className="z-0">
         <TileLayer
-          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-          url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+          attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
+          url="https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
         />
         <FitBounds origin={origin} dest={dest} />
         <Marker position={[origin.lat, origin.lng]} icon={dotIcon("#2563eb", "⚡")}>
