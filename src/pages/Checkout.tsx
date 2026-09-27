@@ -17,6 +17,7 @@ import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { DeliveryRouteMap } from "@/components/DeliveryRouteMap";
+import { LocationPickerMap } from "@/components/LocationPickerMap";
 
 interface Loc {
   id: string;
@@ -61,6 +62,8 @@ const Checkout = () => {
   // Geocodificación de la dirección escrita (Nominatim) para cotizar sin GPS.
   const [geocoding, setGeocoding] = useState(false);
   const [geocodeError, setGeocodeError] = useState<string | null>(null);
+  // Mapa para elegir la ubicación tocando (tercera vía para cotizar).
+  const [showPicker, setShowPicker] = useState(false);
 
   // La cotización solo es válida si corresponde a las coordenadas actuales.
   const quoteValid =
@@ -556,7 +559,43 @@ const Checkout = () => {
                     )}
                   </div>
 
-                  {/* 3. Resultado de la cotización */}
+                  {/* 3. Elegir en el mapa */}
+                  <div className="flex items-center gap-3 text-xs text-muted-foreground">
+                    <span className="h-px flex-1 bg-border" />
+                    <span>o elige en el mapa</span>
+                    <span className="h-px flex-1 bg-border" />
+                  </div>
+
+                  {!showPicker ? (
+                    <Button
+                      type="button"
+                      onClick={() => setShowPicker(true)}
+                      variant="outline"
+                      className="w-full"
+                    >
+                      <MapPin className="w-4 h-4" /> Elegir mi ubicación en el mapa
+                    </Button>
+                  ) : (
+                    <div className="space-y-2">
+                      <LocationPickerMap
+                        center={origin ?? { lat: 23.1367, lng: -82.3589 }}
+                        initialPoint={coords}
+                        onPick={(lat, lng) => {
+                          setCoords({ lat, lng });
+                          setShowPicker(false);
+                        }}
+                      />
+                      <button
+                        type="button"
+                        onClick={() => setShowPicker(false)}
+                        className="text-xs text-muted-foreground underline underline-offset-2"
+                      >
+                        Cerrar mapa
+                      </button>
+                    </div>
+                  )}
+
+                  {/* 4. Resultado de la cotización */}
                   {quoting && (
                     <p className="flex items-center gap-2 text-sm text-muted-foreground">
                       <Loader2 className="w-4 h-4 animate-spin" /> Calculando envío…
