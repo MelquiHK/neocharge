@@ -6,13 +6,16 @@ interface SectionHeadingProps {
   description?: string;
   align?: "center" | "left";
   className?: string;
+  /** Tono del eyebrow: azul (primario) o morado (secundario) */
+  tone?: "blue" | "purple";
 }
 
 /**
  * Encabezado de sección premium y consistente:
  * eyebrow de vidrio + titular display + descripción ligera.
  */
-export function SectionHeading({ eyebrow, title, description, align = "center", className }: SectionHeadingProps) {
+export function SectionHeading({ eyebrow, title, description, align = "center", className, tone = "blue" }: SectionHeadingProps) {
+  const eyebrowClass = tone === "purple" ? "nc-eyebrow-purple" : "nc-eyebrow";
   return (
     <div
       className={cn(
@@ -21,7 +24,7 @@ export function SectionHeading({ eyebrow, title, description, align = "center", 
         className,
       )}
     >
-      <span className="nc-eyebrow">
+      <span className={eyebrowClass}>
         <span className="nc-eyebrow-dot" />
         {eyebrow}
       </span>

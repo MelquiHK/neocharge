@@ -163,7 +163,7 @@ export default function DescargarApp() {
           gratis.
         </p>
         <a href={APK_URL} download>
-          <Button type="button" variant="outline" className="w-full">
+          <Button type="button" variant="purple" className="w-full">
             <Download className="w-4 h-4" /> Descargar APK para Android
           </Button>
         </a>

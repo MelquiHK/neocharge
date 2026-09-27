@@ -16,9 +16,9 @@ export function Footer() {
           (Antes había un "newsletter" que no guardaba los correos en ningún lado:
           se reemplazó por un CTA honesto al WhatsApp del negocio.) */}
       <div className="container-page pt-16 pb-12">
-        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-500 via-brand-600 to-brand-800 p-8 md:p-12 shadow-glow-brand text-white">
+        <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-600 via-grape-700 to-brand-900 p-8 md:p-12 shadow-glow-brand text-white">
           <div className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/20 blur-3xl" aria-hidden />
-          <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-brand-300/40 blur-3xl" aria-hidden />
+          <div className="absolute -bottom-24 -left-24 w-72 h-72 rounded-full bg-grape-300/40 blur-3xl" aria-hidden />
           <div
             className="absolute inset-0 opacity-[0.08] pointer-events-none"
             aria-hidden

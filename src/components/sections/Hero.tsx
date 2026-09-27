@@ -96,7 +96,7 @@ export function Hero() {
             <div className="space-y-5">
               <h1 className="nc-display-xl">
                 <span className="block text-slate-950">Energía para tu moto.</span>
-                <span className="block nc-title-premium pb-2">
+                <span className="block nc-text-shimmer pb-2">
                   Confianza para ti.
                 </span>
               </h1>
@@ -120,9 +120,9 @@ export function Hero() {
               </Button>
               <Button
                 asChild
-                variant="outline"
+                variant="purple-glass"
                 size="xl"
-                className="glass text-slate-900 hover:border-brand-400/60 rounded-2xl transition-all duration-300 hover:-translate-y-0.5 text-base px-8 font-semibold"
+                className="rounded-2xl transition-all duration-300 hover:-translate-y-0.5 text-base px-8"
               >
                 <a
                   href="https://wa.me/5363180910"
@@ -256,7 +256,7 @@ export function Hero() {
       {/* Divisor de ondas de agua hacia la sección clara siguiente */}
       <div className="nc-waves" aria-hidden>
         <svg className="nc-wave nc-wave-b" viewBox="0 0 2880 120" preserveAspectRatio="none">
-          <path d={WAVE_PATH} fill="#bfdbfe" opacity="0.55" />
+          <path d={WAVE_PATH} fill="#ddd6fe" opacity="0.55" />
         </svg>
         <svg className="nc-wave nc-wave-a" viewBox="0 0 2880 120" preserveAspectRatio="none">
           <path d={WAVE_PATH} fill="#ffffff" />

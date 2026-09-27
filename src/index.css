@@ -36,6 +36,11 @@
     --secondary: 220 20% 93%;
     --secondary-foreground: 222 30% 22%;
 
+    /* Morado secundario: armoniza con el azul característico */
+    --grape: 262 83% 58%;              /* #8b5cf6 */
+    --grape-deep: 263 70% 48%;         /* #7c3aed */
+    --grape-glow: 262 90% 72%;         /* #b39dff */
+
     --muted: 220 18% 94%;
     --muted-foreground: 220 12% 46%;
 
@@ -54,7 +59,9 @@
     /* Gradientes */
     --gradient-primary: linear-gradient(135deg, #60a5fa 0%, #2663f2 100%);
     --gradient-accent: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
-    --gradient-hero: linear-gradient(160deg, #fbfdff 0%, #f1f5fb 45%, #e8f0fe 100%);
+    --gradient-grape: linear-gradient(135deg, #a78bfa 0%, #7c3aed 100%);
+    --gradient-duo: linear-gradient(135deg, #2663f2 0%, #7c3aed 100%);
+    --gradient-hero: linear-gradient(160deg, #ffffff 0%, #fbfdff 60%, #f4f7ff 100%);
     --gradient-glow: radial-gradient(circle, hsl(222 89% 55% / 0.35) 0%, transparent 70%);
     --gradient-shine: linear-gradient(120deg, transparent 30%, hsl(0 0% 100% / 0.7) 50%, transparent 70%);
 
@@ -97,14 +104,10 @@
   }
   body {
     @apply text-foreground antialiased;
-    /* Fondo claro elegante estilo Staff: base gris-azulada muy clara con
-       resplandores sutiles azules, fijos al hacer scroll */
-    background:
-      radial-gradient(600px 400px at 15% 0%, rgba(147, 197, 253, 0.35), transparent 70%),
-      radial-gradient(700px 500px at 90% 10%, rgba(147, 197, 253, 0.30), transparent 70%),
-      radial-gradient(800px 600px at 50% 110%, rgba(96, 165, 250, 0.22), transparent 70%),
-      linear-gradient(160deg, #fbfdff 0%, #f1f5fb 45%, #e8f0fe 100%);
-    background-attachment: fixed;
+    /* Fondo BLANCO pero vivo: la decoración animada (burbujas de cristal,
+       blobs de color, patrón de puntos) la pone <AmbientBackground /> fijo
+       detrás del contenido. El body queda blanco puro. */
+    background: #ffffff;
     color: #1e293b;
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
@@ -127,7 +130,7 @@
     outline-offset: 2px;
   }
   ::selection {
-    background: rgba(96, 165, 250, 0.45);
+    background: rgba(139, 92, 246, 0.35);
     color: #1e293b;
   }
   /* Scrollbar con degradado azul estilo Staff */
@@ -170,6 +173,39 @@
     box-shadow: 0 12px 40px rgba(31, 41, 55, 0.10);
   }
 
+  /* ---- GLASSWATER: cristal de agua para todo lo flotante ----
+     Navbar flotante, barra de búsqueda, menús desplegables, burbujas,
+     chips, barras y paneles flotantes. Blur real + borde luminoso
+     superior + sombra suave azulada. Estático (sin animar el blur). */
+  .nc-glasswater {
+    background: linear-gradient(155deg,
+      rgba(255, 255, 255, 0.82),
+      rgba(255, 255, 255, 0.55) 48%,
+      rgba(240, 246, 255, 0.68));
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.95),
+      inset 0 -1px 1px rgba(38, 99, 242, 0.06),
+      0 16px 48px rgba(38, 99, 242, 0.14),
+      0 4px 16px rgba(31, 41, 55, 0.08);
+  }
+  .nc-glasswater-violet {
+    background: linear-gradient(155deg,
+      rgba(250, 248, 255, 0.82),
+      rgba(245, 240, 255, 0.55) 48%,
+      rgba(237, 233, 254, 0.68));
+    backdrop-filter: blur(28px) saturate(190%);
+    -webkit-backdrop-filter: blur(28px) saturate(190%);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.95),
+      inset 0 -1px 1px rgba(124, 58, 237, 0.08),
+      0 16px 48px rgba(124, 58, 237, 0.16),
+      0 4px 16px rgba(31, 41, 55, 0.08);
+  }
+
   /* ---- Tarjeta base NeoCharge (modo claro, estilo Staff) ---- */
   .nc-card {
     @apply glass rounded-3xl p-5 transition-all duration-300;
@@ -198,6 +234,26 @@
   }
   .nc-btn-ghost {
     @apply nc-btn glass font-semibold text-slate-700 hover:bg-white/85;
+  }
+  /* Botón secundario MORADO: el secundario de la tienda es morado */
+  .nc-btn-purple {
+    @apply nc-btn text-white;
+    background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 45%, #7c3aed 100%);
+    box-shadow: 0 0 12px rgba(139, 92, 246, 0.35), 0 8px 24px rgba(124, 58, 237, 0.25);
+  }
+  .nc-btn-purple:hover {
+    box-shadow: 0 0 24px rgba(139, 92, 246, 0.45), 0 12px 32px rgba(124, 58, 237, 0.30);
+    filter: brightness(1.04);
+  }
+  /* Secundario morado en vidrio (outline suave) */
+  .nc-btn-purple-glass {
+    @apply nc-btn font-semibold;
+    @apply border border-grape-300/70 bg-grape-100/50 text-grape-800 backdrop-blur-xl;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.8), 0 8px 24px rgba(124, 58, 237, 0.12);
+  }
+  .nc-btn-purple-glass:hover {
+    @apply border-grape-400/80 bg-grape-100/80;
+    box-shadow: inset 0 1px 1px rgba(255,255,255,0.8), 0 12px 32px rgba(124, 58, 237, 0.20);
   }
   .nc-btn-danger {
     @apply nc-btn bg-gradient-to-br from-red-400 to-red-600 text-white shadow-lg shadow-red-500/30;
@@ -238,6 +294,15 @@
   .nc-eyebrow .nc-eyebrow-dot {
     @apply w-1.5 h-1.5 rounded-full bg-brand-600 animate-pulse shrink-0;
   }
+  /* Eyebrow morada (tono secundario) */
+  .nc-eyebrow-purple {
+    @apply inline-flex items-center gap-2 px-4 py-1.5 rounded-full text-[11px] font-bold uppercase tracking-[0.18em];
+    @apply border border-grape-300/50 bg-white/60 text-grape-800 backdrop-blur-xl;
+    box-shadow: 0 4px 16px hsl(262 83% 58% / 0.14);
+  }
+  .nc-eyebrow-purple .nc-eyebrow-dot {
+    @apply w-1.5 h-1.5 rounded-full bg-grape-600 animate-pulse shrink-0;
+  }
 
   /* Titular display expresivo */
   .nc-display {
@@ -260,10 +325,35 @@
     @apply py-16 md:py-24;
   }
 
-  /* Chip de vidrio flotante */
+  /* Chip de vidrio flotante (glasswater) */
   .nc-chip {
-    @apply inline-flex items-center gap-2 rounded-2xl border border-white/60 bg-white/70 backdrop-blur-xl px-4 py-2.5;
-    box-shadow: 0 12px 32px rgba(31, 41, 55, 0.12);
+    @apply inline-flex items-center gap-2 rounded-2xl px-4 py-2.5;
+    background: linear-gradient(155deg,
+      rgba(255, 255, 255, 0.85),
+      rgba(255, 255, 255, 0.55) 50%,
+      rgba(240, 246, 255, 0.70));
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.95),
+      0 12px 32px rgba(38, 99, 242, 0.12),
+      0 4px 12px rgba(31, 41, 55, 0.08);
+  }
+  /* Chip flotante morado */
+  .nc-chip-purple {
+    @apply inline-flex items-center gap-2 rounded-2xl px-4 py-2.5;
+    background: linear-gradient(155deg,
+      rgba(250, 248, 255, 0.85),
+      rgba(245, 240, 255, 0.55) 50%,
+      rgba(237, 233, 254, 0.70));
+    backdrop-filter: blur(24px) saturate(180%);
+    -webkit-backdrop-filter: blur(24px) saturate(180%);
+    border: 1px solid rgba(255, 255, 255, 0.85);
+    box-shadow:
+      inset 0 1px 1px rgba(255, 255, 255, 0.95),
+      0 12px 32px rgba(124, 58, 237, 0.14),
+      0 4px 12px rgba(31, 41, 55, 0.08);
   }
 
   /* Tarjeta premium: vidrio con borde luminoso superior y hover elevado */
@@ -305,7 +395,7 @@
     bottom: 4px;
     height: 2px;
     border-radius: 2px;
-    background: linear-gradient(90deg, hsl(222 89% 55%), hsl(222 100% 70%));
+    background: linear-gradient(90deg, hsl(222 89% 55%), hsl(262 83% 58%));
     transform: scaleX(0);
     transform-origin: left;
     transition: transform 0.35s var(--transition-base);
@@ -588,6 +678,110 @@
     100% {
       transform: translate(100%, 100%) rotate(45deg);
     }
+  }
+}
+
+/* =========================================
+   NEOCHARGE AMBIENT — fondo blanco pero vivo
+   Burbujas flotantes de cristal, blobs de degradado suaves animados,
+   patrón de puntos sutil y aurora tenue. Solo transform/opacity
+   animados (GPU). Todo se apaga con prefers-reduced-motion.
+   El componente <AmbientBackground /> monta estas capas.
+   ========================================= */
+
+.nc-ambient {
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+  background: #ffffff;
+}
+
+/* Patrón de puntos sutil */
+.nc-ambient-dots {
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(rgba(38, 99, 242, 0.10) 1.2px, transparent 1.2px);
+  background-size: 30px 30px;
+  -webkit-mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 20%, transparent 85%);
+          mask-image: radial-gradient(ellipse 90% 70% at 50% 0%, #000 20%, transparent 85%);
+}
+
+/* Aurora tenue superior: azul → morado */
+.nc-ambient-aurora {
+  position: absolute;
+  left: -10%;
+  right: -10%;
+  top: -22%;
+  height: 52%;
+  background:
+    radial-gradient(45% 70% at 30% 40%, rgba(147, 197, 253, 0.35), transparent 70%),
+    radial-gradient(40% 65% at 68% 55%, rgba(196, 181, 253, 0.38), transparent 70%),
+    radial-gradient(30% 55% at 50% 20%, rgba(165, 243, 252, 0.28), transparent 70%);
+  animation: nc-aurora-sway 18s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes nc-aurora-sway {
+  from { transform: translate3d(-3%, 0, 0) scale(1); }
+  to { transform: translate3d(3%, 2%, 0) scale(1.06); }
+}
+
+/* Blobs de degradado suaves (blur estático, se anima el transform) */
+.nc-ambient-blob {
+  position: absolute;
+  border-radius: 9999px;
+  filter: blur(90px);
+  animation: nc-blob-drift 22s ease-in-out infinite alternate;
+  will-change: transform;
+}
+@keyframes nc-blob-drift {
+  from { transform: translate3d(-6%, -4%, 0) scale(1); }
+  to { transform: translate3d(6%, 5%, 0) scale(1.12); }
+}
+
+/* Burbujas de cristal flotantes */
+.nc-bubble {
+  position: absolute;
+  border-radius: 9999px;
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.12) 42%, transparent 60%),
+    linear-gradient(150deg, rgba(147, 197, 253, 0.20), rgba(196, 181, 253, 0.16) 55%, rgba(255, 255, 255, 0.06));
+  border: 1px solid rgba(255, 255, 255, 0.75);
+  box-shadow:
+    inset 0 2px 6px rgba(255, 255, 255, 0.65),
+    inset 0 -3px 8px rgba(38, 99, 242, 0.08),
+    0 10px 30px rgba(38, 99, 242, 0.10);
+  backdrop-filter: blur(2px);
+  -webkit-backdrop-filter: blur(2px);
+  animation: nc-bubble-float 11s ease-in-out infinite;
+  will-change: transform;
+}
+.nc-bubble-violet {
+  background:
+    radial-gradient(circle at 32% 28%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.12) 42%, transparent 60%),
+    linear-gradient(150deg, rgba(196, 181, 253, 0.22), rgba(147, 197, 253, 0.14) 55%, rgba(255, 255, 255, 0.06));
+  box-shadow:
+    inset 0 2px 6px rgba(255, 255, 255, 0.65),
+    inset 0 -3px 8px rgba(124, 58, 237, 0.10),
+    0 10px 30px rgba(124, 58, 237, 0.12);
+}
+@keyframes nc-bubble-float {
+  0%, 100% { transform: translate3d(0, 0, 0); }
+  50% { transform: translate3d(14px, -34px, 0); }
+}
+
+/* Contenido por encima del ambiente */
+.nc-content-above {
+  position: relative;
+  z-index: 1;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nc-ambient-aurora,
+  .nc-ambient-blob,
+  .nc-bubble {
+    animation: none !important;
   }
 }
 

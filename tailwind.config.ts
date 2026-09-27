@@ -38,6 +38,17 @@ export default {
           500: '#f59e0b',
           600: '#d97706',
         },
+        // Morado secundario: armoniza con el azul característico (#2663f2)
+        grape: {
+          100: '#ede9fe',
+          200: '#ddd6fe',
+          300: '#c4b5fd',
+          400: '#a78bfa',
+          500: '#8b5cf6',
+          600: '#7c3aed',
+          700: '#6d28d9',
+          800: '#5b21b6',
+        },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
         ring: "hsl(var(--ring))",
@@ -105,6 +116,8 @@ export default {
         'glow-brand': '0 0 24px rgba(102, 148, 255, 0.45)',
         'glow-brand-sm': '0 0 12px rgba(102, 148, 255, 0.35)',
         'glow-accent': '0 0 40px rgba(96, 165, 250, 0.45)',
+        'glow-grape': '0 0 24px rgba(139, 92, 246, 0.45)',
+        'glow-grape-sm': '0 0 12px rgba(139, 92, 246, 0.35)',
         'card-hover': '0 20px 50px rgba(0, 0, 0, 0.15)',
       },
       spacing: {

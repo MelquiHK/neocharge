@@ -32,6 +32,7 @@ export function HowToBuy() {
           eyebrow="Compra fácil"
           title="Comprar es así de simple"
           description="Sin cuentas complicadas ni pagos por adelantado. En tres pasos lo tienes en tus manos."
+          tone="purple"
         />
 
         <div className="relative grid md:grid-cols-3 gap-6">

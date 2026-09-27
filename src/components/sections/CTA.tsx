@@ -9,7 +9,7 @@ export function CTA() {
   return (
     <section ref={ref} className={cn("py-12 md:py-16 nc-section-wash reveal", visible && "is-visible")}>
       <div className="container-page">
-        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-600 via-brand-700 to-brand-900 p-10 md:p-16 lg:p-20 text-center text-white shadow-glow-brand nc-beam-host">
+        <div className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-brand-700 via-grape-800 to-brand-950 p-10 md:p-16 lg:p-20 text-center text-white shadow-glow-brand nc-beam-host">
           <div className="nc-beam" aria-hidden />
           <div
             className="absolute inset-0 opacity-[0.07] pointer-events-none"
@@ -20,7 +20,7 @@ export function CTA() {
               backgroundSize: "44px 44px",
             }}
           />
-          <div className="absolute -top-40 -right-40 w-[420px] h-[420px] rounded-full bg-brand-300/40 blur-[100px] animate-pulse-glow pointer-events-none" aria-hidden />
+          <div className="absolute -top-40 -right-40 w-[420px] h-[420px] rounded-full bg-grape-400/40 blur-[100px] animate-pulse-glow pointer-events-none" aria-hidden />
           <div className="absolute -bottom-40 -left-40 w-[420px] h-[420px] rounded-full bg-white/15 blur-[100px] animate-pulse-glow pointer-events-none" style={{ animationDelay: "2s" }} aria-hidden />
 
           <div className="relative max-w-3xl mx-auto space-y-6 md:space-y-7">

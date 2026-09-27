@@ -149,14 +149,14 @@ const ShopPage = () => {
 
       {/* Filters bar */}
       <div className="sticky top-24 z-40 mb-8">
-        <div className="glass rounded-2xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center shadow-soft">
+        <div className="nc-glasswater rounded-[1.75rem] p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-grape-600" />
             <Input
               placeholder="Buscar productos..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-11 h-11 rounded-xl border-0 bg-secondary/60 focus-visible:ring-1"
+              className="pl-11 h-11 rounded-xl border border-white/70 bg-white/70 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(31,41,55,0.05)] focus-visible:ring-2 focus-visible:ring-grape-400/40"
             />
             {search && (
               <button
@@ -169,11 +169,11 @@ const ShopPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
+            <SlidersHorizontal className="w-4 h-4 text-grape-600" />
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as Sort)}
-              className="h-11 rounded-xl border-0 bg-secondary/60 px-3 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
+              className="h-11 rounded-xl border border-white/70 bg-white/70 backdrop-blur-xl px-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-grape-400/40 shadow-[inset_0_1px_2px_rgba(31,41,55,0.05)]"
             >
               {sortOptions.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>

@@ -45,7 +45,7 @@
   animation: nc-wash-pulse 9s ease-in-out infinite;
 }
 .nc-wash-b {
-  background: radial-gradient(50% 45% at 18% 82%, rgba(134, 184, 20, 0.16), transparent 70%);
+  background: radial-gradient(50% 45% at 18% 82%, rgba(139, 92, 246, 0.20), transparent 70%);
   animation: nc-wash-pulse 13s ease-in-out infinite reverse;
 }
 @keyframes nc-wash-pulse {
@@ -216,8 +216,8 @@
 /* ---------- Lavado decorativo estático para secciones claras ---------- */
 .nc-section-wash {
   background:
-    radial-gradient(42% 60% at 88% 12%, rgba(59, 130, 246, 0.06), transparent 70%),
-    radial-gradient(36% 55% at 8% 88%, rgba(34, 211, 238, 0.05), transparent 70%);
+    radial-gradient(42% 60% at 88% 12%, rgba(59, 130, 246, 0.07), transparent 70%),
+    radial-gradient(36% 55% at 8% 88%, rgba(139, 92, 246, 0.08), transparent 70%);
 }
 
 /* ---------- Movimiento reducido: todo quieto ---------- */

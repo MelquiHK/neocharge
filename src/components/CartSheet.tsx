@@ -35,7 +35,7 @@ export function CartSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={(o) => (o ? null : closeCart())}>
-      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0 border-l">
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0 border-l nc-glasswater !border-white/70">
         <SheetHeader className="px-6 py-5 border-b bg-white/70 dark:bg-slate-950/60 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
           <div className="flex items-center justify-between">
             <SheetTitle className="font-display text-xl flex items-center gap-2">

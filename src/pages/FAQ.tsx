@@ -41,7 +41,7 @@ const FAQ = () => {
               <MessageCircle className="w-5 h-5" /> WhatsApp
             </a>
           </Button>
-          <Button asChild size="lg" variant="outline" className="rounded-full">
+          <Button asChild size="lg" variant="purple-glass" className="rounded-full">
             <Link to="/contacto">Ir a contacto</Link>
           </Button>
         </div>
