@@ -1,6 +1,7 @@
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { CartSheet } from "@/components/CartSheet";
+import { InstallAppBubble } from "@/components/InstallAppBubble";
 import { Outlet } from "react-router-dom";
 import { useCart } from "@/hooks/use-cart";
 import { Info } from "lucide-react";
@@ -24,6 +25,7 @@ export function SiteLayout() {
       </main>
       <Footer />
       <CartSheet />
+      <InstallAppBubble />
     </div>
   );
 }
