@@ -3,80 +3,81 @@
 @tailwind utilities;
 
 /* =========================================
-   NEOCHARGE — Sistema de diseño premium
+   NEOCHARGE — Sistema de diseño "vidrio y volt"
    Tienda de electrónica · La Habana, Cuba
-   Estilo: claro, moderno, energético
+   Estilo: claro, glassmorphism, acento verde volt/lima
+   (lenguaje visual heredado de la app NeoCharge Staff)
    Todos los colores en HSL
    ========================================= */
 
 @layer base {
   :root {
-    /* Bases neutras cálidas */
-    --background: 40 33% 98%;        /* marfil suave */
-    --foreground: 222 30% 11%;       /* tinta casi negra */
+    /* Base clara estilo Staff */
+    --background: 220 25% 97%;
+    --foreground: 222 35% 14%;       /* tinta pizarra */
 
     --card: 0 0% 100%;
-    --card-foreground: 222 30% 11%;
+    --card-foreground: 222 35% 14%;
 
     --popover: 0 0% 100%;
-    --popover-foreground: 222 30% 11%;
+    --popover-foreground: 222 35% 14%;
 
-    /* Marca: azul eléctrico vibrante */
-    --primary: 222 89% 55%;
-    --primary-foreground: 0 0% 100%;
-    --primary-glow: 222 100% 70%;
+    /* Marca: verde volt/lima (como la app Staff) */
+    --primary: 78 82% 40%;           /* volt-600 #86b814 */
+    --primary-foreground: 222 35% 14%;
+    --primary-glow: 78 82% 59%;      /* volt-400 #c2ec3f */
 
-    /* Acento: verde eléctrico (energía) */
-    --accent: 152 76% 45%;
-    --accent-foreground: 0 0% 100%;
-    --accent-glow: 152 86% 60%;
+    /* Acento: tinte volt suave */
+    --accent: 78 80% 90%;
+    --accent-foreground: 78 72% 26%;
+    --accent-glow: 78 85% 60%;
 
     /* Secundarios suaves */
-    --secondary: 222 30% 96%;
-    --secondary-foreground: 222 30% 11%;
+    --secondary: 220 20% 93%;
+    --secondary-foreground: 222 30% 22%;
 
-    --muted: 222 20% 95%;
-    --muted-foreground: 222 14% 42%;
+    --muted: 220 18% 94%;
+    --muted-foreground: 220 12% 46%;
 
     --destructive: 0 84% 58%;
     --destructive-foreground: 0 0% 100%;
 
-    --success: 152 76% 42%;
+    --success: 78 72% 34%;
     --warning: 38 92% 50%;
 
-    --border: 222 20% 91%;
-    --input: 222 20% 91%;
-    --ring: 222 89% 55%;
+    --border: 220 18% 88%;
+    --input: 220 18% 92%;
+    --ring: 78 75% 42%;
 
-    --radius: 1rem;
+    --radius: 1.25rem;
 
     /* Gradientes */
-    --gradient-primary: linear-gradient(135deg, hsl(222 89% 55%), hsl(222 100% 70%));
-    --gradient-accent: linear-gradient(135deg, #3b82f6 0%, #2dd4bf 100%);
-    --gradient-hero: radial-gradient(ellipse at top, hsl(222 100% 96%) 0%, hsl(40 33% 98%) 60%);
-    --gradient-glow: radial-gradient(circle, hsl(222 100% 70% / 0.35) 0%, transparent 70%);
+    --gradient-primary: linear-gradient(135deg, #c2ec3f 0%, #86b814 100%);
+    --gradient-accent: linear-gradient(135deg, #e2f99e 0%, #d2f56d 100%);
+    --gradient-hero: linear-gradient(160deg, #fbfdff 0%, #f1f5fb 45%, #eef7e4 100%);
+    --gradient-glow: radial-gradient(circle, hsl(78 82% 40% / 0.35) 0%, transparent 70%);
     --gradient-shine: linear-gradient(120deg, transparent 30%, hsl(0 0% 100% / 0.7) 50%, transparent 70%);
 
-    /* Sombras suaves multicapa */
+    /* Sombras suaves multicapa estilo Staff */
     --shadow-xs: 0 1px 2px hsl(222 30% 11% / 0.04);
-    --shadow-sm: 0 2px 4px hsl(222 30% 11% / 0.04), 0 1px 2px hsl(222 30% 11% / 0.06);
-    --shadow-md: 0 6px 16px hsl(222 30% 11% / 0.06), 0 2px 4px hsl(222 30% 11% / 0.04);
-    --shadow-lg: 0 16px 40px hsl(222 30% 11% / 0.08), 0 4px 12px hsl(222 30% 11% / 0.05);
-    --shadow-xl: 0 24px 60px hsl(222 30% 11% / 0.12), 0 8px 24px hsl(222 30% 11% / 0.06);
-    --shadow-glow: 0 20px 60px hsl(222 89% 55% / 0.25);
-    --shadow-accent-glow: 0 20px 60px hsl(152 76% 45% / 0.25);
+    --shadow-sm: 0 8px 32px rgba(31, 41, 55, 0.08);
+    --shadow-md: 0 8px 32px rgba(31, 41, 55, 0.08), 0 2px 4px hsl(222 30% 11% / 0.04);
+    --shadow-lg: 0 12px 40px rgba(31, 41, 55, 0.12), 0 4px 12px hsl(222 30% 11% / 0.05);
+    --shadow-xl: 0 20px 60px rgba(31, 41, 55, 0.16), 0 8px 24px hsl(222 30% 11% / 0.06);
+    --shadow-glow: 0 0 24px hsl(78 82% 40% / 0.45);
+    --shadow-accent-glow: 0 0 24px hsl(78 85% 55% / 0.40);
 
     --transition-base: cubic-bezier(0.22, 1, 0.36, 1);
 
     /* Sidebar (legacy shadcn) */
     --sidebar-background: 0 0% 100%;
-    --sidebar-foreground: 222 30% 11%;
-    --sidebar-primary: 222 89% 55%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 222 20% 95%;
-    --sidebar-accent-foreground: 222 30% 11%;
-    --sidebar-border: 222 20% 91%;
-    --sidebar-ring: 222 89% 55%;
+    --sidebar-foreground: 222 35% 14%;
+    --sidebar-primary: 78 82% 40%;
+    --sidebar-primary-foreground: 222 35% 14%;
+    --sidebar-accent: 220 20% 93%;
+    --sidebar-accent-foreground: 222 30% 22%;
+    --sidebar-border: 220 18% 88%;
+    --sidebar-ring: 78 75% 42%;
   }
 }
 
@@ -95,10 +96,20 @@
     }
   }
   body {
-    @apply bg-background text-foreground antialiased;
+    @apply text-foreground antialiased;
+    /* Fondo claro elegante estilo Staff: base gris-azulada muy clara con
+       resplandores sutiles de volt (lima) y azul, fijos al hacer scroll */
+    background:
+      radial-gradient(600px 400px at 15% 0%, rgba(210, 245, 109, 0.35), transparent 70%),
+      radial-gradient(700px 500px at 90% 10%, rgba(147, 197, 253, 0.30), transparent 70%),
+      radial-gradient(800px 600px at 50% 110%, rgba(210, 245, 109, 0.22), transparent 70%),
+      linear-gradient(160deg, #fbfdff 0%, #f1f5fb 45%, #eef7e4 100%);
+    background-attachment: fixed;
+    color: #1e293b;
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
     font-feature-settings: 'cv02', 'cv03', 'cv04', 'cv11';
     text-rendering: optimizeLegibility;
+    min-height: 100vh;
   }
   h1, h2, h3, h4, h5, h6 {
     font-family: 'Space Grotesk', 'Plus Jakarta Sans', sans-serif;
@@ -116,10 +127,10 @@
     outline-offset: 2px;
   }
   ::selection {
-    background: hsl(var(--primary) / 0.22);
-    color: hsl(var(--primary));
+    background: rgba(194, 236, 63, 0.55);
+    color: #1e293b;
   }
-  /* Scrollbar sutil */
+  /* Scrollbar con degradado volt estilo Staff */
   ::-webkit-scrollbar {
     width: 10px;
     height: 10px;
@@ -128,13 +139,13 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.28);
+    background: linear-gradient(180deg, #c2ec3f, #86b814);
     border-radius: 8px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.45);
+    background: linear-gradient(180deg, #a9d91f, #678d12);
     background-clip: content-box;
     border: 2px solid transparent;
   }
@@ -149,19 +160,72 @@
     @apply container mx-auto px-4 sm:px-6 lg:px-8;
   }
 
+  /* ---- Superficies glass estilo Staff ---- */
   .glass {
-    background: linear-gradient(155deg, hsl(0 0% 100% / 0.68), hsl(0 0% 100% / 0.36) 55%, hsl(0 0% 100% / 0.52));
-    backdrop-filter: blur(24px) saturate(200%);
-    -webkit-backdrop-filter: blur(24px) saturate(200%);
-    border: 1px solid hsl(0 0% 100% / 0.65);
-    box-shadow:
-      inset 0 1px 1px hsl(0 0% 100% / 0.85),
-      inset 0 -1px 1px hsl(0 0% 100% / 0.25),
-      0 12px 32px hsl(222 30% 11% / 0.10);
+    @apply border border-white/60 bg-white/60 backdrop-blur-xl;
+    box-shadow: 0 8px 32px rgba(31, 41, 55, 0.08);
+  }
+  .glass-strong {
+    @apply border border-white/70 bg-white/80 backdrop-blur-2xl;
+    box-shadow: 0 12px 40px rgba(31, 41, 55, 0.10);
+  }
+
+  /* ---- Tarjeta base NeoCharge (modo claro, estilo Staff) ---- */
+  .nc-card {
+    @apply glass rounded-3xl p-5 transition-all duration-300;
+  }
+  .nc-card-interactive {
+    @apply nc-card hover:-translate-y-0.5 hover:shadow-elevated active:translate-y-0;
+  }
+
+  /* ---- Inputs estilo Staff ---- */
+  .nc-input {
+    @apply w-full rounded-2xl border border-slate-200/80 bg-white/70 px-4 py-3 text-slate-800 shadow-inner outline-none backdrop-blur transition placeholder:text-slate-400 focus:border-volt-500 focus:bg-white focus:ring-4 focus:ring-volt-400/25;
+  }
+  .nc-label {
+    @apply mb-1.5 block text-sm font-semibold text-slate-600;
+  }
+
+  /* ---- Botones estilo Staff ---- */
+  .nc-btn {
+    @apply inline-flex items-center justify-center gap-2 rounded-2xl px-5 py-3 font-bold transition-all duration-200 active:scale-[0.97] disabled:opacity-50;
+  }
+  .nc-btn-primary {
+    @apply nc-btn bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm hover:shadow-glow-volt hover:brightness-[1.03];
+  }
+  .nc-btn-gold {
+    @apply nc-btn bg-gradient-to-br from-gold-300 to-gold-500 text-slate-900 shadow-lg shadow-gold-500/30;
+  }
+  .nc-btn-ghost {
+    @apply nc-btn glass font-semibold text-slate-700 hover:bg-white/85;
+  }
+  .nc-btn-danger {
+    @apply nc-btn bg-gradient-to-br from-red-400 to-red-600 text-white shadow-lg shadow-red-500/30;
+  }
+
+  /* ---- Títulos de sección con degradado de texto ---- */
+  .nc-title-gradient {
+    @apply bg-gradient-to-r from-slate-900 via-slate-700 to-volt-700 bg-clip-text font-extrabold text-transparent;
+  }
+
+  /* ---- Mosaico de icono con degradado volt ---- */
+  .nc-icon-tile {
+    @apply flex shrink-0 items-center justify-center rounded-2xl bg-gradient-to-br from-volt-300 to-volt-600 text-slate-900 shadow-lg shadow-volt-400/40;
+  }
+  .nc-icon-tile-sm {
+    @apply nc-icon-tile h-9 w-9;
+  }
+  .nc-icon-tile-md {
+    @apply nc-icon-tile h-11 w-11;
+  }
+
+  /* ---- Divisor sutil ---- */
+  .nc-divider {
+    @apply my-4 h-px bg-gradient-to-r from-transparent via-slate-300/70 to-transparent;
   }
 
   .text-gradient {
-    background: var(--gradient-primary);
+    background: linear-gradient(120deg, #0f172a 0%, #334155 55%, #678d12 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;
@@ -174,7 +238,7 @@
     background-clip: text;
     -webkit-text-fill-color: transparent;
     color: transparent;
-    filter: drop-shadow(0 0 10px rgba(59, 130, 246, 0.3));
+    filter: drop-shadow(0 0 10px rgba(169, 217, 31, 0.35));
   }
 
   .glow-primary {
@@ -186,8 +250,7 @@
   }
 
   .card-elevated {
-    @apply bg-card border border-border rounded-3xl;
-    box-shadow: var(--shadow-md);
+    @apply glass rounded-3xl;
     transition: transform 0.4s var(--transition-base), box-shadow 0.4s var(--transition-base);
   }
 
@@ -237,9 +300,16 @@
     animation: glow-pulse 3s infinite ease-in-out;
   }
 
+  .animate-fade-in {
+    animation: fade-in 0.5s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  .animate-fade-in-up {
+    animation: fade-in-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+  }
+
   @keyframes glow-pulse {
-    0%, 100% { filter: drop-shadow(0 0 5px rgba(59, 130, 246, 0.4)); }
-    50% { filter: drop-shadow(0 0 20px rgba(59, 130, 246, 0.8)); }
+    0%, 100% { filter: drop-shadow(0 0 5px rgba(169, 217, 31, 0.4)); }
+    50% { filter: drop-shadow(0 0 20px rgba(169, 217, 31, 0.8)); }
   }
 
   /* Marquee */
@@ -346,7 +416,7 @@
 
 /* Radial gradient overlay */
 .bg-radial-gradient {
-  background: radial-gradient(circle at 50% 50%, rgba(59, 130, 246, 0.1), transparent);
+  background: radial-gradient(circle at 50% 50%, rgba(169, 217, 31, 0.10), transparent);
 }
 
 /* Perspective for 3D effects */
@@ -357,7 +427,7 @@
 /* Light gradient for text */
 @layer utilities {
   .text-glow {
-    filter: drop-shadow(0 0 8px rgba(59, 130, 246, 0.4));
+    filter: drop-shadow(0 0 8px rgba(169, 217, 31, 0.4));
   }
 
   .animate-cart-pop {
@@ -365,7 +435,7 @@
   }
 
   .text-glow-lg {
-    filter: drop-shadow(0 0 16px rgba(59, 130, 246, 0.6));
+    filter: drop-shadow(0 0 16px rgba(169, 217, 31, 0.6));
   }
 
   .backdrop-blur-xl {
@@ -402,7 +472,7 @@
 
   .hover-lift:hover {
     transform: translateY(-8px);
-    box-shadow: 0 20px 50px rgba(59, 130, 246, 0.2);
+    box-shadow: 0 20px 50px rgba(169, 217, 31, 0.2);
   }
 
   .shine {
