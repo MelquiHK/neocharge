@@ -21,7 +21,7 @@ const MessengerPage = () => {
   }
 
   return (
-    <div className="min-h-screen bg-secondary/20">
+    <div className="min-h-screen">
       <div className="container-page py-8 space-y-8">
         <header className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <div className="space-y-1">
@@ -32,8 +32,8 @@ const MessengerPage = () => {
                 </Link>
               </Button>
             </div>
-            <h1 className="text-3xl font-display font-bold flex items-center gap-3">
-              <Map className="w-8 h-8 text-primary" />
+            <h1 className="text-3xl font-display font-bold flex items-center gap-3 nc-title-gradient">
+              <span className="nc-icon-tile-sm"><Map className="w-5 h-5" /></span>
               Panel de Mensajería
             </h1>
             <p className="text-muted-foreground">Calcula rutas, distancias y precios para tus entregas.</p>

@@ -23,7 +23,7 @@ const MAP_STYLE = "https://tiles.openfreemap.org/styles/bright";
 
 function makePinEl(): HTMLElement {
   const el = document.createElement("div");
-  el.innerHTML = `<div style="background:#2563eb;width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);font-size:16px;">📍</span></div>`;
+  el.innerHTML = `<div style="background:#65a30d;width:36px;height:36px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;"><span style="transform:rotate(45deg);font-size:16px;">📍</span></div>`;
   return el;
 }
 
@@ -66,7 +66,7 @@ export function LocationPickerMap({ center, initialPoint = null, onPick }: Props
     map.on("error", (e) => {
       // Los fallos de tiles sueltos son normales (reintenta solo); solo el
       // fallo del estilo/fuente es fatal: e.tile viene vacío en ese caso.
-      const fatal = !e.tile && !readyRef.current;
+      const fatal = !(e as { tile?: unknown }).tile && !readyRef.current;
       console.error("Error del mapa:", e?.error?.message || e);
       if (!cancelled && fatal) setMapError(true);
     });
@@ -109,7 +109,7 @@ export function LocationPickerMap({ center, initialPoint = null, onPick }: Props
   return (
     <div className="space-y-2">
       <div
-        className="rounded-xl overflow-hidden border-2 border-border relative"
+        className="rounded-3xl overflow-hidden border-2 border-white/70 shadow-glow-volt-sm relative"
         style={{ height: 280 }}
       >
         <div ref={containerRef} style={{ height: "100%", width: "100%" }} />

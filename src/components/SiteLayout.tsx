@@ -12,8 +12,8 @@ export function SiteLayout() {
   return (
     <div className="min-h-screen flex flex-col">
       {/* Global Currency Notice */}
-      <div className="bg-primary/5 border-b border-primary/10 py-2 hidden md:block">
-        <div className="container-page flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-primary/70">
+      <div className="bg-volt-200/50 border-b border-volt-400/25 py-2 hidden md:block backdrop-blur-xl">
+        <div className="container-page flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-volt-800">
           <Info className="w-3 h-3" />
           Precios actualizados · Pagos aceptados en {paymentCurrency === "USD" ? "USD, CUP y MLC" : "CUP, USD y MLC"} · Entrega en 24h
         </div>

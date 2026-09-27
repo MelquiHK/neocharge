@@ -41,11 +41,11 @@
   pointer-events: none;
 }
 .nc-wash-a {
-  background: radial-gradient(60% 50% at 72% 18%, rgba(59, 130, 246, 0.20), transparent 70%);
+  background: radial-gradient(60% 50% at 72% 18%, rgba(169, 217, 31, 0.28), transparent 70%);
   animation: nc-wash-pulse 9s ease-in-out infinite;
 }
 .nc-wash-b {
-  background: radial-gradient(50% 45% at 18% 82%, rgba(34, 211, 238, 0.13), transparent 70%);
+  background: radial-gradient(50% 45% at 18% 82%, rgba(134, 184, 20, 0.16), transparent 70%);
   animation: nc-wash-pulse 13s ease-in-out infinite reverse;
 }
 @keyframes nc-wash-pulse {
@@ -53,9 +53,9 @@
   50% { opacity: 1; }
 }
 
-/* ---------- Shimmer líquido en el titular del hero ---------- */
+/* ---------- Shimmer líquido en el titular (modo claro, volt) ---------- */
 .nc-text-shimmer {
-  background: linear-gradient(110deg, #93c5fd 20%, #67e8f9 40%, #f0f9ff 50%, #67e8f9 60%, #93c5fd 80%);
+  background: linear-gradient(110deg, #65a30d 20%, #a9d91f 40%, #f7fee7 50%, #a9d91f 60%, #65a30d 80%);
   background-size: 220% auto;
   -webkit-background-clip: text;
   background-clip: text;

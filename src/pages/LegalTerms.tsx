@@ -16,12 +16,12 @@ const LegalTerms = () => {
 
       <header className="space-y-3">
         <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">Legales</span>
-        <h1 className="font-display text-5xl font-bold">Términos y condiciones</h1>
+        <h1 className="font-display text-5xl font-bold nc-title-gradient">Términos y condiciones</h1>
         <p className="text-muted-foreground">
         </p>
       </header>
 
-      <div className="prose prose-neutral dark:prose-invert">
+      <div className="prose prose-neutral nc-card p-8 md:p-10">
         <h2>1. Compras</h2>
         <p>
           Al realizar un pedido aceptas que la disponibilidad y el precio pueden confirmarse por WhatsApp.

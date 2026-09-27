@@ -59,8 +59,8 @@ export class ErrorBoundary extends React.Component<Props, State> {
     if (this.state.hasError) {
       const isChunkError = this.state.error ? this.isChunkLoadError(this.state.error) : false;
       return (
-        <div className="min-h-screen flex items-center justify-center bg-background">
-          <div className="container-page max-w-md text-center space-y-6">
+        <div className="min-h-screen flex items-center justify-center">
+          <div className="container-page max-w-md text-center space-y-6 glass-strong rounded-3xl p-8 border border-white/70 shadow-glow-volt-sm">
             <div className="flex justify-center">
               <div className="w-16 h-16 rounded-full bg-destructive/10 flex items-center justify-center">
                 <AlertCircle className="w-8 h-8 text-destructive" />
@@ -84,7 +84,7 @@ export class ErrorBoundary extends React.Component<Props, State> {
                 </>
               )}
               {this.state.error && (
-                <details className="mt-4 p-3 bg-muted rounded text-left text-xs text-muted-foreground">
+                <details className="mt-4 p-3 bg-white/70 border border-white/70 rounded-2xl text-left text-xs text-muted-foreground backdrop-blur">
                   <summary className="cursor-pointer font-mono font-semibold">Ver detalles del error</summary>
                   <div className="mt-2 space-y-2">
                     <p className="font-semibold">Mensaje:</p>

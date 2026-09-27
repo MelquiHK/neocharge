@@ -18,7 +18,7 @@ const FAQ = () => {
 
       <header className="max-w-2xl space-y-3">
         <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">Ayuda</span>
-        <h1 className="font-display text-5xl font-bold">Preguntas frecuentes</h1>
+        <h1 className="font-display text-5xl font-bold nc-title-gradient">Preguntas frecuentes</h1>
         <p className="text-muted-foreground text-lg">
           Respuestas rápidas sobre compras, envíos, garantía y pagos.
         </p>
@@ -27,7 +27,7 @@ const FAQ = () => {
       <FAQSection />
 
       {/* Entrelazado: si la duda no está aquí, contacto directo */}
-      <section className="rounded-3xl border border-border/60 bg-secondary/40 p-8 md:p-10 text-center space-y-4">
+      <section className="nc-card p-8 md:p-10 text-center space-y-4 hover-lift">
         <h2 className="font-display text-2xl md:text-3xl font-bold">
           ¿No encontraste tu respuesta?
         </h2>

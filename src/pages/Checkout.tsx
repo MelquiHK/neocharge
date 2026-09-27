@@ -422,13 +422,13 @@ const Checkout = () => {
             <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
               Checkout Seguro
             </div>
-            <h1 className="font-display text-5xl font-bold tracking-tight">Finalizar pedido</h1>
+            <h1 className="font-display text-5xl font-bold tracking-tight nc-title-gradient">Finalizar pedido</h1>
             <p className="text-xl text-muted-foreground font-light max-w-2xl">
               Recibimos tu pedido directamente. Te contactaremos por WhatsApp para coordinar el envío y el pago.
             </p>
           </header>
 
-          <section className="card-elevated p-6 space-y-4">
+          <section className="nc-card p-6 space-y-4 hover-lift">
             <h2 className="font-display text-lg font-bold">Tus datos</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -442,7 +442,7 @@ const Checkout = () => {
             </div>
           </section>
 
-          <section className="card-elevated p-6 space-y-4">
+          <section className="nc-card p-6 space-y-4 hover-lift">
             <h2 className="font-display text-lg font-bold">Método de entrega</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               <button
@@ -638,13 +638,13 @@ const Checkout = () => {
                 ) : locationError ? (
                   <p className="text-sm text-destructive">{locationError}</p>
                 ) : locations.length === 0 ? (
-                  <div className="rounded-2xl bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-900">
+                  <div className="rounded-2xl bg-yellow-50/80 border border-yellow-200/70 p-4 text-sm text-yellow-900">
                     No hay locales con stock para los productos del carrito. Elige uno y te contactaremos para coordinar la disponibilidad.
                   </div>
                 ) : (
                   <>
                     {locations.length > 1 && (
-                      <div className="rounded-2xl bg-blue-50 border border-blue-200 p-4 text-sm text-blue-900">
+                      <div className="rounded-2xl bg-volt-100/70 border border-volt-300/60 p-4 text-sm text-volt-900">
                         Tu pedido incluye productos disponibles en varios locales. Usa el filtro para ver sólo locales de cargadores, electrónica o mixtos.
                       </div>
                     )}
@@ -673,7 +673,7 @@ const Checkout = () => {
                       </div>
                     )}
                     {filteredLocations.length === 0 ? (
-                      <div className="rounded-2xl bg-yellow-50 border border-yellow-200 p-4 text-sm text-yellow-900">
+                      <div className="rounded-2xl bg-yellow-50/80 border border-yellow-200/70 p-4 text-sm text-yellow-900">
                         No hay locales que coincidan con el filtro seleccionado. Cambia el filtro para ver más opciones.
                       </div>
                     ) : (
@@ -714,7 +714,7 @@ const Checkout = () => {
             )}
           </section>
 
-          <section className="card-elevated p-6 space-y-3">
+          <section className="nc-card p-6 space-y-3 hover-lift">
             <Label htmlFor="notes" className="font-display text-lg font-bold">Notas (opcional)</Label>
             <Textarea
               id="notes"
@@ -735,10 +735,10 @@ const Checkout = () => {
         </form>
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <div className="card-elevated p-6 space-y-4">
+          <div className="nc-card p-6 space-y-4 hover-lift">
             <h2 className="font-display text-lg font-bold">Resumen del pedido</h2>
 
-            <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-1.5 rounded-2xl border border-border/50 shadow-inner">
+            <div className="flex items-center justify-between bg-white/70 backdrop-blur p-1.5 rounded-2xl border border-slate-200/70 shadow-inner">
               <button
                 type="button"
                 onClick={() => setPaymentCurrency("USD")}

@@ -204,15 +204,15 @@ Por favor, revisa mis pagos. ¡Gracias!`;
 
   if (loading) {
     return (
-      <div className="relative overflow-hidden bg-[#070d20]">
+      <div className="relative overflow-hidden">
         <div className="nc-wash-a" aria-hidden />
         <div className="nc-wash-b" aria-hidden />
         <div className="relative container-page py-20 space-y-4">
-          <div className="h-8 bg-white/10 rounded animate-pulse w-1/3" />
-          <div className="h-4 bg-white/10 rounded animate-pulse w-1/2" />
+          <div className="h-8 bg-slate-200/70 rounded animate-pulse w-1/3" />
+          <div className="h-4 bg-slate-200/70 rounded animate-pulse w-1/2" />
           <div className="space-y-3 mt-8">
             {Array.from({ length: 3 }).map((_, i) => (
-              <div key={i} className="h-20 bg-white/10 rounded-3xl animate-pulse" />
+              <div key={i} className="h-20 bg-slate-200/70 rounded-3xl animate-pulse" />
             ))}
           </div>
         </div>
@@ -222,43 +222,43 @@ Por favor, revisa mis pagos. ¡Gracias!`;
   if (!user) return <Navigate to="/auth" replace />;
 
   return (
-    <div className="relative overflow-hidden bg-[#070d20]">
+    <div className="relative overflow-hidden">
       {/* Lavados de color + orbes */}
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
       <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-blue-600/20 blur-[130px] pointer-events-none"
+        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-volt-300/30 blur-[130px] pointer-events-none"
         aria-hidden
       />
       <div
-        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none"
+        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-volt-200/25 blur-[120px] pointer-events-none"
         aria-hidden
       />
 
       <div className="relative container-page py-12 space-y-8">
-        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-white/10 pb-10">
+        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-slate-200/70 pb-10">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/10 border border-white/15 text-cyan-200 text-xs font-bold uppercase tracking-widest backdrop-blur-xl">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-volt-800 text-xs font-bold uppercase tracking-widest">
               {role === "owner" ? "Dueño Supremo" : role === "admin" ? "Administrador" : role === "gestor" ? "Gestor de Ventas" : role === "mensajero" ? "Mensajero" : "Perfil de Cliente"}
             </div>
-            <h1 className="font-display text-5xl font-bold tracking-tight text-white">Mi cuenta</h1>
-            <p className="text-lg text-slate-300 font-light">{user.email}</p>
+            <h1 className="font-display text-5xl font-bold tracking-tight nc-title-gradient">Mi cuenta</h1>
+            <p className="text-lg text-muted-foreground font-light">{user.email}</p>
           </div>
           <div className="flex flex-wrap gap-2">
             {isAdmin && (
-              <Button asChild className="rounded-full bg-white/10 border border-white/20 text-white hover:bg-white/20 backdrop-blur-xl">
+              <Button asChild className="rounded-full glass text-slate-700 hover:bg-white/90 font-semibold">
                 <Link to="/admin"><LayoutDashboard className="w-4 h-4" /> Panel admin</Link>
               </Button>
             )}
             {isMensajero && (
-              <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-blue-50 font-bold">
+              <Button asChild className="rounded-full bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 hover:brightness-105 font-bold shadow-glow-volt-sm">
                 <Link to="/mensajeria"><Map className="w-4 h-4" /> Panel Mensajero</Link>
               </Button>
             )}
-            <Button onClick={() => setEditing(!editing)} className="rounded-full bg-white/10 border border-white/20 text-white hover:bg-white/20 backdrop-blur-xl">
+            <Button onClick={() => setEditing(!editing)} className="rounded-full glass text-slate-700 hover:bg-white/90 font-semibold">
               {editing ? "Cancelar" : "Editar perfil"}
             </Button>
-            <Button onClick={signOut} className="rounded-full bg-red-500/15 border border-red-400/30 text-red-200 hover:bg-red-500/25 backdrop-blur-xl">
+            <Button onClick={signOut} className="rounded-full bg-red-500/10 border border-red-300/40 text-red-600 hover:bg-red-500/15 font-semibold">
               <LogOut className="w-4 h-4" /> Cerrar sesión
             </Button>
           </div>
@@ -266,9 +266,9 @@ Por favor, revisa mis pagos. ¡Gracias!`;
 
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1 space-y-6">
-            <section className="rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-6 space-y-4">
+            <section className="glass-strong rounded-[2rem] p-6 space-y-4">
               <div className="flex flex-col items-center text-center space-y-3">
-                <div className="w-24 h-24 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border-4 border-white/20 shadow-lg">
+                <div className="w-24 h-24 rounded-full bg-volt-100 flex items-center justify-center overflow-hidden border-4 border-volt-200/70 shadow-glow-volt-sm">
                   {profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
@@ -276,43 +276,43 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                   )}
                 </div>
                 <div>
-                  <h3 className="font-display text-xl font-bold text-white">{profile?.full_name || profile?.username}</h3>
+                  <h3 className="font-display text-xl font-bold nc-title-gradient">{profile?.full_name || profile?.username}</h3>
                   <p className="text-sm text-slate-400">@{profile?.username}</p>
                 </div>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-white/10">
-                <div className="flex items-center gap-2 text-sm text-slate-200">
-                  <Phone className="w-4 h-4 text-cyan-300" />
+              <div className="space-y-3 pt-4 border-t border-slate-200/70">
+                <div className="flex items-center gap-2 text-sm text-slate-700">
+                  <Phone className="w-4 h-4 text-volt-600" />
                   <span>{profile?.phone || "Sin teléfono"}</span>
                 </div>
                 <div className="flex items-start gap-2 text-sm">
-                  <Info className="w-4 h-4 text-cyan-300 mt-1" />
+                  <Info className="w-4 h-4 text-volt-600 mt-1" />
                   <p className="text-slate-400 italic">{(profile as ProfileWithBio | null)?.bio || "Sin biografía"}</p>
                 </div>
               </div>
             </section>
 
             {editing && (
-              <section className="rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-6 space-y-4 animate-in fade-in slide-in-from-top-4">
-                <h3 className="font-bold flex items-center gap-2 text-white"><Save className="w-4 h-4" /> Editar Datos</h3>
+              <section className="glass-strong rounded-[2rem] p-6 space-y-4 animate-fade-in-up">
+                <h3 className="font-bold flex items-center gap-2 nc-title-gradient"><Save className="w-4 h-4" /> Editar Datos</h3>
                 <div className="space-y-3">
                   <div className="space-y-1">
-                    <Label className="text-slate-200 font-medium">Nombre Completo</Label>
-                    <Input value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60" />
+                    <Label className="text-slate-700 font-medium">Nombre Completo</Label>
+                    <Input value={formData.full_name} onChange={e => setFormData({...formData, full_name: e.target.value})} className="nc-input h-12" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-slate-200 font-medium">Nombre de Usuario</Label>
-                    <Input value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60" />
+                    <Label className="text-slate-700 font-medium">Nombre de Usuario</Label>
+                    <Input value={formData.username} onChange={e => setFormData({...formData, username: e.target.value})} className="nc-input h-12" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-slate-200 font-medium">Teléfono</Label>
-                    <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60" />
+                    <Label className="text-slate-700 font-medium">Teléfono</Label>
+                    <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="nc-input h-12" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-slate-200 font-medium">Foto de Perfil</Label>
+                    <Label className="text-slate-700 font-medium">Foto de Perfil</Label>
                     <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-full bg-white/10 flex items-center justify-center overflow-hidden border border-white/20">
+                      <div className="w-20 h-20 rounded-full bg-volt-100 flex items-center justify-center overflow-hidden border border-volt-200/70">
                         {selectedFile ? (
                           <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover" />
                         ) : formData.avatar_url ? (
@@ -329,7 +329,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                             setSelectedFile(e.target.files[0]);
                           }
                         }}
-                        className="flex-grow h-12 rounded-2xl bg-white/10 border-white/20 text-slate-200 file:text-slate-200 backdrop-blur-md"
+                        className="flex-grow h-12 rounded-2xl bg-white/70 border border-slate-200/80 text-slate-700 backdrop-blur-md file:mr-3 file:rounded-xl file:border-0 file:bg-volt-200 file:px-3 file:py-1.5 file:font-semibold file:text-slate-900"
                       />
                     </div>
                     {selectedFile && (
@@ -344,10 +344,10 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                     )}
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-slate-200 font-medium">Biografía</Label>
-                    <Textarea value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60" />
+                    <Label className="text-slate-700 font-medium">Biografía</Label>
+                    <Textarea value={formData.bio} onChange={e => setFormData({...formData, bio: e.target.value})} className="nc-input" />
                   </div>
-                  <Button onClick={handleSaveProfile} disabled={saving || uploading} className="w-full mt-4 h-12 rounded-2xl bg-white text-slate-950 hover:bg-blue-50 font-bold">
+                  <Button onClick={handleSaveProfile} disabled={saving || uploading} className="nc-btn-primary w-full mt-4 h-12">
                     {uploading ? "Subiendo imagen..." : saving ? "Guardando..." : "Guardar Cambios"}
                   </Button>
                 </div>
@@ -357,66 +357,66 @@ Por favor, revisa mis pagos. ¡Gracias!`;
 
           <div className="lg:col-span-2 space-y-6">
             {isGestor && gestorStats && (
-              <section className="rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-6">
+              <section className="glass-strong rounded-[2rem] p-6">
                 <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
-                  <h2 className="font-display text-2xl font-bold flex items-center gap-2 text-white">
-                    <Wallet className="w-6 h-6 text-cyan-300" /> Resumen de Gestor
+                  <h2 className="font-display text-2xl font-bold flex items-center gap-2 nc-title-gradient">
+                    <Wallet className="w-6 h-6 text-volt-600" /> Resumen de Gestor
                   </h2>
                   <div className="flex gap-2">
-                    <Button size="sm" onClick={sendToWhatsApp} className="rounded-full bg-green-500/20 border border-green-400/30 text-green-200 hover:bg-green-500/30">
+                    <Button size="sm" onClick={sendToWhatsApp} className="rounded-full bg-green-500/10 border border-green-300/50 text-green-700 hover:bg-green-500/20 font-semibold">
                       <MessageSquare className="w-4 h-4 mr-2" /> WhatsApp Admin
                     </Button>
-                    <Button size="sm" onClick={handleRequestPayment} disabled={requestingPayment} className="rounded-full bg-white text-slate-950 hover:bg-blue-50 font-bold">
+                    <Button size="sm" onClick={handleRequestPayment} disabled={requestingPayment} className="rounded-full bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 hover:brightness-105 font-bold shadow-glow-volt-sm">
                       <Send className="w-4 h-4 mr-2" /> Pedir Pago
                     </Button>
                   </div>
                 </div>
 
                 <div className="grid sm:grid-cols-3 gap-4">
-                  <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
+                  <div className="glass p-4 rounded-2xl">
                     <div className="flex items-center gap-2 text-xs font-medium uppercase text-slate-400 mb-1">
                       <Clock className="w-3 h-3" /> Pendiente
                     </div>
-                    <div className="text-2xl font-bold text-amber-300">{formatCUP(gestorStats.bySeller[0]?.pendingCommission || 0)}</div>
+                    <div className="text-2xl font-bold text-amber-600">{formatCUP(gestorStats.bySeller[0]?.pendingCommission || 0)}</div>
                   </div>
-                  <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
+                  <div className="glass p-4 rounded-2xl">
                     <div className="flex items-center gap-2 text-xs font-medium uppercase text-slate-400 mb-1">
                       <CheckCircle className="w-3 h-3" /> Pagado
                     </div>
-                    <div className="text-2xl font-bold text-emerald-300">{formatCUP(gestorStats.bySeller[0]?.paidCommission || 0)}</div>
+                    <div className="text-2xl font-bold text-emerald-600">{formatCUP(gestorStats.bySeller[0]?.paidCommission || 0)}</div>
                   </div>
-                  <div className="bg-white/10 p-4 rounded-2xl border border-white/15 backdrop-blur-md">
+                  <div className="glass p-4 rounded-2xl">
                     <div className="flex items-center gap-2 text-xs font-medium uppercase text-slate-400 mb-1">
                       <Package className="w-3 h-3" /> Ventas
                     </div>
-                    <div className="text-2xl font-bold text-cyan-200">{gestorStats.bySeller[0]?.count || 0}</div>
+                    <div className="text-2xl font-bold text-volt-700">{gestorStats.bySeller[0]?.count || 0}</div>
                   </div>
                 </div>
               </section>
             )}
 
-            <section className="rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-6">
-              <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2 text-white">
-                <Package className="w-5 h-5 text-cyan-300" /> Mis pedidos
+            <section className="glass-strong rounded-[2rem] p-6">
+              <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2 nc-title-gradient">
+                <Package className="w-5 h-5 text-volt-600" /> Mis pedidos
               </h2>
               {orders.length === 0 ? (
                 <div className="text-center py-12 space-y-3">
                   <p className="text-slate-400">No tienes pedidos todavía.</p>
-                  <Button asChild className="rounded-full bg-white text-slate-950 hover:bg-blue-50 font-bold px-6 h-12"><Link to="/tienda">Empezar a comprar</Link></Button>
+                  <Button asChild className="rounded-full bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 hover:brightness-105 font-bold px-6 h-12 shadow-glow-volt-sm"><Link to="/tienda">Empezar a comprar</Link></Button>
                 </div>
               ) : (
-                <div className="divide-y divide-white/10">
+                <div className="divide-y divide-slate-200/70">
                   {orders.map((o) => (
                     <div key={o.id} className="py-4 flex items-center justify-between gap-4">
                       <div>
-                        <p className="font-semibold text-sm text-white">Pedido #{o.id.slice(0, 8)}</p>
+                        <p className="font-semibold text-sm">Pedido #{o.id.slice(0, 8)}</p>
                         <p className="text-xs text-slate-400">
                           {new Date(o.created_at).toLocaleString("es-CU")} · {Array.isArray(o.items) ? o.items.length : 0} productos
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-display font-bold text-cyan-200">{formatPrice(o.total)}</p>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-white/10 border border-white/15 text-slate-300 capitalize">{o.status}</span>
+                        <p className="font-display font-bold text-volt-700">{formatPrice(o.total)}</p>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-volt-100 border border-volt-200 text-volt-800 capitalize font-semibold">{o.status}</span>
                       </div>
                     </div>
                   ))}

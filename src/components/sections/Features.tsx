@@ -32,14 +32,14 @@ const features = [
 export function Features() {
   const { ref, visible } = useReveal();
   return (
-    <section ref={ref} className={cn("py-12 md:py-16 bg-white reveal", visible && "is-visible")}>
+    <section ref={ref} className={cn("py-12 md:py-16 reveal", visible && "is-visible")}>
       <div className="container-page">
         <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-volt-200/70 text-volt-800 border border-volt-400/30 text-xs font-bold uppercase tracking-widest">
             Por qué NeoCharge
           </div>
-          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight">
-            Comprar aquí es <span className="text-gradient-accent">sin enredos</span>
+          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
+            Comprar aquí es sin enredos
           </h2>
           <p className="text-muted-foreground text-lg font-light">
             Precios claros, garantía de verdad y entrega en La Habana. Así de simple.
@@ -51,19 +51,16 @@ export function Features() {
             <div
               key={f.title}
               className={cn(
-                "group relative p-7 rounded-3xl overflow-hidden bg-card border border-border hover:border-primary/40 hover:shadow-lifted transition-all duration-500 hover:-translate-y-1.5 nc-shine-hover",
+                "group relative p-7 rounded-3xl overflow-hidden glass border-white/70 hover:border-volt-400/60 hover:shadow-glow-volt-sm transition-all duration-500 hover:-translate-y-1.5 nc-shine-hover",
                 "reveal",
                 visible && "is-visible",
               )}
               style={{ transitionDelay: `${i * 80}ms` }}
             >
               <div
-                className={cn(
-                  "w-14 h-14 rounded-2xl bg-gradient-to-br flex items-center justify-center mb-5 shadow-elevated group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500",
-                  f.color,
-                )}
+                className="nc-icon-tile-md mb-5 group-hover:scale-110 group-hover:rotate-3 transition-transform duration-500"
               >
-                <f.icon className="w-7 h-7 text-white" strokeWidth={2.2} />
+                <f.icon className="w-7 h-7" strokeWidth={2.2} />
               </div>
               <h3 className="font-display text-xl font-bold mb-2">{f.title}</h3>
               <p className="text-sm text-muted-foreground leading-relaxed">{f.desc}</p>

@@ -22,13 +22,13 @@ import "@/components/sections/visual-effects.css";
 const serviceTypeLabels = {
   purchase: {
     label: "Compra",
-    badgeClass: "bg-emerald-400/15 text-emerald-200 ring-emerald-300/30",
+    badgeClass: "bg-emerald-100 text-emerald-700 ring-emerald-200/70",
     action: "Comprar servicio",
     hint: "Este servicio está listo para contratarse de forma directa. Escríbenos y coordinamos la compra contigo.",
   },
   request: {
     label: "Pedido / Solicitud",
-    badgeClass: "bg-blue-400/15 text-blue-200 ring-blue-300/30",
+    badgeClass: "bg-volt-200/60 text-volt-900 ring-volt-300/60",
     action: "Pedir servicio",
     hint: "Solicita este servicio por WhatsApp y te contactaremos para confirmar detalles, tiempos y coordinación.",
   },
@@ -89,8 +89,7 @@ export default function ServiceDetail() {
 
   return (
     <div className="relative overflow-hidden">
-      {/* Fondo claro con lavados suaves */}
-      <div className="absolute inset-0 bg-gradient-to-b from-slate-50 via-white to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 pointer-events-none" aria-hidden />
+      {/* Lavado suave sobre el fondo pastel del body */}
       <div className="nc-section-wash absolute inset-0 pointer-events-none" aria-hidden />
 
       <div ref={ref} className={cn("relative container-page py-10 md:py-16 reveal", visible && "is-visible")}>
@@ -102,14 +101,14 @@ export default function ServiceDetail() {
         </Link>
 
         {loading ? (
-          <div className="rounded-[2rem] border border-border bg-card p-16 text-center">
+          <div className="nc-card p-16 text-center hover-lift">
             <Loader2 className="mx-auto mb-4 h-8 w-8 animate-spin text-primary" />
             <p className="text-muted-foreground">Cargando servicio...</p>
           </div>
         ) : notFound || !service ? (
-          <div className="max-w-xl mx-auto text-center rounded-[2.5rem] border border-border bg-card p-12 md:p-16 shadow-xl space-y-6">
-            <div className="mx-auto w-16 h-16 rounded-3xl bg-primary/10 flex items-center justify-center">
-              <SearchX className="w-8 h-8 text-primary" />
+          <div className="max-w-xl mx-auto text-center nc-card p-12 md:p-16 space-y-6 hover-lift">
+            <div className="mx-auto nc-icon-tile w-16 h-16 !rounded-3xl">
+              <SearchX className="w-8 h-8" />
             </div>
             <h1 className="font-display text-3xl md:text-4xl font-bold tracking-tight">
               Servicio no encontrado
@@ -132,27 +131,27 @@ export default function ServiceDetail() {
         ) : (
           <>
             {/* Hero del servicio: panel oscuro con vidrio líquido */}
-            <section className="relative overflow-hidden rounded-[2.5rem] bg-gradient-to-br from-[#0a1430] via-[#0d1b4d] to-[#070d20] text-white shadow-2xl nc-beam-host">
+            <section className="relative overflow-hidden rounded-[2.5rem] glass-strong shadow-xl hover-lift">
               <div className="nc-beam" aria-hidden />
               <div className="nc-wash-a" aria-hidden />
               <div
-                className="absolute -top-32 -right-32 w-[380px] h-[380px] rounded-full bg-blue-500/20 blur-[100px] pointer-events-none"
+                className="absolute -top-32 -right-32 w-[380px] h-[380px] rounded-full bg-volt-300/40 blur-[100px] pointer-events-none"
                 aria-hidden
               />
               <div className="relative p-8 md:p-12 lg:p-14">
                 <div className="flex flex-wrap items-center gap-3 mb-6">
-                  <span className="inline-flex items-center gap-1.5 rounded-full border border-white/25 nc-liquid px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-slate-100">
+                  <span className="inline-flex items-center gap-1.5 rounded-full glass border-volt-300/50 px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] text-volt-800">
                     <Tag className="w-3.5 h-3.5" /> {service.category ?? "General"}
                   </span>
                   <span className={cn("rounded-full px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-[0.18em] ring-1 backdrop-blur-md", typeMeta.badgeClass)}>
                     {typeMeta.label}
                   </span>
                 </div>
-                <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] max-w-3xl">
+                <h1 className="font-display text-4xl md:text-6xl font-bold tracking-tight leading-[1.05] max-w-3xl nc-title-gradient">
                   {service.title}
                 </h1>
                 {service.summary && (
-                  <p className="mt-5 text-lg md:text-xl text-slate-300 font-light leading-relaxed max-w-2xl">
+                  <p className="mt-5 text-lg md:text-xl text-muted-foreground font-light leading-relaxed max-w-2xl">
                     {service.summary}
                   </p>
                 )}
@@ -163,7 +162,7 @@ export default function ServiceDetail() {
             <div className="grid lg:grid-cols-[1fr_380px] gap-8 mt-8">
               <div className="space-y-8">
                 {service.description && (
-                  <section className="rounded-[2rem] border border-border bg-card p-8 md:p-10 shadow-sm">
+                  <section className="nc-card p-8 md:p-10 hover-lift">
                     <h2 className="font-display text-2xl font-bold tracking-tight mb-4">
                       Descripción del servicio
                     </h2>
@@ -174,7 +173,7 @@ export default function ServiceDetail() {
                 )}
 
                 {service.features && service.features.length > 0 && (
-                  <section className="rounded-[2rem] border border-border bg-card p-8 md:p-10 shadow-sm">
+                  <section className="nc-card p-8 md:p-10 hover-lift">
                     <h2 className="font-display text-2xl font-bold tracking-tight mb-6">
                       Qué incluye
                     </h2>
@@ -194,7 +193,7 @@ export default function ServiceDetail() {
 
               {/* Tarjeta de contratación con vidrio */}
               <aside className="lg:sticky lg:top-28 h-fit">
-                <div className="rounded-[2rem] border border-white/40 nc-liquid-soft p-7 md:p-8 shadow-xl space-y-6">
+                <div className="glass-strong rounded-[2rem] p-7 md:p-8 space-y-6 hover-lift">
                   <div>
                     <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground font-bold">Precio</p>
                     <p className="mt-2 font-display text-4xl font-bold tracking-tight">

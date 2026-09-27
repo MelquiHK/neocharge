@@ -54,10 +54,10 @@ export default function DescargarApp() {
       </Link>
 
       <div className="text-center space-y-4">
-        <div className="w-20 h-20 mx-auto rounded-3xl bg-primary flex items-center justify-center shadow-lg">
-          <Smartphone className="w-10 h-10 text-white" />
+        <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 flex items-center justify-center shadow-glow-volt">
+          <Smartphone className="w-10 h-10 text-slate-900" />
         </div>
-        <h1 className="text-3xl font-extrabold tracking-tight">
+        <h1 className="text-3xl font-extrabold tracking-tight nc-title-gradient">
           Lleva NeoCharge en tu bolsillo
         </h1>
         <p className="text-muted-foreground">
@@ -67,7 +67,7 @@ export default function DescargarApp() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
-        <div className="flex items-start gap-3 p-4 rounded-xl border bg-card">
+        <div className="flex items-start gap-3 p-4 glass rounded-3xl hover-lift">
           <Zap className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div>
             <p className="font-bold text-sm">Apertura instantánea</p>
@@ -76,7 +76,7 @@ export default function DescargarApp() {
             </p>
           </div>
         </div>
-        <div className="flex items-start gap-3 p-4 rounded-xl border bg-card">
+        <div className="flex items-start gap-3 p-4 glass rounded-3xl hover-lift">
           <ShoppingBag className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div>
             <p className="font-bold text-sm">Compra más rápido</p>
@@ -87,7 +87,7 @@ export default function DescargarApp() {
         </div>
       </div>
 
-      <div className="mt-8 p-6 rounded-2xl border-2 border-primary/20 bg-primary/5 text-center space-y-4">
+      <div className="mt-8 p-6 glass rounded-3xl border-volt-300/50 text-center space-y-4 shadow-glow-volt-sm">
         {installed || accepted ? (
           <p className="flex items-center justify-center gap-2 font-bold text-green-600">
             <CheckCircle2 className="w-5 h-5" /> ¡Ya tienes la app instalada!
@@ -117,7 +117,7 @@ export default function DescargarApp() {
       </div>
 
       {showManual && !installed && !accepted && (
-        <div className="mt-6 p-5 rounded-2xl border bg-card space-y-3 animate-in fade-in">
+        <div className="mt-6 p-5 glass rounded-3xl space-y-3 animate-fade-in">
           <p className="font-bold text-sm">Instálala manualmente en 3 pasos:</p>
           {isIOS ? (
             <ol className="text-sm text-muted-foreground space-y-2 list-decimal list-inside">
@@ -143,7 +143,7 @@ export default function DescargarApp() {
         </div>
       )}
 
-      <div className="mt-8 p-5 rounded-2xl border bg-card space-y-3">
+      <div className="mt-8 p-5 glass rounded-3xl space-y-3 hover-lift">
         <p className="font-bold text-sm flex items-center gap-2">
           <Download className="w-4 h-4" /> ¿Prefieres el archivo directo? (Android)
         </p>

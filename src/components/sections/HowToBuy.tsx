@@ -25,14 +25,14 @@ const steps = [
 export function HowToBuy() {
   const { ref, visible } = useReveal();
   return (
-    <section ref={ref} className={cn("py-12 md:py-16 bg-slate-50/70 nc-section-wash reveal", visible && "is-visible")}>
+    <section ref={ref} className={cn("py-12 md:py-16 nc-section-wash reveal", visible && "is-visible")}>
       <div className="container-page">
         <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12 space-y-4">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-volt-200/70 text-volt-800 border border-volt-400/30 text-xs font-bold uppercase tracking-widest">
             Compra fácil
           </div>
-          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight">
-            Comprar es <span className="text-gradient-accent">así de simple</span>
+          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
+            Comprar es así de simple
           </h2>
           <p className="text-muted-foreground text-lg font-light">
             Sin cuentas complicadas ni pagos por adelantado. En tres pasos lo tienes en tus manos.
@@ -49,15 +49,15 @@ export function HowToBuy() {
             <div
               key={s.title}
               className={cn(
-                "relative p-7 rounded-3xl overflow-hidden bg-card border border-border hover:border-primary/40 hover:shadow-lifted transition-all duration-500 hover:-translate-y-1.5 nc-shine-hover",
+                "relative p-7 rounded-3xl overflow-hidden glass border-white/70 hover:border-volt-400/60 hover:shadow-glow-volt-sm transition-all duration-500 hover:-translate-y-1.5 nc-shine-hover",
                 "reveal",
                 visible && "is-visible",
               )}
               style={{ transitionDelay: `${i * 110}ms` }}
             >
               <div className="flex items-center justify-between mb-5">
-                <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-primary to-primary-glow flex items-center justify-center shadow-elevated">
-                  <s.icon className="w-7 h-7 text-white" strokeWidth={2.2} />
+                <div className="nc-icon-tile-md">
+                  <s.icon className="w-7 h-7" strokeWidth={2.2} />
                 </div>
                 <span className="font-display text-5xl font-black text-primary/10 select-none" aria-hidden>
                   {i + 1}
@@ -80,7 +80,7 @@ export function HowToBuy() {
           )}
           style={{ transitionDelay: "330ms" }}
         >
-          <span className="w-12 h-12 shrink-0 rounded-2xl bg-emerald-500/15 text-emerald-600 flex items-center justify-center">
+          <span className="nc-icon-tile-md">
             <ShieldCheck className="w-6 h-6" />
           </span>
           <p className="text-[15px] leading-relaxed text-slate-700">

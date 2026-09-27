@@ -174,13 +174,13 @@ const BlogPost = () => {
             year: "numeric",
           })}
         </p>
-        <h1 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight">
+        <h1 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
           {post.title}
         </h1>
         {post.excerpt && <p className="text-muted-foreground text-lg">{post.excerpt}</p>}
       </header>
 
-      <div className="mt-10 rounded-3xl overflow-hidden border border-border/60 shadow-soft">
+      <div className="mt-10 glass rounded-3xl overflow-hidden">
         {images.length > 0 ? (
           <>
             <div className="aspect-[16/9] bg-secondary">
@@ -233,7 +233,7 @@ const BlogPost = () => {
               <Link
                 key={r.id}
                 to={`/blog/${r.slug}`}
-                className="group rounded-3xl border border-border/60 overflow-hidden bg-card hover:border-primary/50 transition-all hover:-translate-y-1 hover:shadow-lifted"
+                className="group glass rounded-3xl overflow-hidden hover-lift hover:border-volt-300"
               >
                 {r.image_url ? (
                   <div className="aspect-[16/9] overflow-hidden bg-secondary">
@@ -267,7 +267,7 @@ const BlogPost = () => {
         </section>
       )}
 
-      <section className="mt-12 rounded-3xl border border-border/60 bg-secondary/40 p-8 md:p-10 text-center space-y-4">
+      <section className="mt-12 nc-card p-8 md:p-10 text-center space-y-4 hover-lift">
         <h2 className="font-display text-2xl md:text-3xl font-bold">¿Te gustó el artículo?</h2>
         <p className="text-muted-foreground max-w-xl mx-auto">
           Ponlo en práctica con nuestros productos: cargadores y accesorios con garantía

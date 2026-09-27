@@ -9,8 +9,8 @@ const WHATSAPP_URL =
 
 export function Footer() {
   return (
-    <footer className="relative mt-32 border-t border-border bg-secondary/30">
-      <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-primary/40 to-transparent" />
+    <footer className="relative mt-32 border-t border-white/60 bg-white/50 backdrop-blur-xl">
+      <div className="absolute inset-x-0 -top-px h-px bg-gradient-to-r from-transparent via-volt-500/60 to-transparent" />
 
       {/* Banda de contacto directo por WhatsApp.
           (Antes había un "newsletter" que no guardaba los correos en ningún lado:

@@ -52,15 +52,15 @@ export function InstallAppBubble() {
     <button
       type="button"
       onClick={() => navigate("/descargar-app")}
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 pl-2 pr-2 py-2 rounded-full bg-slate-900/95 text-white shadow-2xl border border-white/10 backdrop-blur animate-in slide-in-from-bottom-4 duration-500 max-w-[92vw]"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 pl-2 pr-2 py-2 rounded-full glass-strong text-slate-900 shadow-glow-volt-sm border border-volt-400/40 animate-in slide-in-from-bottom-4 duration-500 max-w-[92vw]"
       aria-label="Instalar la app de NeoCharge"
     >
-      <span className="w-10 h-10 rounded-full bg-primary flex items-center justify-center shrink-0">
-        <Smartphone className="w-5 h-5 text-white" />
+      <span className="w-10 h-10 rounded-full bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 flex items-center justify-center shrink-0 shadow-glow-volt-sm">
+        <Smartphone className="w-5 h-5 text-slate-900" />
       </span>
       <span className="text-left leading-tight">
         <span className="block text-sm font-bold">Instala la app de NeoCharge</span>
-        <span className="block text-[11px] text-white/70">Compra más rápido desde tu inicio</span>
+        <span className="block text-[11px] text-slate-500">Compra más rápido desde tu inicio</span>
       </span>
       <span
         role="button"
@@ -68,7 +68,7 @@ export function InstallAppBubble() {
         aria-label="Cerrar aviso"
         onClick={dismiss}
         onKeyDown={(e) => e.key === "Enter" && dismiss(e as unknown as React.MouseEvent)}
-        className="w-7 h-7 rounded-full flex items-center justify-center text-white/60 hover:text-white hover:bg-white/10 shrink-0"
+        className="w-7 h-7 rounded-full flex items-center justify-center text-slate-500 hover:text-slate-900 hover:bg-slate-900/5 shrink-0"
       >
         <X className="w-4 h-4" />
       </span>

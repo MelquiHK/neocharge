@@ -92,16 +92,16 @@ const Auth = () => {
   };
 
   return (
-    <div className="relative overflow-hidden bg-[#070d20]">
+    <div className="relative overflow-hidden">
       {/* Lavados de color + orbes */}
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
       <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-blue-600/20 blur-[130px] pointer-events-none"
+        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-volt-300/30 blur-[130px] pointer-events-none"
         aria-hidden
       />
       <div
-        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-cyan-500/10 blur-[120px] pointer-events-none"
+        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-volt-200/25 blur-[120px] pointer-events-none"
         aria-hidden
       />
 
@@ -109,21 +109,21 @@ const Auth = () => {
         <div className="max-w-md mx-auto">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white mb-8 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-volt-700 mb-8 transition-colors"
           >
             <ArrowLeft className="w-4 h-4" /> Volver al inicio
           </Link>
 
           {/* Tarjeta de vidrio líquido */}
-          <div className="rounded-[2.5rem] border border-white/25 nc-liquid nc-sheen p-8 sm:p-10 shadow-2xl">
+          <div className="glass-strong rounded-[2.5rem] p-8 sm:p-10">
             <div className="flex flex-col items-center gap-4 text-center">
-              <div className="p-4 rounded-3xl bg-white/10 border border-white/20 backdrop-blur-xl shadow-lg mb-1">
+              <div className="nc-icon-tile rounded-3xl p-4 mb-1">
                 <Logo showText={false} />
               </div>
-              <h1 className="font-display text-3xl font-bold tracking-tight text-white">
+              <h1 className="font-display text-3xl font-bold tracking-tight nc-title-gradient">
                 {mode === "login" ? "¡Hola de nuevo!" : "Únete a NeoCharge"}
               </h1>
-              <p className="text-base text-slate-300 font-light leading-relaxed">
+              <p className="text-base text-muted-foreground font-light leading-relaxed">
                 {mode === "login"
                   ? "Entra para gestionar tus compras y favoritos."
                   : "Crea tu cuenta y vive la experiencia premium."}
@@ -132,7 +132,7 @@ const Auth = () => {
 
             {/* Tabs píldora de vidrio */}
             <div
-              className="grid grid-cols-2 gap-1 p-1.5 rounded-full bg-white/10 border border-white/15 backdrop-blur-xl mt-8"
+              className="grid grid-cols-2 gap-1 p-1.5 rounded-full glass mt-8"
               role="tablist"
               aria-label="Modo de autenticación"
             >
@@ -144,8 +144,8 @@ const Auth = () => {
                 className={cn(
                   "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
                   mode === "login"
-                    ? "bg-white text-slate-950 shadow-lg"
-                    : "text-slate-300 hover:text-white",
+                    ? "bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm"
+                    : "text-muted-foreground hover:text-volt-800",
                 )}
               >
                 <LogIn className="w-4 h-4" /> Iniciar
@@ -158,8 +158,8 @@ const Auth = () => {
                 className={cn(
                   "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
                   mode === "signup"
-                    ? "bg-white text-slate-950 shadow-lg"
-                    : "text-slate-300 hover:text-white",
+                    ? "bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm"
+                    : "text-muted-foreground hover:text-volt-800",
                 )}
               >
                 <UserPlus className="w-4 h-4" /> Crear cuenta
@@ -169,7 +169,7 @@ const Auth = () => {
             <form onSubmit={handleSubmit} className="space-y-4 mt-7">
               {mode === "signup" && (
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-slate-200 font-medium">Nombre completo</Label>
+                  <Label htmlFor="name" className="text-slate-700 font-medium">Nombre completo</Label>
                   <Input
                     id="name"
                     value={name}
@@ -177,12 +177,12 @@ const Auth = () => {
                     required
                     placeholder="Juan Pérez"
                     autoComplete="name"
-                    className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                    className="nc-input h-12"
                   />
                 </div>
               )}
               <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-200 font-medium">Correo</Label>
+                <Label htmlFor="email" className="text-slate-700 font-medium">Correo</Label>
                 <Input
                   id="email"
                   type="email"
@@ -191,11 +191,11 @@ const Auth = () => {
                   required
                   placeholder="tu@correo.com"
                   autoComplete="email"
-                  className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                  className="nc-input h-12"
                 />
               </div>
               <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-200 font-medium">Contraseña</Label>
+                <Label htmlFor="password" className="text-slate-700 font-medium">Contraseña</Label>
                 <Input
                   id="password"
                   type="password"
@@ -205,21 +205,21 @@ const Auth = () => {
                   minLength={6}
                   placeholder="Mínimo 6 caracteres"
                   autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  className="h-12 rounded-2xl bg-white/10 border-white/20 text-white placeholder:text-slate-400 backdrop-blur-md focus-visible:ring-cyan-300/60 focus-visible:border-cyan-300/60"
+                  className="nc-input h-12"
                 />
               </div>
 
               <Button
                 type="submit"
                 size="lg"
-                className="w-full h-13 rounded-2xl bg-white text-slate-950 hover:bg-blue-50 font-bold text-base nc-btn-shine shadow-xl transition-all duration-300 hover:-translate-y-0.5 disabled:translate-y-0"
+                className="nc-btn-primary w-full h-13 text-base nc-btn-shine"
                 disabled={loading}
               >
                 {loading ? "Procesando..." : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
               </Button>
             </form>
 
-            <p className="text-xs text-slate-400 text-center mt-6 leading-relaxed">
+            <p className="text-xs text-muted-foreground text-center mt-6 leading-relaxed">
               Comprar como invitado también es posible —<br />puedes hacer pedidos sin cuenta.
             </p>
           </div>

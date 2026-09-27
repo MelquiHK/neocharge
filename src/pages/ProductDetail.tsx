@@ -408,16 +408,16 @@ export default function ProductDetail() {
 
           {/* Description */}
           {product.description && (
-            <div className="bg-gradient-to-br from-blue-50 to-slate-50 dark:from-blue-950/30 dark:to-slate-900/30 rounded-lg p-5 border border-blue-100 dark:border-blue-900/30">
-              <h3 className="font-semibold text-slate-900 dark:text-white mb-3">Descripción</h3>
-              <p className="text-slate-700 dark:text-slate-300 leading-relaxed whitespace-pre-wrap">{product.description}</p>
+            <div className="glass rounded-3xl p-5 border-volt-200/60 hover-lift">
+              <h3 className="font-semibold mb-3">Descripción</h3>
+              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{product.description}</p>
             </div>
           )}
 
           {/* Add to Cart */}
           <div className="space-y-4">
             <div className="flex items-center gap-4">
-              <div className="flex items-center border rounded-lg">
+              <div className="flex items-center border border-slate-200/80 bg-white/70 rounded-2xl backdrop-blur overflow-hidden">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
                   className="px-4 py-2 hover:bg-muted"
@@ -438,7 +438,7 @@ export default function ProductDetail() {
             <Button
               onClick={handleAddToCart}
               disabled={outOfStock}
-              className="w-full h-12 text-base nc-btn-shine relative overflow-hidden active:scale-[0.99] transition-transform"
+              className="w-full h-12 text-base nc-btn-shine rounded-2xl relative overflow-hidden active:scale-[0.99] transition-transform"
             >
               {outOfStock ? "Agotado" : "Añadir al carrito"}
             </Button>
@@ -465,8 +465,8 @@ export default function ProductDetail() {
 
           {/* Warranty */}
           {product.warranty_type && (
-            <div className="bg-primary/10 rounded-lg p-4 text-sm">
-              <p className="font-semibold text-primary mb-1">✓ {warrantyTypeLabel(product.warranty_type)}</p>
+            <div className="glass rounded-2xl p-4 text-sm border-volt-200/60">
+              <p className="font-semibold text-volt-800 mb-1">✓ {warrantyTypeLabel(product.warranty_type)}</p>
               <p className="text-muted-foreground">Todos nuestros productos incluyen garantía completa y soporte técnico.</p>
             </div>
           )}
@@ -474,10 +474,10 @@ export default function ProductDetail() {
           {/* Delivery: entrelazado con la calculadora de envío */}
           <Link
             to="/calcular-envio"
-            className="flex items-center gap-3 rounded-lg border border-border/60 bg-secondary/40 p-4 text-sm hover:border-primary/50 hover:bg-secondary/70 transition-colors group"
+            className="flex items-center gap-3 glass rounded-3xl p-4 text-sm hover:border-volt-400 hover-lift transition-colors group"
           >
-            <span className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-              <Truck className="w-5 h-5 text-primary" />
+            <span className="nc-icon-tile-sm">
+              <Truck className="w-5 h-5" />
             </span>
             <span>
               <span className="font-semibold block group-hover:text-primary transition-colors">
@@ -494,7 +494,7 @@ export default function ProductDetail() {
       <div className="grid gap-10 lg:grid-cols-[1.35fr_0.8fr] mb-16">
         {product.warranty_type === "charger" ? (
           <div>
-            <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-950/80">
+            <div className="glass rounded-3xl p-6 hover-lift">
               <h2 className="font-display text-2xl font-bold mb-3">Calculadora de cargador</h2>
               <p className="text-sm text-muted-foreground mb-4">Comprueba si este cargador sirve para tu batería y obtén recomendaciones de voltaje y amperaje.</p>
               <ChargerCalculator
@@ -519,35 +519,35 @@ export default function ProductDetail() {
             <TabsContent value="locations" className="space-y-4 mt-6">
               {locStock.length > 0 ? (
                 <div className="space-y-3">
-                  <div className="bg-green-50 dark:bg-green-950/20 border border-green-200 dark:border-green-900 rounded-lg p-4 mb-4">
-                    <p className="text-sm font-semibold text-green-900 dark:text-green-200">✓ Producto disponible en {locStock.length} ubicación{locStock.length > 1 ? 'es' : ''}</p>
+                  <div className="bg-green-50/80 border border-green-200/70 rounded-2xl p-4 mb-4">
+                    <p className="text-sm font-semibold text-green-800">✓ Producto disponible en {locStock.length} ubicación{locStock.length > 1 ? 'es' : ''}</p>
                   </div>
                   <div className="grid gap-4">
                     {locStock.map((loc) => (
-                      <div key={loc.store_locations.id} className="border rounded-lg p-4 hover:shadow-md transition-shadow hover:border-blue-400 dark:hover:border-blue-600">
+                      <div key={loc.store_locations.id} className="glass rounded-3xl p-4 hover:border-volt-400 hover-lift transition-shadow">
                         <div className="flex items-start justify-between gap-4 mb-3">
                           <div className="flex-1">
-                            <h3 className="font-bold text-lg text-slate-900 dark:text-white flex items-center gap-2">
+                            <h3 className="font-bold text-lg flex items-center gap-2">
                               <span className="text-lg">{loc.store_locations.location_type === 'physical' ? '🏪' : '📦'}</span>
                               {loc.store_locations.name}
                             </h3>
                             <div className="space-y-2 mt-2">
                               {loc.store_locations.address && (
-                                <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-500" />
+                                <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-volt-600" />
                                   <span>{loc.store_locations.address}</span>
                                 </div>
                               )}
                               {loc.store_locations.hours && (
-                                <div className="flex items-start gap-2 text-sm text-slate-600 dark:text-slate-400">
-                                  <Clock className="w-4 h-4 mt-0.5 flex-shrink-0 text-blue-500" />
+                                <div className="flex items-start gap-2 text-sm text-muted-foreground">
+                                  <Clock className="w-4 h-4 mt-0.5 flex-shrink-0 text-volt-600" />
                                   <span>{loc.store_locations.hours}</span>
                                 </div>
                               )}
                             </div>
                           </div>
                           <div className="text-right">
-                            <div className={`text-3xl font-bold ${loc.stock > 0 ? 'text-green-600 dark:text-green-400' : 'text-red-600 dark:text-red-400'}`}>
+                            <div className={`text-3xl font-bold ${loc.stock > 0 ? 'text-green-600' : 'text-red-500'}`}>
                               {loc.stock}
                             </div>
                             <p className="text-xs text-muted-foreground mt-1">
@@ -571,8 +571,8 @@ export default function ProductDetail() {
                   </div>
                 </div>
               ) : (
-                <div className="bg-yellow-50 dark:bg-yellow-950/20 border border-yellow-200 dark:border-yellow-900 rounded-lg p-4 text-center">
-                  <p className="text-sm font-semibold text-yellow-900 dark:text-yellow-200">⚠️ No hay información de disponibilidad en tiendas</p>
+                <div className="bg-yellow-50/80 border border-yellow-200/70 rounded-2xl p-4 text-center">
+                  <p className="text-sm font-semibold text-yellow-900">⚠️ No hay información de disponibilidad en tiendas</p>
                   <p className="text-xs text-muted-foreground mt-1">Contacta con nosotros para conocer disponibilidad</p>
                 </div>
               )}

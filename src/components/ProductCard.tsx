@@ -81,7 +81,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
   return (
     <div
       className={cn(
-        "group relative rounded-3xl overflow-hidden transition-all duration-700 bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 hover:border-primary/30 dark:hover:border-primary/30 hover:shadow-2xl dark:hover:shadow-primary/5 hover:-translate-y-3 flex flex-col h-full",
+        "group relative rounded-3xl overflow-hidden transition-all duration-500 glass border-white/70 hover:border-volt-400/60 hover:shadow-glow-volt-sm hover:-translate-y-1.5 flex flex-col h-full",
         variant === "featured" && "lg:col-span-2",
       )}
     >
@@ -97,7 +97,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
               <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/20 via-white/5 to-transparent dark:from-white/10 pointer-events-none z-[5]" />
               {/* Animated background glow */}
               <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                <div className="absolute inset-0 bg-gradient-to-br from-blue-500/10 via-transparent to-purple-500/10"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-volt-400/15 via-transparent to-volt-600/15"></div>
               </div>
 
               {/* Main Image */}
@@ -145,7 +145,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                   </div>
                 )}
                 {product.is_featured && !discount && (
-                  <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-blue-500 to-cyan-500 text-white text-xs font-bold shadow-lifted animate-bounce-in">
+                  <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-volt-400 to-volt-600 text-slate-900 text-xs font-bold shadow-lifted animate-bounce-in">
                     ⭐ Destacado
                   </div>
                 )}
@@ -174,7 +174,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                 !added && "nc-btn-shine",
                 added
                   ? "bg-green-500 text-white"
-                  : "bg-primary text-white hover:bg-primary/90"
+                  : "bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm hover:shadow-glow-volt hover:brightness-[1.03]"
               )}
             >
               {added ? (
@@ -270,7 +270,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                 aria-valuemax={100}
               >
                 <div
-                  className="h-full bg-gradient-to-r from-blue-500 to-cyan-500 transition-all duration-500"
+                  className="h-full bg-gradient-to-r from-volt-400 to-volt-600 transition-all duration-500"
                   style={{
                     width: `${Math.min((product.stock / 100) * 100, 100)}%`,
                   }}

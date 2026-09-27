@@ -216,7 +216,7 @@ const Blog = () => {
     <div className="container-page py-12 md:py-16">
       {/* Tira discreta de avisos: una línea, se puede cerrar */}
       {notificationPermission !== "granted" && !notifDismissed && (
-        <div className="mb-8 flex items-center gap-3 rounded-2xl border border-border/60 bg-card/80 px-4 py-2.5 text-sm shadow-soft backdrop-blur">
+        <div className="mb-8 flex items-center gap-3 glass rounded-3xl px-4 py-2.5 text-sm">
           <Bell className="w-4 h-4 text-primary shrink-0" aria-hidden />
           <p className="flex-1 text-muted-foreground truncate">
             <span className="font-semibold text-foreground">Avisos del blog.</span>{" "}
@@ -246,7 +246,7 @@ const Blog = () => {
 
       <header className="max-w-3xl mb-12 md:mb-16 space-y-5">
         {newPost && (
-          <div className="rounded-3xl border border-primary/25 bg-primary/5 p-4">
+          <div className="glass rounded-3xl border-volt-300/50 p-4">
             <div className="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
               <div className="flex items-start gap-3">
                 <Sparkles className="w-5 h-5 text-primary shrink-0 mt-0.5" />
@@ -282,9 +282,9 @@ const Blog = () => {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
           NeoCharge Blog
         </div>
-        <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight">
+        <h1 className="font-display text-5xl md:text-6xl font-bold tracking-tight nc-title-gradient">
           Novedades, guías <br />
-          <span className="text-gradient-accent">y soluciones</span>
+          <span>y soluciones</span>
         </h1>
         <p className="text-xl text-muted-foreground font-light">
           Aprende a sacarle el máximo partido a tus dispositivos con consejos de expertos.
@@ -323,7 +323,7 @@ const Blog = () => {
             <section aria-label="Artículo destacado">
               <Link
                 to={`/blog/${featured.slug}`}
-                className="group grid md:grid-cols-2 card-elevated overflow-hidden fx-shine"
+                className="group grid md:grid-cols-2 glass rounded-3xl overflow-hidden fx-shine hover-lift"
               >
                 <PostCover post={featured} className="aspect-[16/10] md:aspect-auto md:min-h-[320px]" />
                 <div className="p-8 md:p-10 flex flex-col justify-center space-y-4">
@@ -364,7 +364,7 @@ const Blog = () => {
                   <Link
                     key={p.id}
                     to={`/blog/${p.slug}`}
-                    className="card-elevated overflow-hidden group"
+                    className="glass rounded-3xl overflow-hidden group hover-lift"
                   >
                     <PostCover post={p} className="aspect-[16/9]" />
                     <div className="p-6 space-y-2">
@@ -388,7 +388,7 @@ const Blog = () => {
           )}
 
           {/* Cierre editorial: el blog crece */}
-          <section className="rounded-3xl border border-dashed border-border bg-secondary/30 p-8 md:p-10 text-center space-y-3">
+          <section className="glass rounded-3xl border-dashed p-8 md:p-10 text-center space-y-3">
             <p className="font-display text-xl font-bold">Seguimos escribiendo</p>
             <p className="text-muted-foreground max-w-xl mx-auto">
               Publicamos guías prácticas sobre cargadores, baterías y electrónica. Mientras

@@ -47,7 +47,7 @@ export default function FavoritesPage() {
   return (
     <div className="container-page py-16">
       <div className="max-w-2xl mx-auto text-center mb-12">
-        <h1 className="font-display text-5xl font-bold leading-tight text-foreground mb-4">
+        <h1 className="font-display text-5xl font-bold leading-tight mb-4 nc-title-gradient">
           Tus Productos Favoritos
         </h1>
         <p className="text-lg text-muted-foreground">
@@ -56,18 +56,18 @@ export default function FavoritesPage() {
       </div>
 
       {isLoading ? (
-        <div className="flex flex-col items-center justify-center p-8 bg-muted rounded-xl">
-          <Loader2 className="w-10 h-10 text-primary animate-spin mb-4" />
+        <div className="nc-card p-8 flex flex-col items-center justify-center hover-lift">
+          <Loader2 className="w-10 h-10 text-volt-600 animate-spin mb-4" />
           <p className="text-lg text-muted-foreground">Cargando tus favoritos...</p>
         </div>
       ) : error ? (
-        <div className="flex flex-col items-center justify-center p-8 bg-destructive/10 text-destructive rounded-xl">
+        <div className="nc-card p-8 flex flex-col items-center justify-center text-destructive">
           <p className="text-lg font-semibold mb-2">¡Oops! Ha ocurrido un error.</p>
           <p className="text-sm text-destructive-foreground">{error}</p>
           <Button onClick={() => window.location.reload()} variant="outline" className="mt-4">Recargar</Button>
         </div>
       ) : !hasFavorites ? (
-        <div className="flex flex-col items-center justify-center p-8 bg-secondary rounded-xl text-secondary-foreground">
+        <div className="nc-card p-8 flex flex-col items-center justify-center hover-lift">
           <HeartOff className="w-16 h-16 text-muted-foreground mb-6" />
           <h2 className="text-2xl font-bold mb-2">No tienes productos favoritos aún.</h2>
           <p className="text-lg text-muted-foreground mb-6 text-center">

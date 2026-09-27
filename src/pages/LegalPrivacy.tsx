@@ -16,10 +16,10 @@ const LegalPrivacy = () => {
 
       <header className="space-y-3">
         <span className="inline-block text-xs font-semibold uppercase tracking-widest text-primary">Legales</span>
-        <h1 className="font-display text-5xl font-bold">Política de privacidad</h1>
+        <h1 className="font-display text-5xl font-bold nc-title-gradient">Política de privacidad</h1>
       </header>
 
-      <div className="prose prose-neutral dark:prose-invert">
+      <div className="prose prose-neutral nc-card p-8 md:p-10">
         <h2>Datos que recopilamos</h2>
         <p>
           Podemos recopilar información como nombre, teléfono y dirección cuando realizas un pedido.

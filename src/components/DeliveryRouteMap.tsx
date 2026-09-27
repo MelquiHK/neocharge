@@ -43,7 +43,7 @@ export function DeliveryRouteMap({ origin, dest, originLabel = "NeoCharge" }: Pr
     });
     map.addControl(new NavigationControl({ showCompass: false }), "top-right");
 
-    const originMarker = new MlMarker({ element: dotEl("#2563eb", "⚡") })
+    const originMarker = new MlMarker({ element: dotEl("#65a30d", "⚡") })
       .setLngLat([origin.lng, origin.lat])
       .setPopup(
         new Popup({ offset: 18 }).setHTML(
@@ -76,7 +76,7 @@ export function DeliveryRouteMap({ origin, dest, originLabel = "NeoCharge" }: Pr
           id: "route",
           type: "line",
           source: "route",
-          paint: { "line-color": "#2563eb", "line-width": 5, "line-opacity": 0.85 },
+          paint: { "line-color": "#65a30d", "line-width": 5, "line-opacity": 0.85 },
         });
       }
       map.fitBounds(
@@ -120,7 +120,7 @@ export function DeliveryRouteMap({ origin, dest, originLabel = "NeoCharge" }: Pr
   }, [origin.lat, origin.lng, dest.lat, dest.lng, originLabel]);
 
   return (
-    <div className="relative rounded-2xl overflow-hidden border border-border/60 shadow-soft" style={{ height: 250 }}>
+    <div className="relative rounded-3xl overflow-hidden border border-white/70 shadow-glow-volt-sm" style={{ height: 250 }}>
       <div ref={containerRef} style={{ height: "100%", width: "100%" }} className="z-0" />
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/60 z-[500] pointer-events-none">

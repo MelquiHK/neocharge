@@ -222,10 +222,10 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
     ? `${specs.voltage}V` : "No disponible";
 
   return (
-    <div className="rounded-3xl border border-slate-200 bg-slate-50 p-6 dark:border-slate-800 dark:bg-slate-900/70">
+    <div className="nc-card">
       <div className="flex flex-col gap-3 mb-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-primary font-semibold">Calculadora de cargador</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-volt-700 font-semibold">Calculadora de cargador</p>
           <h3 className="text-2xl font-bold">¿Te sirve este cargador para tu batería?</h3>
           <p className="text-sm text-muted-foreground mt-2">
             Ingresa el voltaje y la capacidad de tu batería para ver si el cargador es compatible y cuánto tiempo tardará en cargar.
@@ -242,6 +242,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
               value={batteryVoltage}
               placeholder="48"
               onChange={(event) => setBatteryVoltage(event.target.value)}
+              className="nc-input h-12"
             />
           </div>
           <div className="space-y-2">
@@ -254,6 +255,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
               value={batteryCapacity}
               placeholder="20"
               onChange={(event) => setBatteryCapacity(event.target.value)}
+              className="nc-input h-12"
             />
           </div>
           <div className="space-y-2">
@@ -261,7 +263,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
             <select
               id="battery-type"
               className={cn(
-                "h-10 w-full rounded-md border border-input bg-background px-3 text-sm outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2",
+                "nc-input h-12",
                 "text-slate-900 dark:text-slate-100"
               )}
               value={batteryType}
@@ -278,11 +280,11 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
 
       <form onSubmit={handleSubmit} className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-2">
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200 dark:bg-slate-950 dark:border-slate-800">
+          <div className="rounded-2xl glass border-white/70 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">Voltaje del cargador</p>
             <p className="text-lg font-semibold">{voltageDescription}</p>
           </div>
-          <div className="rounded-2xl bg-white p-4 shadow-sm border border-slate-200 dark:bg-slate-950 dark:border-slate-800">
+          <div className="rounded-2xl glass border-white/70 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground mb-2">Corriente del cargador</p>
             <p className="text-lg font-semibold">{currentDescription}</p>
           </div>
@@ -301,25 +303,25 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
       </form>
 
       {showResult && result && (
-        <div className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 dark:border-slate-800 dark:bg-slate-950">
+        <div className="mt-6 rounded-3xl glass-strong border-white/70 p-5">
           <p className="text-sm text-muted-foreground">Resultado</p>
-          <h4 className="mt-3 text-lg font-semibold">{result.compatible ? "Compatible" : "No compatible"}</h4>
+          <h4 className="mt-3 text-lg font-semibold nc-title-gradient inline-block">{result.compatible ? "Compatible" : "No compatible"}</h4>
           <p className="mt-3 text-slate-700 dark:text-slate-300 whitespace-pre-line">{result.compatibilityMessage}</p>
 
           <div className="grid gap-3 mt-4 sm:grid-cols-2">
-            <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
+            <div className="rounded-2xl glass border-white/70 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Carga estimada</p>
               <p className="mt-2 text-base font-semibold">
                 {result.chargeHours ? `${result.chargeHours} horas` : "No disponible"}
               </p>
             </div>
-            <div className="rounded-2xl bg-slate-50 p-4 dark:bg-slate-900">
+            <div className="rounded-2xl glass border-white/70 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Carga recomendada</p>
               <p className="mt-2 text-base font-semibold">{result.recommendationCurrent}A</p>
             </div>
           </div>
 
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="mt-4 rounded-2xl glass border-white/70 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Tiempos de carga con cargadores comunes</p>
             <ul className="mt-3 space-y-2 text-sm">
               {result.commonChargeOptions.map((option) => (
@@ -331,11 +333,11 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
           </div>
 
           {result.exactVoltageMatches.length > 0 && (
-            <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+            <div className="mt-4 rounded-2xl glass border-white/70 p-4">
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Cargadores disponibles para {result.voltage}V</p>
               <div className="mt-3 grid gap-3">
                 {result.exactVoltageMatches.slice(0, 3).map((item) => (
-                  <div key={item.charger.id} className="rounded-2xl border border-border bg-white p-4 dark:bg-slate-950">
+                  <div key={item.charger.id} className="rounded-2xl border border-border bg-white p-4 dark:bg-slate-950 hover:border-volt-400/50 transition-colors">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="font-semibold">{item.charger.name}</p>
@@ -360,11 +362,11 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
             </div>
           )}
 
-          <div className="mt-4 rounded-2xl border border-slate-200 bg-slate-50 p-4 dark:border-slate-800 dark:bg-slate-900">
+          <div className="mt-4 rounded-2xl glass border-white/70 p-4">
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Recomendaciones del catálogo</p>
             <div className="mt-3 space-y-3">
               {result.topChargerResults.map((item) => (
-                <div key={item.charger.id} className="rounded-2xl border border-border bg-white p-4 dark:bg-slate-950">
+                <div key={item.charger.id} className="rounded-2xl border border-border bg-white p-4 dark:bg-slate-950 hover:border-volt-400/50 transition-colors">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-semibold">{item.charger.name}</p>
@@ -397,7 +399,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
           )}
 
           {!result.compatible && (
-            <div className="mt-4 rounded-2xl bg-blue-50 border border-blue-200 p-4 text-sm text-blue-900 dark:bg-blue-950/30 dark:border-blue-800 dark:text-blue-200">
+            <div className="mt-4 rounded-2xl bg-volt-100/70 border border-volt-300/60 p-4 text-sm text-volt-900">
               <p className="font-semibold">Recomendación</p>
               <p className="mt-2">
                 Busca un cargador de <strong>{result.voltage}V</strong> y aproximadamente <strong>{result.recommendationCurrent}A</strong> para tu batería.

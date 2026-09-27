@@ -73,21 +73,21 @@ export function Hero() {
   ];
 
   return (
-    <section className="relative overflow-hidden bg-[#070d20] text-white">
-      {/* Fondo: azul noche refinado */}
-      <div className="absolute inset-0 bg-gradient-to-b from-[#0a1430] via-[#0a1128] to-[#070d20]" aria-hidden />
+    <section className="relative overflow-hidden text-slate-900">
+      {/* Fondo claro estilo Staff: lavados volt sobre el pastel del body */}
+      <div className="absolute inset-0 bg-gradient-to-b from-volt-100/60 via-transparent to-transparent" aria-hidden />
       <div
         className="absolute inset-0 opacity-[0.05] pointer-events-none"
         aria-hidden
         style={{
           backgroundImage:
-            "linear-gradient(rgba(255,255,255,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,0.6) 1px, transparent 1px)",
+            "linear-gradient(rgba(15,23,42,0.6) 1px, transparent 1px), linear-gradient(90deg, rgba(15,23,42,0.6) 1px, transparent 1px)",
           backgroundSize: "44px 44px",
         }}
       />
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-blue-600/20 rounded-full filter blur-3xl animate-blob pointer-events-none" aria-hidden />
-      <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full filter blur-3xl animate-blob animation-delay-2000 pointer-events-none" aria-hidden />
-      <div className="absolute inset-0 bg-radial-gradient opacity-60 pointer-events-none" aria-hidden />
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-volt-400/30 rounded-full filter blur-3xl animate-blob pointer-events-none" aria-hidden />
+      <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-volt-300/25 rounded-full filter blur-3xl animate-blob animation-delay-2000 pointer-events-none" aria-hidden />
+      <div className="absolute inset-0 bg-radial-glow opacity-60 pointer-events-none" aria-hidden />
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
 
@@ -95,19 +95,19 @@ export function Hero() {
         <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-center">
           {/* Columna izquierda */}
           <div className="space-y-7 animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-white/5 border border-white/10 backdrop-blur-md">
-              <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse" aria-hidden />
-              <span className="text-sm font-semibold text-slate-200">Tienda de electrónica · La Habana</span>
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border-white/70 shadow-glow-volt-sm">
+              <span className="w-2 h-2 rounded-full bg-volt-500 animate-pulse" aria-hidden />
+              <span className="text-sm font-semibold text-slate-700">Tienda de electrónica · La Habana</span>
             </div>
 
             <div className="space-y-4">
               <h1 className="text-5xl md:text-6xl lg:text-7xl font-display font-bold tracking-tight leading-[1.05]">
-                <span className="block text-white">Electrónica de verdad</span>
-                <span className="block nc-text-shimmer">
+                <span className="block text-slate-900">Electrónica de verdad</span>
+                <span className="block nc-title-gradient">
                   para La Habana
                 </span>
               </h1>
-              <p className="text-lg md:text-xl text-slate-300 max-w-xl leading-relaxed font-light">
+              <p className="text-lg md:text-xl text-slate-600 max-w-xl leading-relaxed font-light">
                 Cargadores para motos eléctricas, audio y piezas. Garantía real, entrega a domicilio
                 y pago en USD o CUP cuando el producto está en tus manos.
               </p>
@@ -117,7 +117,7 @@ export function Hero() {
               <Button
                 asChild
                 size="xl"
-                className="btn-shine group bg-gradient-to-r from-blue-600 to-blue-500 hover:from-blue-500 hover:to-blue-400 text-white font-bold rounded-2xl glow-primary transition-all duration-300 hover:-translate-y-0.5"
+                className="btn-shine group bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 font-bold rounded-2xl shadow-glow-volt-sm hover:shadow-glow-volt hover:brightness-[1.03] transition-all duration-300 hover:-translate-y-0.5"
               >
                 <Link to="/tienda" className="flex items-center gap-2.5">
                   Explorar la tienda
@@ -128,7 +128,7 @@ export function Hero() {
                 asChild
                 variant="outline"
                 size="xl"
-                className="border-white/20 bg-white/5 text-white backdrop-blur-md hover:bg-white/10 hover:border-emerald-400/50 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
+                className="glass text-slate-900 hover:border-volt-400/60 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
               >
                 <a
                   href="https://wa.me/5363180910"
@@ -136,20 +136,20 @@ export function Hero() {
                   rel="noopener noreferrer"
                   className="flex items-center gap-2.5"
                 >
-                  <MessageCircle className="w-5 h-5 text-emerald-400" />
+                  <MessageCircle className="w-5 h-5 text-emerald-600" />
                   WhatsApp directo
                 </a>
               </Button>
             </div>
 
             {/* Stats honestos */}
-            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-white/10">
+            <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-900/10">
               {stats.map((stat, i) => (
                 <div key={stat.label} className="animate-fade-in-up" style={{ animationDelay: `${0.15 + i * 0.1}s` }}>
-                  <p className="text-2xl md:text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-blue-300 to-cyan-300">
+                  <p className="text-2xl md:text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-volt-600 to-lime-600">
                     {stat.value}
                   </p>
-                  <p className="text-xs md:text-sm text-slate-400 font-medium mt-1">{stat.label}</p>
+                  <p className="text-xs md:text-sm text-slate-500 font-medium mt-1">{stat.label}</p>
                 </div>
               ))}
             </div>
@@ -161,10 +161,10 @@ export function Hero() {
                   className="flex items-center gap-3 animate-fade-in-left"
                   style={{ animationDelay: `${0.3 + i * 0.1}s` }}
                 >
-                  <span className="flex-shrink-0 w-9 h-9 rounded-xl bg-blue-500/15 border border-blue-400/25 flex items-center justify-center">
-                    <item.icon className="w-4 h-4 text-blue-300" />
+                  <span className="nc-icon-tile-sm">
+                    <item.icon className="w-4 h-4" />
                   </span>
-                  <span className="text-slate-300 font-medium text-[15px]">{item.text}</span>
+                  <span className="text-slate-700 font-medium text-[15px]">{item.text}</span>
                 </li>
               ))}
             </ul>
@@ -172,9 +172,9 @@ export function Hero() {
 
           {/* Columna derecha: producto protagonista real */}
           <div className="relative animate-fade-in-right" style={{ animationDelay: "0.25s" }}>
-            <div className="absolute -inset-6 bg-blue-600/15 blur-3xl rounded-full pointer-events-none" aria-hidden />
-            <div className="relative rounded-[2rem] border border-white/25 nc-liquid nc-sheen p-4 sm:p-5 hover:border-white/40 transition-colors duration-500">
-              <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-slate-800/60 nc-ripple">
+            <div className="absolute -inset-6 bg-volt-400/25 blur-3xl rounded-full pointer-events-none" aria-hidden />
+            <div className="relative rounded-[2rem] border border-white/70 glass-strong shadow-glow-volt-sm p-4 sm:p-5 hover:border-volt-400/50 transition-colors duration-500">
+              <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-volt-100/70 nc-ripple">
                 {spotlightImage ? (
                   <img
                     src={spotlightImage}
@@ -185,7 +185,7 @@ export function Hero() {
                     fetchPriority="high"
                   />
                 ) : (
-                  <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-slate-700/60 to-slate-800/60" aria-hidden />
+                  <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-volt-100/80 to-volt-200/80" aria-hidden />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none" aria-hidden />
                 <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/95 text-slate-950 text-xs font-bold uppercase tracking-wider shadow-lg">
@@ -196,17 +196,17 @@ export function Hero() {
 
               <div className="flex items-center justify-between gap-4 px-2 pt-4 pb-1.5">
                 <div className="min-w-0">
-                  <p className="text-white font-display font-bold text-lg leading-tight truncate">
+                  <p className="text-slate-900 font-display font-bold text-lg leading-tight truncate">
                     {spotlight?.name ?? "Cargando…"}
                   </p>
-                  <p className="text-cyan-300 font-bold text-xl mt-0.5">
+                  <p className="text-volt-700 font-bold text-xl mt-0.5">
                     {spotlight ? formatPrice(spotlight.price, spotlight.currency ?? "USD") : "···"}
                   </p>
                 </div>
                 {spotlight && (
                   <Button
                     asChild
-                    className="shrink-0 rounded-xl bg-white text-slate-950 hover:bg-blue-50 font-bold transition-all duration-300 hover:-translate-y-0.5"
+                    className="shrink-0 rounded-xl bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm hover:shadow-glow-volt hover:brightness-[1.03] font-bold transition-all duration-300 hover:-translate-y-0.5"
                   >
                     <Link to={`/producto/${encodeURIComponent(spotlight.slug)}`} className="flex items-center gap-2">
                       Ver <ArrowRight className="w-4 h-4" />
@@ -217,16 +217,16 @@ export function Hero() {
             </div>
 
             {/* Chips flotantes */}
-            <div className="absolute -top-4 -right-2 sm:-right-4 flex items-center gap-2 rounded-2xl border border-white/25 nc-liquid px-3.5 py-2.5 animate-float">
-              <ShieldCheck className="w-4 h-4 text-emerald-400" />
-              <span className="text-xs font-bold text-slate-200">Garantía incluida</span>
+            <div className="absolute -top-4 -right-2 sm:-right-4 flex items-center gap-2 rounded-2xl border border-white/60 glass px-3.5 py-2.5 animate-float">
+              <ShieldCheck className="w-4 h-4 text-emerald-600" />
+              <span className="text-xs font-bold text-slate-700">Garantía incluida</span>
             </div>
             <div
-              className="absolute -bottom-4 -left-2 sm:-left-4 flex items-center gap-2 rounded-2xl border border-white/25 nc-liquid px-3.5 py-2.5 animate-float"
+              className="absolute -bottom-4 -left-2 sm:-left-4 flex items-center gap-2 rounded-2xl border border-white/60 glass px-3.5 py-2.5 animate-float"
               style={{ animationDelay: "1.4s" }}
             >
-              <Truck className="w-4 h-4 text-blue-300" />
-              <span className="text-xs font-bold text-slate-200">Entrega en La Habana</span>
+              <Truck className="w-4 h-4 text-volt-600" />
+              <span className="text-xs font-bold text-slate-700">Entrega en La Habana</span>
             </div>
           </div>
         </div>
@@ -235,7 +235,7 @@ export function Hero() {
       {/* Divisor de ondas de agua hacia la sección clara siguiente */}
       <div className="nc-waves" aria-hidden>
         <svg className="nc-wave nc-wave-b" viewBox="0 0 2880 120" preserveAspectRatio="none">
-          <path d={WAVE_PATH} fill="#bfdbfe" opacity="0.5" />
+          <path d={WAVE_PATH} fill="#e4f7a8" opacity="0.6" />
         </svg>
         <svg className="nc-wave nc-wave-a" viewBox="0 0 2880 120" preserveAspectRatio="none">
           <path d={WAVE_PATH} fill="#ffffff" />

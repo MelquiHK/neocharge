@@ -33,16 +33,16 @@ export function FeaturedProducts() {
   }, []);
 
   return (
-    <section ref={ref} className={cn("py-12 md:py-16 bg-white reveal", visible && "is-visible")}>
+    <section ref={ref} className={cn("py-12 md:py-16 reveal", visible && "is-visible")}>
       <div className="container-page">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-6 mb-10 md:mb-12">
           <div className="space-y-3 max-w-2xl">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
-              <span className="w-1.5 h-1.5 rounded-full bg-primary animate-pulse" />
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-volt-200/70 text-volt-800 border border-volt-400/30 text-xs font-bold uppercase tracking-widest">
+              <span className="w-1.5 h-1.5 rounded-full bg-volt-600 animate-pulse" />
               Nuestros productos
             </div>
-            <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight">
-              Productos <span className="text-gradient-accent">destacados</span>
+            <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
+              Productos destacados
             </h2>
             <p className="text-muted-foreground text-lg font-light">
               Cargadores, audio y piezas con garantía, listos para entrega en La Habana.
@@ -62,7 +62,7 @@ export function FeaturedProducts() {
             ))}
           </div>
         ) : products.length === 0 ? (
-          <div className="rounded-3xl border border-border bg-card p-12 text-center">
+          <div className="nc-card p-12 text-center">
             <p className="font-display text-2xl font-bold">Estamos actualizando el catálogo</p>
             <p className="text-muted-foreground mt-2">
               Escríbenos por WhatsApp al +53 6318-0910 y te mostramos lo disponible hoy.

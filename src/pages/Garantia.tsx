@@ -15,8 +15,8 @@ const Garantia = () => {
         <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
           Transparencia Total
         </div>
-        <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight">
-          Garantía <span className="text-gradient-accent">NeoCharge</span>
+        <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight nc-title-gradient">
+          Garantía <span>NeoCharge</span>
         </h1>
         <p className="text-xl text-muted-foreground max-w-3xl mx-auto font-light leading-relaxed">
           {settings.warranty_intro}
@@ -25,20 +25,20 @@ const Garantia = () => {
 
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
-            <ShieldCheck className="w-5 h-5 text-primary-foreground" />
+          <div className="nc-icon-tile w-10 h-10">
+            <ShieldCheck className="w-5 h-5" />
           </div>
           <h2 className="font-display text-2xl md:text-3xl font-bold">{settings.warranty_chargers_title}</h2>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4">
-          <div className="card-elevated p-6 space-y-3">
+          <div className="nc-card p-6 space-y-3 hover-lift">
             <Package className="w-6 h-6 text-primary" />
             <h3 className="font-display font-bold text-lg">{settings.warranty_chargers_title}</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">{settings.warranty_chargers_text}</p>
           </div>
 
-          <div className="card-elevated p-6 space-y-3">
+          <div className="nc-card p-6 space-y-3 hover-lift">
             <Clock className="w-6 h-6 text-accent" />
             <h3 className="font-display font-bold text-lg">24 horas para probar</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -47,7 +47,7 @@ const Garantia = () => {
             </p>
           </div>
 
-          <div className="card-elevated p-6 space-y-3">
+          <div className="nc-card p-6 space-y-3 hover-lift">
             <Repeat className="w-6 h-6 text-success" />
             <h3 className="font-display font-bold text-lg">Cambio sin costo</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -56,7 +56,7 @@ const Garantia = () => {
             </p>
           </div>
 
-          <div className="card-elevated p-6 space-y-3">
+          <div className="nc-card p-6 space-y-3 hover-lift">
             <MessageCircle className="w-6 h-6 text-primary" />
             <h3 className="font-display font-bold text-lg">Soporte técnico</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
@@ -76,15 +76,15 @@ const Garantia = () => {
 
       <section className="space-y-6">
         <div className="flex items-center gap-3">
-          <div className="w-10 h-10 rounded-xl bg-gradient-accent flex items-center justify-center shadow-glow-accent">
-            <Package className="w-5 h-5 text-accent-foreground" />
+          <div className="nc-icon-tile w-10 h-10">
+            <Package className="w-5 h-5" />
           </div>
           <h2 className="font-display text-2xl md:text-3xl font-bold">{settings.warranty_electronics_title}</h2>
         </div>
 
-        <div className="card-elevated p-6 space-y-4">
+        <div className="nc-card p-6 space-y-4 hover-lift">
           <p className="text-muted-foreground leading-relaxed">{settings.warranty_electronics_text}</p>
-          <div className="rounded-xl bg-muted p-4 border border-border">
+          <div className="glass rounded-2xl p-4">
             <p className="text-sm text-muted-foreground leading-relaxed">
               <strong className="text-foreground">Estos productos no tienen devolución.</strong> Probamos cada
               equipo frente a ti precisamente para evitar cualquier problema. Una vez aceptado, no aceptamos
