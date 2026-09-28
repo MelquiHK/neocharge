@@ -214,7 +214,7 @@ export function MessengerPanel() {
     <div className="grid lg:grid-cols-12 gap-6 p-4 max-w-[1600px] mx-auto">
       {/* Left Sidebar: Controls & Info */}
       <div className="lg:col-span-4 space-y-6">
-        <Card className="p-6 rounded-3xl glass border-white/70 shadow-glow-volt-sm">
+        <Card className="p-6 rounded-3xl glass border-white/70 shadow-glow-brand-sm">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-2xl nc-icon-tile-md">
               <Calculator className="w-6 h-6" />
@@ -301,7 +301,7 @@ export function MessengerPanel() {
         </Card>
 
         {distance > 0 && (
-          <Card className="p-6 rounded-3xl shadow-glow-volt-sm bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 overflow-hidden relative border border-volt-400/50">
+          <Card className="p-6 rounded-3xl shadow-glow-brand-sm bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white overflow-hidden relative border border-brand-400/50">
             <div className="absolute -right-4 -bottom-4 opacity-10">
               <Navigation className="w-32 h-32" />
             </div>

@@ -14,7 +14,7 @@ const serviceTypeLabels = {
   },
   request: {
     label: "Pedido / Solicitud",
-    badgeClass: "bg-volt-100 text-volt-800 ring-volt-300",
+    badgeClass: "bg-brand-100 text-brand-800 ring-brand-300",
     action: "Pedir servicio",
   },
 } as const;
@@ -91,7 +91,7 @@ export default function Services() {
               <div className="grid gap-8 p-6 md:p-8 lg:grid-cols-[1.2fr_0.8fr]">
                 <div>
                   <div className="mb-4 flex flex-wrap items-center gap-3">
-                    <span className="rounded-full glass border-volt-300/50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-volt-800">
+                    <span className="rounded-full glass border-brand-300/50 px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-brand-800">
                       {selectedService.category ?? "General"}
                     </span>
                     <span className={"rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-[0.18em] ring-1 " + (serviceTypeLabels[(selectedService.service_type ?? "request") as keyof typeof serviceTypeLabels]?.badgeClass ?? serviceTypeLabels.request.badgeClass)}>
@@ -111,8 +111,8 @@ export default function Services() {
                         {selectedService.currency === "CUP" ? `${selectedService.price} CUP` : `${selectedService.price} USD`}
                       </p>
                     </div>
-                    <div className="rounded-2xl bg-volt-100/70 px-4 py-3 ring-1 ring-volt-300/60">
-                      <p className="text-xs uppercase tracking-[0.18em] text-volt-700">Tipo</p>
+                    <div className="rounded-2xl bg-brand-100/70 px-4 py-3 ring-1 ring-brand-300/60">
+                      <p className="text-xs uppercase tracking-[0.18em] text-brand-700">Tipo</p>
                       <p className="mt-1 text-lg font-semibold">
                         {serviceTypeLabels[(selectedService.service_type ?? "request") as keyof typeof serviceTypeLabels]?.label ?? "Pedido / Solicitud"}
                       </p>
@@ -170,8 +170,8 @@ export default function Services() {
                   }}
                   className={`text-left rounded-[28px] p-7 transition-all duration-200 cursor-pointer hover-lift ${
                     isSelected
-                      ? "glass border-volt-400 shadow-glow-volt-sm"
-                      : "glass hover:border-volt-300"
+                      ? "glass border-brand-400 shadow-glow-brand-sm"
+                      : "glass hover:border-brand-300"
                   }`}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">

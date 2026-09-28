@@ -644,7 +644,7 @@ const Checkout = () => {
                 ) : (
                   <>
                     {locations.length > 1 && (
-                      <div className="rounded-2xl bg-volt-100/70 border border-volt-300/60 p-4 text-sm text-volt-900">
+                      <div className="rounded-2xl bg-brand-100/70 border border-brand-300/60 p-4 text-sm text-brand-900">
                         Tu pedido incluye productos disponibles en varios locales. Usa el filtro para ver sólo locales de cargadores, electrónica o mixtos.
                       </div>
                     )}

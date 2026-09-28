@@ -408,7 +408,7 @@ export default function ProductDetail() {
 
           {/* Description */}
           {product.description && (
-            <div className="glass rounded-3xl p-5 border-volt-200/60 hover-lift">
+            <div className="glass rounded-3xl p-5 border-brand-200/60 hover-lift">
               <h3 className="font-semibold mb-3">Descripción</h3>
               <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{product.description}</p>
             </div>
@@ -465,8 +465,8 @@ export default function ProductDetail() {
 
           {/* Warranty */}
           {product.warranty_type && (
-            <div className="glass rounded-2xl p-4 text-sm border-volt-200/60">
-              <p className="font-semibold text-volt-800 mb-1">✓ {warrantyTypeLabel(product.warranty_type)}</p>
+            <div className="glass rounded-2xl p-4 text-sm border-brand-200/60">
+              <p className="font-semibold text-brand-800 mb-1">✓ {warrantyTypeLabel(product.warranty_type)}</p>
               <p className="text-muted-foreground">Todos nuestros productos incluyen garantía completa y soporte técnico.</p>
             </div>
           )}
@@ -474,7 +474,7 @@ export default function ProductDetail() {
           {/* Delivery: entrelazado con la calculadora de envío */}
           <Link
             to="/calcular-envio"
-            className="flex items-center gap-3 glass rounded-3xl p-4 text-sm hover:border-volt-400 hover-lift transition-colors group"
+            className="flex items-center gap-3 glass rounded-3xl p-4 text-sm hover:border-brand-400 hover-lift transition-colors group"
           >
             <span className="nc-icon-tile-sm">
               <Truck className="w-5 h-5" />
@@ -524,7 +524,7 @@ export default function ProductDetail() {
                   </div>
                   <div className="grid gap-4">
                     {locStock.map((loc) => (
-                      <div key={loc.store_locations.id} className="glass rounded-3xl p-4 hover:border-volt-400 hover-lift transition-shadow">
+                      <div key={loc.store_locations.id} className="glass rounded-3xl p-4 hover:border-brand-400 hover-lift transition-shadow">
                         <div className="flex items-start justify-between gap-4 mb-3">
                           <div className="flex-1">
                             <h3 className="font-bold text-lg flex items-center gap-2">
@@ -534,13 +534,13 @@ export default function ProductDetail() {
                             <div className="space-y-2 mt-2">
                               {loc.store_locations.address && (
                                 <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-volt-600" />
+                                  <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0 text-brand-600" />
                                   <span>{loc.store_locations.address}</span>
                                 </div>
                               )}
                               {loc.store_locations.hours && (
                                 <div className="flex items-start gap-2 text-sm text-muted-foreground">
-                                  <Clock className="w-4 h-4 mt-0.5 flex-shrink-0 text-volt-600" />
+                                  <Clock className="w-4 h-4 mt-0.5 flex-shrink-0 text-brand-600" />
                                   <span>{loc.store_locations.hours}</span>
                                 </div>
                               )}

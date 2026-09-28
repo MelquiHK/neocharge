@@ -227,18 +227,18 @@ Por favor, revisa mis pagos. ¡Gracias!`;
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
       <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-volt-300/30 blur-[130px] pointer-events-none"
+        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-brand-300/30 blur-[130px] pointer-events-none"
         aria-hidden
       />
       <div
-        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-volt-200/25 blur-[120px] pointer-events-none"
+        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-brand-200/25 blur-[120px] pointer-events-none"
         aria-hidden
       />
 
       <div className="relative container-page py-12 space-y-8">
         <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-slate-200/70 pb-10">
           <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-volt-800 text-xs font-bold uppercase tracking-widest">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-brand-800 text-xs font-bold uppercase tracking-widest">
               {role === "owner" ? "Dueño Supremo" : role === "admin" ? "Administrador" : role === "gestor" ? "Gestor de Ventas" : role === "mensajero" ? "Mensajero" : "Perfil de Cliente"}
             </div>
             <h1 className="font-display text-5xl font-bold tracking-tight nc-title-gradient">Mi cuenta</h1>
@@ -251,7 +251,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
               </Button>
             )}
             {isMensajero && (
-              <Button asChild className="rounded-full bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 hover:brightness-105 font-bold shadow-glow-volt-sm">
+              <Button asChild className="rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white hover:brightness-105 font-bold shadow-glow-brand-sm">
                 <Link to="/mensajeria"><Map className="w-4 h-4" /> Panel Mensajero</Link>
               </Button>
             )}
@@ -268,7 +268,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
           <div className="lg:col-span-1 space-y-6">
             <section className="glass-strong rounded-[2rem] p-6 space-y-4">
               <div className="flex flex-col items-center text-center space-y-3">
-                <div className="w-24 h-24 rounded-full bg-volt-100 flex items-center justify-center overflow-hidden border-4 border-volt-200/70 shadow-glow-volt-sm">
+                <div className="w-24 h-24 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-4 border-brand-200/70 shadow-glow-brand-sm">
                   {profile?.avatar_url ? (
                     <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
                   ) : (
@@ -283,11 +283,11 @@ Por favor, revisa mis pagos. ¡Gracias!`;
 
               <div className="space-y-3 pt-4 border-t border-slate-200/70">
                 <div className="flex items-center gap-2 text-sm text-slate-700">
-                  <Phone className="w-4 h-4 text-volt-600" />
+                  <Phone className="w-4 h-4 text-brand-600" />
                   <span>{profile?.phone || "Sin teléfono"}</span>
                 </div>
                 <div className="flex items-start gap-2 text-sm">
-                  <Info className="w-4 h-4 text-volt-600 mt-1" />
+                  <Info className="w-4 h-4 text-brand-600 mt-1" />
                   <p className="text-slate-400 italic">{(profile as ProfileWithBio | null)?.bio || "Sin biografía"}</p>
                 </div>
               </div>
@@ -312,7 +312,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                   <div className="space-y-1">
                     <Label className="text-slate-700 font-medium">Foto de Perfil</Label>
                     <div className="flex items-center gap-4">
-                      <div className="w-20 h-20 rounded-full bg-volt-100 flex items-center justify-center overflow-hidden border border-volt-200/70">
+                      <div className="w-20 h-20 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border border-brand-200/70">
                         {selectedFile ? (
                           <img src={URL.createObjectURL(selectedFile)} alt="Preview" className="w-full h-full object-cover" />
                         ) : formData.avatar_url ? (
@@ -329,7 +329,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                             setSelectedFile(e.target.files[0]);
                           }
                         }}
-                        className="flex-grow h-12 rounded-2xl bg-white/70 border border-slate-200/80 text-slate-700 backdrop-blur-md file:mr-3 file:rounded-xl file:border-0 file:bg-volt-200 file:px-3 file:py-1.5 file:font-semibold file:text-slate-900"
+                        className="flex-grow h-12 rounded-2xl bg-white/70 border border-slate-200/80 text-slate-700 backdrop-blur-md file:mr-3 file:rounded-xl file:border-0 file:bg-brand-200 file:px-3 file:py-1.5 file:font-semibold file:text-slate-900"
                       />
                     </div>
                     {selectedFile && (
@@ -360,13 +360,13 @@ Por favor, revisa mis pagos. ¡Gracias!`;
               <section className="glass-strong rounded-[2rem] p-6">
                 <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
                   <h2 className="font-display text-2xl font-bold flex items-center gap-2 nc-title-gradient">
-                    <Wallet className="w-6 h-6 text-volt-600" /> Resumen de Gestor
+                    <Wallet className="w-6 h-6 text-brand-600" /> Resumen de Gestor
                   </h2>
                   <div className="flex gap-2">
                     <Button size="sm" onClick={sendToWhatsApp} className="rounded-full bg-green-500/10 border border-green-300/50 text-green-700 hover:bg-green-500/20 font-semibold">
                       <MessageSquare className="w-4 h-4 mr-2" /> WhatsApp Admin
                     </Button>
-                    <Button size="sm" onClick={handleRequestPayment} disabled={requestingPayment} className="rounded-full bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 hover:brightness-105 font-bold shadow-glow-volt-sm">
+                    <Button size="sm" onClick={handleRequestPayment} disabled={requestingPayment} className="rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white hover:brightness-105 font-bold shadow-glow-brand-sm">
                       <Send className="w-4 h-4 mr-2" /> Pedir Pago
                     </Button>
                   </div>
@@ -389,7 +389,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                     <div className="flex items-center gap-2 text-xs font-medium uppercase text-slate-400 mb-1">
                       <Package className="w-3 h-3" /> Ventas
                     </div>
-                    <div className="text-2xl font-bold text-volt-700">{gestorStats.bySeller[0]?.count || 0}</div>
+                    <div className="text-2xl font-bold text-brand-700">{gestorStats.bySeller[0]?.count || 0}</div>
                   </div>
                 </div>
               </section>
@@ -397,12 +397,12 @@ Por favor, revisa mis pagos. ¡Gracias!`;
 
             <section className="glass-strong rounded-[2rem] p-6">
               <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2 nc-title-gradient">
-                <Package className="w-5 h-5 text-volt-600" /> Mis pedidos
+                <Package className="w-5 h-5 text-brand-600" /> Mis pedidos
               </h2>
               {orders.length === 0 ? (
                 <div className="text-center py-12 space-y-3">
                   <p className="text-slate-400">No tienes pedidos todavía.</p>
-                  <Button asChild className="rounded-full bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 hover:brightness-105 font-bold px-6 h-12 shadow-glow-volt-sm"><Link to="/tienda">Empezar a comprar</Link></Button>
+                  <Button asChild className="rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white hover:brightness-105 font-bold px-6 h-12 shadow-glow-brand-sm"><Link to="/tienda">Empezar a comprar</Link></Button>
                 </div>
               ) : (
                 <div className="divide-y divide-slate-200/70">
@@ -415,8 +415,8 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                         </p>
                       </div>
                       <div className="text-right">
-                        <p className="font-display font-bold text-volt-700">{formatPrice(o.total)}</p>
-                        <span className="text-xs px-2 py-0.5 rounded-full bg-volt-100 border border-volt-200 text-volt-800 capitalize font-semibold">{o.status}</span>
+                        <p className="font-display font-bold text-brand-700">{formatPrice(o.total)}</p>
+                        <span className="text-xs px-2 py-0.5 rounded-full bg-brand-100 border border-brand-200 text-brand-800 capitalize font-semibold">{o.status}</span>
                       </div>
                     </div>
                   ))}

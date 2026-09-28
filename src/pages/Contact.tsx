@@ -64,25 +64,25 @@ const Contact = () => {
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
       <div
-        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-volt-300/30 blur-[130px] pointer-events-none"
+        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[700px] rounded-full bg-brand-300/30 blur-[130px] pointer-events-none"
         aria-hidden
       />
       <div
-        className="absolute top-1/3 -right-40 w-[480px] h-[480px] rounded-full bg-volt-200/25 blur-[120px] pointer-events-none"
+        className="absolute top-1/3 -right-40 w-[480px] h-[480px] rounded-full bg-brand-200/25 blur-[120px] pointer-events-none"
         aria-hidden
       />
 
       <div ref={ref} className={cn("relative container-page py-14 md:py-24 reveal", visible && "is-visible")}>
         {/* Hero */}
         <header className="text-center max-w-3xl mx-auto mb-14 md:mb-20 space-y-6">
-          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-volt-800 text-xs font-bold uppercase tracking-[0.2em]">
+          <div className="inline-flex items-center gap-2 px-4 py-1.5 rounded-full glass text-brand-800 text-xs font-bold uppercase tracking-[0.2em]">
             Contacto Directo
           </div>
           <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight nc-title-gradient">
             Hablemos
           </h1>
           <p className="text-xl text-muted-foreground font-light leading-relaxed">
-            Estamos disponibles <span className="font-semibold text-volt-800">24 horas</span> para resolver tus dudas. <br className="hidden md:block" />
+            Estamos disponibles <span className="font-semibold text-brand-800">24 horas</span> para resolver tus dudas. <br className="hidden md:block" />
             Elige el canal que prefieras y te responderemos al instante.
           </p>
         </header>
@@ -131,7 +131,7 @@ const Contact = () => {
                 <a
                   key={i}
                   href={c.href}
-                  className="block p-5 sm:p-6 rounded-[1.75rem] glass hover:border-volt-300 transition-all duration-300 hover:-translate-y-1"
+                  className="block p-5 sm:p-6 rounded-[1.75rem] glass hover:border-brand-300 transition-all duration-300 hover:-translate-y-1"
                 >
                   {inner}
                 </a>

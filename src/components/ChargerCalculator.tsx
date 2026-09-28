@@ -225,7 +225,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
     <div className="nc-card">
       <div className="flex flex-col gap-3 mb-4">
         <div>
-          <p className="text-xs uppercase tracking-[0.24em] text-volt-700 font-semibold">Calculadora de cargador</p>
+          <p className="text-xs uppercase tracking-[0.24em] text-brand-700 font-semibold">Calculadora de cargador</p>
           <h3 className="text-2xl font-bold">¿Te sirve este cargador para tu batería?</h3>
           <p className="text-sm text-muted-foreground mt-2">
             Ingresa el voltaje y la capacidad de tu batería para ver si el cargador es compatible y cuánto tiempo tardará en cargar.
@@ -337,7 +337,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
               <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Cargadores disponibles para {result.voltage}V</p>
               <div className="mt-3 grid gap-3">
                 {result.exactVoltageMatches.slice(0, 3).map((item) => (
-                  <div key={item.charger.id} className="rounded-2xl border border-border bg-white p-4 dark:bg-slate-950 hover:border-volt-400/50 transition-colors">
+                  <div key={item.charger.id} className="rounded-2xl border border-border bg-white p-4 dark:bg-slate-950 hover:border-brand-400/50 transition-colors">
                     <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                       <div>
                         <p className="font-semibold">{item.charger.name}</p>
@@ -366,7 +366,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
             <p className="text-xs uppercase tracking-[0.2em] text-muted-foreground">Recomendaciones del catálogo</p>
             <div className="mt-3 space-y-3">
               {result.topChargerResults.map((item) => (
-                <div key={item.charger.id} className="rounded-2xl border border-border bg-white p-4 dark:bg-slate-950 hover:border-volt-400/50 transition-colors">
+                <div key={item.charger.id} className="rounded-2xl border border-border bg-white p-4 dark:bg-slate-950 hover:border-brand-400/50 transition-colors">
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                       <p className="font-semibold">{item.charger.name}</p>
@@ -399,7 +399,7 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
           )}
 
           {!result.compatible && (
-            <div className="mt-4 rounded-2xl bg-volt-100/70 border border-volt-300/60 p-4 text-sm text-volt-900">
+            <div className="mt-4 rounded-2xl bg-brand-100/70 border border-brand-300/60 p-4 text-sm text-brand-900">
               <p className="font-semibold">Recomendación</p>
               <p className="mt-2">
                 Busca un cargador de <strong>{result.voltage}V</strong> y aproximadamente <strong>{result.recommendationCurrent}A</strong> para tu batería.

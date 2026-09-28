@@ -55,7 +55,7 @@ export function Categories() {
     <section ref={ref} className={cn("py-12 md:py-16 reveal", visible && "is-visible")}>
       <div className="container-page">
         <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12 space-y-3">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-volt-200/70 text-volt-800 border border-volt-400/30 text-xs font-bold uppercase tracking-widest">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-200/70 text-brand-800 border border-brand-400/30 text-xs font-bold uppercase tracking-widest">
             Explora por categorías
           </div>
           <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
@@ -84,8 +84,8 @@ export function Categories() {
                     className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
                   />
                 ) : (
-                  <div className="absolute inset-0 bg-gradient-to-br from-volt-200 via-volt-300 to-volt-400 flex items-center justify-center">
-                    <Headphones className="w-20 h-20 text-volt-700/40 group-hover:text-volt-600/60 group-hover:scale-110 transition-all duration-500" />
+                  <div className="absolute inset-0 bg-gradient-to-br from-brand-200 via-brand-300 to-brand-400 flex items-center justify-center">
+                    <Headphones className="w-20 h-20 text-brand-700/40 group-hover:text-brand-600/60 group-hover:scale-110 transition-all duration-500" />
                   </div>
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />

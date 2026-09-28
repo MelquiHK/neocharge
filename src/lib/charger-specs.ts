@@ -59,8 +59,8 @@ const parseChargerSpecsText = (text: string | null | undefined): ChargerSpecs =>
   for (const line of lines) {
     const lower = line.toLowerCase();
 
-    if (/volt/i.test(line) || /v\b/i.test(line)) {
-      const voltageMatch = line.match(/(\d+(?:[.,]\d+)?)(?=\s*(?:v|volt))/i);
+    if (/brand/i.test(line) || /v\b/i.test(line)) {
+      const voltageMatch = line.match(/(\d+(?:[.,]\d+)?)(?=\s*(?:v|brand))/i);
       if (voltageMatch) {
         specs.voltage = parseNumber(voltageMatch[1]);
       }

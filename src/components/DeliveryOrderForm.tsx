@@ -98,7 +98,7 @@ function OrderSteps({
                   aria-hidden="true"
                   className={`h-px w-3 sm:w-6 rounded ${
                     done || isCurrent || current === -1
-                      ? "bg-volt-400/60"
+                      ? "bg-brand-400/60"
                       : "bg-border"
                   }`}
                 />
@@ -106,9 +106,9 @@ function OrderSteps({
               <span
                 className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-1.5 text-[11px] sm:text-xs font-bold border whitespace-nowrap transition-colors ${
                   done
-                    ? "bg-volt-200/70 text-volt-800 border-volt-400/40"
+                    ? "bg-brand-200/70 text-brand-800 border-brand-400/40"
                     : isCurrent
-                      ? "bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 border-volt-400/60 shadow-glow-volt-sm"
+                      ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white border-brand-400/60 shadow-glow-brand-sm"
                       : "bg-secondary/60 text-muted-foreground border-border/60"
                 }`}
               >
@@ -366,7 +366,7 @@ export function DeliveryOrderForm({
     <div className="space-y-5 sm:space-y-6 mt-8 min-w-0 max-w-full">
       <div className="text-center max-w-2xl mx-auto min-w-0 max-w-full">
         <h2 className="font-display text-2xl md:text-3xl font-bold flex items-center justify-center gap-2">
-          <ClipboardList className="w-7 h-7 text-volt-600" /> Completa tu pedido
+          <ClipboardList className="w-7 h-7 text-brand-600" /> Completa tu pedido
         </h2>
         <p className="text-sm text-muted-foreground mt-2 leading-relaxed">
           Ya tienes tu destino y el costo del envío. Ahora tus datos, tu dirección
@@ -380,7 +380,7 @@ export function DeliveryOrderForm({
         <div className="xl:col-span-2 space-y-5 sm:space-y-6 min-w-0">
           <div className="grid gap-5 sm:gap-6 md:grid-cols-2">
             {/* Datos del cliente */}
-            <Card className="p-5 sm:p-6 rounded-3xl glass border-white/70 shadow-glow-volt-sm">
+            <Card className="p-5 sm:p-6 rounded-3xl glass border-white/70 shadow-glow-brand-sm">
               <SectionHeader
                 icon={<User className="w-5 h-5" />}
                 title="Tus datos"
@@ -443,7 +443,7 @@ export function DeliveryOrderForm({
             </Card>
 
             {/* Dirección escrita */}
-            <Card className="p-5 sm:p-6 rounded-3xl glass border-white/70 shadow-glow-volt-sm">
+            <Card className="p-5 sm:p-6 rounded-3xl glass border-white/70 shadow-glow-brand-sm">
               <SectionHeader
                 icon={<MapPin className="w-5 h-5" />}
                 title="Dirección escrita"
@@ -539,7 +539,7 @@ export function DeliveryOrderForm({
           </div>
 
           {/* Productos */}
-          <Card className="p-5 sm:p-6 rounded-3xl glass border-white/70 shadow-glow-volt-sm">
+          <Card className="p-5 sm:p-6 rounded-3xl glass border-white/70 shadow-glow-brand-sm">
             <SectionHeader
               icon={<Package className="w-5 h-5" />}
               title="Elige tus productos"
@@ -664,7 +664,7 @@ export function DeliveryOrderForm({
                 <ShoppingCart className="w-4 h-4" /> Tu pedido
                 <span
                   key={cart.length}
-                  className="animate-cart-pop inline-flex items-center justify-center min-w-[1.75rem] h-7 px-2 rounded-full bg-volt-200/70 text-volt-800 text-xs font-bold tabular-nums"
+                  className="animate-cart-pop inline-flex items-center justify-center min-w-[1.75rem] h-7 px-2 rounded-full bg-brand-200/70 text-brand-800 text-xs font-bold tabular-nums"
                 >
                   {cart.length}
                 </span>
@@ -686,7 +686,7 @@ export function DeliveryOrderForm({
                   {cart.map((c) => (
                     <li
                       key={c.productId}
-                      className="flex items-center gap-3 p-3 rounded-2xl bg-volt-100/60 border border-volt-400/30 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2"
+                      className="flex items-center gap-3 p-3 rounded-2xl bg-brand-100/60 border border-brand-400/30 motion-safe:animate-in motion-safe:fade-in motion-safe:slide-in-from-top-2"
                     >
                       <div className="min-w-0 flex-1">
                         <p className="text-sm font-semibold truncate">{c.name}</p>
@@ -740,7 +740,7 @@ export function DeliveryOrderForm({
         {/* Resumen del pedido (fijo al hacer scroll en escritorio) */}
         <div className="xl:col-span-1 min-w-0">
           <div className="xl:sticky xl:top-24">
-            <Card className="overflow-hidden rounded-3xl border border-volt-400/50 bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt">
+            <Card className="overflow-hidden rounded-3xl border border-brand-400/50 bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand">
               <div className="relative">
                 <div
                   aria-hidden="true"

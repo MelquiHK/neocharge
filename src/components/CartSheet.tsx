@@ -72,7 +72,7 @@ export function CartSheet() {
               {items.map((item, index) => (
                 <div
                   key={item.id}
-                  className="nc-rise flex gap-5 p-4 rounded-[1.5rem] glass border-white/70 hover:border-volt-400/60 transition-all duration-300 hover:shadow-glow-volt-sm group"
+                  className="nc-rise flex gap-5 p-4 rounded-[1.5rem] glass border-white/70 hover:border-brand-400/60 transition-all duration-300 hover:shadow-glow-brand-sm group"
                   style={{ animationDelay: `${Math.min(index * 60, 360)}ms` }}
                 >
                   <div className="w-20 h-20 rounded-xl overflow-hidden bg-secondary shrink-0">
@@ -163,7 +163,7 @@ export function CartSheet() {
               </button>
             </div>
 
-            <div className="border-t border-volt-400/25 px-6 py-8 space-y-6 bg-white/60 backdrop-blur-xl">
+            <div className="border-t border-brand-400/25 px-6 py-8 space-y-6 bg-white/60 backdrop-blur-xl">
               {/* Currency Selector */}
               <div className="flex items-center justify-between bg-white dark:bg-slate-950 p-1.5 rounded-2xl border border-border/50 shadow-inner">
                 <button

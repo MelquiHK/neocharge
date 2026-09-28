@@ -120,7 +120,7 @@ export function DeliveryRouteMap({ origin, dest, originLabel = "NeoCharge" }: Pr
   }, [origin.lat, origin.lng, dest.lat, dest.lng, originLabel]);
 
   return (
-    <div className="relative rounded-3xl overflow-hidden border border-white/70 shadow-glow-volt-sm" style={{ height: 250 }}>
+    <div className="relative rounded-3xl overflow-hidden border border-white/70 shadow-glow-brand-sm" style={{ height: 250 }}>
       <div ref={containerRef} style={{ height: "100%", width: "100%" }} className="z-0" />
       {loading && (
         <div className="absolute inset-0 flex items-center justify-center bg-background/60 z-[500] pointer-events-none">

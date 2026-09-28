@@ -74,8 +74,8 @@ export function Hero() {
 
   return (
     <section className="relative overflow-hidden text-slate-900">
-      {/* Fondo claro estilo Staff: lavados volt sobre el pastel del body */}
-      <div className="absolute inset-0 bg-gradient-to-b from-volt-100/60 via-transparent to-transparent" aria-hidden />
+      {/* Fondo claro estilo Staff: lavados brand sobre el pastel del body */}
+      <div className="absolute inset-0 bg-gradient-to-b from-brand-100/60 via-transparent to-transparent" aria-hidden />
       <div
         className="absolute inset-0 opacity-[0.05] pointer-events-none"
         aria-hidden
@@ -85,8 +85,8 @@ export function Hero() {
           backgroundSize: "44px 44px",
         }}
       />
-      <div className="absolute -top-32 -right-32 w-96 h-96 bg-volt-400/30 rounded-full filter blur-3xl animate-blob pointer-events-none" aria-hidden />
-      <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-volt-300/25 rounded-full filter blur-3xl animate-blob animation-delay-2000 pointer-events-none" aria-hidden />
+      <div className="absolute -top-32 -right-32 w-96 h-96 bg-brand-400/30 rounded-full filter blur-3xl animate-blob pointer-events-none" aria-hidden />
+      <div className="absolute -bottom-40 -left-32 w-96 h-96 bg-brand-300/25 rounded-full filter blur-3xl animate-blob animation-delay-2000 pointer-events-none" aria-hidden />
       <div className="absolute inset-0 bg-radial-glow opacity-60 pointer-events-none" aria-hidden />
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
@@ -95,8 +95,8 @@ export function Hero() {
         <div className="grid lg:grid-cols-[1.05fr_0.95fr] gap-12 lg:gap-16 items-center">
           {/* Columna izquierda */}
           <div className="space-y-7 animate-fade-in-up">
-            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border-white/70 shadow-glow-volt-sm">
-              <span className="w-2 h-2 rounded-full bg-volt-500 animate-pulse" aria-hidden />
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glass border-white/70 shadow-glow-brand-sm">
+              <span className="w-2 h-2 rounded-full bg-brand-500 animate-pulse" aria-hidden />
               <span className="text-sm font-semibold text-slate-700">Tienda de electrónica · La Habana</span>
             </div>
 
@@ -117,7 +117,7 @@ export function Hero() {
               <Button
                 asChild
                 size="xl"
-                className="btn-shine group bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 font-bold rounded-2xl shadow-glow-volt-sm hover:shadow-glow-volt hover:brightness-[1.03] transition-all duration-300 hover:-translate-y-0.5"
+                className="btn-shine group bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white font-bold rounded-2xl shadow-glow-brand-sm hover:shadow-glow-brand hover:brightness-[1.08] transition-all duration-300 hover:-translate-y-0.5"
               >
                 <Link to="/tienda" className="flex items-center gap-2.5">
                   Explorar la tienda
@@ -128,7 +128,7 @@ export function Hero() {
                 asChild
                 variant="outline"
                 size="xl"
-                className="glass text-slate-900 hover:border-volt-400/60 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
+                className="glass text-slate-900 hover:border-brand-400/60 rounded-2xl transition-all duration-300 hover:-translate-y-0.5"
               >
                 <a
                   href="https://wa.me/5363180910"
@@ -146,7 +146,7 @@ export function Hero() {
             <div className="grid grid-cols-3 gap-4 pt-6 border-t border-slate-900/10">
               {stats.map((stat, i) => (
                 <div key={stat.label} className="animate-fade-in-up" style={{ animationDelay: `${0.15 + i * 0.1}s` }}>
-                  <p className="text-2xl md:text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-volt-600 to-lime-600">
+                  <p className="text-2xl md:text-3xl font-display font-bold text-transparent bg-clip-text bg-gradient-to-r from-brand-600 to-grape-600">
                     {stat.value}
                   </p>
                   <p className="text-xs md:text-sm text-slate-500 font-medium mt-1">{stat.label}</p>
@@ -172,9 +172,9 @@ export function Hero() {
 
           {/* Columna derecha: producto protagonista real */}
           <div className="relative animate-fade-in-right" style={{ animationDelay: "0.25s" }}>
-            <div className="absolute -inset-6 bg-volt-400/25 blur-3xl rounded-full pointer-events-none" aria-hidden />
-            <div className="relative rounded-[2rem] border border-white/70 glass-strong shadow-glow-volt-sm p-4 sm:p-5 hover:border-volt-400/50 transition-colors duration-500">
-              <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-volt-100/70 nc-ripple">
+            <div className="absolute -inset-6 bg-brand-400/25 blur-3xl rounded-full pointer-events-none" aria-hidden />
+            <div className="relative rounded-[2rem] glass-water p-4 sm:p-5 hover:border-brand-300/70 transition-colors duration-500">
+              <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-brand-100/70 nc-ripple">
                 {spotlightImage ? (
                   <img
                     src={spotlightImage}
@@ -185,7 +185,7 @@ export function Hero() {
                     fetchPriority="high"
                   />
                 ) : (
-                  <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-volt-100/80 to-volt-200/80" aria-hidden />
+                  <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-brand-100/80 to-brand-200/80" aria-hidden />
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/45 via-transparent to-transparent pointer-events-none" aria-hidden />
                 <span className="absolute left-4 top-4 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-amber-400/95 text-slate-950 text-xs font-bold uppercase tracking-wider shadow-lg">
@@ -199,14 +199,14 @@ export function Hero() {
                   <p className="text-slate-900 font-display font-bold text-lg leading-tight truncate">
                     {spotlight?.name ?? "Cargando…"}
                   </p>
-                  <p className="text-volt-700 font-bold text-xl mt-0.5">
+                  <p className="text-brand-700 font-bold text-xl mt-0.5">
                     {spotlight ? formatPrice(spotlight.price, spotlight.currency ?? "USD") : "···"}
                   </p>
                 </div>
                 {spotlight && (
                   <Button
                     asChild
-                    className="shrink-0 rounded-xl bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm hover:shadow-glow-volt hover:brightness-[1.03] font-bold transition-all duration-300 hover:-translate-y-0.5"
+                    className="shrink-0 rounded-xl bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm hover:shadow-glow-brand hover:brightness-[1.08] font-bold transition-all duration-300 hover:-translate-y-0.5"
                   >
                     <Link to={`/producto/${encodeURIComponent(spotlight.slug)}`} className="flex items-center gap-2">
                       Ver <ArrowRight className="w-4 h-4" />
@@ -225,7 +225,7 @@ export function Hero() {
               className="absolute -bottom-4 -left-2 sm:-left-4 flex items-center gap-2 rounded-2xl border border-white/60 glass px-3.5 py-2.5 animate-float"
               style={{ animationDelay: "1.4s" }}
             >
-              <Truck className="w-4 h-4 text-volt-600" />
+              <Truck className="w-4 h-4 text-brand-600" />
               <span className="text-xs font-bold text-slate-700">Entrega en La Habana</span>
             </div>
           </div>
@@ -235,7 +235,7 @@ export function Hero() {
       {/* Divisor de ondas de agua hacia la sección clara siguiente */}
       <div className="nc-waves" aria-hidden>
         <svg className="nc-wave nc-wave-b" viewBox="0 0 2880 120" preserveAspectRatio="none">
-          <path d={WAVE_PATH} fill="#e4f7a8" opacity="0.6" />
+          <path d={WAVE_PATH} fill="#dbeafe" opacity="0.6" />
         </svg>
         <svg className="nc-wave nc-wave-a" viewBox="0 0 2880 120" preserveAspectRatio="none">
           <path d={WAVE_PATH} fill="#ffffff" />

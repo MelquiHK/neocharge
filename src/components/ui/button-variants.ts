@@ -6,13 +6,13 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 shadow-glow-volt-sm hover:shadow-glow-volt hover:brightness-[1.03]",
-        hero: "bg-gradient-primary text-slate-900 shadow-glow-volt hover:shadow-glow-volt btn-shine hover:-translate-y-0.5",
-        electric: "bg-gradient-accent text-volt-900 shadow-glow-volt-sm hover:shadow-glow-volt btn-shine hover:-translate-y-0.5",
+        default: "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm hover:shadow-glow-brand hover:brightness-[1.03]",
+        hero: "bg-gradient-primary text-slate-900 shadow-glow-brand hover:shadow-glow-brand btn-shine hover:-translate-y-0.5",
+        electric: "bg-gradient-accent text-brand-900 shadow-glow-brand-sm hover:shadow-glow-brand btn-shine hover:-translate-y-0.5",
         whatsapp: "bg-[hsl(142_70%_45%)] text-white hover:bg-[hsl(142_70%_40%)] shadow-elevated hover:shadow-lifted hover:-translate-y-0.5",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-soft",
         secondary: "bg-secondary text-secondary-foreground hover:bg-secondary/80 shadow-soft",
-        outline: "border-2 border-border bg-white/60 backdrop-blur hover:bg-white/85 hover:border-volt-500/50 text-foreground",
+        outline: "border-2 border-border bg-white/60 backdrop-blur hover:bg-white/85 hover:border-brand-500/50 text-foreground",
         soft: "bg-secondary text-secondary-foreground hover:bg-muted",
         ghost: "hover:bg-white/70 text-foreground",
         link: "text-primary underline-offset-4 hover:underline",

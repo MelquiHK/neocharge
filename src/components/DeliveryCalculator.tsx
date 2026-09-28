@@ -334,7 +334,7 @@ export function DeliveryCalculator() {
     <div className="grid gap-5 sm:gap-6 md:grid-cols-12 max-w-[1600px] mx-auto w-full min-w-0">
       {/* Panel lateral: controles */}
       <div className="md:col-span-5 xl:col-span-4 space-y-5 sm:space-y-6 min-w-0 max-w-full">
-        <Card className="p-6 rounded-3xl glass border-white/70 shadow-glow-volt-sm">
+        <Card className="p-6 rounded-3xl glass border-white/70 shadow-glow-brand-sm">
           <div className="flex items-center gap-3 mb-6">
             <div className="p-2 rounded-2xl nc-icon-tile-md">
               <Calculator className="w-6 h-6" />
@@ -468,7 +468,7 @@ export function DeliveryCalculator() {
 
         {/* Resultado */}
         {orderReady && (
-          <Card className="p-6 rounded-3xl shadow-glow-volt-sm bg-gradient-to-br from-volt-300 via-volt-400 to-volt-500 text-slate-900 overflow-hidden relative border border-volt-400/50">
+          <Card className="p-6 rounded-3xl shadow-glow-brand-sm bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white overflow-hidden relative border border-brand-400/50">
             <div className="absolute -right-4 -bottom-4 opacity-10">
               <Navigation className="w-32 h-32" />
             </div>
@@ -523,7 +523,7 @@ export function DeliveryCalculator() {
             {otherPoints.map((p) => (
               <div
                 key={p.id}
-                className="flex items-start gap-2.5 p-3 rounded-2xl bg-volt-200/60 border border-volt-400/40 transition-colors hover:bg-volt-200/80"
+                className="flex items-start gap-2.5 p-3 rounded-2xl bg-brand-200/60 border border-brand-400/40 transition-colors hover:bg-brand-200/80"
               >
                 <MapPin className="w-4 h-4 text-muted-foreground shrink-0 mt-0.5" />
                 <div className="min-w-0">

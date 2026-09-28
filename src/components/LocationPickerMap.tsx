@@ -109,7 +109,7 @@ export function LocationPickerMap({ center, initialPoint = null, onPick }: Props
   return (
     <div className="space-y-2">
       <div
-        className="rounded-3xl overflow-hidden border-2 border-white/70 shadow-glow-volt-sm relative"
+        className="rounded-3xl overflow-hidden border-2 border-white/70 shadow-glow-brand-sm relative"
         style={{ height: 280 }}
       >
         <div ref={containerRef} style={{ height: "100%", width: "100%" }} />

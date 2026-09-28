@@ -57,7 +57,7 @@ export default function FavoritesPage() {
 
       {isLoading ? (
         <div className="nc-card p-8 flex flex-col items-center justify-center hover-lift">
-          <Loader2 className="w-10 h-10 text-volt-600 animate-spin mb-4" />
+          <Loader2 className="w-10 h-10 text-brand-600 animate-spin mb-4" />
           <p className="text-lg text-muted-foreground">Cargando tus favoritos...</p>
         </div>
       ) : error ? (
