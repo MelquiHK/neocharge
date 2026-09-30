@@ -355,16 +355,24 @@ export default function ImageViewer({
             draggable={false}
             className="absolute max-w-full max-h-full object-contain blur-xl scale-110 opacity-60 pointer-events-none select-none"
           />
-          {/* Versión completa */}
+          {/* Versión completa (por encima de la difuminada: al ser
+              posicionada pinta sobre ella aunque esta cargue después) */}
           <img
             key={src}
+            ref={(el) => {
+              // Si la imagen ya está en caché, onLoad puede no dispararse:
+              // marcarla como cargada de inmediato para no dejar el velo gris.
+              if (el && el.complete && el.naturalWidth > 0 && !fullLoaded) {
+                setFullLoaded(true);
+              }
+            }}
             src={full}
             srcSet={responsiveImage(src, "100vw").srcSet}
             sizes="100vw"
             alt={alt}
             draggable={false}
             onLoad={() => setFullLoaded(true)}
-            className="max-w-full max-h-full object-contain pointer-events-none select-none transition-opacity duration-300"
+            className="relative max-w-full max-h-full object-contain pointer-events-none select-none transition-opacity duration-300"
             style={{ opacity: fullLoaded ? 1 : 0 }}
           />
         </div>
