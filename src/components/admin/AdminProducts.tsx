@@ -747,7 +747,7 @@ export function AdminProducts() {
                   </div>
                   <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary">
                     {uploadingModel ? "Subiendo modelo…" : <><Cuboid className="h-5 w-5" /><span>Subir archivo .glb</span></>}
-                    <input type="file" accept=".glb" className="hidden" onChange={(e) => {
+                    <input type="file" accept=".glb" aria-label="Subir archivo .glb del modelo 3D" className="sr-only focus:not-sr-only focus:absolute focus:z-10 focus:rounded-lg focus:bg-background focus:px-3 focus:py-2 focus:text-sm focus:shadow-lg" onChange={(e) => {
                       const f = e.target.files?.[0];
                       if (f) handleModelUpload(f);
                       e.target.value = "";
