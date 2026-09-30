@@ -15,9 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import {
   Copy, Download, Plus, Pencil, Trash2, Image as ImageIcon, X, Star, Sparkles, CheckSquare, Square,
-  Package, Search, Tag, DollarSign, Layers, FolderTree, Eye, Store,
+  Package, Search, Tag, DollarSign, Layers, FolderTree, Eye, Store, Cuboid, QrCode,
 } from "lucide-react";
 import { toast } from "sonner";
+import QRCode from "qrcode";
+import { SITE_URL } from "@/lib/seo";
 import { formatPrice } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Product, Category, StoreLocation } from "@/types";
@@ -216,6 +218,26 @@ export function AdminProducts() {
       const main = (prev.main_image_index ?? 0) >= imgs.length ? 0 : prev.main_image_index;
       return { ...prev, images: imgs, main_image_index: main };
     });
+  };
+
+  const [uploadingModel, setUploadingModel] = useState(false);
+
+  /** Sube un .glb al bucket `product-models` y guarda su URL pública. */
+  const handleModelUpload = async (file: File) => {
+    if (!/\.glb$/i.test(file.name)) {
+      toast.error("El modelo 3D debe ser un archivo .glb");
+      return;
+    }
+    setUploadingModel(true);
+    const path = `${Date.now()}-${Math.random().toString(36).slice(2, 8)}.glb`;
+    const { error } = await supabase.storage.from("product-models").upload(path, file, {
+      contentType: "model/gltf-binary",
+    });
+    if (error) { toast.error("Error al subir modelo 3D: " + error.message); setUploadingModel(false); return; }
+    const { data: { publicUrl } } = supabase.storage.from("product-models").getPublicUrl(path);
+    setEditing((prev) => prev ? { ...prev, modelo_3d_url: publicUrl } : prev);
+    setUploadingModel(false);
+    toast.success("Modelo 3D subido");
   };
 
   const saveProduct = async () => {
@@ -696,6 +718,61 @@ export function AdminProducts() {
                 </div>
               </section>
 
+              {/* Modelo 3D */}
+              <section className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+                <AdminCardTitle icon={Cuboid} title="Modelo 3D" />
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Archivo <code className="font-mono">.glb</code> del producto (escaneado con KIRI Engine, optimizado a 2–5 MB).
+                  Cuando existe, la página muestra el visor 3D con realidad aumentada.
+                </p>
+                <div className="flex flex-col gap-3">
+                  <div className="flex gap-2">
+                    <Input
+                      placeholder="https://…/modelo.glb"
+                      value={editing.modelo_3d_url ?? ""}
+                      onChange={(e) => setEditing({ ...editing, modelo_3d_url: e.target.value || null })}
+                      className="font-mono text-xs"
+                    />
+                    {editing.modelo_3d_url && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon"
+                        title="Quitar modelo 3D"
+                        onClick={() => setEditing({ ...editing, modelo_3d_url: null })}
+                      >
+                        <X className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
+                  <label className="flex cursor-pointer items-center justify-center gap-2 rounded-xl border-2 border-dashed border-border px-4 py-3 text-sm text-muted-foreground transition-colors hover:border-primary hover:text-primary">
+                    {uploadingModel ? "Subiendo modelo…" : <><Cuboid className="h-5 w-5" /><span>Subir archivo .glb</span></>}
+                    <input type="file" accept=".glb" className="hidden" onChange={(e) => {
+                      const f = e.target.files?.[0];
+                      if (f) handleModelUpload(f);
+                      e.target.value = "";
+                    }} />
+                  </label>
+                  {editing.modelo_3d_url && (
+                    <p className="flex items-center gap-1.5 text-xs text-green-700">
+                      <CheckSquare className="h-3.5 w-3.5" /> Modelo conectado — el visor 3D aparecerá en la página del producto.
+                    </p>
+                  )}
+                </div>
+
+                {/* QR del producto: abre la página con el 3D listo */}
+                {editing.slug ? (
+                  <div className="mt-4 rounded-xl border border-border/60 bg-card p-3">
+                    <p className="mb-2 flex items-center gap-1.5 text-xs font-semibold">
+                      <QrCode className="h-4 w-4" /> QR del producto
+                    </p>
+                    <ProductQR url={`${SITE_URL}/producto/${editing.slug}?vista=3d`} name={editing.name ?? editing.slug} />
+                  </div>
+                ) : (
+                  <p className="mt-3 text-xs text-muted-foreground">Guarda el producto primero para generar su código QR.</p>
+                )}
+              </section>
+
               {/* Stock por local (Disponibilidad) */}
               {locations.length > 0 && (
                 <section className="rounded-2xl border border-border/60 bg-muted/20 p-4">
@@ -749,6 +826,69 @@ export function AdminProducts() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/**
+ * QR del producto: apunta a la página con ?vista=3d para que al escanearlo
+ * se abra directo la vista 3D. Se puede descargar en PNG para imprimirlo
+ * en flyers o empaques.
+ */
+function ProductQR({ url, name }: { url: string; name: string }) {
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    QRCode.toDataURL(url, {
+      width: 512,
+      margin: 2,
+      color: { dark: "#0a2540", light: "#ffffff" },
+    })
+      .then((d) => { if (alive) setDataUrl(d); })
+      .catch(() => { if (alive) setDataUrl(null); });
+    return () => { alive = false; };
+  }, [url]);
+
+  const download = () => {
+    if (!dataUrl) return;
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = `qr-${name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-")}.png`;
+    a.click();
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Enlace copiado");
+    } catch {
+      toast.error("No se pudo copiar el enlace");
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-4">
+      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-white p-1">
+        {dataUrl ? (
+          <img src={dataUrl} alt={`QR de ${name}`} className="h-full w-full" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+            Generando…
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-mono text-[11px] text-muted-foreground">{url}</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Button type="button" size="sm" variant="outline" onClick={download} disabled={!dataUrl}>
+            <Download className="mr-1 h-3.5 w-3.5" /> PNG
+          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={copyLink}>
+            <Copy className="mr-1 h-3.5 w-3.5" /> Copiar enlace
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

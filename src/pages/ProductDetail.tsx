@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link } from "react-router-dom";
+import { useParams, Link, useSearchParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/use-cart";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
@@ -11,8 +11,10 @@ import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { responsiveImage } from "@/lib/responsive-image";
 import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock, Truck } from "lucide-react";
+import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock, Truck, Expand } from "lucide-react";
 import { toast } from "sonner";
+import ImageViewer from "@/components/product/ImageViewer";
+import Model3DViewer from "@/components/product/Model3DViewer";
 import { ChargerCalculator } from "@/components/ChargerCalculator";
 import { ProductSpecs } from "@/components/ProductSpecs";
 import {
@@ -62,6 +64,9 @@ export default function ProductDetail() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [viewerOpen, setViewerOpen] = useState(false);
+  const [searchParams] = useSearchParams();
+  const open3D = searchParams.get("vista") === "3d";
   
   const { isFavorite, toggleFavorite } = useUnifiedFavorites();
   const liked = product ? isFavorite(product.id) : false;
@@ -319,18 +324,33 @@ export default function ProductDetail() {
               (() => {
                 const ri = responsiveImage(mainImage, "(max-width: 1024px) 100vw, 600px");
                 return (
-                  <img
-                    src={ri.src}
-                    srcSet={ri.srcSet}
-                    sizes={ri.sizes}
-                    alt={product.name}
-                    className="w-full h-full object-cover"
-                  />
+                  <button
+                    type="button"
+                    onClick={() => setViewerOpen(true)}
+                    aria-label="Ampliar fotos del producto"
+                    className="block w-full h-full cursor-zoom-in"
+                  >
+                    <img
+                      src={ri.src}
+                      srcSet={ri.srcSet}
+                      sizes={ri.sizes}
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                      fetchPriority="high"
+                      decoding="async"
+                    />
+                  </button>
                 );
               })()
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                 Sin imagen
+              </div>
+            )}
+            {mainImage && (
+              <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/55 text-white text-xs px-3 py-1.5 pointer-events-none">
+                <Expand className="h-3.5 w-3.5" />
+                Toca para ampliar
               </div>
             )}
             {discount && (
@@ -339,6 +359,17 @@ export default function ProductDetail() {
               </div>
             )}
           </div>
+
+          {/* Visor a pantalla completa: pellizco, doble toque, deslizar */}
+          {viewerOpen && images.length > 0 && (
+            <ImageViewer
+              images={images}
+              initialIndex={activeImage}
+              alt={product.name}
+              onClose={() => setViewerOpen(false)}
+              onIndexChange={setActiveImage}
+            />
+          )}
 
           {/* Thumbnails */}
           {images.length > 1 && (
@@ -490,6 +521,18 @@ export default function ProductDetail() {
           </Link>
         </div>
       </div>
+
+      {/* Vista 3D: solo aparece cuando el producto tiene modelo */}
+      {product.modelo_3d_url ? (
+        <div className="mb-16">
+          <Model3DViewer
+            modelUrl={product.modelo_3d_url}
+            poster={mainImage}
+            name={product.name}
+            autoFocus={open3D}
+          />
+        </div>
+      ) : null}
 
       <div className="grid gap-10 lg:grid-cols-[1.35fr_0.8fr] mb-16">
         {product.warranty_type === "charger" ? (
