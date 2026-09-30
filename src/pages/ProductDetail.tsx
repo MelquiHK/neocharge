@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import { useParams, Link, useSearchParams } from "react-router-dom";
+import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { useCart } from "@/hooks/use-cart";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
@@ -10,11 +10,12 @@ import { computeDisplayPrice, formatPrice, formatCUP, formatMoney, hasSaneDiscou
 import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { responsiveImage } from "@/lib/responsive-image";
 import { Button } from "@/components/ui/button";
+import { SITE_URL } from "@/lib/seo";
+import { buildShareImage } from "@/lib/share-image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock, Truck, Expand } from "lucide-react";
 import { toast } from "sonner";
 import ImageViewer from "@/components/product/ImageViewer";
-import Model3DViewer from "@/components/product/Model3DViewer";
 import { ChargerCalculator } from "@/components/ChargerCalculator";
 import { ProductSpecs } from "@/components/ProductSpecs";
 import {
@@ -65,8 +66,6 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [viewerOpen, setViewerOpen] = useState(false);
-  const [searchParams] = useSearchParams();
-  const open3D = searchParams.get("vista") === "3d";
   
   const { isFavorite, toggleFavorite } = useUnifiedFavorites();
   const liked = product ? isFavorite(product.id) : false;
@@ -192,23 +191,30 @@ export default function ProductDetail() {
   const handleShare = async () => {
     if (!product) return;
 
+    const productUrl = `${SITE_URL}/producto/${product.slug}`;
     const shareData: ShareData = {
       title: product.name,
       text: `${product.name} - ${displayPriceLabel(display)}\n${product.description || ''}\n¡Mira este producto en NeoCharge!`, // Richer text
-      url: window.location.href,
+      url: productUrl,
     };
 
-    // Attempt to add main product image if available
+    // Imagen para compartir: foto del producto con su QR en la esquina inferior derecha
     const mainImage = product.images?.[product.main_image_index ?? 0] ?? product.images?.[0];
     if (mainImage) {
       try {
-        const response = await fetch(mainImage);
-        const blob = await response.blob();
-        const file = new File([blob], `${product.slug}.jpg`, { type: blob.type });
+        const file = await buildShareImage(mainImage, productUrl, product.slug);
         shareData.files = [file];
       } catch (error) {
-        console.error("Error al cargar la imagen para compartir:", error);
-        // Fallback to sharing without image if image loading fails
+        console.error("Error al generar la imagen para compartir:", error);
+        // Plan B: compartir la foto original sin QR
+        try {
+          const response = await fetch(mainImage);
+          const blob = await response.blob();
+          const file = new File([blob], `${product.slug}.jpg`, { type: blob.type });
+          shareData.files = [file];
+        } catch {
+          // Compartir solo texto si la imagen tampoco carga
+        }
       }
     }
 
@@ -521,18 +527,6 @@ export default function ProductDetail() {
           </Link>
         </div>
       </div>
-
-      {/* Vista 3D: solo aparece cuando el producto tiene modelo */}
-      {product.modelo_3d_url ? (
-        <div className="mb-16">
-          <Model3DViewer
-            modelUrl={product.modelo_3d_url}
-            poster={mainImage}
-            name={product.name}
-            autoFocus={open3D}
-          />
-        </div>
-      ) : null}
 
       <div className="grid gap-10 lg:grid-cols-[1.35fr_0.8fr] mb-16">
         {product.warranty_type === "charger" ? (

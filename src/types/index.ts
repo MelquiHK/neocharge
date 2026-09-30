@@ -16,8 +16,6 @@ export interface Product {
   extra_cup_per_usd?: number | null;
   images?: string[] | null;
   main_image_index?: number | null;
-  /** URL pública del modelo 3D (GLB) en el bucket `product-models`. */
-  modelo_3d_url?: string | null;
   stock?: number | null;
   category_id?: string | null;
   description?: string | null;
