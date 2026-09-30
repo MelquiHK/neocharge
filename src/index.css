@@ -89,6 +89,13 @@
     scroll-behavior: smooth;
     /* El header es flotante (fijo): deja aire al saltar a anclas */
     scroll-padding-top: 104px;
+    /* Bloqueo REAL del zoom de página por pellizco en móvil.
+       El meta viewport (user-scalable=no) solo no basta: Chrome en Android
+       lo puede ignorar. Con pan-x pan-y el navegador permite desplazar con
+       un dedo pero NUNCA amplía la página con pellizco ni doble toque.
+       El visor de fotos y el visor 3D definen su propio touch-action en su
+       contenedor, así que su zoom interno sigue funcionando. */
+    touch-action: pan-x pan-y;
   }
   @media (min-width: 768px) {
     html {
@@ -97,6 +104,8 @@
   }
   body {
     @apply text-foreground antialiased;
+    /* Refuerzo del bloqueo de zoom de página (ver comentario en html) */
+    touch-action: pan-x pan-y;
     /* Fondo claro elegante estilo Staff: base gris-azulada muy clara con
        resplandores sutiles de brand (lima) y azul, fijos al hacer scroll */
     background:
