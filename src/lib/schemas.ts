@@ -20,6 +20,7 @@ export const productSchema = z.object({
   is_featured: z.boolean().default(false),
   sort_order: z.number().int().default(0),
   warranty_type: z.enum(["electronics", "charger", "no-warranty"]).nullable(),
+  modelo_3d_url: z.string().nullable(),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;
