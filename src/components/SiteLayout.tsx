@@ -15,7 +15,7 @@ export function SiteLayout() {
       <div className="bg-brand-200/50 border-b border-brand-400/25 py-2 hidden md:block backdrop-blur-xl">
         <div className="container-page flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-brand-800">
           <Info className="w-3 h-3" />
-          Precios actualizados · Pagos aceptados en {paymentCurrency === "USD" ? "USD, CUP y MLC" : "CUP, USD y MLC"} · Entrega en 24h
+          Precios actualizados · Pagos aceptados en {paymentCurrency === "USD" ? "USD y CUP" : "CUP y USD"} · Entrega en 24h
         </div>
       </div>
       
