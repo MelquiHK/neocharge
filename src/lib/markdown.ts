@@ -14,8 +14,15 @@ const inline = (text: string) =>
       '<img src="$2" alt="$1" class="rounded-2xl border border-slate-200 bg-slate-100 p-2 max-w-full" />'
     )
     .replace(
-      /\[([^\]]+)\]\((https?:\/\/[^)]+)\)/g,
-      '<a href="$2" target="_blank" rel="noreferrer noopener" class="text-primary underline decoration-primary/30 hover:decoration-primary">$1</a>'
+      /\[([^\]]+)\]\(((?:https?:\/\/|\/)[^)\s]+)\)/g,
+      (_m, label: string, url: string) => {
+        const external = /^https?:\/\//.test(url);
+        const cls =
+          "text-primary underline decoration-primary/30 hover:decoration-primary";
+        return external
+          ? `<a href="${url}" target="_blank" rel="noreferrer noopener" class="${cls}">${label}</a>`
+          : `<a href="${url}" class="${cls}">${label}</a>`;
+      }
     )
     .replace(/\*\*(.+?)\*\*/g, "<strong>$1</strong>")
     .replace(/__(.+?)__/g, "<strong>$1</strong>")
@@ -44,7 +51,25 @@ const demathBold = (text: string): string => {
 };
 
 const LIST_ITEM = /^(?:[-*+]|\d+[.)])\s+(.*)$/;
-const NUMBERED_HEADING = /^(?:\*\*)?(\d+)\.\s+(.+?)(?:\*\*)?$/;
+const HEADING_LINE = /^#{1,3}\s+/;
+
+/**
+ * Detecta un encabezado de sección numerada en sus formas comunes:
+ *   "**N. Título** resto" | "N. **Título** resto" | "N. **Título:** resto" | "N. Título"
+ * Devuelve el número, el título limpio y el resto de la línea como inicio del cuerpo.
+ */
+const parseNumberedHeading = (
+  line: string
+): { num: string; title: string; rest: string } | null => {
+  const t = line.trim();
+  let m = t.match(/^\*\*(\d+)\.\s+(.+?)\*\*\s*:?\s*(.*)$/);
+  if (m) return { num: m[1], title: m[2].trim(), rest: m[3].trim() };
+  m = t.match(/^(\d+)\.\s+\*\*(.+?)\*\*\s*:?\s*(.*)$/);
+  if (m) return { num: m[1], title: m[2].trim(), rest: m[3].trim() };
+  m = t.match(/^(\d+)\.\s+(.+)$/);
+  if (m) return { num: m[1], title: m[2].trim(), rest: "" };
+  return null;
+};
 
 /**
  * Normaliza el texto crudo de un artículo del blog en tiempo de
@@ -72,27 +97,29 @@ export const normalizeArticleContent = (raw: string): string => {
   text = text.replace(/^[ \t]*•[ \t]+/gm, "- ");
 
   // 4. Agrupar secciones numeradas en lista ordenada real: el encabezado
-  // "N. Título" (o "**N. Título**") más todo su cuerpo forman UN item;
-  // los items consecutivos quedan en el mismo bloque (una sola <ol>).
+  // "N. Título" (o "**N. Título**" / "N. **Título**") más todo su cuerpo forman
+  // UN item; los items consecutivos quedan en el mismo bloque (una sola <ol>).
+  // El cuerpo se corta ante un encabezado markdown (## ...) o el siguiente
+  // item numerado, para no tragarse el resto del artículo.
   const lines = text.split("\n");
   const out: string[] = [];
   let i = 0;
   while (i < lines.length) {
-    const head = lines[i].trim().match(NUMBERED_HEADING);
+    const head = parseNumberedHeading(lines[i]);
     if (head) {
-      const num = head[1];
-      const title = head[2];
-      i += 1;
-      // Saltar líneas en blanco entre el encabezado y su cuerpo.
-      while (i < lines.length && lines[i].trim() === "") i += 1;
       const body: string[] = [];
-      while (i < lines.length && !lines[i].trim().match(NUMBERED_HEADING)) {
-        body.push(lines[i].trim());
+      if (head.rest) body.push(head.rest);
+      i += 1;
+      while (i < lines.length) {
+        const t = lines[i].trim();
+        if (HEADING_LINE.test(t)) break;
+        if (parseNumberedHeading(lines[i])) break;
+        if (t) body.push(t);
         i += 1;
       }
       // El cuerpo queda dentro del item: párrafos unidos con salto simple.
       const bodyText = body.join("\n").replace(/\n{2,}/g, "\n").trim();
-      out.push(`${num}. **${title}**${bodyText ? ` — ${bodyText}` : ""}`);
+      out.push(`${head.num}. **${head.title}**${bodyText ? ` — ${bodyText}` : ""}`);
     } else {
       out.push(lines[i]);
       i += 1;
@@ -108,8 +135,17 @@ const renderTipLine = (label: string, rest: string) =>
 
 type ListPart = { kind: "text"; lines: string[] } | { kind: "list"; lines: string[] };
 
-const renderList = (lines: string[]): string => {
-  const ordered = /^\d+[.)]\s+/.test(lines[0]);
+// Una línea que abre un bloque nuevo (encabezado, cita, código): corta la lista.
+const BLOCK_START = /^(#{1,3}\s+|>\s*|```)/;
+
+const renderList = (lines: string[]): { html: string; rest: string[] } => {
+  // Consumir solo las líneas de la lista; un bloque nuevo la interrumpe.
+  let end = 0;
+  while (end < lines.length && !BLOCK_START.test(lines[end].trim())) end += 1;
+  const listLines = lines.slice(0, end);
+  const rest = lines.slice(end);
+
+  const ordered = /^\d+[.)]\s+/.test(listLines[0]);
   // Items con partes ordenadas: texto y sublistas en el orden del original.
   // Un marcador de tipo distinto abre una sublista dentro del item actual;
   // una línea sin marcador la cierra y continúa el texto del item.
@@ -130,7 +166,7 @@ const renderList = (lines: string[]): string => {
     return last.lines;
   };
 
-  for (const line of lines) {
+  for (const line of listLines) {
     const m = line.match(LIST_ITEM);
     if (m) {
       const lineOrdered = /^\d+[.)]\s+/.test(line);
@@ -155,7 +191,10 @@ const renderList = (lines: string[]): string => {
     .map((itemParts) => {
       const body = itemParts
         .map((part) => {
-          if (part.kind === "list") return renderList(part.lines);
+          if (part.kind === "list") {
+            const sub = renderList(part.lines);
+            return sub.html + (sub.rest.length ? renderMarkdown(sub.rest.join("\n")) : "");
+          }
           // Dentro del texto: las líneas de consejo se destacan.
           const html: string[] = [];
           let buf: string[] = [];
@@ -181,34 +220,43 @@ const renderList = (lines: string[]): string => {
       return `<li>${body}</li>`;
     })
     .join("");
-  return `<${tag}>${itemsHtml}</${tag}>`;
+  return { html: `<${tag}>${itemsHtml}</${tag}>`, rest };
 };
 
 export const renderMarkdown = (raw: string) => {
   const sanitized = escapeHtml(raw || "");
-  const blocks = sanitized.split(/\n{2,}/).map((block) => {
+  const out: string[] = [];
+  for (const block of sanitized.split(/\n{2,}/)) {
     const lines = block.split("\n");
     // Lista: el bloque empieza con un marcador; las líneas siguientes que no
-    // lo tienen son continuación del item anterior.
+    // lo tienen son continuación del item anterior, salvo que abran un
+    // bloque nuevo (encabezado, cita, código).
     if (LIST_ITEM.test(lines[0])) {
-      return renderList(lines);
+      const { html, rest } = renderList(lines);
+      out.push(html);
+      if (rest.length) out.push(renderMarkdown(rest.join("\n")));
+      continue;
     }
 
     const heading = lines[0].match(/^(#{1,3})\s+(.*)$/);
     if (heading) {
       const level = Math.min(3, heading[1].length);
-      return `<h${level}>${inline(heading[2])}</h${level}>`;
+      out.push(`<h${level}>${inline(heading[2])}</h${level}>`);
+      continue;
     }
 
     // Párrafo de consejo ("Tip pro:", "Consejo extra:") → callout destacado.
     if (lines.length === 1) {
       const tip = lines[0].match(TIP_LINE);
       if (tip) {
-        return `<p class="rounded-2xl border border-accent/25 bg-accent/10 px-5 py-4"><strong>${tip[1]}:</strong> ${inline(tip[2])}</p>`;
+        out.push(
+          `<p class="rounded-2xl border border-accent/25 bg-accent/10 px-5 py-4"><strong>${tip[1]}:</strong> ${inline(tip[2])}</p>`
+        );
+        continue;
       }
     }
 
-    return `<p>${lines.map((line) => inline(line)).join("<br />")}</p>`;
-  });
-  return blocks.join("");
+    out.push(`<p>${lines.map((line) => inline(line)).join("<br />")}</p>`);
+  }
+  return out.join("");
 };
