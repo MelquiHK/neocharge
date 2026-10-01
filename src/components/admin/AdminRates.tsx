@@ -20,6 +20,7 @@ import {
   adminTr,
   AdminLoading,
 } from "./ui";
+import { DollarTrend } from "./DollarTrend";
 
 interface Rate {
   id: string;
@@ -124,6 +125,10 @@ export function AdminRates() {
               </div>
             )}
           </AdminCard>
+
+          {current && (
+            <DollarTrend rates={rates} />
+          )}
 
           {current && (
             <AdminStat

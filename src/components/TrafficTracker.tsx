@@ -31,6 +31,18 @@ export function TrafficTracker() {
     lastKeyRef.current = key;
     lastAtRef.current = now;
 
+    // Las fichas de producto cuentan una vista por sesión: las recargas
+    // no deben inflar el "más visto" del panel Analytics.
+    if (pathname.startsWith("/producto/")) {
+      try {
+        const seenKey = `nc_pv_${pathname}`;
+        if (sessionStorage.getItem(seenKey)) return;
+        sessionStorage.setItem(seenKey, "1");
+      } catch {
+        // sessionStorage no disponible: se registra igual
+      }
+    }
+
     const referrer = typeof document !== "undefined" ? document.referrer || null : null;
     const userAgent = typeof navigator !== "undefined" ? navigator.userAgent || null : null;
 
