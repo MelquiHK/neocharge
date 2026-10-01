@@ -12,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { toast } from "sonner";
 import { Product } from "@/types";
+import { LowStockBadge } from "@/components/LowStockBadge";
 
 interface ProductCardProps {
   product: Product;
@@ -249,14 +250,10 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
             )}
           </div>
 
-          {/* Stock Warning */}
-          {product.stock > 0 && product.stock <= 5 && (
-            <div className="p-2 rounded-lg bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 border border-orange-300 dark:border-orange-700/50">
-              <p className="text-xs font-semibold text-orange-700 dark:text-orange-300">
-                ⚠️ Solo quedan {product.stock} en stock
-              </p>
-            </div>
-          )}
+          {/* Insignia de stock bajo */}
+          <div>
+            <LowStockBadge stock={product.stock} />
+          </div>
 
           {/* Stock Indicator con etiqueta */}
           {product.stock > 0 && (

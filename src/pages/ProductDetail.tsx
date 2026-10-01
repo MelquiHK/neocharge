@@ -11,13 +11,15 @@ import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { responsiveImage } from "@/lib/responsive-image";
 import { Button } from "@/components/ui/button";
 import { SITE_URL } from "@/lib/seo";
+import { getWhatsAppLink } from "@/lib/whatsapp";
 import { buildShareImage } from "@/lib/share-image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock, Truck, Expand, Zap } from "lucide-react";
+import { Heart, Share2, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, MapPin, Clock, Truck, Expand, Zap, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import ImageViewer from "@/components/product/ImageViewer";
 import { ChargerCalculator } from "@/components/ChargerCalculator";
 import { StockAlertSignup } from "@/components/StockAlertSignup";
+import { LowStockBadge } from "@/components/LowStockBadge";
 import { ProductSpecs } from "@/components/ProductSpecs";
 import { batteryTypeChip, productRating } from "@/lib/product-display";
 import {
@@ -454,6 +456,7 @@ export default function ProductDetail() {
           <div className={`text-sm font-semibold ${outOfStock ? "text-destructive" : "text-green-600"}`}>
             {outOfStock ? "Agotado" : `${product.stock} disponibles`}
           </div>
+          <LowStockBadge stock={product.stock} className="mt-1" />
 
           {/* Description */}
           {product.description && (
@@ -490,6 +493,20 @@ export default function ProductDetail() {
               className="w-full h-12 text-base nc-btn-shine rounded-2xl relative overflow-hidden active:scale-[0.99] transition-transform"
             >
               {outOfStock ? "Agotado" : "Añadir al carrito"}
+            </Button>
+
+            <Button
+              variant="outline"
+              disabled={outOfStock}
+              onClick={() => {
+                const priceLabel = formatMoney(Number(product.price), product.currency);
+                const message = `Hola, quiero el ${product.name} (${priceLabel})`;
+                window.open(getWhatsAppLink(message), "_blank");
+              }}
+              className="w-full h-12 text-base rounded-2xl glass border-brand-300/60 text-brand-800 hover:border-brand-400 hover:text-brand-900 active:scale-[0.99] transition-transform"
+            >
+              <MessageCircle className="w-5 h-5" aria-hidden="true" />
+              Pedir por WhatsApp
             </Button>
 
             <div className="flex gap-2">
@@ -556,6 +573,11 @@ export default function ProductDetail() {
                 productSpecs={product.specifications}
                 availableChargers={chargerOptions}
               />
+              <Button asChild variant="outline" className="rounded-full mt-4 w-full sm:w-auto">
+                <Link to="/comparar-cargadores">
+                  Comparar todos los cargadores <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         ) : null}

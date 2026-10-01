@@ -93,6 +93,11 @@ export const seoConfig: Record<string, MetaTags> = {
     description:
       "Calcula el costo de la mensajería desde nuestro local del Vedado hasta tu ubicación en La Habana.",
   },
+  comparar: {
+    title: "Comparar cargadores - NeoCharge",
+    description:
+      "Compara los cargadores NeoCharge para baterías de litio: precio, amperaje y tiempo estimado de carga según los Ah de tu batería.",
+  },
   legal: {
     title: "Términos y Condiciones - NeoCharge",
     description: "Lee nuestros términos de uso y política de privacidad.",

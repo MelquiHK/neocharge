@@ -120,6 +120,25 @@ export const getRecommendedCurrent = (capacityAh: number): number => {
   return recommended;
 };
 
+/**
+ * Estima el tiempo de carga en horas con la fórmula: Ah ÷ A + 15% de pérdidas.
+ * Devuelve undefined si los valores no son válidos.
+ */
+export const estimateChargeHours = (
+  capacityAh: number | null | undefined,
+  currentA: number | null | undefined
+): number | undefined => {
+  if (
+    capacityAh === null || capacityAh === undefined ||
+    currentA === null || currentA === undefined ||
+    !Number.isFinite(capacityAh) || !Number.isFinite(currentA) ||
+    capacityAh <= 0 || currentA <= 0
+  ) {
+    return undefined;
+  }
+  return Math.round(((capacityAh / currentA) * 1.15) * 10) / 10;
+};
+
 export const getBatteryTypeLabel = (type: string): string => {
   if (type === "lifepo4") return "LiFePO4";
   if (type === "lead-acid") return "Plomo-ácido / Gel";
