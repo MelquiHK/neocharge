@@ -220,6 +220,33 @@ export type Database = {
         // (FK original omitida: debe ser asignable al fallback `Relationships: []`; ver nota en Tables)
         Relationships: []
       }
+      stock_alerts: {
+        Row: {
+          id: string
+          product_id: string
+          phone: string
+          created_at: string
+          notified_at: string | null
+          status: string
+        }
+        Insert: {
+          id?: string
+          product_id: string
+          phone: string
+          created_at?: string
+          notified_at?: string | null
+          status?: string
+        }
+        Update: {
+          id?: string
+          product_id?: string
+          phone?: string
+          created_at?: string
+          notified_at?: string | null
+          status?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

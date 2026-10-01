@@ -17,6 +17,7 @@ import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock, Tru
 import { toast } from "sonner";
 import ImageViewer from "@/components/product/ImageViewer";
 import { ChargerCalculator } from "@/components/ChargerCalculator";
+import { StockAlertSignup } from "@/components/StockAlertSignup";
 import { ProductSpecs } from "@/components/ProductSpecs";
 import { batteryTypeChip, productRating } from "@/lib/product-display";
 import {
@@ -510,6 +511,11 @@ export default function ProductDetail() {
               </Button>
             </div>
           </div>
+
+          {/* Alerta de stock: solo cuando está agotado */}
+          {outOfStock && product && (
+            <StockAlertSignup productId={product.id} productName={product.name} />
+          )}
 
           {/* Warranty */}
           {product.warranty_type && (
