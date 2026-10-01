@@ -16,7 +16,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   whatsapp_url: "https://wa.me/5363180910",
   contact_url: "/contacto",
   support_phone: "+53 6318-0910",
-  support_email: "habanasound90@gmail.com",
+  support_email: "neocharge0@gmail.com",
   support_address: "D entre 21 y 23, Vedado, La Habana",
   support_hours: "Atención 24 horas, todos los días",
   locations_intro: "Compra en cualquiera de nuestros locales. Activa los filtros y revisa stock en tiempo real para cada punto de venta.",
