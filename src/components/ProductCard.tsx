@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, Check, Heart } from "lucide-react";
+import { ShoppingBag, Check, Heart, Zap } from "lucide-react";
+import { batteryTypeChip } from "@/lib/product-display";
 import { memo, useState, type MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
@@ -198,6 +199,11 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
               <h3 className="font-display font-bold text-lg leading-tight text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">
                 {product.name}
               </h3>
+              {batteryTypeChip(product) && (
+                <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-brand-100 text-brand-800 border border-brand-300/50 text-[11px] font-bold">
+                  <Zap className="w-3 h-3" /> {batteryTypeChip(product)}
+                </span>
+              )}
             </Link>
             <button
               type="button"

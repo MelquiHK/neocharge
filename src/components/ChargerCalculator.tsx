@@ -88,7 +88,7 @@ const getChargerMatchScore = (
 export function ChargerCalculator({ productName, productSpecs, availableChargers = [] }: ChargerCalculatorProps) {
   const [batteryVoltage, setBatteryVoltage] = useState("");
   const [batteryCapacity, setBatteryCapacity] = useState("");
-  const [batteryType, setBatteryType] = useState("lead-acid");
+  const [batteryType, setBatteryType] = useState("lithium");
   const [showResult, setShowResult] = useState(false);
 
   const specs = useMemo(

@@ -13,11 +13,12 @@ import { Button } from "@/components/ui/button";
 import { SITE_URL } from "@/lib/seo";
 import { buildShareImage } from "@/lib/share-image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock, Truck, Expand } from "lucide-react";
+import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock, Truck, Expand, Zap } from "lucide-react";
 import { toast } from "sonner";
 import ImageViewer from "@/components/product/ImageViewer";
 import { ChargerCalculator } from "@/components/ChargerCalculator";
 import { ProductSpecs } from "@/components/ProductSpecs";
+import { batteryTypeChip, productRating } from "@/lib/product-display";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -412,10 +413,20 @@ export default function ProductDetail() {
         <div className="space-y-6">
           <div>
             <h1 className="font-display text-4xl font-bold mb-2">{product.name}</h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-              <span className="flex items-center gap-1">
-                ⭐ 4.9 (127 reseñas)
-              </span>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 flex-wrap">
+              {(() => {
+                const r = productRating(product.id);
+                return (
+                  <span className="flex items-center gap-1">
+                    ⭐ {r.rating} ({r.count} reseñas)
+                  </span>
+                );
+              })()}
+              {batteryTypeChip(product) && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-100 text-brand-800 border border-brand-300/50 text-xs font-bold">
+                  <Zap className="w-3 h-3" /> {batteryTypeChip(product)}
+                </span>
+              )}
             </div>
           </div>
 

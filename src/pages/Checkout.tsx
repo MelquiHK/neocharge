@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MessageCircle, MapPin, Store, Truck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,20 @@ import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DeliveryRouteMap } from "@/components/DeliveryRouteMap";
-import { LocationPickerMap } from "@/components/LocationPickerMap";
+// Los mapas (maplibre-gl ~1MB) se cargan solo cuando el usuario los abre,
+// para no inflar el chunk inicial del checkout.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DeliveryRouteMap = lazy(() => import("@/components/DeliveryRouteMap").then((m: any) => ({ default: m.DeliveryRouteMap })));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const LocationPickerMap = lazy(() => import("@/components/LocationPickerMap").then((m: any) => ({ default: m.LocationPickerMap })));
+
+function MapFallback() {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-muted/40 h-64 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+      <Loader2 className="w-4 h-4 animate-spin" /> Cargando mapa…
+    </div>
+  );
+}
 
 interface Loc {
   id: string;
@@ -577,6 +589,7 @@ const Checkout = () => {
                     </Button>
                   ) : (
                     <div className="space-y-2">
+                      <Suspense fallback={<MapFallback />}>
                       <LocationPickerMap
                         center={origin ?? { lat: 23.1367, lng: -82.3589 }}
                         initialPoint={coords}
@@ -585,6 +598,7 @@ const Checkout = () => {
                           setShowPicker(false);
                         }}
                       />
+                      </Suspense>
                       <button
                         type="button"
                         onClick={() => setShowPicker(false)}
@@ -610,7 +624,9 @@ const Checkout = () => {
                         <span className="font-display text-xl font-bold whitespace-nowrap">= {formatCUP(quote.priceCUP)}</span>
                       </div>
                       {quotedCoords && (
-                        <DeliveryRouteMap origin={origin} dest={quotedCoords} />
+                        <Suspense fallback={<MapFallback />}>
+                          <DeliveryRouteMap origin={origin} dest={quotedCoords} />
+                        </Suspense>
                       )}
                     </>
                   )}

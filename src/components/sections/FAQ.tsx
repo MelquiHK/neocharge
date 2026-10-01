@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     q: "¿Los cargadores funcionan con todas las motos eléctricas?",
-    a: "Funcionan con la mayoría de motos eléctricas con baterías de Plomo-Ácido o Gel. NO son compatibles con baterías LiFePO4 (Litio-Ferro-Fosfato). Verifica el voltaje de tu batería (72V o 48V).",
+    a: "Nuestros cargadores son para baterías de litio (incluyendo LiFePO4). NO sirven para baterías de plomo-ácido o gel. Verifica que el voltaje nominal del cargador coincida con el de tu batería (72V o 48V).",
   },
   {
     q: "¿Qué pasa si no sé qué cargador necesito?",
@@ -40,7 +40,7 @@ const faqs = [
   },
   {
     q: "¿Cómo puedo contactarlos?",
-    a: "Estamos disponibles por WhatsApp al +53 6318-0910, de 8am a 8pm.",
+    a: "Estamos disponibles por WhatsApp al +53 6318-0910, las 24 horas.",
   },
 ];
 

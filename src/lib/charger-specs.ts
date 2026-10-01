@@ -77,8 +77,13 @@ const parseChargerSpecsText = (text: string | null | undefined): ChargerSpecs =>
     if (/litio|li-ion|lithium/i.test(lower)) {
       specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "Li-ion"])];
     }
+    // OJO: "no sirve para plomo-ácido" es una NEGACIÓN, no compatibilidad.
+    // Solo se registra Plomo-ácido/Gel si la mención no está negada.
     if (/plomo|gel|lead-acid|acido/i.test(lower)) {
-      specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "Plomo-ácido/Gel"])];
+      const negated = /no\s+(sirve|son|es|sea|sean|funciona|funcionan|compatible|apta?|recomend)/i.test(lower);
+      if (!negated) {
+        specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "Plomo-ácido/Gel"])];
+      }
     }
   }
 
