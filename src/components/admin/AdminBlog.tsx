@@ -28,7 +28,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "sonner";
 import { Plus, Pencil, Trash2, Image as ImageIcon, ExternalLink, BookOpen, Newspaper, FolderOpen } from "lucide-react";
-import { renderMarkdown } from "@/lib/markdown";
+import { normalizeArticleContent, renderMarkdown } from "@/lib/markdown";
 import { showBrowserNotification } from "@/lib/notifications";
 import {
   AdminSectionHeader,
@@ -658,8 +658,8 @@ export function AdminBlog() {
               {previewMode ? (
                 <div className="rounded-3xl border border-border/60 bg-card p-4 shadow-soft sm:p-5">
                   <div
-                    className="prose prose-sm dark:prose-invert"
-                    dangerouslySetInnerHTML={{ __html: renderMarkdown(postEditing?.content ?? "") }}
+                    className="prose prose-neutral dark:prose-invert max-w-none prose-headings:font-display prose-headings:tracking-tight prose-p:leading-[1.85] prose-li:leading-[1.85]"
+                    dangerouslySetInnerHTML={{ __html: renderMarkdown(normalizeArticleContent(postEditing?.content ?? "")) }}
                   />
                 </div>
               ) : (

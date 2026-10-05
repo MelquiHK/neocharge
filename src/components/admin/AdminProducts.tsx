@@ -15,9 +15,11 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import {
   Copy, Download, Plus, Pencil, Trash2, Image as ImageIcon, X, Star, Sparkles, CheckSquare, Square,
-  Package, Search, Tag, DollarSign, Layers, FolderTree, Eye, Store,
+  Package, Search, Tag, DollarSign, Layers, FolderTree, Eye, Store, QrCode,
 } from "lucide-react";
 import { toast } from "sonner";
+import QRCode from "qrcode";
+import { SITE_URL } from "@/lib/seo";
 import { formatPrice } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Product, Category, StoreLocation } from "@/types";
@@ -696,6 +698,18 @@ export function AdminProducts() {
                 </div>
               </section>
 
+              {/* QR del producto: abre la página del producto al escanearlo */}
+              <section className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+                <AdminCardTitle icon={QrCode} title="QR del producto" />
+                {editing.slug ? (
+                  <div className="rounded-xl border border-border/60 bg-card p-3">
+                    <ProductQR url={`${SITE_URL}/producto/${editing.slug}`} name={editing.name ?? editing.slug} />
+                  </div>
+                ) : (
+                  <p className="text-xs text-muted-foreground">Guarda el producto primero para generar su código QR.</p>
+                )}
+              </section>
+
               {/* Stock por local (Disponibilidad) */}
               {locations.length > 0 && (
                 <section className="rounded-2xl border border-border/60 bg-muted/20 p-4">
@@ -749,6 +763,68 @@ export function AdminProducts() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+    </div>
+  );
+}
+
+/**
+ * QR del producto: apunta a la página del producto. Se puede descargar en
+ * PNG para imprimirlo en flyers o empaques.
+ */
+function ProductQR({ url, name }: { url: string; name: string }) {
+  const [dataUrl, setDataUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let alive = true;
+    QRCode.toDataURL(url, {
+      width: 512,
+      margin: 2,
+      color: { dark: "#0a2540", light: "#ffffff" },
+    })
+      .then((d) => { if (alive) setDataUrl(d); })
+      .catch(() => { if (alive) setDataUrl(null); });
+    return () => { alive = false; };
+  }, [url]);
+
+  const download = () => {
+    if (!dataUrl) return;
+    const a = document.createElement("a");
+    a.href = dataUrl;
+    a.download = `qr-${name.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]+/g, "-")}.png`;
+    a.click();
+  };
+
+  const copyLink = async () => {
+    try {
+      await navigator.clipboard.writeText(url);
+      toast.success("Enlace copiado");
+    } catch {
+      toast.error("No se pudo copiar el enlace");
+    }
+  };
+
+  return (
+    <div className="flex items-center gap-4">
+      <div className="h-24 w-24 shrink-0 overflow-hidden rounded-lg border border-border bg-white p-1">
+        {dataUrl ? (
+          <img src={dataUrl} alt={`QR de ${name}`} className="h-full w-full" />
+        ) : (
+          <div className="flex h-full w-full items-center justify-center text-xs text-muted-foreground">
+            Generando…
+          </div>
+        )}
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="truncate font-mono text-[11px] text-muted-foreground">{url}</p>
+        <div className="mt-2 flex flex-wrap gap-2">
+          <Button type="button" size="sm" variant="outline" onClick={download} disabled={!dataUrl}>
+            <Download className="mr-1 h-3.5 w-3.5" /> PNG
+          </Button>
+          <Button type="button" size="sm" variant="outline" onClick={copyLink}>
+            <Copy className="mr-1 h-3.5 w-3.5" /> Copiar enlace
+          </Button>
+        </div>
+      </div>
     </div>
   );
 }

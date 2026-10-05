@@ -33,7 +33,7 @@ export function PostCoverFallback({
       role="img"
       aria-label={title}
     >
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-primary/80 to-accent/70" />
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-950 via-primary/80 to-accent/70 fx-gradient-pan" />
       <div className="absolute inset-0 bg-grid opacity-40" />
       <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full bg-white/10 blur-3xl" />
       <div className="absolute -bottom-12 -left-12 w-56 h-56 rounded-full bg-accent/30 blur-3xl" />
@@ -216,7 +216,7 @@ const BlogPost = () => {
         )}
       </div>
 
-      <article className="mt-10 prose prose-neutral dark:prose-invert max-w-3xl prose-headings:font-display prose-headings:tracking-tight prose-strong:text-foreground prose-li:marker:text-primary prose-ol:space-y-4 prose-ul:space-y-2 prose-li:leading-relaxed">
+      <article className="mt-10 prose prose-neutral dark:prose-invert max-w-3xl prose-headings:font-display prose-headings:tracking-tight prose-headings:mt-12 prose-headings:mb-5 prose-strong:text-foreground prose-p:leading-[1.85] prose-p:mb-7 prose-p:text-[1.02rem] prose-li:marker:text-primary prose-ol:space-y-4 prose-ul:space-y-2 prose-li:leading-[1.85]">
         {html ? (
           <div dangerouslySetInnerHTML={{ __html: html }} />
         ) : (

@@ -1,6 +1,5 @@
 import { useReveal } from "@/hooks/use-reveal";
 import { Banknote, MessageCircle, ShieldCheck, Truck } from "lucide-react";
-import { SectionHeading } from "@/components/sections/SectionHeading";
 import { cn } from "@/lib/utils";
 
 const features = [
@@ -35,11 +34,17 @@ export function Features() {
   return (
     <section ref={ref} className={cn("py-12 md:py-16 reveal", visible && "is-visible")}>
       <div className="container-page">
-        <SectionHeading
-          eyebrow="Por qué NeoCharge"
-          title="Comprar aquí es sin enredos"
-          description="Precios claros, garantía de verdad y entrega en La Habana. Así de simple."
-        />
+        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-200/70 text-brand-800 border border-brand-400/30 text-xs font-bold uppercase tracking-widest">
+            Por qué NeoCharge
+          </div>
+          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
+            Comprar aquí es sin enredos
+          </h2>
+          <p className="text-muted-foreground text-lg font-light">
+            Precios claros, garantía de verdad y entrega en La Habana. Así de simple.
+          </p>
+        </div>
 
         <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
           {features.map((f, i) => (

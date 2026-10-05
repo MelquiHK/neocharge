@@ -70,8 +70,8 @@ export function Header({ className }: { className?: string }) {
           className={cn(
             "flex items-center justify-between rounded-full transition-all duration-500 px-4 sm:px-6",
             scrolled
-              ? "nc-glasswater shadow-xl h-16"
-              : "nc-glasswater h-20",
+              ? "glass-water shadow-xl shadow-brand-500/15 h-16"
+              : "glass-water h-20",
           )}
         >
           <Logo />
@@ -156,7 +156,7 @@ export function Header({ className }: { className?: string }) {
               {itemCount > 0 && (
                 <span
                   className={cn(
-                    "absolute -top-0.5 -right-0.5 min-w-[20px] h-5 px-1 rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white text-[10px] font-bold flex items-center justify-center shadow-glow-brand-sm",
+                    "absolute -top-0.5 -right-0.5 min-w-[20px] h-5 px-1 rounded-full bg-gradient-to-br from-brand-500 to-grape-600 text-white text-[10px] font-bold flex items-center justify-center shadow-glow-brand-sm",
                     bump && "animate-bump",
                   )}
                 >
@@ -179,7 +179,7 @@ export function Header({ className }: { className?: string }) {
 
         {/* Mobile menu panel */}
         {mobileOpen && (
-          <div className="lg:hidden mt-3 nc-glasswater rounded-3xl p-4 animate-fade-in">
+          <div className="lg:hidden mt-3 glass rounded-3xl p-4 shadow-lifted animate-fade-in">
             <nav className="flex flex-col gap-1" aria-label="Móvil">
               {links.map((l) => (
                 <NavLink

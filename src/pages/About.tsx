@@ -9,6 +9,9 @@ const About = () => {
   return (
     <div>
       <section className="container-page py-20 md:py-32 relative overflow-hidden">
+        {/* Decoración premium: orbes de luz flotantes */}
+        <div className="absolute -top-10 right-[10%] w-72 h-72 rounded-full bg-primary/15 blur-3xl fx-float pointer-events-none" aria-hidden />
+        <div className="absolute top-40 left-[5%] w-56 h-56 rounded-full bg-accent/15 blur-3xl fx-float fx-delay-2 pointer-events-none" aria-hidden />
         <div className="max-w-4xl space-y-8 relative">
           <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
             Sobre NeoCharge

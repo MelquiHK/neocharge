@@ -1,12 +1,12 @@
 /**
- * Efecto "volar al carrito" de NeoCharge, 100% CSS y autocontenido:
- * los keyframes se inyectan una sola vez en <head>.
+ * Efectos visuales premium de NeoCharge ("efecto agua"), 100% CSS y
+ * autocontenidos: los keyframes se inyectan una sola vez en <head>.
  *
- * - nc-fly-to-cart: fantasma que vuela al carrito al añadir un producto
- *   (animación funcional y transitoria: solo se dispara al añadir).
- *
- * Los demás acabados (brillos al hover, pop del corazón) viven en
- * src/index.css como reglas estáticas/hover. Nada perpetuo.
+ * - nc-fly-to-cart: fantasma que vuela al carrito al añadir un producto.
+ * - nc-heart-pop: pop del corazón de favoritos.
+ * - nc-water-shine: barrido de brillo sutil sobre tarjetas destacadas.
+ * - nc-btn-shine: micro-brillo periódico en botones "Añadir al carrito".
+ * - nc-rise: entrada suave de ítems (carrito).
  *
  * Rendimiento: solo se animan transform y opacity. Todo respeta
  * prefers-reduced-motion (también en JS para el fly-to-cart).
@@ -30,7 +30,63 @@ const KEYFRAMES = `
     border-radius: 9999px;
   }
 }
-`;  /* flyToCart() ya no se ejecuta con prefers-reduced-motion (ver abajo) */
+@keyframes nc-heart-pop {
+  0% { transform: scale(0.6); }
+  45% { transform: scale(1.35); }
+  100% { transform: scale(1); }
+}
+@keyframes nc-shine-sweep {
+  0% { transform: translateX(-180%) skewX(-18deg); opacity: 0; }
+  12% { opacity: 1; }
+  48% { transform: translateX(380%) skewX(-18deg); opacity: 1; }
+  62%, 100% { transform: translateX(380%) skewX(-18deg); opacity: 0; }
+}
+@keyframes nc-rise-in {
+  from { opacity: 0; transform: translateY(12px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+/* Barrido de brillo "agua" sobre tarjetas destacadas (solo transform/opacity) */
+.nc-water-shine { position: relative; }
+.nc-water-shine::after {
+  content: "";
+  position: absolute;
+  top: -10%; bottom: -10%; left: 0;
+  width: 38%;
+  background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,.32) 42%, rgba(255,255,255,.5) 50%, rgba(255,255,255,.32) 58%, transparent 100%);
+  transform: translateX(-180%) skewX(-18deg);
+  opacity: 0;
+  animation: nc-shine-sweep 4.4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 6;
+}
+.dark .nc-water-shine::after {
+  background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,.10) 42%, rgba(255,255,255,.18) 50%, rgba(255,255,255,.10) 58%, transparent 100%);
+}
+
+/* Micro-brillo en botones "Añadir al carrito" */
+.nc-btn-shine { position: relative; overflow: hidden; }
+.nc-btn-shine::after {
+  content: "";
+  position: absolute;
+  top: -10%; bottom: -10%; left: 0;
+  width: 30%;
+  background: linear-gradient(100deg, transparent 0%, rgba(255,255,255,.45) 50%, transparent 100%);
+  transform: translateX(-220%) skewX(-18deg);
+  opacity: 0;
+  animation: nc-shine-sweep 3.8s ease-in-out infinite;
+  pointer-events: none;
+}
+
+/* Entrada suave de elementos */
+.nc-rise { animation: nc-rise-in 0.45s cubic-bezier(.22,.9,.28,1) both; }
+
+@media (prefers-reduced-motion: reduce) {
+  .nc-water-shine::after,
+  .nc-btn-shine::after { animation: none; display: none; }
+  .nc-rise { animation: none; }
+}
+`;
 
 function ensureStyle() {
   if (typeof document === "undefined") return;

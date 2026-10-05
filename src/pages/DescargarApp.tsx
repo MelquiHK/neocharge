@@ -53,52 +53,41 @@ export default function DescargarApp() {
         <ArrowLeft className="w-4 h-4" /> Volver a la tienda
       </Link>
 
-      <div className="text-center space-y-5 pt-4">
-        <div className="relative w-24 h-24 mx-auto">
-          <div className="absolute -inset-3 rounded-[2rem] bg-brand-400/30 blur-2xl" aria-hidden />
-          <div className="relative w-24 h-24 rounded-[1.75rem] bg-gradient-to-br from-brand-400 via-brand-500 to-brand-700 flex items-center justify-center shadow-glow-brand">
-            <Smartphone className="w-11 h-11 text-white" />
-          </div>
+      <div className="text-center space-y-4">
+        <div className="w-20 h-20 mx-auto rounded-3xl bg-gradient-to-br from-brand-300 via-brand-400 to-brand-500 flex items-center justify-center shadow-glow-brand">
+          <Smartphone className="w-10 h-10 text-slate-900" />
         </div>
-        <span className="nc-eyebrow">
-          <span className="nc-eyebrow-dot" />
-          App NeoCharge · v{APK_VERSION}
-        </span>
-        <h1 className="nc-display text-4xl md:text-5xl nc-title-premium">
+        <h1 className="text-3xl font-extrabold tracking-tight nc-title-gradient">
           Lleva NeoCharge en tu bolsillo
         </h1>
-        <p className="text-slate-500 text-lg font-light max-w-xl mx-auto leading-relaxed">
+        <p className="text-muted-foreground">
           Instala la app y compra tus cargadores y accesorios más rápido, directo
           desde la pantalla de inicio de tu teléfono. Gratis, sin registro.
         </p>
       </div>
 
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mt-10">
-        <div className="nc-card-premium !rounded-3xl p-5 flex items-start gap-4">
-          <span className="nc-icon-tile-md shrink-0">
-            <Zap className="w-6 h-6" strokeWidth={2.2} />
-          </span>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-8">
+        <div className="flex items-start gap-3 p-4 glass rounded-3xl hover-lift">
+          <Zap className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div>
-            <p className="font-display font-bold text-slate-900">Apertura instantánea</p>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="font-bold text-sm">Apertura instantánea</p>
+            <p className="text-xs text-muted-foreground">
               Abre la tienda en un toque, sin escribir la dirección web.
             </p>
           </div>
         </div>
-        <div className="nc-card-premium !rounded-3xl p-5 flex items-start gap-4">
-          <span className="nc-icon-tile-md shrink-0">
-            <ShoppingBag className="w-6 h-6" strokeWidth={2.2} />
-          </span>
+        <div className="flex items-start gap-3 p-4 glass rounded-3xl hover-lift">
+          <ShoppingBag className="w-5 h-5 text-primary shrink-0 mt-0.5" />
           <div>
-            <p className="font-display font-bold text-slate-900">Compra más rápido</p>
-            <p className="text-sm text-slate-500 mt-0.5">
+            <p className="font-bold text-sm">Compra más rápido</p>
+            <p className="text-xs text-muted-foreground">
               Tu carrito y tus favoritos siempre a la mano.
             </p>
           </div>
         </div>
       </div>
 
-      <div className="mt-8 p-6 md:p-8 nc-card-premium !rounded-[2rem] text-center space-y-5">
+      <div className="mt-8 p-6 glass rounded-3xl border-brand-300/50 text-center space-y-4 shadow-glow-brand-sm">
         {installed || accepted ? (
           <p className="flex items-center justify-center gap-2 font-bold text-green-600">
             <CheckCircle2 className="w-5 h-5" /> ¡Ya tienes la app instalada!
@@ -163,7 +152,7 @@ export default function DescargarApp() {
           gratis.
         </p>
         <a href={APK_URL} download>
-          <Button type="button" variant="purple" className="w-full">
+          <Button type="button" variant="outline" className="w-full">
             <Download className="w-4 h-4" /> Descargar APK para Android
           </Button>
         </a>

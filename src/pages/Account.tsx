@@ -7,9 +7,14 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatPrice, formatCUP } from "@/lib/format";
-import { Package, LogOut, LayoutDashboard, User, Phone, Info, Save, MessageSquare, Wallet, CheckCircle, Clock, Map, Calculator, Send } from "lucide-react";
+import { getWhatsAppLink } from "@/lib/whatsapp";
+import { Package, LogOut, LayoutDashboard, User, Phone, Info, Save, MessageSquare, Wallet, CheckCircle, Clock, Map, Calculator, Send, Plus } from "lucide-react";
 import { toast } from "sonner";
+import "@/components/sections/visual-effects.css";
 import { computeSalesTotalsBySeller, type SellerSale } from "@/lib/sales";
+import { RegistrarVentaDialog } from "@/components/gestor/RegistrarVentaDialog";
+import { VentasHistorial } from "@/components/gestor/VentasHistorial";
+import { SolicitudesPago } from "@/components/gestor/SolicitudesPago";
 
 interface Order {
   id: string;
@@ -42,6 +47,8 @@ const Account = () => {
   // Gestor specific data
   const [gestorSales, setGestorSales] = useState<SellerSale[]>([]);
   const [requestingPayment, setRequestingPayment] = useState(false);
+  const [saleDialogOpen, setSaleDialogOpen] = useState(false);
+  const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
   useEffect(() => {
     document.title = "Mi cuenta — NeoCharge";
@@ -61,7 +68,7 @@ const Account = () => {
 
   useEffect(() => {
     if (!user) return;
-    
+
     // Load orders
     supabase
       .from("orders")
@@ -70,15 +77,52 @@ const Account = () => {
       .order("created_at", { ascending: false })
       .then(({ data }) => data && setOrders(data as Order[]));
 
+    if (!isGestor) return;
+
     // Load sales if gestor
-    if (isGestor) {
+    const loadSales = () => {
       supabase
         .from("seller_sales")
         .select("*")
         .eq("seller_user_id", user.id)
         .order("created_at", { ascending: false })
         .then(({ data }) => data && setGestorSales(data));
-    }
+    };
+    const checkPendingRequest = () => {
+      supabase
+        .from("payment_requests")
+        .select("id")
+        .eq("user_id", user.id)
+        .eq("status", "pending")
+        .limit(1)
+        .then(({ data }) => setHasPendingRequest(!!data && data.length > 0));
+    };
+    loadSales();
+    checkPendingRequest();
+
+    // Realtime: las ventas y solicitudes se actualizan solas (ej. cuando el
+    // admin marca una comisión como pagada o aprueba una solicitud).
+    const salesChannel = supabase
+      .channel(`gestor-sales-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "seller_sales", filter: `seller_user_id=eq.${user.id}` },
+        () => loadSales()
+      )
+      .subscribe();
+    const payChannel = supabase
+      .channel(`gestor-payments-${user.id}`)
+      .on(
+        "postgres_changes",
+        { event: "*", schema: "public", table: "payment_requests", filter: `user_id=eq.${user.id}` },
+        () => checkPendingRequest()
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(salesChannel);
+      supabase.removeChannel(payChannel);
+    };
   }, [user, isGestor]);
 
   const gestorStats = useMemo(() => {
@@ -166,6 +210,10 @@ const handleAvatarUpload = async (file: File) => {
       toast.error("No tienes comisiones pendientes de pago.");
       return;
     }
+    if (hasPendingRequest) {
+      toast.error("Ya tienes una solicitud de pago en revisión.");
+      return;
+    }
 
     setRequestingPayment(true);
     try {
@@ -177,12 +225,24 @@ const handleAvatarUpload = async (file: File) => {
       });
 
       if (error) throw error;
+      setHasPendingRequest(true);
       toast.success("Solicitud de pago enviada al administrador.");
     } catch (error: unknown) {
       toast.error("Error al solicitar pago: " + (error instanceof Error ? error.message : String(error)));
     } finally {
       setRequestingPayment(false);
     }
+  };
+
+  const handleSaleSaved = () => {
+    // Recarga inmediata (el realtime también lo haría, pero así se ve al instante).
+    if (!user) return;
+    supabase
+      .from("seller_sales")
+      .select("*")
+      .eq("seller_user_id", user.id)
+      .order("created_at", { ascending: false })
+      .then(({ data }) => data && setGestorSales(data));
   };
 
   const sendToWhatsApp = () => {
@@ -196,15 +256,15 @@ Pagado: ${formatCUP(stats.paidCommission)}
 Pendiente: ${formatCUP(stats.pendingCommission)}
 
 Por favor, revisa mis pagos. ¡Gracias!`;
-    
-    const encoded = encodeURIComponent(message);
-    window.open(`https://wa.me/5363180910?text=${encoded}`, "_blank");
+
+    window.open(getWhatsAppLink(message), "_blank");
   };
 
   if (loading) {
     return (
       <div className="relative overflow-hidden">
         <div className="nc-wash-a" aria-hidden />
+        <div className="nc-wash-b" aria-hidden />
         <div className="relative container-page py-20 space-y-4">
           <div className="h-8 bg-slate-200/70 rounded animate-pulse w-1/3" />
           <div className="h-4 bg-slate-200/70 rounded animate-pulse w-1/2" />
@@ -221,8 +281,17 @@ Por favor, revisa mis pagos. ¡Gracias!`;
 
   return (
     <div className="relative overflow-hidden">
-      {/* Un único lavado estático tenuísimo en la parte alta. Nada animado. */}
+      {/* Lavados de color + orbes */}
       <div className="nc-wash-a" aria-hidden />
+      <div className="nc-wash-b" aria-hidden />
+      <div
+        className="absolute -top-40 left-1/2 -translate-x-1/2 w-[640px] h-[640px] rounded-full bg-brand-300/30 blur-[130px] pointer-events-none"
+        aria-hidden
+      />
+      <div
+        className="absolute -bottom-52 -left-32 w-[480px] h-[480px] rounded-full bg-brand-200/25 blur-[120px] pointer-events-none"
+        aria-hidden
+      />
 
       <div className="relative container-page py-12 space-y-8">
         <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-slate-200/70 pb-10">
@@ -240,7 +309,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
               </Button>
             )}
             {isMensajero && (
-              <Button asChild className="rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white hover:brightness-105 font-bold shadow-glow-brand-sm">
+              <Button asChild className="rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white hover:brightness-105 font-bold shadow-glow-brand-sm">
                 <Link to="/mensajeria"><Map className="w-4 h-4" /> Panel Mensajero</Link>
               </Button>
             )}
@@ -349,14 +418,23 @@ Por favor, revisa mis pagos. ¡Gracias!`;
               <section className="glass-strong rounded-[2rem] p-6">
                 <div className="flex items-center justify-between flex-wrap gap-3 mb-6">
                   <h2 className="font-display text-2xl font-bold flex items-center gap-2 nc-title-gradient">
-                    <Wallet className="w-6 h-6 text-brand-600" /> Resumen de Gestor
+                    <Wallet className="w-6 h-6 text-brand-600" /> Panel de Gestor
                   </h2>
-                  <div className="flex gap-2">
+                  <div className="flex flex-wrap gap-2">
+                    <Button size="sm" onClick={() => setSaleDialogOpen(true)} className="rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white hover:brightness-105 font-bold shadow-glow-brand-sm">
+                      <Plus className="w-4 h-4 mr-2" /> Registrar venta
+                    </Button>
+                    <Button
+                      size="sm"
+                      onClick={handleRequestPayment}
+                      disabled={requestingPayment || hasPendingRequest}
+                      title={hasPendingRequest ? "Ya tienes una solicitud en revisión" : "Pedir el pago de tus comisiones pendientes"}
+                      className="rounded-full glass text-slate-700 hover:bg-white/90 font-semibold disabled:opacity-50"
+                    >
+                      <Send className="w-4 h-4 mr-2" /> {hasPendingRequest ? "Pago en revisión" : "Pedir Pago"}
+                    </Button>
                     <Button size="sm" onClick={sendToWhatsApp} className="rounded-full bg-green-500/10 border border-green-300/50 text-green-700 hover:bg-green-500/20 font-semibold">
                       <MessageSquare className="w-4 h-4 mr-2" /> WhatsApp Admin
-                    </Button>
-                    <Button size="sm" onClick={handleRequestPayment} disabled={requestingPayment} className="rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white hover:brightness-105 font-bold shadow-glow-brand-sm">
-                      <Send className="w-4 h-4 mr-2" /> Pedir Pago
                     </Button>
                   </div>
                 </div>
@@ -384,6 +462,14 @@ Por favor, revisa mis pagos. ¡Gracias!`;
               </section>
             )}
 
+            {isGestor && (
+              <VentasHistorial sales={gestorSales} />
+            )}
+
+            {isGestor && user && (
+              <SolicitudesPago userId={user.id} />
+            )}
+
             <section className="glass-strong rounded-[2rem] p-6">
               <h2 className="font-display text-xl font-bold mb-4 flex items-center gap-2 nc-title-gradient">
                 <Package className="w-5 h-5 text-brand-600" /> Mis pedidos
@@ -391,7 +477,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
               {orders.length === 0 ? (
                 <div className="text-center py-12 space-y-3">
                   <p className="text-slate-400">No tienes pedidos todavía.</p>
-                  <Button asChild className="rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white hover:brightness-105 font-bold px-6 h-12 shadow-glow-brand-sm"><Link to="/tienda">Empezar a comprar</Link></Button>
+                  <Button asChild className="rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white hover:brightness-105 font-bold px-6 h-12 shadow-glow-brand-sm"><Link to="/tienda">Empezar a comprar</Link></Button>
                 </div>
               ) : (
                 <div className="divide-y divide-slate-200/70">
@@ -415,6 +501,14 @@ Por favor, revisa mis pagos. ¡Gracias!`;
           </div>
         </div>
       </div>
+
+      {isGestor && (
+        <RegistrarVentaDialog
+          open={saleDialogOpen}
+          onOpenChange={setSaleDialogOpen}
+          onSaved={handleSaleSaved}
+        />
+      )}
     </div>
   );
 };

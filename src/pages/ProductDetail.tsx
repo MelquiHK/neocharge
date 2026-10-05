@@ -10,12 +10,18 @@ import { computeDisplayPrice, formatPrice, formatCUP, formatMoney, hasSaneDiscou
 import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { responsiveImage } from "@/lib/responsive-image";
 import { Button } from "@/components/ui/button";
-import { cn } from "@/lib/utils";
+import { SITE_URL } from "@/lib/seo";
+import { getWhatsAppLink } from "@/lib/whatsapp";
+import { buildShareImage } from "@/lib/share-image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Share2, ArrowLeft, ChevronLeft, ChevronRight, MapPin, Clock, Truck } from "lucide-react";
+import { Heart, Share2, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, MapPin, Clock, Truck, Expand, Zap, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
+import ImageViewer from "@/components/product/ImageViewer";
 import { ChargerCalculator } from "@/components/ChargerCalculator";
+import { StockAlertSignup } from "@/components/StockAlertSignup";
+import { LowStockBadge } from "@/components/LowStockBadge";
 import { ProductSpecs } from "@/components/ProductSpecs";
+import { batteryTypeChip, productRating } from "@/lib/product-display";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -63,6 +69,7 @@ export default function ProductDetail() {
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
+  const [viewerOpen, setViewerOpen] = useState(false);
   
   const { isFavorite, toggleFavorite } = useUnifiedFavorites();
   const liked = product ? isFavorite(product.id) : false;
@@ -188,23 +195,30 @@ export default function ProductDetail() {
   const handleShare = async () => {
     if (!product) return;
 
+    const productUrl = `${SITE_URL}/producto/${product.slug}`;
     const shareData: ShareData = {
       title: product.name,
       text: `${product.name} - ${displayPriceLabel(display)}\n${product.description || ''}\n¡Mira este producto en NeoCharge!`, // Richer text
-      url: window.location.href,
+      url: productUrl,
     };
 
-    // Attempt to add main product image if available
+    // Imagen para compartir: foto del producto con su QR en la esquina inferior derecha
     const mainImage = product.images?.[product.main_image_index ?? 0] ?? product.images?.[0];
     if (mainImage) {
       try {
-        const response = await fetch(mainImage);
-        const blob = await response.blob();
-        const file = new File([blob], `${product.slug}.jpg`, { type: blob.type });
+        const file = await buildShareImage(mainImage, productUrl, product.slug);
         shareData.files = [file];
       } catch (error) {
-        console.error("Error al cargar la imagen para compartir:", error);
-        // Fallback to sharing without image if image loading fails
+        console.error("Error al generar la imagen para compartir:", error);
+        // Plan B: compartir la foto original sin QR
+        try {
+          const response = await fetch(mainImage);
+          const blob = await response.blob();
+          const file = new File([blob], `${product.slug}.jpg`, { type: blob.type });
+          shareData.files = [file];
+        } catch {
+          // Compartir solo texto si la imagen tampoco carga
+        }
       }
     }
 
@@ -312,50 +326,71 @@ export default function ProductDetail() {
       </div>
 
       {/* Main Product Section */}
-      <div className="grid lg:grid-cols-2 gap-10 lg:gap-14 mb-16">
+      <div className="grid lg:grid-cols-2 gap-12 mb-16">
         {/* Images */}
         <div className="space-y-4">
-          <div className="nc-card-premium !p-3">
-            <div className="relative aspect-square rounded-[1.4rem] overflow-hidden bg-gradient-to-br from-brand-100/60 to-slate-200/60">
-              {mainImage ? (
-                (() => {
-                  const ri = responsiveImage(mainImage, "(max-width: 1024px) 100vw, 600px");
-                  return (
+          <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted">
+            {mainImage ? (
+              (() => {
+                const ri = responsiveImage(mainImage, "(max-width: 1024px) 100vw, 600px");
+                return (
+                  <button
+                    type="button"
+                    onClick={() => setViewerOpen(true)}
+                    aria-label="Ampliar fotos del producto"
+                    className="block w-full h-full cursor-zoom-in"
+                  >
                     <img
                       src={ri.src}
                       srcSet={ri.srcSet}
                       sizes={ri.sizes}
                       alt={product.name}
                       className="w-full h-full object-cover"
+                      fetchPriority="high"
+                      decoding="async"
                     />
-                  );
-                })()
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-muted-foreground">
-                  Sin imagen
-                </div>
-              )}
-              {discount && (
-                <div className="absolute top-4 right-4 bg-gradient-to-r from-red-500 to-orange-500 text-white px-3.5 py-1.5 rounded-full text-sm font-bold shadow-lifted">
-                  -{discount}%
-                </div>
-              )}
-            </div>
+                  </button>
+                );
+              })()
+            ) : (
+              <div className="w-full h-full flex items-center justify-center text-muted-foreground">
+                Sin imagen
+              </div>
+            )}
+            {mainImage && (
+              <div className="absolute bottom-3 right-3 flex items-center gap-1.5 rounded-full bg-black/55 text-white text-xs px-3 py-1.5 pointer-events-none">
+                <Expand className="h-3.5 w-3.5" />
+                Toca para ampliar
+              </div>
+            )}
+            {discount && (
+              <div className="absolute top-4 right-4 bg-destructive text-destructive-foreground px-3 py-1 rounded-full text-sm font-semibold">
+                -{discount}%
+              </div>
+            )}
           </div>
+
+          {/* Visor a pantalla completa: pellizco, doble toque, deslizar */}
+          {viewerOpen && images.length > 0 && (
+            <ImageViewer
+              images={images}
+              initialIndex={activeImage}
+              alt={product.name}
+              onClose={() => setViewerOpen(false)}
+              onIndexChange={setActiveImage}
+            />
+          )}
 
           {/* Thumbnails */}
           {images.length > 1 && (
-            <div className="flex gap-3">
+            <div className="flex gap-2">
               {images.map((img, idx) => (
                 <button
                   key={idx}
                   onClick={() => setActiveImage(idx)}
-                  className={cn(
-                    "w-20 h-20 rounded-2xl overflow-hidden border-2 transition-all duration-300 bg-white/60 backdrop-blur",
-                    activeImage === idx
-                      ? "border-brand-500 shadow-glow-brand-sm scale-105"
-                      : "border-white/70 hover:border-brand-400/50 opacity-70 hover:opacity-100",
-                  )}
+                  className={`w-16 h-16 rounded-lg overflow-hidden border-2 transition-colors ${
+                    activeImage === idx ? "border-primary" : "border-transparent"
+                  }`}
                 >
                   {(() => {
                     const ri = responsiveImage(img, "64px");
@@ -380,41 +415,48 @@ export default function ProductDetail() {
         {/* Product Info */}
         <div className="space-y-6">
           <div>
-            <h1 className="nc-display text-4xl md:text-5xl text-slate-950 mb-3">{product.name}</h1>
-            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4">
-              <span className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-amber-100/80 border border-amber-200/70 text-amber-800 font-semibold text-xs">
-                ⭐ 4.9 · 127 reseñas
-              </span>
+            <h1 className="font-display text-4xl font-bold mb-2">{product.name}</h1>
+            <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 flex-wrap">
+              {(() => {
+                const r = productRating(product.id);
+                return (
+                  <span className="flex items-center gap-1">
+                    ⭐ {r.rating} ({r.count} reseñas)
+                  </span>
+                );
+              })()}
+              {batteryTypeChip(product) && (
+                <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-100 text-brand-800 border border-brand-300/50 text-xs font-bold">
+                  <Zap className="w-3 h-3" /> {batteryTypeChip(product)}
+                </span>
+              )}
             </div>
           </div>
 
-          {/* Price — panel de cristal */}
-          <div className="nc-card-premium !rounded-3xl p-6 space-y-2">
-            <p className="text-xs font-bold uppercase tracking-[0.18em] text-slate-400">Precio</p>
-            <div className="flex items-baseline gap-3 flex-wrap">
-              <span className="nc-display text-4xl md:text-5xl nc-title-premium">
+          {/* Price */}
+          <div className="space-y-2">
+            <div className="flex items-baseline gap-3">
+              <span className="font-display text-3xl font-bold">
                 {displayPriceLabel(display)}
               </span>
               {showCompare && (
-                <span className="text-lg text-slate-400 line-through">
+                <span className="text-lg text-muted-foreground line-through">
                   {formatMoney(Number(product.compare_price), product.currency)}
                 </span>
               )}
             </div>
             {displayConvertedLine(display) && (
-              <p className="text-sm text-slate-500">
+              <p className="text-sm text-muted-foreground">
                 {displayConvertedLine(display)}
               </p>
             )}
-            <div className={cn("text-sm font-semibold pt-1", outOfStock ? "text-destructive" : "text-emerald-600")}>
-              {outOfStock ? "Agotado" : (
-                <span className="inline-flex items-center gap-1.5">
-                  <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" />
-                  {product.stock} disponibles
-                </span>
-              )}
-            </div>
           </div>
+
+          {/* Stock Status */}
+          <div className={`text-sm font-semibold ${outOfStock ? "text-destructive" : "text-green-600"}`}>
+            {outOfStock ? "Agotado" : `${product.stock} disponibles`}
+          </div>
+          <LowStockBadge stock={product.stock} className="mt-1" />
 
           {/* Description */}
           {product.description && (
@@ -453,6 +495,20 @@ export default function ProductDetail() {
               {outOfStock ? "Agotado" : "Añadir al carrito"}
             </Button>
 
+            <Button
+              variant="outline"
+              disabled={outOfStock}
+              onClick={() => {
+                const priceLabel = formatMoney(Number(product.price), product.currency);
+                const message = `Hola, quiero el ${product.name} (${priceLabel})`;
+                window.open(getWhatsAppLink(message), "_blank");
+              }}
+              className="w-full h-12 text-base rounded-2xl glass border-brand-300/60 text-brand-800 hover:border-brand-400 hover:text-brand-900 active:scale-[0.99] transition-transform"
+            >
+              <MessageCircle className="w-5 h-5" aria-hidden="true" />
+              Pedir por WhatsApp
+            </Button>
+
             <div className="flex gap-2">
               <Button
                 variant="outline"
@@ -472,6 +528,11 @@ export default function ProductDetail() {
               </Button>
             </div>
           </div>
+
+          {/* Alerta de stock: solo cuando está agotado */}
+          {outOfStock && product && (
+            <StockAlertSignup productId={product.id} productName={product.name} />
+          )}
 
           {/* Warranty */}
           {product.warranty_type && (
@@ -512,6 +573,11 @@ export default function ProductDetail() {
                 productSpecs={product.specifications}
                 availableChargers={chargerOptions}
               />
+              <Button asChild variant="outline" className="rounded-full mt-4 w-full sm:w-auto">
+                <Link to="/comparar-cargadores">
+                  Comparar todos los cargadores <ArrowRight className="w-4 h-4" />
+                </Link>
+              </Button>
             </div>
           </div>
         ) : null}

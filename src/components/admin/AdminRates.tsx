@@ -20,6 +20,7 @@ import {
   adminTr,
   AdminLoading,
 } from "./ui";
+import { DollarTrend } from "./DollarTrend";
 
 interface Rate {
   id: string;
@@ -38,7 +39,7 @@ export function AdminRates() {
 
   const load = async () => {
     setLoading(true);
-    const { data } = await supabase.from("exchange_rates").select("*").order("rate_date", { ascending: false }).limit(30);
+    const { data } = await supabase.from("exchange_rates").select("*").order("rate_date", { ascending: false }).limit(90);
     setRates((data ?? []) as Rate[]);
     if (data && data.length > 0) {
       const today = new Date().toISOString().split("T")[0];
@@ -124,6 +125,10 @@ export function AdminRates() {
               </div>
             )}
           </AdminCard>
+
+          {current && (
+            <DollarTrend rates={rates} />
+          )}
 
           {current && (
             <AdminStat

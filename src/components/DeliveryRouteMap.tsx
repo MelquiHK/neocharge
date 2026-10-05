@@ -43,7 +43,7 @@ export function DeliveryRouteMap({ origin, dest, originLabel = "NeoCharge" }: Pr
     });
     map.addControl(new NavigationControl({ showCompass: false }), "top-right");
 
-    const originMarker = new MlMarker({ element: dotEl("#2663f2", "⚡") })
+    const originMarker = new MlMarker({ element: dotEl("#65a30d", "⚡") })
       .setLngLat([origin.lng, origin.lat])
       .setPopup(
         new Popup({ offset: 18 }).setHTML(
@@ -76,7 +76,7 @@ export function DeliveryRouteMap({ origin, dest, originLabel = "NeoCharge" }: Pr
           id: "route",
           type: "line",
           source: "route",
-          paint: { "line-color": "#2663f2", "line-width": 5, "line-opacity": 0.85 },
+          paint: { "line-color": "#65a30d", "line-width": 5, "line-opacity": 0.85 },
         });
       }
       map.fitBounds(

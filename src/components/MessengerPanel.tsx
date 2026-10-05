@@ -301,7 +301,7 @@ export function MessengerPanel() {
         </Card>
 
         {distance > 0 && (
-          <Card className="p-6 rounded-3xl shadow-glow-brand-sm bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white overflow-hidden relative border border-brand-400/50">
+          <Card className="p-6 rounded-3xl shadow-glow-brand-sm bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white overflow-hidden relative border border-brand-400/50">
             <div className="absolute -right-4 -bottom-4 opacity-10">
               <Navigation className="w-32 h-32" />
             </div>

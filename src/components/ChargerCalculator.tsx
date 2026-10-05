@@ -88,7 +88,7 @@ const getChargerMatchScore = (
 export function ChargerCalculator({ productName, productSpecs, availableChargers = [] }: ChargerCalculatorProps) {
   const [batteryVoltage, setBatteryVoltage] = useState("");
   const [batteryCapacity, setBatteryCapacity] = useState("");
-  const [batteryType, setBatteryType] = useState("lead-acid");
+  const [batteryType, setBatteryType] = useState("lithium");
   const [showResult, setShowResult] = useState(false);
 
   const specs = useMemo(
@@ -156,10 +156,16 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
     const bestChargerResult = sortedResults[0];
     const topChargerResults = sortedResults.slice(0, 3);
 
-    // Preferir cargadores 72V con 7A o 10A que estén en stock
-    const preferred72Candidates = sortedResults.filter((r) =>
-      r.chargerSpecs.voltage === 72 && (r.chargerSpecs.current === 7 || r.chargerSpecs.current === 10) && Number(r.charger.stock ?? 0) > 0
-    );
+    // Regla de Mel: sugerir el que esté disponible, priorizando el 72V/5A
+    // (carga lenta de 7–9 h, el que más cuida la batería)
+    const preferred72Candidates = sortedResults
+      .filter((r) => r.chargerSpecs.voltage === 72 && Number(r.charger.stock ?? 0) > 0)
+      .sort((a, b) => {
+        const aIs5 = a.chargerSpecs.current === 5 ? 0 : 1;
+        const bIs5 = b.chargerSpecs.current === 5 ? 0 : 1;
+        if (aIs5 !== bIs5) return aIs5 - bIs5;
+        return b.score - a.score;
+      });
 
     const preferred72 = preferred72Candidates.length > 0 ? preferred72Candidates[0] : null;
 
@@ -419,6 +425,9 @@ export function ChargerCalculator({ productName, productSpecs, availableChargers
                   <Link to={`/producto/${result.preferred72.charger.slug}`} className="text-primary font-semibold hover:underline">Ver producto</Link>
                 ) : null}
               </div>
+              {result.preferred72.chargerSpecs.current === 5 ? (
+                <p className="mt-2 text-sm">Carga lenta de 7–9 h: la que más cuida tu batería.</p>
+              ) : null}
               <p className="mt-2 text-sm">Stock disponible: {result.preferred72.charger.stock}</p>
             </div>
           ) : result.inStockBest ? (

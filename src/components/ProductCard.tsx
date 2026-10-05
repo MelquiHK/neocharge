@@ -1,5 +1,6 @@
 import { Link } from "react-router-dom";
-import { ShoppingBag, Check, Heart } from "lucide-react";
+import { ShoppingBag, Check, Heart, Zap } from "lucide-react";
+import { batteryTypeChip } from "@/lib/product-display";
 import { memo, useState, type MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
@@ -11,6 +12,7 @@ import { cn } from "@/lib/utils";
 import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { toast } from "sonner";
 import { Product } from "@/types";
+import { LowStockBadge } from "@/components/LowStockBadge";
 
 interface ProductCardProps {
   product: Product;
@@ -81,7 +83,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
   return (
     <div
       className={cn(
-        "group nc-card-premium flex flex-col h-full",
+        "group relative rounded-3xl overflow-hidden transition-all duration-500 glass border-white/70 hover:border-brand-400/60 hover:shadow-glow-brand-sm hover:-translate-y-1.5 flex flex-col h-full",
         variant === "featured" && "lg:col-span-2",
       )}
     >
@@ -95,6 +97,10 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
             )}>
               {/* Reflejo suave estático tipo "agua" sobre la foto */}
               <div className="absolute inset-x-0 top-0 h-20 bg-gradient-to-b from-white/20 via-white/5 to-transparent dark:from-white/10 pointer-events-none z-[5]" />
+              {/* Animated background glow */}
+              <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
+                <div className="absolute inset-0 bg-gradient-to-br from-brand-400/15 via-transparent to-brand-600/15"></div>
+              </div>
 
               {/* Main Image */}
               {mainImage && (() => {
@@ -109,8 +115,15 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                     decoding="async"
                     className={cn(
                       "absolute inset-0 w-full h-full object-cover transition-all duration-700",
-                      "group-hover:scale-110",
-                      hoverImage && "group-hover:opacity-0",
+                      // El zoom en hover solo en dispositivos con hover real:
+                      // en táctil el :hover se queda "pegado" al tocar y la foto
+                      // se ve aumentada al volver del detalle.
+                      "[@media(hover:hover)]:group-hover:scale-120",
+                      // El fundido a la 2da imagen también solo con hover
+                      // real: en táctil el :hover pegado dejaba la foto
+                      // principal en opacity-0 y la secundaria oculta
+                      // (caja vacía) en productos con 2 fotos.
+                      hoverImage && "[@media(hover:hover)]:group-hover:opacity-0",
                     )}
                   />
                 );
@@ -128,7 +141,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                     aria-hidden
                     loading="lazy"
                     decoding="async"
-                    className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-110"
+                    className="absolute inset-0 w-full h-full object-cover opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity duration-700 scale-110"
                   />
                 );
               })()}
@@ -136,12 +149,12 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
               {/* Top Badges */}
               <div className="absolute top-3 left-3 flex flex-col gap-2 z-10">
                 {discount && (
-                  <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold shadow-lifted animate-bounce-in">
+                  <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-red-500 to-orange-500 text-white text-xs font-bold shadow-lifted animate-bounce-in">
                     -{discount}%
                   </div>
                 )}
                 {product.is_featured && !discount && (
-                  <div className="px-3 py-1.5 rounded-full bg-gradient-to-r from-brand-500 to-brand-700 text-white text-xs font-bold shadow-glow-brand-sm animate-bounce-in">
+                  <div className="px-3 py-1.5 rounded-lg bg-gradient-to-r from-brand-500 to-grape-600 text-white text-xs font-bold shadow-lifted animate-bounce-in">
                     ⭐ Destacado
                   </div>
                 )}
@@ -160,7 +173,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
           </Link>
 
           {/* Quick Add Button — visible en táctil, revelado en hover en escritorio */}
-          <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/50 nc-glasswater p-2 translate-y-[130%] group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500 z-30 pointer-events-auto shadow-xl">
+          <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/50 nc-liquid-soft p-2 translate-y-[130%] group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500 z-30 pointer-events-auto shadow-xl">
             <Button
               type="button"
               onClick={handleAdd}
@@ -170,7 +183,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                 !added && "nc-btn-shine",
                 added
                   ? "bg-green-500 text-white"
-                  : "bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-glow-brand-sm hover:shadow-glow-brand hover:brightness-[1.03]"
+                  : "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm hover:shadow-glow-brand hover:brightness-[1.03]"
               )}
             >
               {added ? (
@@ -194,6 +207,11 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
               <h3 className="font-display font-bold text-lg leading-tight text-slate-900 dark:text-white group-hover:text-primary transition-colors line-clamp-2">
                 {product.name}
               </h3>
+              {batteryTypeChip(product) && (
+                <span className="inline-flex items-center gap-1 mt-1.5 px-2 py-0.5 rounded-full bg-brand-100 text-brand-800 border border-brand-300/50 text-[11px] font-bold">
+                  <Zap className="w-3 h-3" /> {batteryTypeChip(product)}
+                </span>
+              )}
             </Link>
             <button
               type="button"
@@ -217,36 +235,32 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
           </div>
 
           {/* Price Section — mt-auto la pega al fondo para parejar las cards */}
-          <div className="space-y-1 mt-auto pt-1 border-t border-slate-900/5">
+          <div className="space-y-1.5 mt-auto">
             <div className="flex items-baseline gap-2 flex-wrap">
               {display.primary === "USD" ? (
-                <span className="text-[1.35rem] font-display font-bold text-slate-950 tracking-tight">
+                <span className="text-xl font-display font-bold text-gray-900 dark:text-white">
                   {formatPrice(display.usd!)}
                 </span>
               ) : (
-                <span className="text-[1.35rem] font-display font-bold text-slate-950 tracking-tight">
+                <span className="text-xl font-display font-bold text-gray-900 dark:text-white">
                   {formatCUP(display.cup!)}
                 </span>
               )}
               {showCompare && (
-                <span className="text-sm text-slate-400 line-through">
+                <span className="text-sm text-gray-500 dark:text-gray-400 line-through">
                   {formatMoney(product.compare_price!, product.currency)}
                 </span>
               )}
             </div>
             {display.primary === "USD" && display.cup != null && (
-              <p className="text-xs text-slate-500">≈ {formatCUP(display.cup)}</p>
+              <p className="text-xs text-gray-500 dark:text-gray-400">≈ {formatCUP(display.cup)}</p>
             )}
           </div>
 
-          {/* Stock Warning */}
-          {product.stock > 0 && product.stock <= 5 && (
-            <div className="p-2 rounded-lg bg-gradient-to-r from-orange-100 to-red-100 dark:from-orange-900/30 dark:to-red-900/30 border border-orange-300 dark:border-orange-700/50">
-              <p className="text-xs font-semibold text-orange-700 dark:text-orange-300">
-                ⚠️ Solo quedan {product.stock} en stock
-              </p>
-            </div>
-          )}
+          {/* Insignia de stock bajo */}
+          <div>
+            <LowStockBadge stock={product.stock} />
+          </div>
 
           {/* Stock Indicator con etiqueta */}
           {product.stock > 0 && (

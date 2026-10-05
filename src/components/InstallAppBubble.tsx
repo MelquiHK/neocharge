@@ -52,7 +52,7 @@ export function InstallAppBubble() {
     <button
       type="button"
       onClick={() => navigate("/descargar-app")}
-      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 pl-2 pr-2 py-2 rounded-full nc-glasswater text-slate-900 animate-in slide-in-from-bottom-4 duration-500 max-w-[92vw]"
+      className="fixed bottom-4 left-1/2 -translate-x-1/2 z-40 flex items-center gap-3 pl-2 pr-2 py-2 rounded-full glass-strong text-slate-900 shadow-glow-brand-sm border border-brand-400/40 animate-in slide-in-from-bottom-4 duration-500 max-w-[92vw]"
       aria-label="Instalar la app de NeoCharge"
     >
       <span className="w-10 h-10 rounded-full bg-gradient-to-br from-brand-300 via-brand-400 to-brand-500 flex items-center justify-center shrink-0 shadow-glow-brand-sm">

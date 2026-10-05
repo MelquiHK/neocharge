@@ -35,7 +35,7 @@ export function CartSheet() {
 
   return (
     <Sheet open={isOpen} onOpenChange={(o) => (o ? null : closeCart())}>
-      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0 border-l nc-glasswater !border-white/70">
+      <SheetContent className="w-full sm:max-w-md p-0 flex flex-col gap-0 border-l">
         <SheetHeader className="px-6 py-5 border-b bg-white/70 dark:bg-slate-950/60 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60">
           <div className="flex items-center justify-between">
             <SheetTitle className="font-display text-xl flex items-center gap-2">
@@ -72,7 +72,7 @@ export function CartSheet() {
               {items.map((item, index) => (
                 <div
                   key={item.id}
-                  className="animate-fade-in-up flex gap-5 p-4 rounded-[1.5rem] glass border-white/70 hover:border-brand-400/60 transition-all duration-300 hover:shadow-glow-brand-sm group"
+                  className="nc-rise flex gap-5 p-4 rounded-[1.5rem] glass border-white/70 hover:border-brand-400/60 transition-all duration-300 hover:shadow-glow-brand-sm group"
                   style={{ animationDelay: `${Math.min(index * 60, 360)}ms` }}
                 >
                   <div className="w-20 h-20 rounded-xl overflow-hidden bg-secondary shrink-0">

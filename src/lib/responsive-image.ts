@@ -12,7 +12,12 @@ function toRenderUrl(url: string, width: number): string | null {
   //   -> https://<proyecto>.supabase.co/storage/v1/render/image/public/<bucket>/<path>?width=..&quality=..
   const m = url.match(/^(https:\/\/[^/]+\/storage\/v1\/)object\/public\/(.+)$/);
   if (!m) return null;
-  return `${m[1]}render/image/public/${m[2]}?width=${width}&quality=80`;
+  // NOTA (2026-10-05): el parámetro resize=contain es OBLIGATORIO.
+  // Sin él, Supabase usa resize=cover por defecto y con solo width
+  // devuelve (width × alto_original) — p. ej. una imagen 1024×1024
+  // pedida con ?width=400 llegaba como 400×1024 (tira vertical),
+  // y con object-cover en la tarjeta cuadrada se veía super-ampliada.
+  return `${m[1]}render/image/public/${m[2]}?width=${width}&quality=80&resize=contain`;
 }
 
 export interface ResponsiveImage {

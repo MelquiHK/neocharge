@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { ArrowLeft, MessageCircle, MapPin, Store, Truck, Loader2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -16,8 +16,20 @@ import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { DeliveryRouteMap } from "@/components/DeliveryRouteMap";
-import { LocationPickerMap } from "@/components/LocationPickerMap";
+// Los mapas (maplibre-gl ~1MB) se cargan solo cuando el usuario los abre,
+// para no inflar el chunk inicial del checkout.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const DeliveryRouteMap = lazy(() => import("@/components/DeliveryRouteMap").then((m: any) => ({ default: m.DeliveryRouteMap })));
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const LocationPickerMap = lazy(() => import("@/components/LocationPickerMap").then((m: any) => ({ default: m.LocationPickerMap })));
+
+function MapFallback() {
+  return (
+    <div className="rounded-2xl border border-border/60 bg-muted/40 h-64 flex items-center justify-center gap-2 text-sm text-muted-foreground">
+      <Loader2 className="w-4 h-4 animate-spin" /> Cargando mapa…
+    </div>
+  );
+}
 
 interface Loc {
   id: string;
@@ -419,17 +431,16 @@ const Checkout = () => {
             <Link to="/tienda" className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-primary transition-colors mb-2">
               <ArrowLeft className="w-4 h-4" /> Volver a la tienda
             </Link>
-            <span className="nc-eyebrow">
-              <span className="nc-eyebrow-dot" />
-              Checkout seguro
-            </span>
-            <h1 className="nc-display text-5xl md:text-6xl nc-title-premium">Finalizar pedido</h1>
-            <p className="text-lg md:text-xl text-slate-500 font-light max-w-2xl leading-relaxed">
+            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+              Checkout Seguro
+            </div>
+            <h1 className="font-display text-5xl font-bold tracking-tight nc-title-gradient">Finalizar pedido</h1>
+            <p className="text-xl text-muted-foreground font-light max-w-2xl">
               Recibimos tu pedido directamente. Te contactaremos por WhatsApp para coordinar el envío y el pago.
             </p>
           </header>
 
-          <section className="nc-card-premium !rounded-3xl p-6 md:p-7 space-y-5">
+          <section className="nc-card p-6 space-y-4 hover-lift">
             <h2 className="font-display text-lg font-bold">Tus datos</h2>
             <div className="grid sm:grid-cols-2 gap-4">
               <div className="space-y-2">
@@ -443,7 +454,7 @@ const Checkout = () => {
             </div>
           </section>
 
-          <section className="nc-card-premium !rounded-3xl p-6 md:p-7 space-y-5">
+          <section className="nc-card p-6 space-y-4 hover-lift">
             <h2 className="font-display text-lg font-bold">Método de entrega</h2>
             <div className="grid sm:grid-cols-2 gap-3">
               <button
@@ -578,6 +589,7 @@ const Checkout = () => {
                     </Button>
                   ) : (
                     <div className="space-y-2">
+                      <Suspense fallback={<MapFallback />}>
                       <LocationPickerMap
                         center={origin ?? { lat: 23.1367, lng: -82.3589 }}
                         initialPoint={coords}
@@ -586,6 +598,7 @@ const Checkout = () => {
                           setShowPicker(false);
                         }}
                       />
+                      </Suspense>
                       <button
                         type="button"
                         onClick={() => setShowPicker(false)}
@@ -611,7 +624,9 @@ const Checkout = () => {
                         <span className="font-display text-xl font-bold whitespace-nowrap">= {formatCUP(quote.priceCUP)}</span>
                       </div>
                       {quotedCoords && (
-                        <DeliveryRouteMap origin={origin} dest={quotedCoords} />
+                        <Suspense fallback={<MapFallback />}>
+                          <DeliveryRouteMap origin={origin} dest={quotedCoords} />
+                        </Suspense>
                       )}
                     </>
                   )}
@@ -715,7 +730,7 @@ const Checkout = () => {
             )}
           </section>
 
-          <section className="nc-card-premium !rounded-3xl p-6 md:p-7 space-y-4">
+          <section className="nc-card p-6 space-y-3 hover-lift">
             <Label htmlFor="notes" className="font-display text-lg font-bold">Notas (opcional)</Label>
             <Textarea
               id="notes"
@@ -736,7 +751,7 @@ const Checkout = () => {
         </form>
 
         <aside className="lg:sticky lg:top-28 lg:self-start">
-          <div className="nc-card-premium !rounded-3xl p-6 md:p-7 space-y-5">
+          <div className="nc-card p-6 space-y-4 hover-lift">
             <h2 className="font-display text-lg font-bold">Resumen del pedido</h2>
 
             <div className="flex items-center justify-between bg-white/70 backdrop-blur p-1.5 rounded-2xl border border-slate-200/70 shadow-inner">

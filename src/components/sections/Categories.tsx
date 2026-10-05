@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Headphones, MessageCircle } from "lucide-react";
-import { SectionHeading } from "@/components/sections/SectionHeading";
 import { supabase } from "@/integrations/supabase/client";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
@@ -55,11 +54,14 @@ export function Categories() {
   return (
     <section ref={ref} className={cn("py-12 md:py-16 reveal", visible && "is-visible")}>
       <div className="container-page">
-        <SectionHeading
-          eyebrow="Explora por categorías"
-          title="Encuentra exactamente lo que necesitas"
-          tone="purple"
-        />
+        <div className="text-center max-w-3xl mx-auto mb-10 md:mb-12 space-y-3">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-200/70 text-brand-800 border border-brand-400/30 text-xs font-bold uppercase tracking-widest">
+            Explora por categorías
+          </div>
+          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
+            Encuentra exactamente lo que necesitas
+          </h2>
+        </div>
 
         <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-5">
           {cats.map((c, i) => {
@@ -88,7 +90,7 @@ export function Categories() {
                 )}
                 <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/25 to-transparent" />
                 <div className="absolute inset-0 p-5 flex flex-col justify-end text-white">
-                  <div className="rounded-2xl border border-white/25 fx-glass p-4">
+                  <div className="rounded-2xl border border-white/25 nc-liquid p-4">
                   <span
                     className={cn(
                       "self-start mb-2.5 px-2.5 py-1 rounded-full text-[11px] font-bold uppercase tracking-wider",

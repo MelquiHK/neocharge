@@ -6,11 +6,8 @@ export const buttonVariants = cva(
   {
     variants: {
       variant: {
-        default: "bg-gradient-to-br from-brand-300 via-brand-400 to-brand-500 text-white shadow-glow-brand-sm hover:shadow-glow-brand hover:brightness-[1.03]",
-        hero: "bg-gradient-primary text-white shadow-glow-brand hover:shadow-glow-brand btn-shine hover:-translate-y-0.5",
-        /* Secundario de la tienda: morado */
-        purple: "bg-gradient-to-br from-grape-400 via-grape-500 to-grape-600 text-white shadow-glow-grape-sm hover:shadow-glow-grape hover:brightness-[1.04] hover:-translate-y-0.5",
-        "purple-glass": "border border-grape-300/70 bg-grape-100/50 text-grape-800 backdrop-blur-xl shadow-[inset_0_1px_1px_rgba(255,255,255,0.8),0_8px_24px_rgba(124,58,237,0.12)] hover:border-grape-400/80 hover:bg-grape-100/80 hover:-translate-y-0.5",
+        default: "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm hover:shadow-glow-brand hover:brightness-[1.03]",
+        hero: "bg-gradient-primary text-slate-900 shadow-glow-brand hover:shadow-glow-brand btn-shine hover:-translate-y-0.5",
         electric: "bg-gradient-accent text-brand-900 shadow-glow-brand-sm hover:shadow-glow-brand btn-shine hover:-translate-y-0.5",
         whatsapp: "bg-[hsl(142_70%_45%)] text-white hover:bg-[hsl(142_70%_40%)] shadow-elevated hover:shadow-lifted hover:-translate-y-0.5",
         destructive: "bg-destructive text-destructive-foreground hover:bg-destructive/90 shadow-soft",

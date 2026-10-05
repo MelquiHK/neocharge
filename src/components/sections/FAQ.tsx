@@ -8,7 +8,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
-import { SectionHeading } from "@/components/sections/SectionHeading";
 
 const faqs = [
   {
@@ -29,7 +28,7 @@ const faqs = [
   },
   {
     q: "¿Los cargadores funcionan con todas las motos eléctricas?",
-    a: "Funcionan con la mayoría de motos eléctricas con baterías de Plomo-Ácido o Gel. NO son compatibles con baterías LiFePO4 (Litio-Ferro-Fosfato). Verifica el voltaje de tu batería (72V o 48V).",
+    a: "Nuestros cargadores son para baterías de litio (incluyendo LiFePO4). NO sirven para baterías de plomo-ácido o gel. Verifica que el voltaje nominal del cargador coincida con el de tu batería (72V o 48V).",
   },
   {
     q: "¿Qué pasa si no sé qué cargador necesito?",
@@ -41,7 +40,7 @@ const faqs = [
   },
   {
     q: "¿Cómo puedo contactarlos?",
-    a: "Estamos disponibles por WhatsApp al +53 6318-0910, de 8am a 8pm.",
+    a: "Estamos disponibles por WhatsApp al +53 6318-0910, las 24 horas.",
   },
 ];
 
@@ -50,7 +49,14 @@ export function FAQ() {
   return (
     <section ref={ref} className={cn("py-12 md:py-16 nc-section-wash reveal", visible && "is-visible")}>
       <div className="container-page max-w-4xl">
-        <SectionHeading eyebrow="Centro de ayuda" title="Resolvemos tus dudas" />
+        <div className="text-center mb-10 md:mb-12 space-y-4">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-brand-200/70 text-brand-800 border border-brand-400/30 text-xs font-bold uppercase tracking-widest">
+            Centro de ayuda
+          </div>
+          <h2 className="font-display text-4xl md:text-5xl font-bold leading-tight tracking-tight nc-title-gradient">
+            Resolvemos tus dudas
+          </h2>
+        </div>
 
         <Accordion type="single" collapsible className="space-y-3">
           {faqs.map((f, i) => (

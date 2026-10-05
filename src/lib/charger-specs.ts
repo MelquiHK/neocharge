@@ -59,8 +59,8 @@ const parseChargerSpecsText = (text: string | null | undefined): ChargerSpecs =>
   for (const line of lines) {
     const lower = line.toLowerCase();
 
-    if (/volt/i.test(line) || /v\b/i.test(line)) {
-      const voltageMatch = line.match(/(\d+(?:[.,]\d+)?)(?=\s*(?:v|volt))/i);
+    if (/brand/i.test(line) || /v\b/i.test(line)) {
+      const voltageMatch = line.match(/(\d+(?:[.,]\d+)?)(?=\s*(?:v|brand))/i);
       if (voltageMatch) {
         specs.voltage = parseNumber(voltageMatch[1]);
       }
@@ -77,8 +77,13 @@ const parseChargerSpecsText = (text: string | null | undefined): ChargerSpecs =>
     if (/litio|li-ion|lithium/i.test(lower)) {
       specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "Li-ion"])];
     }
+    // OJO: "no sirve para plomo-ácido" es una NEGACIÓN, no compatibilidad.
+    // Solo se registra Plomo-ácido/Gel si la mención no está negada.
     if (/plomo|gel|lead-acid|acido/i.test(lower)) {
-      specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "Plomo-ácido/Gel"])];
+      const negated = /no\s+(sirve|son|es|sea|sean|funciona|funcionan|compatible|apta?|recomend)/i.test(lower);
+      if (!negated) {
+        specs.batteryTypes = [...new Set([...(specs.batteryTypes ?? []), "Plomo-ácido/Gel"])];
+      }
     }
   }
 
@@ -113,6 +118,25 @@ export const parseChargerSpecifications = (
 export const getRecommendedCurrent = (capacityAh: number): number => {
   const recommended = Math.max(2, Math.min(10, Math.round(capacityAh * 0.15)));
   return recommended;
+};
+
+/**
+ * Estima el tiempo de carga en horas con la fórmula: Ah ÷ A + 15% de pérdidas.
+ * Devuelve undefined si los valores no son válidos.
+ */
+export const estimateChargeHours = (
+  capacityAh: number | null | undefined,
+  currentA: number | null | undefined
+): number | undefined => {
+  if (
+    capacityAh === null || capacityAh === undefined ||
+    currentA === null || currentA === undefined ||
+    !Number.isFinite(capacityAh) || !Number.isFinite(currentA) ||
+    capacityAh <= 0 || currentA <= 0
+  ) {
+    return undefined;
+  }
+  return Math.round(((capacityAh / currentA) * 1.15) * 10) / 10;
 };
 
 export const getBatteryTypeLabel = (type: string): string => {

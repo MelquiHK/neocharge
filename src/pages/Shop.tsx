@@ -133,30 +133,29 @@ const ShopPage = () => {
 
   return (
     <div className="container-page py-12 md:py-20">
-      <header className="mb-12 md:mb-16 space-y-6">
-        <span className="nc-eyebrow">
-          <span className="nc-eyebrow-dot" />
-          Catálogo
-        </span>
-        <h1 className="nc-display text-5xl md:text-7xl nc-title-premium">
-          Toda nuestra electrónica
+      <header className="mb-16 space-y-6">
+        <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-primary/10 text-primary text-xs font-bold uppercase tracking-widest">
+          Catálogo Premium
+        </div>
+        <h1 className="font-display text-6xl md:text-7xl font-bold tracking-tight nc-title-gradient">
+          Toda nuestra <br /><span>electrónica</span>
         </h1>
-        <p className="text-lg md:text-xl text-slate-500 font-light max-w-3xl leading-relaxed">
-          Cargadores, audio y piezas con garantía certificada y entrega inmediata
-          en toda La Habana.
+        <p className="text-xl text-muted-foreground font-light max-w-3xl leading-relaxed">
+          Selección exclusiva de productos con garantía certificada y entrega inmediata en toda La Habana. <br className="hidden md:block" />
+          Encuentra la energía y tecnología que tu dispositivo necesita.
         </p>
       </header>
 
       {/* Filters bar */}
       <div className="sticky top-24 z-40 mb-8">
-        <div className="nc-glasswater rounded-[1.75rem] p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center">
+        <div className="glass rounded-2xl p-3 flex flex-col md:flex-row gap-3 items-stretch md:items-center shadow-soft">
           <div className="relative flex-1">
-            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-grape-600" />
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
             <Input
               placeholder="Buscar productos..."
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              className="pl-11 h-11 rounded-xl border border-white/70 bg-white/70 backdrop-blur-xl shadow-[inset_0_1px_2px_rgba(31,41,55,0.05)] focus-visible:ring-2 focus-visible:ring-grape-400/40"
+              className="pl-11 h-11 rounded-xl border-0 bg-secondary/60 focus-visible:ring-1"
             />
             {search && (
               <button
@@ -169,11 +168,11 @@ const ShopPage = () => {
             )}
           </div>
           <div className="flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4 text-grape-600" />
+            <SlidersHorizontal className="w-4 h-4 text-muted-foreground" />
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value as Sort)}
-              className="h-11 rounded-xl border border-white/70 bg-white/70 backdrop-blur-xl px-3 text-sm font-medium text-slate-700 focus:outline-none focus:ring-2 focus:ring-grape-400/40 shadow-[inset_0_1px_2px_rgba(31,41,55,0.05)]"
+              className="h-11 rounded-xl border-0 bg-secondary/60 px-3 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
             >
               {sortOptions.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>
@@ -188,10 +187,10 @@ const ShopPage = () => {
         <button
           onClick={() => setCat("all")}
           className={cn(
-            "px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 border",
+            "px-4 py-2 rounded-full text-sm font-semibold transition-all",
             activeCat === "all"
-              ? "bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-glow-brand-sm border-transparent"
-              : "bg-white/60 border-white/70 text-slate-700 backdrop-blur hover:border-brand-400/50 hover:text-brand-700",
+              ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm"
+              : "bg-secondary text-foreground hover:bg-muted",
           )}
         >
           Todos
@@ -200,10 +199,10 @@ const ShopPage = () => {
           <button
             onClick={() => setCat("favorites")}
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 border",
+              "px-4 py-2 rounded-full text-sm font-semibold transition-all",
               activeCat === "favorites"
-                ? "bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-glow-brand-sm border-transparent"
-                : "bg-white/60 border-white/70 text-slate-700 backdrop-blur hover:border-brand-400/50 hover:text-brand-700",
+                ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm"
+                : "bg-secondary text-foreground hover:bg-muted",
             )}
           >
             Favoritos
@@ -214,10 +213,10 @@ const ShopPage = () => {
             key={c.id}
             onClick={() => setCat(c.slug)}
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-semibold transition-all duration-300 border",
+              "px-4 py-2 rounded-full text-sm font-semibold transition-all",
               activeCat === c.slug
-                ? "bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-glow-brand-sm border-transparent"
-                : "bg-white/60 border-white/70 text-slate-700 backdrop-blur hover:border-brand-400/50 hover:text-brand-700",
+                ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm"
+                : "bg-secondary text-foreground hover:bg-muted",
             )}
           >
             {displayCategoryName(c.name)}

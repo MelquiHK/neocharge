@@ -108,7 +108,7 @@ function OrderSteps({
                   done
                     ? "bg-brand-200/70 text-brand-800 border-brand-400/40"
                     : isCurrent
-                      ? "bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white border-brand-400/60 shadow-glow-brand-sm"
+                      ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white border-brand-400/60 shadow-glow-brand-sm"
                       : "bg-secondary/60 text-muted-foreground border-border/60"
                 }`}
               >
@@ -740,7 +740,7 @@ export function DeliveryOrderForm({
         {/* Resumen del pedido (fijo al hacer scroll en escritorio) */}
         <div className="xl:col-span-1 min-w-0">
           <div className="xl:sticky xl:top-24">
-            <Card className="overflow-hidden rounded-3xl border border-brand-400/50 bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white shadow-glow-brand">
+            <Card className="overflow-hidden rounded-3xl border border-brand-400/50 bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand">
               <div className="relative">
                 <div
                   aria-hidden="true"

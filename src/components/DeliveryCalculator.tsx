@@ -1,15 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  MapContainer,
-  TileLayer,
-  Marker,
-  Popup,
-  Polyline,
-  useMap,
-  useMapEvents,
-} from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { DeliveryMapLibre } from "@/components/DeliveryMapLibre";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -32,14 +22,6 @@ import {
 import { formatCUP } from "@/lib/format";
 import { parseLocationInput } from "@/lib/location-links";
 import { DeliveryOrderForm } from "@/components/DeliveryOrderForm";
-
-// Fix Leaflet marker icons (sin @ts-ignore: acceso tipado al prototipo)
-delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
-L.Icon.Default.mergeOptions({
-  iconRetinaUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png",
-  iconUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png",
-  shadowUrl: "https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png",
-});
 
 // El número de WhatsApp del pedido ahora lo maneja DeliveryOrderForm
 // (constante hardcodeada 5363180910, el único número permitido).
@@ -64,39 +46,6 @@ interface NominatimResult {
   display_name: string;
   lat: string;
   lon: string;
-}
-
-function dotIcon(color: string, emoji: string) {
-  return L.divIcon({
-    className: "",
-    html: `<div style="background:${color};width:30px;height:30px;border-radius:50%;border:3px solid white;box-shadow:0 2px 8px rgba(0,0,0,.4);display:flex;align-items:center;justify-content:center;font-size:15px;">${emoji}</div>`,
-    iconSize: [30, 30],
-    iconAnchor: [15, 15],
-  });
-}
-
-// Controlador para centrar suavemente el mapa cuando se marca un punto
-function MapController({ center }: { center?: [number, number] | null }) {
-  const map = useMap();
-  useEffect(() => {
-    if (center) {
-      map.flyTo(center, Math.max(map.getZoom(), 14), { duration: 1.2 });
-    }
-  }, [center, map]);
-  return null;
-}
-
-function MapClickHandler({
-  onMapClick,
-}: {
-  onMapClick: (lat: number, lng: number) => void;
-}) {
-  useMapEvents({
-    click(e) {
-      onMapClick(e.latlng.lat, e.latlng.lng);
-    },
-  });
-  return null;
 }
 
 export function DeliveryCalculator() {
@@ -468,7 +417,7 @@ export function DeliveryCalculator() {
 
         {/* Resultado */}
         {orderReady && (
-          <Card className="p-6 rounded-3xl shadow-glow-brand-sm bg-gradient-to-br from-brand-500 via-brand-600 to-brand-700 text-white overflow-hidden relative border border-brand-400/50">
+          <Card className="p-6 rounded-3xl shadow-glow-brand-sm bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white overflow-hidden relative border border-brand-400/50">
             <div className="absolute -right-4 -bottom-4 opacity-10">
               <Navigation className="w-32 h-32" />
             </div>
@@ -546,71 +495,16 @@ export function DeliveryCalculator() {
       {/* Mapa */}
       <div className="md:col-span-7 xl:col-span-8 h-[420px] sm:h-[500px] md:h-auto md:min-h-[620px] relative min-w-0 max-w-full">
         <div className="absolute inset-0 rounded-3xl overflow-hidden border border-border/50 ring-1 ring-border/60 shadow-soft">
-          <MapContainer
-            center={[DEFAULT_ORIGIN.lat, DEFAULT_ORIGIN.lng]}
-            zoom={13}
-            style={{ height: "100%", width: "100%" }}
-            className="z-0"
-          >
-            <TileLayer
-              attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-            />
-            <MapController center={mapFocus} />
-            <MapClickHandler onMapClick={handleMapClick} />
-
-            {origin && (
-              <Marker position={[origin.lat, origin.lng]} icon={dotIcon("#65a30d", "🏠")}>
-                <Popup>
-                  <div className="text-xs">
-                    <p className="font-bold">{origin.label}</p>
-                    <p className="text-muted-foreground">Origen de los envíos</p>
-                  </div>
-                </Popup>
-              </Marker>
-            )}
-
-            {otherPoints.map((p) => (
-              <Marker key={p.id} position={[p.lat, p.lng]}>
-                <Popup>
-                  <div className="text-xs">
-                    <p className="font-bold">{p.name}</p>
-                    {p.address && <p className="text-muted-foreground">{p.address}</p>}
-                  </div>
-                </Popup>
-              </Marker>
-            ))}
-
-            {stop && (
-              <Marker position={[stop.lat, stop.lng]} icon={dotIcon("#f59e0b", "🛑")}>
-                <Popup>
-                  <div className="text-xs">
-                    <p className="font-bold">Parada intermedia</p>
-                    <p className="text-muted-foreground">
-                      {stop.lat.toFixed(5)}, {stop.lng.toFixed(5)}
-                    </p>
-                  </div>
-                </Popup>
-              </Marker>
-            )}
-
-            {dest && (
-              <Marker position={[dest.lat, dest.lng]} icon={dotIcon("#dc2626", "📍")}>
-                <Popup>
-                  <div className="text-xs">
-                    <p className="font-bold">Destino</p>
-                    <p className="text-muted-foreground">
-                      {dest.lat.toFixed(5)}, {dest.lng.toFixed(5)}
-                    </p>
-                  </div>
-                </Popup>
-              </Marker>
-            )}
-
-            {route.length > 0 && (
-              <Polyline positions={route} color="#65a30d" weight={4} opacity={0.8} />
-            )}
-          </MapContainer>
+          <DeliveryMapLibre
+            center={{ lat: DEFAULT_ORIGIN.lat, lng: DEFAULT_ORIGIN.lng }}
+            focus={mapFocus}
+            origin={origin}
+            otherPoints={salePoints}
+            stop={stop}
+            dest={dest}
+            route={route}
+            onMapClick={handleMapClick}
+          />
         </div>
       </div>
 

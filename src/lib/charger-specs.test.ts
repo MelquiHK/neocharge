@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import { parseChargerSpecifications, parseNumber } from "./charger-specs";
+import { estimateChargeHours, parseChargerSpecifications, parseNumber } from "./charger-specs";
 
 describe("parseChargerSpecifications", () => {
   it("extrae voltaje y corriente del texto de especificaciones", () => {
@@ -70,5 +70,31 @@ describe("parseNumber", () => {
   it("devuelve undefined para valores vacíos", () => {
     expect(parseNumber("")).toBeUndefined();
     expect(parseNumber(null)).toBeUndefined();
+  });
+});
+
+describe("estimateChargeHours", () => {
+  it("aplica la fórmula Ah ÷ A + 15%", () => {
+    expect(estimateChargeHours(20, 5)).toBe(4.6);
+    expect(estimateChargeHours(20, 10)).toBe(2.3);
+    expect(estimateChargeHours(20, 3)).toBe(7.7);
+  });
+
+  it("la carga lenta (5A) tarda más que la rápida (10A)", () => {
+    const slow = estimateChargeHours(35, 5)!;
+    const fast = estimateChargeHours(35, 10)!;
+    expect(slow).toBeGreaterThan(fast);
+    // 35Ah con 5A cae en el rango ideal de 7-9 horas
+    expect(slow).toBeGreaterThanOrEqual(7);
+    expect(slow).toBeLessThanOrEqual(9);
+  });
+
+  it("devuelve undefined para valores inválidos", () => {
+    expect(estimateChargeHours(0, 5)).toBeUndefined();
+    expect(estimateChargeHours(20, 0)).toBeUndefined();
+    expect(estimateChargeHours(-20, 5)).toBeUndefined();
+    expect(estimateChargeHours(null, 5)).toBeUndefined();
+    expect(estimateChargeHours(20, undefined)).toBeUndefined();
+    expect(estimateChargeHours(NaN, 5)).toBeUndefined();
   });
 });
