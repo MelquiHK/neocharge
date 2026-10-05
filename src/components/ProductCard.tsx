@@ -115,7 +115,10 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                     decoding="async"
                     className={cn(
                       "absolute inset-0 w-full h-full object-cover transition-all duration-700",
-                      "group-hover:scale-120",
+                      // El zoom en hover solo en dispositivos con hover real:
+                      // en táctil el :hover se queda "pegado" al tocar y la foto
+                      // se ve aumentada al volver del detalle.
+                      "[@media(hover:hover)]:group-hover:scale-120",
                       hoverImage && "group-hover:opacity-0",
                     )}
                   />
@@ -134,7 +137,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                     aria-hidden
                     loading="lazy"
                     decoding="async"
-                    className="absolute inset-0 w-full h-full object-cover opacity-0 group-hover:opacity-100 transition-opacity duration-700 scale-110"
+                    className="absolute inset-0 w-full h-full object-cover opacity-0 [@media(hover:hover)]:group-hover:opacity-100 transition-opacity duration-700 scale-110"
                   />
                 );
               })()}
