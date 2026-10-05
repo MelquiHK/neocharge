@@ -119,7 +119,11 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                       // en táctil el :hover se queda "pegado" al tocar y la foto
                       // se ve aumentada al volver del detalle.
                       "[@media(hover:hover)]:group-hover:scale-120",
-                      hoverImage && "group-hover:opacity-0",
+                      // El fundido a la 2da imagen también solo con hover
+                      // real: en táctil el :hover pegado dejaba la foto
+                      // principal en opacity-0 y la secundaria oculta
+                      // (caja vacía) en productos con 2 fotos.
+                      hoverImage && "[@media(hover:hover)]:group-hover:opacity-0",
                     )}
                   />
                 );

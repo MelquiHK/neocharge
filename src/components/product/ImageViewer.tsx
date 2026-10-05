@@ -441,9 +441,11 @@ export default function ImageViewer({
   );
 }
 
-/** URL de la imagen redimensionada vía el API de transformación de Supabase. */
+/** URL de la imagen redimensionada vía el API de transformación de Supabase.
+ *  resize=contain es obligatorio: sin él, con solo width Supabase devuelve
+ *  (width × alto_original) y la foto se ve recortada/ampliada. */
 function variantUrl(url: string, width: number): string {
   const m = url.match(/^(https:\/\/[^/]+\/storage\/v1\/)object\/public\/(.+)$/);
   if (!m) return url;
-  return `${m[1]}render/image/public/${m[2]}?width=${width}&quality=80`;
+  return `${m[1]}render/image/public/${m[2]}?width=${width}&quality=80&resize=contain`;
 }
