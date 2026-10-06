@@ -280,27 +280,54 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
         ? `${partnerSource.partner_name} — ${partnerSource.location_name}`
         : null;
 
-      const { data: saleId, error } = await supabase.rpc("register_sale_with_fulfillment", {
-        p_seller_user_id: user.id,
-        p_seller_name: sellerName,
-        p_product_id: selectedProduct.id,
-        p_product_name: selectedProduct.name,
-        p_price: priceNum,
-        p_currency: currency,
-        p_customer_name: customerName.trim(),
-        p_customer_phone: customerPhone.trim(),
-        p_commission_amount: commission,
-        p_commission_currency: "CUP",
-        p_sale_details: saleDetails,
-        p_delivery_type: deliveryType,
-        p_source_type: isPartnerSale ? "partner" : "own",
-        p_partner_id: partnerSource?.partner_id ?? null,
-        p_partner_location_id: partnerSource?.location_id ?? null,
-        p_partner_price: partnerSource?.partner_price ?? null,
-        p_location_name: locationName,
-      });
-      if (error) throw error;
-      void saleId;
+      // Intento principal: función transaccional (requiere la migración de socios).
+      // Si aún no está aplicada, se usa el insert directo anterior.
+      let saved = false;
+      try {
+        const { data: saleId, error } = await supabase.rpc("register_sale_with_fulfillment", {
+          p_seller_user_id: user.id,
+          p_seller_name: sellerName,
+          p_product_id: selectedProduct.id,
+          p_product_name: selectedProduct.name,
+          p_price: priceNum,
+          p_currency: currency,
+          p_customer_name: customerName.trim(),
+          p_customer_phone: customerPhone.trim(),
+          p_commission_amount: commission,
+          p_commission_currency: "CUP",
+          p_sale_details: saleDetails,
+          p_delivery_type: deliveryType,
+          p_source_type: isPartnerSale ? "partner" : "own",
+          p_partner_id: partnerSource?.partner_id ?? null,
+          p_partner_location_id: partnerSource?.location_id ?? null,
+          p_partner_price: partnerSource?.partner_price ?? null,
+          p_location_name: locationName,
+        });
+        if (error) throw error;
+        void saleId;
+        saved = true;
+      } catch (rpcError: unknown) {
+        const msg = rpcError instanceof Error ? rpcError.message : String(rpcError);
+        if (!/does not exist|Could not find|not found/i.test(msg)) throw rpcError;
+        // Fallback: insert directo (sin surtido por socio).
+        const { error } = await supabase.from("seller_sales").insert({
+          seller_user_id: user.id,
+          seller_name: sellerName,
+          product_id: selectedProduct.id,
+          product_name: selectedProduct.name,
+          price: priceNum,
+          currency,
+          customer_name: customerName.trim() === "" ? null : customerName.trim(),
+          customer_phone: customerPhone.trim() === "" ? null : customerPhone.trim(),
+          commission_amount: commission,
+          commission_currency: "CUP",
+          sale_details: saleDetails,
+          delivery_type: deliveryType,
+        });
+        if (error) throw error;
+        saved = true;
+      }
+      if (!saved) throw new Error("No se pudo guardar la venta.");
 
       if (isPartnerSale && partnerSource && Number.isFinite(partnerMarginUsd)) {
         toast.success(
