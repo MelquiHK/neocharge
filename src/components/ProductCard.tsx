@@ -78,7 +78,8 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
     setTimeout(() => setAdded(false), 1400);
   };
 
-  const outOfStock = product.stock <= 0;
+  // null = sin control de stock → se trata como disponible
+  const outOfStock = product.stock != null && product.stock <= 0;
 
   return (
     <div

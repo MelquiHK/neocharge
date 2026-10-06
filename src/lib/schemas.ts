@@ -15,6 +15,7 @@ export const productSchema = z.object({
   images: z.array(z.string()).default([]),
   main_image_index: z.number().int().min(0).default(0),
   stock: z.number().int().min(0, "El stock debe ser mayor o igual a 0"),
+  own_stock: z.number().int().min(0).default(0),
   low_stock_threshold: z.number().int().min(0).nullable(),
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),

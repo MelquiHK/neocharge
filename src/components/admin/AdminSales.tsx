@@ -885,6 +885,21 @@ export function AdminSales() {
                       <MapPin className="h-4 w-4 text-muted-foreground" />
                       <p>{selectedSale.location_name || "No especificado"}</p>
                     </div>
+                    {(selectedSale as { source_type?: string }).source_type === "partner" && (
+                      <div className="mt-2 rounded-xl bg-grape-100/70 border border-grape-200 p-3 text-sm dark:bg-grape-900/20">
+                        <p className="font-semibold text-grape-800 dark:text-grape-200">Venta en socio (interno)</p>
+                        <p className="text-muted-foreground">
+                          El socio retuvo ${(selectedSale as { partner_price?: number }).partner_price != null
+                            ? Number((selectedSale as { partner_price?: number }).partner_price).toFixed(2)
+                            : "?"} USD
+                          {(selectedSale as { margin_held_usd?: number }).margin_held_usd != null && (
+                            <> · tu margen de <span className="font-semibold text-emerald-700">
+                              ${Number((selectedSale as { margin_held_usd?: number }).margin_held_usd).toFixed(2)} USD
+                            </span> quedó pendiente de recoger</>
+                          )}.
+                        </p>
+                      </div>
+                    )}
                   </div>
 
                   {/* Comisión y markup (modelo UNA O LA OTRA). */}
@@ -1064,6 +1079,11 @@ export function AdminSales() {
                         <Badge variant="outline" className="px-1.5 py-0 text-[9px] font-bold uppercase">
                           {sale.currency}
                         </Badge>
+                        {(sale as { source_type?: string }).source_type === "partner" && (
+                          <Badge className="px-1.5 py-0 text-[9px] font-bold uppercase bg-grape-100 text-grape-700 border-grape-200 dark:bg-grape-900/40 dark:text-grape-300">
+                            Socio
+                          </Badge>
+                        )}
                       </div>
                       <div className="flex flex-wrap gap-x-4 gap-y-1 text-[11px] text-muted-foreground">
                         <span className="flex items-center gap-1"><User className="h-3 w-3" /> {sale.customer_name || "Sin cliente"}</span>

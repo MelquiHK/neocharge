@@ -38,4 +38,16 @@ describe("sortProductsForShop", () => {
 
     expect(sorted.map((p) => p.id)).toEqual(["2", "3", "1"]);
   });
+
+  it("sends out-of-stock products last in every sort mode", () => {
+    const products = [
+      { id: "1", is_featured: false, sort_order: 0, stock: 0, price: 5 },
+      { id: "2", is_featured: true, sort_order: 0, stock: 0, price: 5 },
+      { id: "3", is_featured: false, sort_order: 1, stock: 5, price: 20 },
+      { id: "4", is_featured: false, sort_order: 0, stock: 3, price: 10 },
+    ];
+
+    expect(sortProductsForShop(products, "manual").map((p) => p.id)).toEqual(["4", "3", "2", "1"]);
+    expect(sortProductsForShop(products, "price-asc").map((p) => p.id)).toEqual(["4", "3", "2", "1"]);
+  });
 });

@@ -13,7 +13,7 @@ import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
   AlertDialogFooter, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import { ExternalLink, MapPin, MessageCircle, Trash2, Eye, Send, ShoppingBag } from "lucide-react";
+import { ExternalLink, MapPin, MessageCircle, Trash2, Eye, Send, ShoppingBag, Handshake } from "lucide-react";
 import { toast } from "sonner";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { Order, OrderStatus, OrderItem } from "@/types";
@@ -75,6 +75,8 @@ export function AdminOrders() {
   const [filter, setFilter] = useState<string>("all");
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [viewing, setViewing] = useState<Order | null>(null);
+  /** product_id -> nombres de socios que lo suplen (solo interno) */
+  const [viewingPartners, setViewingPartners] = useState<Record<string, string[]>>({});
   const [deliveryFee, setDeliveryFee] = useState(0);
   const [courier, setCourier] = useState("");
   const [adminNotes, setAdminNotes] = useState("");
@@ -96,6 +98,32 @@ export function AdminOrders() {
     setDeliveryFee(Number(o.delivery_fee ?? 0));
     setCourier(o.courier_name ?? "");
     setAdminNotes(o.admin_notes ?? "");
+    setViewingPartners({});
+    // Socios que suplen los productos del pedido (interno).
+    // Los items guardados traen el id del producto (del carrito).
+    const rawItems = Array.isArray(o.items) ? o.items : [];
+    const ids = [...new Set(
+      rawItems
+        .filter((it): it is Record<string, unknown> => typeof it === "object" && it !== null)
+        .map((it) => String(it.id ?? it.product_id ?? ""))
+        .filter(Boolean)
+    )];
+    if (ids.length > 0) {
+      supabase
+        .from("product_partners")
+        .select("product_id, partners!inner(name)")
+        .in("product_id", ids)
+        .eq("is_active", true)
+        .then(({ data }) => {
+          const map: Record<string, string[]> = {};
+          ((data ?? []) as { product_id: string; partners: { name: string } }[]).forEach((r) => {
+            const pid = String(r.product_id);
+            map[pid] = [...(map[pid] ?? []), r.partners.name];
+          });
+          setViewingPartners(map);
+        })
+        .catch(() => { /* tablas de socios aún no migradas: se ignora */ });
+    }
   };
 
   const saveOrderDetails = async () => {
@@ -316,14 +344,31 @@ export function AdminOrders() {
               <div className="space-y-2">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Productos</p>
                 <div className="space-y-2">
-                  {parseOrderItems(viewing.items).map((it, i) => {
+                  {(Array.isArray(viewing.items) ? viewing.items : []).flatMap((raw, i) => {
+                    if (typeof raw !== "object" || raw === null) return [];
+                    const r = raw as Record<string, unknown>;
+                    const name = typeof r.name === "string" ? r.name : "";
+                    const quantity = Number(r.quantity);
+                    const price = Number(r.price);
+                    if (!name || !Number.isFinite(quantity) || !Number.isFinite(price)) return [];
                     const currency = viewing.payment_currency || "USD";
-                    const itemPrice = currency === "USD" ? (it.displayPriceUSD || it.price) : (it.displayPriceCUP || it.price);
+                    const displayUSD = typeof r.displayPriceUSD === "number" ? r.displayPriceUSD : undefined;
+                    const displayCUP = typeof r.displayPriceCUP === "number" ? r.displayPriceCUP : undefined;
+                    const itemPrice = currency === "USD" ? (displayUSD || price) : (displayCUP || price);
+                    const pid = String(r.id ?? r.product_id ?? "");
+                    const pnames = viewingPartners[pid] ?? [];
                     return (
                       <div key={i} className="flex items-center justify-between gap-3 rounded-2xl border border-border/40 bg-muted/30 p-3 text-sm">
-                        <span className="min-w-0">{it.name} <span className="text-muted-foreground">×{it.quantity}</span></span>
+                        <span className="min-w-0">
+                          {name} <span className="text-muted-foreground">×{quantity}</span>
+                          {pnames.length > 0 && (
+                            <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-grape-100 px-2 py-0.5 text-[11px] font-semibold text-grape-700 dark:bg-grape-900/40 dark:text-grape-300">
+                              <Handshake className="h-3 w-3" /> Socio: {pnames.join(", ")}
+                            </span>
+                          )}
+                        </span>
                         <span className="shrink-0 font-bold">
-                          {currency === "USD" ? formatPrice(itemPrice * it.quantity) : formatCUP(itemPrice * it.quantity)}
+                          {currency === "USD" ? formatPrice(itemPrice * quantity) : formatCUP(itemPrice * quantity)}
                         </span>
                       </div>
                     );

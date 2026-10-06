@@ -6,6 +6,12 @@ export interface ProductOrderingItem {
   category_name?: string | null;
   price?: number | null;
   name?: string | null;
+  stock?: number | null;
+}
+
+/** Los productos sin stock (stock numérico <= 0) van siempre al final. */
+function isOutOfStock(item: ProductOrderingItem): boolean {
+  return typeof item.stock === "number" && item.stock <= 0;
 }
 
 export type ProductSortValue = "manual" | "new" | "old" | "name" | "type" | "price-asc" | "price-desc";
@@ -14,6 +20,13 @@ export function sortProductsForShop<T extends ProductOrderingItem>(items: T[], s
   const list = [...items];
 
   list.sort((a, b) => {
+    const outA = isOutOfStock(a);
+    const outB = isOutOfStock(b);
+
+    if (outA !== outB) {
+      return outA ? 1 : -1;
+    }
+
     const featuredA = !!a.is_featured;
     const featuredB = !!b.is_featured;
 
