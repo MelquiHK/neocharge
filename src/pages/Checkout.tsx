@@ -262,6 +262,11 @@ const Checkout = () => {
         }
       }
 
+      // Abrir la ventana de WhatsApp ANTES de los awaits: en móvil los
+      // popups abiertos después de una espera se bloquean. Se navega
+      // a la URL real cuando el pedido quede guardado.
+      const waWindow = window.open("about:blank", "_blank");
+
       const mapLink = coords
         ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
         : null;
@@ -319,7 +324,13 @@ const Checkout = () => {
       });
 
       try {
-        window.open(getWhatsAppLink(waMessage), "_blank");
+        const waUrl = getWhatsAppLink(waMessage);
+        if (waWindow && !waWindow.closed) {
+          waWindow.location.href = waUrl;
+        } else {
+          // Popup bloqueado: navegar en la misma pestaña.
+          window.location.href = waUrl;
+        }
       } catch (openError) {
         console.error("WhatsApp open error:", openError);
         toast.error("Pedido guardado, pero no pudimos abrir WhatsApp automáticamente.");
