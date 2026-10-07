@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy-client";
 
 export interface ExchangeRate {
   usd_to_cup: number;
@@ -23,6 +23,9 @@ async function fetchRate(): Promise<ExchangeRate | null> {
   if (cached) return cached;
   if (inflight) return inflight;
   inflight = (async () => {
+    // El cliente Supabase se carga bajo demanda (chunk asíncrono, fuera del
+    // bundle inicial) para no bloquear el primer paint.
+    const supabase = await getSupabase();
     const { data, error: queryError } = await supabase
       .from("exchange_rates")
       .select("usd_to_cup,extra_cup_chargers,rate_date")

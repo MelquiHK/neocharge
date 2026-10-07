@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy-client";
 import type { Session, User } from "@supabase/supabase-js";
 import { NO_PERMS, type AdminPermissions, type UserRole, type Profile } from "@/types";
 import { AuthContext, type AuthContextValue } from "@/hooks/use-auth";
@@ -15,6 +15,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadAuthData = useCallback(async (userId: string, email?: string, userMetadata?: Record<string, unknown>) => {
+    // El cliente Supabase viaja en un chunk asíncrono (fuera del bundle
+    // inicial); se resuelve aquí sin bloquear el primer paint.
+    const supabase = await getSupabase();
     try {
       const [{ data: roles }, { data: permData }, { data: profileData }] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", userId),
@@ -73,32 +76,51 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, []);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-      setSession(newSession);
-      setUser(newSession?.user ?? null);
-      if (newSession?.user) {
-        const u = newSession.user;
-        setTimeout(() => loadAuthData(u.id, u.email ?? undefined, u.user_metadata ?? undefined), 0);
-      } else {
-        setRole("user");
-        setProfile(null);
-        setPermissions(NO_PERMS);
-      }
-    });
+    let cancelled = false;
+    let unsubscribe: (() => void) | undefined;
 
-    supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-      setSession(currentSession);
-      setUser(currentSession?.user ?? null);
-      if (currentSession?.user) loadAuthData(currentSession.user.id, currentSession.user.email ?? undefined, currentSession.user.user_metadata ?? undefined);
-      setLoading(false);
-    }).catch((err) => {
-      // Si getSession() rechaza (storage corrupto/bloqueado), salir del loader
-      // en vez de dejar la app atorada en la pantalla de carga.
-      console.error("Error obteniendo la sesión:", err);
-      setLoading(false);
-    });
+    // La suscripción de auth espera al chunk asíncrono de Supabase: la app
+    // pinta primero y la sesión se resuelve en cuanto el chunk llega.
+    getSupabase()
+      .then((supabase) => {
+        if (cancelled) return;
+        const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+          setSession(newSession);
+          setUser(newSession?.user ?? null);
+          if (newSession?.user) {
+            const u = newSession.user;
+            setTimeout(() => loadAuthData(u.id, u.email ?? undefined, u.user_metadata ?? undefined), 0);
+          } else {
+            setRole("user");
+            setProfile(null);
+            setPermissions(NO_PERMS);
+          }
+        });
+        unsubscribe = () => subscription.unsubscribe();
 
-    return () => subscription.unsubscribe();
+        supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+          if (cancelled) return;
+          setSession(currentSession);
+          setUser(currentSession?.user ?? null);
+          if (currentSession?.user) loadAuthData(currentSession.user.id, currentSession.user.email ?? undefined, currentSession.user.user_metadata ?? undefined);
+          setLoading(false);
+        }).catch((err) => {
+          // Si getSession() rechaza (storage corrupto/bloqueado), salir del loader
+          // en vez de dejar la app atorada en la pantalla de carga.
+          console.error("Error obteniendo la sesión:", err);
+          if (!cancelled) setLoading(false);
+        });
+      })
+      .catch((err) => {
+        // Si el chunk de Supabase no pudo cargarse, no dejar la app en loader eterno.
+        console.error("Error cargando el cliente de Supabase:", err);
+        if (!cancelled) setLoading(false);
+      });
+
+    return () => {
+      cancelled = true;
+      unsubscribe?.();
+    };
   }, [loadAuthData]);
 
   const refreshPermissions = useCallback(async () => {
@@ -107,12 +129,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
 
   const refreshProfile = useCallback(async () => {
     if (user) {
+      const supabase = await getSupabase();
       const { data } = await supabase.from("profiles").select("*").eq("id", user.id).maybeSingle();
       if (data) setProfile(data as Profile);
     }
   }, [user]);
 
   const signOut = useCallback(async () => {
+    const supabase = await getSupabase();
     await supabase.auth.signOut();
   }, []);
 

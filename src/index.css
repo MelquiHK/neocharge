@@ -3,6 +3,26 @@
 @tailwind utilities;
 
 /* =========================================
+   Fuentes self-hosted (public/fonts/): no dependen de Google Fonts,
+   que es problemático desde Cuba. font-display: swap para que el texto
+   sea legible de inmediato con las system fonts de respaldo.
+   ========================================= */
+@font-face {
+  font-family: 'Plus Jakarta Sans';
+  font-style: normal;
+  font-weight: 200 800;
+  font-display: swap;
+  src: url('/fonts/plus-jakarta-sans-latin.woff2') format('woff2');
+}
+@font-face {
+  font-family: 'Space Grotesk';
+  font-style: normal;
+  font-weight: 300 700;
+  font-display: swap;
+  src: url('/fonts/space-grotesk-latin.woff2') format('woff2');
+}
+
+/* =========================================
    NEOCHARGE — Sistema de diseño "vidrio y azul"
    Tienda de electrónica · La Habana, Cuba
    Estilo: claro, glassmorphism, acento azul eléctrico + morado

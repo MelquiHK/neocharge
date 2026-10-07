@@ -1,7 +1,8 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Headphones, MessageCircle } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy-client";
+import { responsiveImage } from "@/lib/responsive-image";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
@@ -23,6 +24,7 @@ export function Categories() {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
+      const supabase = await getSupabase();
       const [{ data: c }, { data: p }] = await Promise.all([
         supabase.from("categories").select("id,name,slug,description").order("sort_order"),
         supabase.from("products").select("id,images,main_image_index,category_id").eq("is_active", true),
@@ -75,15 +77,22 @@ export function Categories() {
             );
             const body = (
               <>
-                {cover && !empty ? (
-                  <img
-                    src={cover}
-                    alt={c.name}
-                    loading="lazy"
-                    decoding="async"
-                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
-                  />
-                ) : (
+                {cover && !empty
+                  ? (() => {
+                      const ri = responsiveImage(cover, "(max-width: 640px) 50vw, 25vw");
+                      return (
+                        <img
+                          src={ri.src}
+                          srcSet={ri.srcSet}
+                          sizes={ri.sizes}
+                          alt={c.name}
+                          loading="lazy"
+                          decoding="async"
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-700 group-hover:scale-105"
+                        />
+                      );
+                    })()
+                  : (
                   <div className="absolute inset-0 bg-gradient-to-br from-brand-200 via-brand-300 to-brand-400 flex items-center justify-center">
                     <Headphones className="w-20 h-20 text-brand-700/40 group-hover:text-brand-600/60 group-hover:scale-110 transition-all duration-500" />
                   </div>

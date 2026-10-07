@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy-client";
 import { useAuth } from "@/hooks/use-auth";
 import { toast } from "sonner";
 
@@ -60,6 +60,7 @@ export function useUnifiedFavorites() {
   const runSupabaseFavoriteQuery = useCallback(
     async (table: string, action: "insert" | "delete", productId: string) => {
       if (!user) throw new Error("User not authenticated for Supabase operation.");
+      const supabase = await getSupabase();
 
       if (action === "delete") {
         return supabase.from(table).delete().eq("user_id", user.id).eq("product_id", productId);
@@ -107,8 +108,10 @@ export function useUnifiedFavorites() {
     }
 
     // Luego cargar desde Supabase (con lógica de fallback)
-    const queryFavorites = async (table: string) =>
-      supabase.from(table).select("product_id").eq("user_id", user.id);
+    const queryFavorites = async (table: string) => {
+      const supabase = await getSupabase();
+      return supabase.from(table).select("product_id").eq("user_id", user.id);
+    };
 
     let currentTable = favoritesTable;
     let { data, error } = await queryFavorites(currentTable);

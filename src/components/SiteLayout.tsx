@@ -1,13 +1,30 @@
+import { Suspense, lazy, useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
-import { CartSheet } from "@/components/CartSheet";
 import { InstallAppBubble } from "@/components/InstallAppBubble";
 import { Outlet } from "react-router-dom";
 import { useCart } from "@/hooks/use-cart";
+import { ensureNcFx } from "@/lib/fly-to-cart";
 import { Info } from "lucide-react";
 
+// El sheet del carrito (y con él radix dialog/sheet) NO va en el bundle
+// inicial: se carga la primera vez que el usuario abre el carrito y queda
+// montado desde entonces (se conserva la animación de cierre).
+const CartSheet = lazy(() => import("@/components/CartSheet"));
+
 export function SiteLayout() {
-  const { paymentCurrency } = useCart();
+  const { paymentCurrency, isOpen } = useCart();
+  const [sheetReady, setSheetReady] = useState(false);
+
+  useEffect(() => {
+    // Los keyframes del fly-to-cart deben existir desde el primer paint
+    // (antes se inyectaban al montar el CartSheet).
+    ensureNcFx();
+  }, []);
+
+  useEffect(() => {
+    if (isOpen) setSheetReady(true);
+  }, [isOpen]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -24,7 +41,11 @@ export function SiteLayout() {
         <Outlet />
       </main>
       <Footer />
-      <CartSheet />
+      {sheetReady && (
+        <Suspense fallback={null}>
+          <CartSheet />
+        </Suspense>
+      )}
       <InstallAppBubble />
     </div>
   );

@@ -51,7 +51,7 @@ export default defineConfig(({ mode }) => ({
       workbox: {
         // Las imágenes NO se precachean (ahorra ~2MB en la primera carga):
         // se sirven con caché en tiempo de ejecución más abajo.
-        globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest}'],
+        globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest,woff2}'],
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         runtimeCaching: [

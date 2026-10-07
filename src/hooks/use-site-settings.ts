@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy-client";
 import { SiteSettings } from "@/types";
 
 const DEFAULT_SETTINGS: SiteSettings = {
@@ -30,6 +30,7 @@ export function useSiteSettings() {
     const load = async () => {
       setLoading(true);
       try {
+        const supabase = await getSupabase();
         const { data, error } = await supabase
           .from("site_content_settings")
           .select("*")

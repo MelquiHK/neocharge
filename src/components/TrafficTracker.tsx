@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from "react";
 import { useLocation } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy-client";
 
 const VISITOR_KEY = "neocharge_visitor_id";
 
@@ -46,18 +46,26 @@ export function TrafficTracker() {
     const referrer = typeof document !== "undefined" ? document.referrer || null : null;
     const userAgent = typeof navigator !== "undefined" ? navigator.userAgent || null : null;
 
-    supabase
-      .from("page_views")
-      .insert({
-        visitor_id: visitorId,
-        path: pathname,
-        search: search || null,
-        referrer,
-        user_agent: userAgent,
-      })
-      .then(({ error }) => {
-        // Silent fail (tracking must never break UX)
-        if (error) console.debug("page_views insert failed:", error.message);
+    // El tracking nunca bloquea el primer paint: el cliente Supabase viaja en
+    // un chunk asíncrono y el insert se dispara cuando esté listo.
+    getSupabase()
+      .then((supabase) =>
+        supabase
+          .from("page_views")
+          .insert({
+            visitor_id: visitorId,
+            path: pathname,
+            search: search || null,
+            referrer,
+            user_agent: userAgent,
+          })
+          .then(({ error }) => {
+            // Silent fail (tracking must never break UX)
+            if (error) console.debug("page_views insert failed:", error.message);
+          }),
+      )
+      .catch(() => {
+        // Sin cliente no hay tracking; no rompe nada.
       });
   }, [pathname, search, visitorId]);
 

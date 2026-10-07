@@ -2,7 +2,8 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, MessageCircle, ShieldCheck, Star, Truck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { supabase } from "@/integrations/supabase/client";
+import { getSupabase } from "@/integrations/supabase/lazy-client";
+import { responsiveImage } from "@/lib/responsive-image";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
 
@@ -37,6 +38,7 @@ export function Hero() {
     let cancelled = false;
     const load = async () => {
       try {
+        const supabase = await getSupabase();
         const [featuredRes, countRes] = await Promise.all([
           supabase
             .from("products")
@@ -176,14 +178,21 @@ export function Hero() {
             <div className="relative rounded-[2rem] glass-water p-4 sm:p-5 hover:border-brand-300/70 transition-colors duration-500">
               <div className="relative overflow-hidden rounded-3xl aspect-[4/3] bg-brand-100/70 nc-ripple">
                 {spotlightImage ? (
-                  <img
-                    src={spotlightImage}
-                    alt={spotlight?.name ?? "Producto destacado de NeoCharge"}
-                    className="absolute inset-0 w-full h-full object-cover"
-                    loading="eager"
-                    decoding="async"
-                    fetchPriority="high"
-                  />
+                  (() => {
+                    const ri = responsiveImage(spotlightImage, "(max-width: 768px) 100vw, 50vw");
+                    return (
+                      <img
+                        src={ri.src}
+                        srcSet={ri.srcSet}
+                        sizes={ri.sizes}
+                        alt={spotlight?.name ?? "Producto destacado de NeoCharge"}
+                        className="absolute inset-0 w-full h-full object-cover"
+                        loading="eager"
+                        decoding="async"
+                        fetchPriority="high"
+                      />
+                    );
+                  })()
                 ) : (
                   <div className="absolute inset-0 animate-pulse bg-gradient-to-br from-brand-100/80 to-brand-200/80" aria-hidden />
                 )}
