@@ -471,9 +471,9 @@ export default function ProductDetail() {
                 </button>
                 <span className="px-6 py-2 border-l border-r">{quantity}</span>
                 <button
-                  onClick={() => setQuantity(Math.min(product.stock, quantity + 1))}
+                  onClick={() => setQuantity(product.stock == null ? quantity + 1 : Math.min(product.stock, quantity + 1))}
                   className="px-4 py-2 hover:bg-muted"
-                  disabled={quantity >= product.stock}
+                  disabled={product.stock != null && quantity >= product.stock}
                 >
                   +
                 </button>
