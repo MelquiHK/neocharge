@@ -21,7 +21,7 @@ import { ChargerCalculator } from "@/components/ChargerCalculator";
 import { StockAlertSignup } from "@/components/StockAlertSignup";
 import { LowStockBadge } from "@/components/LowStockBadge";
 import { ProductSpecs } from "@/components/ProductSpecs";
-import { batteryTypeChip, productRating } from "@/lib/product-display";
+import { batteryTypeChip } from "@/lib/product-display";
 import {
   Breadcrumb,
   BreadcrumbItem,
@@ -186,7 +186,8 @@ export default function ProductDetail() {
   const discount = showCompare
     ? Math.round(((comparePrice - priceNum) / comparePrice) * 100)
     : null;
-  const outOfStock = Number(product?.stock ?? 0) <= 0;
+  // null = sin control de stock → disponible (mismo criterio que ProductCard)
+  const outOfStock = product?.stock != null && Number(product.stock) <= 0;
 
   useEffect(() => {
     ensureNcFx();
@@ -417,14 +418,6 @@ export default function ProductDetail() {
           <div>
             <h1 className="font-display text-4xl font-bold mb-2">{product.name}</h1>
             <div className="flex items-center gap-2 text-sm text-muted-foreground mb-4 flex-wrap">
-              {(() => {
-                const r = productRating(product.id);
-                return (
-                  <span className="flex items-center gap-1">
-                    ⭐ {r.rating} ({r.count} reseñas)
-                  </span>
-                );
-              })()}
               {batteryTypeChip(product) && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full bg-brand-100 text-brand-800 border border-brand-300/50 text-xs font-bold">
                   <Zap className="w-3 h-3" /> {batteryTypeChip(product)}

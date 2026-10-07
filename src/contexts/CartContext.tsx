@@ -34,12 +34,21 @@ export function CartProvider({ children }: { children: ReactNode }) {
     setItems((prev) => {
       const existing = prev.find((i) => i.id === incoming.id);
       const qty = incoming.quantity ?? 1;
+      // M10: topar la cantidad por el stock conocido del producto
+      // (null/undefined = sin control de stock → sin tope). Nunca se permite
+      // cantidad > stock, y un producto agotado no entra al carrito.
+      const cap = incoming.stock != null && incoming.stock >= 0 ? incoming.stock : null;
       if (existing) {
+        const next = existing.quantity + qty;
+        const capped = cap != null ? Math.min(next, cap) : next;
+        if (capped <= 0) return prev.filter((i) => i.id !== incoming.id);
         return prev.map((i) =>
-          i.id === incoming.id ? { ...i, quantity: i.quantity + qty } : i,
+          i.id === incoming.id ? { ...i, quantity: capped } : i,
         );
       }
-      return [...prev, { ...incoming, quantity: qty }];
+      const finalQty = cap != null ? Math.min(qty, cap) : qty;
+      if (finalQty <= 0) return prev;
+      return [...prev, { ...incoming, quantity: finalQty }];
     });
   }, []);
 
@@ -61,8 +70,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const { rate: exchangeRate } = useExchangeRate();
 
-  const roundUpToNextWhole = useCallback((num: number) => {
-    return Math.ceil(num);
+  // H8: los totales se redondean al entero MÁS CERCANO. Math.ceil cobraba
+  // de más (ej: $60.20 se mostraba y se enviaba como $61.00).
+  const roundToNearestWhole = useCallback((num: number) => {
+    return Math.round(num);
   }, []);
 
   const value = useMemo<CartContextValue>(() => {
@@ -79,8 +90,8 @@ export function CartProvider({ children }: { children: ReactNode }) {
     const initialTotalCUP = updatedItems.reduce((sum, i) => sum + (i.displayPriceCUP ?? 0) * i.quantity, 0);
     const itemCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
 
-    const totalUSD = roundUpToNextWhole(initialTotalUSD);
-    const totalCUP = roundUpToNextWhole(initialTotalCUP);
+    const totalUSD = roundToNearestWhole(initialTotalUSD);
+    const totalCUP = roundToNearestWhole(initialTotalCUP);
     const total = paymentCurrency === "USD" ? totalUSD : totalCUP;
     // Sin tasa de cambio no se inventan conversiones: un total solo es
     // "completo" si cada ítem tiene precio conocido en esa moneda.
@@ -105,7 +116,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
       paymentCurrency,
       setPaymentCurrency: (currency: "USD" | "CUP") => setPaymentCurrency(currency),
     };
-  }, [items, addItem, removeItem, updateQuantity, clearCart, isOpen, openCart, closeCart, exchangeRate, paymentCurrency, roundUpToNextWhole]);
+  }, [items, addItem, removeItem, updateQuantity, clearCart, isOpen, openCart, closeCart, exchangeRate, paymentCurrency, roundToNearestWhole]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

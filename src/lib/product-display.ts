@@ -28,18 +28,3 @@ export function batteryTypeChip(product: BatteryProduct): string | null {
     return "Para baterías de plomo-ácido/gel";
   return null;
 }
-
-/**
- * Reseñas mostradas por producto: valores deterministas derivados del id
- * (el mismo producto siempre muestra lo mismo), con rating entre 4.0 y 5.0
- * — nunca baja de 4 estrellas.
- */
-export function productRating(id: string): { rating: string; count: number } {
-  let h = 0;
-  for (let i = 0; i < id.length; i++) {
-    h = (h * 31 + id.charCodeAt(i)) >>> 0;
-  }
-  const rating = (4 + (h % 11) / 10).toFixed(1);
-  const count = 18 + (h % 223);
-  return { rating, count };
-}

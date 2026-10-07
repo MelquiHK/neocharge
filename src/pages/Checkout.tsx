@@ -14,6 +14,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatMoney, formatCUP, formatPrice } from "@/lib/format";
 import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { buildOrderBreakdown } from "@/lib/order-pricing";
+import { normalizeCubanPhone } from "@/lib/cuban-phone";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 // Los mapas (maplibre-gl ~1MB) se cargan solo cuando el usuario los abre,
@@ -31,17 +32,9 @@ function MapFallback() {
   );
 }
 
-interface Loc {
-  id: string;
-  name: string;
-  address: string;
-  location_type: string;
-  hours: string | null;
-}
-
 const Checkout = () => {
   const navigate = useNavigate();
-  const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP, completeUSD, completeCUP } = useCart();
+  const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP, completeUSD, completeCUP, removeItem, updateQuantity } = useCart();
   // Sin tasa no se inventan conversiones: un total incompleto se muestra como "—".
   const shownTotalUSD = completeUSD ? formatPrice(totalUSD) : "—";
   const shownTotalCUP = completeCUP ? formatCUP(totalCUP) : "—";
@@ -61,12 +54,15 @@ const Checkout = () => {
   const shippingCUP = delivery === "delivery" ? quote?.priceCUP ?? 0 : 0;
   const shippingUSD = 0;
 
-  const [locations, setLocations] = useState<Loc[]>([]);
-  const [pickupLocId, setPickupLocId] = useState<string>("");
-  const [locationProducts, setLocationProducts] = useState<Record<string, string[]>>({});
-  const [locationLoading, setLocationLoading] = useState(false);
-  const [locationError, setLocationError] = useState<string | null>(null);
-  const [locationFilter, setLocationFilter] = useState<"all" | "electronics" | "chargers" | "both">("all");
+  // NOTA M11/H5 (2026-10-07): "Recoger en local" es GENÉRICO a propósito.
+  // Los locales de socios (p. ej. Yusi – Playa / Boyeros) viven en
+  // partner_location_directory, que solo tiene GRANT SELECT a `authenticated`
+  // y RLS de admin/owner en las tablas base: un visitante anónimo NO puede
+  // leerlos, y exponerlos al público filtraría identidades, teléfonos y
+  // costos de socios. No hay vista ni RPC pública con ese dato (ver
+  // supabase/migrations/20261006190000_partner_fulfillment.sql), así que
+  // el cliente elige recogida genérica y el local exacto se coordina por
+  // WhatsApp con Mel, como ya hace el bot.
 
   const [coords, setCoords] = useState<{ lat: number; lng: number } | null>(null);
   const [geoLoading, setGeoLoading] = useState(false);
@@ -86,8 +82,6 @@ const Checkout = () => {
       quotedCoords.lat === coords.lat &&
       quotedCoords.lng === coords.lng);
 
-  const filteredLocations = locations.filter((loc) => locationFilter === "all" || loc.location_type === locationFilter);
-
   useEffect(() => {
     document.title = "Finalizar pedido — NeoCharge";
   }, []);
@@ -100,126 +94,6 @@ const Checkout = () => {
       clearQuote();
     }
   }, [delivery, coords, quoteFor, clearQuote]);
-
-  useEffect(() => {
-    if (items.length === 0) {
-      setLocations([]);
-      setLocationProducts({});
-      setPickupLocId("");
-      return;
-    }
-
-    setLocationLoading(true);
-    setLocationError(null);
-
-    const itemIds = items.map((item) => item.id).filter(Boolean) as string[];
-
-    const loadFallbackLocations = async () => {
-      const { data: allLocs, error: locsError } = await supabase
-        .from("store_locations")
-        .select("id,name,address,location_type,map_link,hours")
-        .eq("is_active", true)
-        .order("sort_order");
-
-      if (locsError) {
-        console.error("Error loading store locations fallback:", locsError);
-        return null;
-      }
-
-      return allLocs ?? [];
-    };
-
-    const handleFallback = async () => {
-      const fallbackLocations = await loadFallbackLocations();
-      if (!fallbackLocations) {
-        setLocationError("No pudimos cargar los locales disponibles. Intenta de nuevo.");
-        setLocationLoading(false);
-        return;
-      }
-      setLocations(fallbackLocations);
-      setLocationProducts({});
-      if (fallbackLocations.length > 0 && !fallbackLocations.some((loc) => loc.id === pickupLocId)) {
-        setPickupLocId(fallbackLocations[0].id);
-      }
-      setLocationLoading(false);
-    };
-
-    void (async () => {
-      if (itemIds.length === 0) {
-        await handleFallback();
-        return;
-      }
-
-      const { data, error } = await supabase
-        .from("product_locations")
-        .select("product_id,stock,store_locations(id,name,address,location_type,map_link,hours)")
-        .in("product_id", itemIds);
-
-      if (error) {
-        console.error("Error loading product locations:", error);
-        await handleFallback();
-        return;
-      }
-
-      const rows = (data ?? []) as unknown as {
-        product_id?: string | null;
-        stock?: number | null;
-        store_locations?: {
-          id: string;
-          name: string;
-          address?: string | null;
-          location_type?: string | null;
-          hours?: string | null;
-        } | {
-          id: string;
-          name: string;
-          address?: string | null;
-          location_type?: string | null;
-          hours?: string | null;
-        }[] | null;
-      }[];
-      const availableRows = rows.filter((row) => (row.stock ?? 0) > 0 && row.store_locations);
-      const map: Record<string, Loc> = {};
-      const productsByLocation: Record<string, string[]> = {};
-
-// CAMBIA ESTE BLOQUE EXACTAMENTE:
-      availableRows.forEach((row) => {
-        // Forzamos a capturar el local ya sea si viene como objeto o como primer elemento de un array
-        const raw = Array.isArray(row.store_locations) ? row.store_locations[0] : row.store_locations;
-        if (!raw || !raw.id) return; // Si no hay local válido, ignorar
-        const loc: Loc = {
-          id: raw.id,
-          name: raw.name ?? "",
-          address: raw.address ?? "",
-          location_type: raw.location_type ?? "",
-          hours: raw.hours ?? null,
-        };
-        
-        const product = items.find((it) => it.id === row.product_id);
-        if (!product) return;
-
-        map[loc.id] = loc;
-        productsByLocation[loc.id] = productsByLocation[loc.id] ?? [];
-        if (!productsByLocation[loc.id].includes(product.name)) {
-          productsByLocation[loc.id].push(product.name);
-        }
-      });
-
-      const available = Object.values(map);
-
-      if (available.length > 0) {
-        setLocations(available);
-        setLocationProducts(productsByLocation);
-        if (!available.some((loc) => loc.id === pickupLocId)) {
-          setPickupLocId(available[0].id);
-        }
-        setLocationLoading(false);
-        return;
-      }
-
-      await handleFallback();
-    })();
-  }, [items, pickupLocId]);
 
   useEffect(() => {
     if (!user) return;
@@ -314,8 +188,11 @@ const Checkout = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!name.trim() || !phone.trim()) {
-      toast.error("Por favor completa nombre y teléfono");
+    // M9/H3: validar el móvil cubano igual que StockAlertSignup — normalizeCubanPhone
+    // devuelve null si no es 53 + 8 dígitos (móvil), y ese es el formato que se guarda.
+    const normalizedPhone = normalizeCubanPhone(phone);
+    if (!name.trim() || !normalizedPhone) {
+      toast.error("Revisa tus datos: nombre completo y móvil cubano de 8 dígitos (ej: 5842 7265).");
       return;
     }
     if (delivery === "delivery" && !address.trim()) {
@@ -338,15 +215,53 @@ const Checkout = () => {
         return;
       }
     }
-    if (delivery === "pickup" && !pickupLocId) {
-      toast.error("Elige un local para recoger");
-      return;
-    }
+    // M11: la recogida es genérica (sin local específico); el local exacto se
+    // coordina por WhatsApp (ver nota arriba). No hay validación de local.
 
     setSubmitting(true);
 
     try {
-      const pickupLoc = locations.find((l) => l.id === pickupLocId);
+      // M10/H4/H11: revalidar el stock en vivo antes de insertar el pedido.
+      // El carrito vive en localStorage y el stock pudo cambiar entre que el
+      // cliente añadió los productos y confirma. null = sin control de stock.
+      const itemIds = items.map((it) => it.id).filter(Boolean) as string[];
+      if (itemIds.length > 0) {
+        const { data: liveStocks, error: stockError } = await supabase
+          .from("products")
+          .select("id,stock")
+          .in("id", itemIds);
+        if (stockError) {
+          console.error("Stock revalidation error:", stockError);
+          toast.error("No pudimos verificar el stock. Intenta de nuevo.");
+          return;
+        }
+        const liveMap = new Map((liveStocks ?? []).map((p) => [p.id, p.stock as number | null]));
+        const agotados: string[] = [];
+        const ajustados: string[] = [];
+        for (const it of items) {
+          if (!liveMap.has(it.id)) continue;
+          const live = liveMap.get(it.id);
+          if (live == null) continue; // sin control de stock
+          if (live <= 0) {
+            agotados.push(it.name);
+            removeItem(it.id);
+          } else if (it.quantity > live) {
+            ajustados.push(`${it.name} (quedan ${live})`);
+            updateQuantity(it.id, live);
+          }
+        }
+        if (agotados.length > 0) {
+          toast.error(`Ya no hay stock de: ${agotados.join(", ")}. Los quitamos del carrito.`);
+          return;
+        }
+        if (ajustados.length > 0) {
+          toast.warning(
+            `Ajustamos cantidades según el stock disponible: ${ajustados.join(", ")}. Revisa el pedido y confirma de nuevo.`,
+          );
+          return;
+        }
+      }
+
       const mapLink = coords
         ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
         : null;
@@ -361,11 +276,11 @@ const Checkout = () => {
       const orderPayload = {
         user_id: user?.id ?? null,
         customer_name: name.trim(),
-        customer_phone: phone.trim(),
+        customer_phone: normalizedPhone,
         customer_address: delivery === "delivery" ? address.trim() : null,
         delivery_method: delivery,
-        pickup_location: delivery === "pickup" ? pickupLoc?.name ?? null : null,
-        pickup_location_id: delivery === "pickup" ? pickupLocId : null,
+        pickup_location: delivery === "pickup" ? "Recoger en local (coordinar por WhatsApp)" : null,
+        pickup_location_id: null,
         items: items as unknown,
         subtotal: breakdown.productUSD ?? 0,
         delivery_fee: breakdown.shippingUSD,
@@ -393,7 +308,7 @@ const Checkout = () => {
         total,
         paymentCurrency,
         customerName: name.trim(),
-        customerPhone: phone.trim(),
+        customerPhone: normalizedPhone,
         deliveryMethod: delivery,
         customerAddress: delivery === "delivery" ? address.trim() : undefined,
         notes: notes.trim() || undefined,
@@ -479,7 +394,7 @@ const Checkout = () => {
               >
                 <Store className={cn("w-5 h-5 mb-2", delivery === "pickup" ? "text-primary" : "text-muted-foreground")} />
                 <h3 className="font-semibold text-sm">Recoger en local</h3>
-                <p className="text-xs text-muted-foreground mt-1">{locations.length} locales disponibles</p>
+                <p className="text-xs text-muted-foreground mt-1">Coordinamos el local por WhatsApp</p>
               </button>
             </div>
 
@@ -648,84 +563,13 @@ const Checkout = () => {
                 {settings?.locations_intro && (
                   <p className="text-sm text-muted-foreground">{settings.locations_intro}</p>
                 )}
-                <Label>Elige el local *</Label>
-                {locationLoading ? (
-                  <p className="text-sm text-muted-foreground">Cargando locales disponibles...</p>
-                ) : locationError ? (
-                  <p className="text-sm text-destructive">{locationError}</p>
-                ) : locations.length === 0 ? (
-                  <div className="rounded-2xl bg-yellow-50/80 border border-yellow-200/70 p-4 text-sm text-yellow-900">
-                    No hay locales con stock para los productos del carrito. Elige uno y te contactaremos para coordinar la disponibilidad.
-                  </div>
-                ) : (
-                  <>
-                    {locations.length > 1 && (
-                      <div className="rounded-2xl bg-brand-100/70 border border-brand-300/60 p-4 text-sm text-brand-900">
-                        Tu pedido incluye productos disponibles en varios locales. Usa el filtro para ver sólo locales de cargadores, electrónica o mixtos.
-                      </div>
-                    )}
-                    {locations.length > 1 && (
-                      <div className="flex flex-wrap gap-2">
-                        {[
-                          { value: "all", label: "Todos" },
-                          { value: "electronics", label: "Electrónica" },
-                          { value: "chargers", label: "Cargadores" },
-                          { value: "both", label: "Mixto" },
-                        ].map((option) => (
-                          <button
-                            key={option.value}
-                            type="button"
-                            onClick={() => setLocationFilter(option.value as typeof locationFilter)}
-                            className={cn(
-                              "rounded-full px-3 py-2 text-xs font-semibold transition-all",
-                              locationFilter === option.value
-                                ? "bg-primary text-primary-foreground"
-                                : "bg-muted text-muted-foreground hover:bg-muted/80"
-                            )}
-                          >
-                            {option.label}
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                    {filteredLocations.length === 0 ? (
-                      <div className="rounded-2xl bg-yellow-50/80 border border-yellow-200/70 p-4 text-sm text-yellow-900">
-                        No hay locales que coincidan con el filtro seleccionado. Cambia el filtro para ver más opciones.
-                      </div>
-                    ) : (
-                      <div className="grid gap-2">
-                        {filteredLocations.map((loc) => (
-                          <button
-                            type="button"
-                            key={loc.id}
-                            onClick={() => setPickupLocId(loc.id)}
-                            className={cn(
-                              "p-3 rounded-xl border-2 text-left transition-all",
-                              pickupLocId === loc.id ? "border-primary bg-primary/5" : "border-border hover:border-primary/30",
-                            )}
-                          >
-                            <div className="flex items-start gap-2">
-                              <MapPin className="w-4 h-4 text-primary mt-0.5 shrink-0" />
-                              <div className="flex-1">
-                                <p className="font-semibold text-sm">{loc.name}</p>
-                                <p className="text-xs text-muted-foreground">{loc.address}</p>
-                                {loc.hours && <p className="text-xs text-muted-foreground mt-1">🕐 {loc.hours}</p>}
-                                {locationProducts[loc.id] ? (
-                                  <p className="text-xs text-muted-foreground mt-2">
-                                    Productos en este local: {locationProducts[loc.id].slice(0, 3).join(", ")}
-                                    {locationProducts[loc.id].length > 3 ? `, y ${locationProducts[loc.id].length - 3} más` : ""}
-                                  </p>
-                                ) : (
-                                  <p className="text-xs text-muted-foreground mt-2">No hay información de stock detallada para este local.</p>
-                                )}
-                              </div>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </>
-                )}
+                <div className="rounded-2xl bg-brand-100/70 border border-brand-300/60 p-4 text-sm text-brand-900">
+                  <p className="font-semibold mb-1">🏪 Recoger en local</p>
+                  <p>
+                    Al confirmar, te contactaremos por WhatsApp para coordinar el local
+                    de recogida con tu producto disponible.
+                  </p>
+                </div>
               </div>
             )}
           </section>

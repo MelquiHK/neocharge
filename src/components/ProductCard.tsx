@@ -22,7 +22,7 @@ interface ProductCardProps {
 }
 
 function ProductCardComponent({ product, variant = "default", isFavorite: propIsFavorite, onToggleFavorite: propOnToggleFavorite }: ProductCardProps) {
-  const { addItem } = useCart();
+  const { addItem, items } = useCart();
   const { rate } = useExchangeRate();
   const { isFavorite: checkFavorite, toggleFavorite } = useUnifiedFavorites();
 
@@ -56,6 +56,15 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
   const handleAdd = (e: React.MouseEvent<HTMLButtonElement>) => {
     e.preventDefault();
     e.stopPropagation();
+    // M10: no permitir más unidades que el stock conocido (null = sin control).
+    // El botón ya se deshabilita si está agotado; esto topa el quick-add.
+    if (product.stock != null) {
+      const inCart = items.find((i) => i.id === product.id)?.quantity ?? 0;
+      if (inCart + 1 > product.stock) {
+        toast.error(`Solo hay ${product.stock} disponible${product.stock === 1 ? "" : "s"} de este producto.`);
+        return;
+      }
+    }
     addItem({
       id: product.id,
       name: product.name,
