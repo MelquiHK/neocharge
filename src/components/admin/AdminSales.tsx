@@ -10,9 +10,10 @@ import { useAuth } from "@/hooks/use-auth";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { toast } from "sonner";
 import { formatPrice, formatCUP } from "@/lib/format";
-import { BadgeCheck, DollarSign, ShieldCheck, Trash2, Eye, MapPin, Phone, User, FileText, Wallet, ArrowUpRight, CheckCircle2, Clock, TrendingUp, ShieldAlert, AlertCircle, Pencil, Save, HandCoins } from "lucide-react";
+import { BadgeCheck, DollarSign, ShieldCheck, Trash2, Eye, MapPin, Phone, User, FileText, Wallet, ArrowUpRight, CheckCircle2, Clock, TrendingUp, ShieldAlert, AlertCircle, Pencil, Save, HandCoins, Home, Handshake, Truck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { effectiveOwnStock, normalizePartnerCurrency } from "@/lib/partner-sales";
 import {
   parseSaleDetails,
   buildSaleDetails,
@@ -44,7 +45,28 @@ interface ProductOption {
   price: number;
   currency: string;
   price_cup: number | null;
+  own_stock: number;
+  stock: number;
 }
+
+interface PartnerSource {
+  partner_id: string;
+  partner_name: string;
+  partner_price: number;
+  partner_currency: "USD" | "CUP";
+  location_id: string;
+  location_name: string;
+  location_address: string;
+  attendant_name: string | null;
+  quantity: number;
+  pickup_enabled: boolean;
+  delivery_enabled: boolean;
+  priority: number;
+}
+
+type SaleSource =
+  | { type: "own" }
+  | { type: "partner"; source: PartnerSource };
 
 interface StoredLocation {
   id: string;
@@ -80,6 +102,13 @@ export function AdminSales() {
   const [commissionAmount, setCommissionAmount] = useState<number | string>(DEFAULT_COMMISSION_CUP);
   const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
 
+  /* ---------------- Fuente de surtido y entrega ---------------- */
+  const [deliveryType, setDeliveryType] = useState<"recogida" | "mensajeria">("recogida");
+  const [loadingSources, setLoadingSources] = useState(false);
+  const [ownQty, setOwnQty] = useState(0);
+  const [partnerSources, setPartnerSources] = useState<PartnerSource[]>([]);
+  const [source, setSource] = useState<SaleSource | null>(null);
+
   /* ---------------- Filtros / modales ---------------- */
   const [filterSeller, setFilterSeller] = useState("all");
   const [selectedSale, setSelectedSale] = useState<SellerSale | null>(null);
@@ -109,15 +138,85 @@ export function AdminSales() {
     const loadProducts = async () => {
       const { data, error } = await supabase
         .from("products")
-        .select("id, name, price, currency, price_cup")
+        .select("id, name, price, currency, price_cup, own_stock, stock")
         .eq("is_active", true)
         .order("created_at", { ascending: false });
 
-      if (!error) setProductOptions((data ?? []) as ProductOption[]);
+      if (!error) {
+        setProductOptions(
+          ((data ?? []) as Array<Record<string, unknown>>).map((p) => ({
+            id: String(p.id),
+            name: String(p.name ?? ""),
+            price: Number(p.price ?? 0),
+            currency: String(p.currency ?? "USD"),
+            price_cup: p.price_cup != null ? Number(p.price_cup) : null,
+            own_stock: Number((p as { own_stock?: number }).own_stock ?? 0),
+            stock: Number(p.stock ?? 0),
+          }))
+        );
+      }
     };
 
     void loadProducts();
   }, []);
+
+  /* Carga las fuentes de surtido (propio + socios) del producto elegido. */
+  const loadSources = async (id: string, own: number, legacyStock: number) => {
+    setLoadingSources(true);
+    setOwnQty(0);
+    setPartnerSources([]);
+    setSource(null);
+    try {
+      let rows: Array<{
+        partner_id: string; partner_name: string; partner_price: number; partner_currency: string;
+        location_id: string; location_name: string; location_address: string;
+        attendant_name: string | null; quantity: number;
+        pickup_enabled: boolean; delivery_enabled: boolean; priority: number;
+      }> = [];
+      try {
+        const { data, error } = await supabase.rpc("get_partner_sale_sources", { p_product_id: id });
+        if (error) throw error;
+        rows = (data ?? []) as typeof rows;
+      } catch (rpcError: unknown) {
+        const msg = rpcError instanceof Error ? rpcError.message : String(rpcError);
+        // Si la función no existe (migración pendiente), se sigue solo con lo propio.
+        if (!/does not exist|Could not find/i.test(msg)) throw rpcError;
+        rows = [];
+      }
+
+      const configured = rows.length > 0;
+      const sources: PartnerSource[] = rows
+        .filter((r) => Number(r.quantity) > 0)
+        .map((r) => ({
+          partner_id: r.partner_id,
+          partner_name: r.partner_name,
+          partner_price: Number(r.partner_price),
+          partner_currency: normalizePartnerCurrency(r.partner_currency),
+          location_id: r.location_id,
+          location_name: r.location_name,
+          location_address: r.location_address,
+          attendant_name: r.attendant_name,
+          quantity: Number(r.quantity),
+          pickup_enabled: r.pickup_enabled !== false,
+          delivery_enabled: r.delivery_enabled !== false,
+          priority: Number(r.priority ?? 0),
+        }));
+      sources.sort((a, b) => b.priority - a.priority || a.partner_name.localeCompare(b.partner_name));
+
+      const effectiveOwn = effectiveOwnStock(own, legacyStock, configured);
+      setOwnQty(effectiveOwn);
+      setPartnerSources(sources);
+      if (effectiveOwn > 0) {
+        setSource({ type: "own" });
+      } else if (sources.length > 0) {
+        setSource({ type: "partner", source: sources[0] });
+      }
+    } catch (e: unknown) {
+      toast.error("No se pudieron cargar las fuentes: " + (e instanceof Error ? e.message : String(e)));
+    } finally {
+      setLoadingSources(false);
+    }
+  };
 
   /* Vendedores conocidos (para filtro y selector del dueño). */
   const sellers = useMemo(() => {
@@ -158,29 +257,37 @@ export function AdminSales() {
   }, [price, basePrice]);
 
   /* Vista previa en vivo de lo que Mel le deberá al gestor. */
+  const isPartnerSale = source?.type === "partner";
+  const partnerSource = isPartnerSale ? (source as { type: "partner"; source: PartnerSource }).source : null;
+  const hasSources = ownQty > 0 || partnerSources.length > 0;
+  /* En ventas de socio no hay comisión (el margen queda para Mel). */
+  const effectiveCommission = isPartnerSale ? 0 : Number(commissionAmount || 0);
+  /* En ventas de socio tampoco hay markup para el gestor. */
+  const previewMarkup = isPartnerSale ? 0 : formMarkup;
+
   const formPreview = useMemo(() => {
     const tempSale: SellerSale = {
       id: "preview",
       sale_details: buildSaleDetails({
         basePrice,
         baseCurrency,
-        markupAmount: formMarkup,
+        markupAmount: previewMarkup,
         isOwnerSale: formIsOwnerSale,
         detailText: saleDetails.trim() || null,
       }),
       currency,
-      commission_amount: Number(commissionAmount || 0),
+      commission_amount: effectiveCommission,
       commission_currency: "CUP",
     };
     const owed = getSaleOwed(tempSale, rateValue);
-    const markupCUP = Math.max(0, toCUP(formMarkup ?? 0, currency, rateValue));
+    const markupCUP = Math.max(0, toCUP(previewMarkup ?? 0, currency, rateValue));
     const applies: "owner" | "markup" | "commission" = formIsOwnerSale
       ? "owner"
       : markupCUP > 0
         ? "markup"
         : "commission";
     return { owed, applies };
-  }, [basePrice, baseCurrency, formMarkup, formIsOwnerSale, saleDetails, currency, commissionAmount, rateValue]);
+  }, [basePrice, baseCurrency, previewMarkup, formIsOwnerSale, saleDetails, currency, effectiveCommission, rateValue]);
 
   const handleSellerKeyChange = (next: string) => {
     const wasMel = sellerKey === "mel";
@@ -206,6 +313,7 @@ export function AdminSales() {
     // El precio de venta defaultea al base y la moneda se bloquea.
     setPrice(prodPrice);
     setCurrency(prodCurrency);
+    void loadSources(value, selected.own_stock, selected.stock);
   };
 
   const handleProductNameChange = (value: string) => {
@@ -215,6 +323,9 @@ export function AdminSales() {
       setProductId(null);
       setBasePrice(null);
       setBaseCurrency(null);
+      setOwnQty(0);
+      setPartnerSources([]);
+      setSource(null);
     }
   };
 
@@ -231,6 +342,10 @@ export function AdminSales() {
     setSaleDetails("");
     setSellerKey("mel");
     setCommissionAmount(isOwner ? 0 : DEFAULT_COMMISSION_CUP);
+    setDeliveryType("recogida");
+    setOwnQty(0);
+    setPartnerSources([]);
+    setSource(null);
   };
 
   const submit = async () => {
@@ -238,19 +353,55 @@ export function AdminSales() {
       toast.error("Selecciona un producto antes de registrar la venta.");
       return;
     }
+    // Con producto elegido hay que surtir de alguna fuente con stock.
+    if (productId !== null) {
+      if (loadingSources) {
+        toast.error("Espera a que carguen las fuentes de surtido.");
+        return;
+      }
+      if (!hasSources) {
+        toast.error("Sin stock registrado en ninguna fuente. Revisa el inventario antes de vender.");
+        return;
+      }
+      if (!source) {
+        toast.error("Elige de dónde se surte la venta.");
+        return;
+      }
+    }
+    if (isPartnerSale && partnerSource) {
+      if (deliveryType === "recogida" && !partnerSource.pickup_enabled) {
+        toast.error("Ese local no ofrece recogida. Elige mensajería u otra fuente.");
+        return;
+      }
+      if (deliveryType === "mensajeria" && !partnerSource.delivery_enabled) {
+        toast.error("Ese local no ofrece mensajería. Elige recogida u otra fuente.");
+        return;
+      }
+    }
 
     try {
+      // En ventas de socio no hay markup ni comisión: el margen queda para Mel.
+      const saleMarkup = isPartnerSale ? 0 : formMarkup;
+      const sourceText = isPartnerSale && partnerSource
+        ? `Surtido en socio: ${partnerSource.partner_name} — ${partnerSource.location_name} (${deliveryType === "recogida" ? "recogida" : "mensajería"})`
+        : `Surtido propio (${deliveryType === "recogida" ? "recogida" : "mensajería"})`;
+      const detailParts = [sourceText, saleDetails.trim() || null];
+      if (isPartnerSale && locationName.trim()) {
+        detailParts.push(`Dirección del cliente: ${locationName.trim()}`);
+      }
+      const detailText = detailParts.filter(Boolean).join(" · ");
+
       const tempSale: SellerSale = {
         id: "preview",
         sale_details: buildSaleDetails({
           basePrice,
           baseCurrency,
-          markupAmount: formMarkup,
+          markupAmount: saleMarkup,
           isOwnerSale: formIsOwnerSale,
-          detailText: saleDetails.trim() || null,
+          detailText: detailText || null,
         }),
         currency,
-        commission_amount: Number(commissionAmount || 0),
+        commission_amount: effectiveCommission,
         commission_currency: "CUP",
       };
       const owedCUP = getSaleOwed(tempSale, rateValue);
@@ -266,13 +417,21 @@ export function AdminSales() {
         sale_details: buildSaleDetails({
           basePrice,
           baseCurrency,
-          markupAmount: formMarkup,
+          markupAmount: saleMarkup,
           isOwnerSale: formIsOwnerSale,
-          detailText: saleDetails.trim() || null,
+          detailText: detailText || null,
         }),
-        commission_amount: Number(commissionAmount || 0),
+        commission_amount: effectiveCommission,
         commission_currency: "CUP",
         amount_to_receive: Math.round(owedCUP),
+        delivery_type: deliveryType,
+        source_type: isPartnerSale ? "partner" : "own",
+        partner_id: partnerSource?.partner_id ?? null,
+        partner_location_id: partnerSource?.location_id ?? null,
+        // Nombre que guarda la RPC en seller_sales.location_name.
+        rpc_location_name: isPartnerSale && partnerSource
+          ? `${partnerSource.partner_name} — ${partnerSource.location_name}`
+          : (locationName.trim() || null),
       };
 
       if (isOwner) {
@@ -286,7 +445,11 @@ export function AdminSales() {
       }
 
       await createSale(payload);
-      toast.success("Venta registrada");
+      if (isPartnerSale && partnerSource) {
+        toast.success(`Venta registrada en ${partnerSource.partner_name}. El margen queda pendiente de recoger.`, { duration: 5000 });
+      } else {
+        toast.success("Venta registrada");
+      }
       resetForm();
     } catch (e: unknown) {
       toast.error((e instanceof Error ? e.message : null) || "Error creando venta");
@@ -496,6 +659,93 @@ export function AdminSales() {
             </div>
           </div>
 
+          {/* Fuente de surtido y tipo de entrega */}
+          {productId !== null && (
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label>¿De dónde se surte?</Label>
+                {loadingSources ? (
+                  <p className="text-sm text-muted-foreground">Cargando fuentes…</p>
+                ) : !hasSources ? (
+                  <p className="rounded-2xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800 dark:border-amber-800 dark:bg-amber-950/40 dark:text-amber-200">
+                    Sin stock registrado en ninguna fuente. Revisa el inventario antes de vender.
+                  </p>
+                ) : (
+                  <div className="grid gap-2">
+                    {ownQty > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => setSource({ type: "own" })}
+                        className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition-colors ${source?.type === "own" ? "border-primary bg-primary/10" : "border-border bg-card hover:border-primary/50"}`}
+                      >
+                        <Home className="h-4 w-4 shrink-0 text-primary" />
+                        <span className="flex-1">
+                          <span className="font-semibold">Propio</span>
+                          <span className="text-muted-foreground"> — en tu casa ({ownQty} u.)</span>
+                        </span>
+                        {source?.type === "own" && <Badge>elegido</Badge>}
+                      </button>
+                    )}
+                    {partnerSources.map((s) => {
+                      const selected = source?.type === "partner" && (source as { source: PartnerSource }).source.location_id === s.location_id;
+                      return (
+                        <button
+                          key={s.location_id}
+                          type="button"
+                          onClick={() => setSource({ type: "partner", source: s })}
+                          className={`flex items-center gap-3 rounded-2xl border px-4 py-3 text-left text-sm transition-colors ${selected ? "border-grape-500 bg-grape-100/60 dark:bg-grape-900/20" : "border-border bg-card hover:border-grape-400"}`}
+                        >
+                          <Handshake className="h-4 w-4 shrink-0 text-grape-600" />
+                          <span className="flex-1">
+                            <span className="font-semibold">{s.partner_name}</span>
+                            <span className="text-muted-foreground"> — {s.location_name} ({s.quantity} u.)</span>
+                            {s.attendant_name && (
+                              <span className="block text-xs text-muted-foreground">Atiende: {s.attendant_name}</span>
+                            )}
+                            {(!s.pickup_enabled || !s.delivery_enabled) && (
+                              <span className="block text-xs text-amber-600">
+                                {[!s.pickup_enabled ? "sin recogida" : null, !s.delivery_enabled ? "sin mensajería" : null].filter(Boolean).join(" · ")}
+                              </span>
+                            )}
+                          </span>
+                          {selected && <Badge className="border-0 bg-grape-600 text-white">elegido</Badge>}
+                        </button>
+                      );
+                    })}
+                  </div>
+                )}
+              </div>
+
+              <div className="space-y-2">
+                <Label>Entrega</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryType("recogida")}
+                    className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-medium transition-colors ${deliveryType === "recogida" ? "border-primary bg-primary/10" : "border-border bg-card text-muted-foreground"}`}
+                  >
+                    <User className="h-4 w-4" /> Recogida
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setDeliveryType("mensajeria")}
+                    className={`flex items-center justify-center gap-2 rounded-2xl border px-4 py-2.5 text-sm font-medium transition-colors ${deliveryType === "mensajeria" ? "border-primary bg-primary/10" : "border-border bg-card text-muted-foreground"}`}
+                  >
+                    <Truck className="h-4 w-4" /> Mensajería
+                  </button>
+                </div>
+                {isPartnerSale && partnerSource && (
+                  <div className="rounded-2xl border border-grape-200 bg-grape-100/60 p-3 text-sm dark:border-grape-800 dark:bg-grape-900/20">
+                    <p className="font-semibold">Venta en socio (interno)</p>
+                    <p className="text-muted-foreground">
+                      El socio retiene {formatMoney(partnerSource.partner_price, partnerSource.partner_currency)} y tu margen queda pendiente de recoger.
+                    </p>
+                  </div>
+                )}
+              </div>
+            </div>
+          )}
+
           <div className="grid gap-4 md:grid-cols-3">
             <div className="space-y-2">
               <Label>Precio de venta</Label>
@@ -531,8 +781,8 @@ export function AdminSales() {
               </div>
             ) : (
               <div className="space-y-2">
-                <Label>Comisión (CUP)</Label>
-                <Input type="number" value={commissionAmount} onChange={(e) => setCommissionAmount(e.target.value)} placeholder="Ej: 2000" />
+                <Label>Comisión (CUP){isPartnerSale ? " (venta en socio: 0)" : ""}</Label>
+                <Input type="number" value={commissionAmount} onChange={(e) => setCommissionAmount(e.target.value)} placeholder="Ej: 2000" disabled={isPartnerSale} />
               </div>
             )}
           </div>
@@ -540,13 +790,13 @@ export function AdminSales() {
           {isOwner && (
             <div className="grid gap-4 md:grid-cols-2">
               <div className="space-y-2">
-                <Label>Comisión (CUP){formIsOwnerSale ? " (venta del dueño: 0)" : ""}</Label>
+                <Label>Comisión (CUP){formIsOwnerSale ? " (venta del dueño: 0)" : isPartnerSale ? " (venta en socio: 0)" : ""}</Label>
                 <Input
                   type="number"
                   value={commissionAmount}
                   onChange={(e) => setCommissionAmount(e.target.value)}
                   placeholder="Ej: 2000"
-                  disabled={formIsOwnerSale}
+                  disabled={formIsOwnerSale || isPartnerSale}
                 />
               </div>
               <div className="space-y-2">
@@ -600,7 +850,7 @@ export function AdminSales() {
               </div>
               <div className="space-y-1">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Comisión</p>
-                <p className="text-sm font-semibold">{formatCUP(Number(commissionAmount || 0))}</p>
+                <p className="text-sm font-semibold">{formatCUP(effectiveCommission)}{isPartnerSale ? " (socio: 0)" : ""}</p>
               </div>
               <div className="space-y-1">
                 <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">A pagar al gestor</p>
