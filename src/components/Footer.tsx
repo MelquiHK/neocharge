@@ -78,6 +78,7 @@ export function Footer() {
               <li><Link to="/tienda?cat=cables" className="text-muted-foreground hover:text-primary transition-colors">Cables</Link></li>
               <li><Link to="/tienda?cat=baterias" className="text-muted-foreground hover:text-primary transition-colors">Baterías</Link></li>
               <li><Link to="/tienda?cat=accesorios" className="text-muted-foreground hover:text-primary transition-colors">Accesorios</Link></li>
+              <li><Link to="/rastrear" className="text-muted-foreground hover:text-primary transition-colors">Rastrear pedido</Link></li>
             </ul>
           </div>
 
