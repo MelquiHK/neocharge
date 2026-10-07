@@ -41,6 +41,7 @@ const LegalPrivacy = lazy(() => import("./pages/LegalPrivacy.tsx"));
 const CalcularEnvio = lazy(() => import("./pages/CalcularEnvio.tsx"));
 const CompararCargadores = lazy(() => import("./pages/CompararCargadores.tsx"));
 const DescargarApp = lazy(() => import("./pages/DescargarApp.tsx"));
+const Descargas = lazy(() => import("./pages/Descargas.tsx"));
 const OrderConfirmed = lazy(() => import("./pages/OrderConfirmed.tsx"));
 const TrackOrder = lazy(() => import("./pages/TrackOrder.tsx"));
 
@@ -89,6 +90,7 @@ const App = () => (
                   <Route path="/calcular-envio" element={<Suspense fallback={<LoadingPlaceholder />}><CalcularEnvio /></Suspense>} />
                   <Route path="/comparar-cargadores" element={<Suspense fallback={<LoadingPlaceholder />}><CompararCargadores /></Suspense>} />
                   <Route path="/descargar-app" element={<Suspense fallback={<LoadingPlaceholder />}><DescargarApp /></Suspense>} />
+                  <Route path="/descargas" element={<Suspense fallback={<LoadingPlaceholder />}><Descargas /></Suspense>} />
                   <Route path="/pedido-confirmado/:id" element={<Suspense fallback={<LoadingPlaceholder />}><OrderConfirmed /></Suspense>} />
                   <Route path="/rastrear" element={<Suspense fallback={<LoadingPlaceholder />}><TrackOrder /></Suspense>} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
