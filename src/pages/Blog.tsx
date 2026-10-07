@@ -188,17 +188,22 @@ const Blog = () => {
     });
 
     const intervalId = window.setInterval(async () => {
-      const { data } = await supabase
-        .from("blog_posts")
-        .select("id,title,slug,excerpt,image_url,images,created_at")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false })
-        .limit(5);
+      try {
+        const { data } = await supabase
+          .from("blog_posts")
+          .select("id,title,slug,excerpt,image_url,images,created_at")
+          .eq("is_published", true)
+          .order("created_at", { ascending: false })
+          .limit(5);
 
-      const latest = data?.[0] as Post | undefined;
-      if (latest && latest.id !== lastSeenPostIdRef.current) {
-        notifyNewPost(latest);
-        lastSeenPostIdRef.current = latest.id;
+        const latest = data?.[0] as Post | undefined;
+        if (latest && latest.id !== lastSeenPostIdRef.current) {
+          notifyNewPost(latest);
+          lastSeenPostIdRef.current = latest.id;
+        }
+      } catch {
+        // Fallo silencioso deliberado: el polling reintenta en 15s y un bache
+        // de red no debe generar rechazos no manejados recurrentes.
       }
     }, 15000);
 
@@ -206,6 +211,7 @@ const Blog = () => {
       window.removeEventListener("neocharge:blog-published", handleBlogPublished as EventListener);
       window.clearInterval(intervalId);
       channel.unsubscribe();
+      // Cleanup de unmount: si el canal ya se cerró, no hay nada que reportar.
       supabase.removeChannel(channel).catch(() => {});
     };
   }, []);

@@ -59,7 +59,10 @@ export function AdminRates() {
   useEffect(() => { load(); }, []);
 
   const saveToday = async () => {
-    if (!todayRate || isNaN(Number(todayRate))) { toast.error("Tasa inválida"); return; }
+    const rateNum = Number(todayRate);
+    // La tasa debe ser > 0: con 0 o negativa el RPC de ventas no puede
+    // calcular el margen del socio y el hold se pierde en silencio.
+    if (!todayRate || isNaN(rateNum) || rateNum <= 0) { toast.error("La tasa debe ser un número mayor que 0"); return; }
     const today = new Date().toISOString().split("T")[0];
     const payload = {
       rate_date: today,

@@ -75,7 +75,9 @@ const Account = () => {
       .select("id,created_at,total,status,items")
       .eq("user_id", user.id)
       .order("created_at", { ascending: false })
-      .then(({ data }) => data && setOrders(data as Order[]));
+      // Lectura de conveniencia: si falla, la lista queda vacía.
+      .then(({ data }) => data && setOrders(data as Order[]))
+      .catch(() => {});
 
     if (!isGestor) return;
 
@@ -86,7 +88,9 @@ const Account = () => {
         .select("*")
         .eq("seller_user_id", user.id)
         .order("created_at", { ascending: false })
-        .then(({ data }) => data && setGestorSales(data));
+        // Lectura de conveniencia: si falla, la lista queda vacía.
+        .then(({ data }) => data && setGestorSales(data))
+        .catch(() => {});
     };
     const checkPendingRequest = () => {
       supabase
@@ -95,7 +99,9 @@ const Account = () => {
         .eq("user_id", user.id)
         .eq("status", "pending")
         .limit(1)
-        .then(({ data }) => setHasPendingRequest(!!data && data.length > 0));
+        // Lectura de conveniencia: si falla, se asume sin solicitud pendiente.
+        .then(({ data }) => setHasPendingRequest(!!data && data.length > 0))
+        .catch(() => {});
     };
     loadSales();
     checkPendingRequest();
@@ -242,7 +248,9 @@ const handleAvatarUpload = async (file: File) => {
       .select("*")
       .eq("seller_user_id", user.id)
       .order("created_at", { ascending: false })
-      .then(({ data }) => data && setGestorSales(data));
+      // Lectura de conveniencia: si falla, el realtime actualiza solo.
+      .then(({ data }) => data && setGestorSales(data))
+      .catch(() => {});
   };
 
   const sendToWhatsApp = () => {

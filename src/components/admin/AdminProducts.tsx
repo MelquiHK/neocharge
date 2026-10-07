@@ -58,7 +58,6 @@ export function AdminProducts() {
   const {
     partners,
     needsMigration: partnersNeedMigration,
-    loadLocations: loadPartnerLocations,
     loadProductPartnerData,
     saveProductPartnerData,
   } = useAdminPartners();
@@ -91,20 +90,29 @@ export function AdminProducts() {
     setOwnStockInput(0);
   };
 
-  /** Recarga los locales de los socios habilitados (para los inputs de stock). */
+  /** Recarga los locales de los socios habilitados (para los inputs de stock): un solo query. */
   const reloadPpLocs = async (prices: Record<string, number>) => {
     const ids = Object.keys(prices);
     if (ids.length === 0) {
       setPpLocs([]);
       return;
     }
-    const all: (PartnerLocation & { partner_name: string })[] = [];
-    for (const pid of ids) {
-      const p = partners.find((x) => x.id === pid);
-      const locs = await loadPartnerLocations(pid);
-      locs.forEach((l) => all.push({ ...l, partner_name: p?.name ?? "" }));
+    const { data, error } = await supabase
+      .from("partner_locations")
+      .select("*, partners!inner(name)")
+      .in("partner_id", ids)
+      .order("sort_order");
+    if (error) {
+      toast.error("No se pudieron cargar los locales: " + error.message);
+      setPpLocs([]);
+      return;
     }
-    setPpLocs(all);
+    setPpLocs(
+      ((data ?? []) as Array<PartnerLocation & { partners: { name: string } }>).map((l) => ({
+        ...l,
+        partner_name: l.partners.name,
+      }))
+    );
   };
 
   const openNew = () => {

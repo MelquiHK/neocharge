@@ -15,11 +15,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [loading, setLoading] = useState(true);
 
   const loadAuthData = useCallback(async (userId: string, email?: string) => {
-    const [{ data: roles }, { data: permData }, { data: profileData }] = await Promise.all([
-      supabase.from("user_roles").select("role").eq("user_id", userId),
-      supabase.from("admin_permissions").select("*").eq("user_id", userId).maybeSingle(),
-      supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
-    ]);
+    try {
+      const [{ data: roles }, { data: permData }, { data: profileData }] = await Promise.all([
+        supabase.from("user_roles").select("role").eq("user_id", userId),
+        supabase.from("admin_permissions").select("*").eq("user_id", userId).maybeSingle(),
+        supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
+      ]);
 
     const normalizedEmail = email?.toLowerCase() ?? undefined;
     const isOwnerByEmail = !!normalizedEmail && normalizedEmail === OWNER_ADMIN_EMAIL.toLowerCase();
@@ -49,6 +50,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     };
 
     setPermissions(resolvedPermissions);
+    } catch (err) {
+      // Si la carga de roles/permisos falla (p. ej. bache de red), el usuario queda con el
+      // rol por defecto ("user") en vez de dejar una promesa rechazada sin manejar.
+      console.error("Error cargando datos de autenticación:", err);
+    }
   }, []);
 
   useEffect(() => {
@@ -69,6 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
       if (currentSession?.user) loadAuthData(currentSession.user.id, currentSession.user.email ?? undefined);
+      setLoading(false);
+    }).catch((err) => {
+      // Si getSession() rechaza (storage corrupto/bloqueado), salir del loader
+      // en vez de dejar la app atorada en la pantalla de carga.
+      console.error("Error obteniendo la sesión:", err);
       setLoading(false);
     });
 

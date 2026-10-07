@@ -19,10 +19,8 @@ import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 // Los mapas (maplibre-gl ~1MB) se cargan solo cuando el usuario los abre,
 // para no inflar el chunk inicial del checkout.
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const DeliveryRouteMap = lazy(() => import("@/components/DeliveryRouteMap").then((m: any) => ({ default: m.DeliveryRouteMap })));
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const LocationPickerMap = lazy(() => import("@/components/LocationPickerMap").then((m: any) => ({ default: m.LocationPickerMap })));
+const DeliveryRouteMap = lazy(() => import("@/components/DeliveryRouteMap").then((m) => ({ default: m.DeliveryRouteMap })));
+const LocationPickerMap = lazy(() => import("@/components/LocationPickerMap").then((m) => ({ default: m.LocationPickerMap })));
 
 function MapFallback() {
   return (
@@ -108,7 +106,9 @@ const Checkout = () => {
           else if (data.username) setName(data.username);
           if (data.phone) setPhone(data.phone);
         }
-      });
+      })
+      // Lectura de conveniencia: si falla, el formulario queda sin pre-rellenar.
+      .catch(() => {});
   }, [user]);
 
   const requestLocation = () => {

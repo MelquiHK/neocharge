@@ -8,7 +8,7 @@ import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useAuth } from "@/hooks/use-auth";
 import {
   Package, ShoppingBag, Users, DollarSign, TrendingUp, AlertTriangle, Eye,
-  LayoutDashboard, UserCheck, BarChart3, HandCoins, Globe, History, Wallet,
+  LayoutDashboard, UserCheck, BarChart3, HandCoins, Globe, History, Wallet, Handshake,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
@@ -102,6 +102,8 @@ export function AdminDashboard() {
   const [topPages, setTopPages] = useState<TopPageRow[]>([]);
   const [recentViews, setRecentViews] = useState<RecentViewRow[]>([]);
   const [rateMissing, setRateMissing] = useState(false);
+  /** Saldos pendientes de recoger por socio (vista partner_balances). */
+  const [partnerPending, setPartnerPending] = useState<{ partner_id: string; partner_name: string; balance_usd: number }[]>([]);
 
   useEffect(() => {
     const load = async () => {
@@ -159,6 +161,24 @@ export function AdminDashboard() {
       setTopPages((top.data ?? []) as TopPageRow[]);
       setRecentViews((recentV.data ?? []) as RecentViewRow[]);
       setRateMissing(!todayRate.data);
+
+      // Dinero pendiente de recoger en socios. Query aparte con su propio
+      // try/catch: si las tablas de socios no existen o fallan, el resto del
+      // dashboard sigue funcionando y el card simplemente no se muestra.
+      try {
+        const { data: bals } = await supabase.from("partner_balances").select("partner_id, balance_usd");
+        const rows = ((bals ?? []) as { partner_id: string; balance_usd: number | string }[])
+          .map((b) => ({ partner_id: b.partner_id, balance_usd: Number(b.balance_usd ?? 0) }))
+          .filter((b) => b.balance_usd > 0);
+        if (rows.length > 0) {
+          const { data: ps } = await supabase.from("partners").select("id, name").in("id", rows.map((r) => r.partner_id));
+          const names = new Map(((ps ?? []) as { id: string; name: string }[]).map((p) => [p.id, p.name]));
+          setPartnerPending(rows.map((r) => ({ ...r, partner_name: names.get(r.partner_id) ?? "Socio" })));
+        }
+      } catch {
+        // Sin datos de socios: no se muestra el card.
+      }
+
       setLoaded(true);
     };
     load();
@@ -181,6 +201,7 @@ export function AdminDashboard() {
     (s) => s.created_at && new Date(s.created_at) >= monthStart
   );
   const summaryMonth = computeOwnerSalesSummary(monthSales, rateValue);
+  const partnerTotalUsd = partnerPending.reduce((s, p) => s + p.balance_usd, 0);
 
   const cards = [
     { icon: Package, label: "Productos activos", value: stats.products, tone: "blue" as const, sub: "En catálogo" },
@@ -314,6 +335,24 @@ export function AdminDashboard() {
               </div>
             </div>
           )}
+        </AdminCard>
+      )}
+
+      {permissions.can_view_finances && partnerPending.length > 0 && (
+        <AdminCard>
+          <AdminCardTitle icon={Handshake} title="Pendiente de recoger en socios" />
+          <div className="space-y-1.5">
+            {partnerPending.map((p) => (
+              <div key={p.partner_id} className="flex items-center justify-between gap-3 rounded-xl border border-border/60 p-3 text-sm">
+                <span className="font-medium">{p.partner_name}</span>
+                <span className="font-mono font-semibold text-amber-600">{formatPrice(p.balance_usd)}</span>
+              </div>
+            ))}
+            <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/10 p-3 text-sm font-semibold">
+              <span>Total por recoger</span>
+              <span className="font-mono text-amber-600">{formatPrice(partnerTotalUsd)}</span>
+            </div>
+          </div>
         </AdminCard>
       )}
 

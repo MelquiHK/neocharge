@@ -415,12 +415,17 @@ export function AdminCustomers() {
                         value={messengerProfile?.rate_per_km || 300} 
                         onChange={async (e) => {
                           const val = Number(e.target.value);
-                          const { data } = await supabase.from("messenger_profiles").upsert({
-                            user_id: viewing.id,
-                            rate_per_km: val,
-                            updated_at: new Date().toISOString()
-                          }).select().single();
-                          setMessengerProfile(data);
+                          try {
+                            const { data, error } = await supabase.from("messenger_profiles").upsert({
+                              user_id: viewing.id,
+                              rate_per_km: val,
+                              updated_at: new Date().toISOString()
+                            }).select().single();
+                            if (error) throw error;
+                            setMessengerProfile(data);
+                          } catch (err: unknown) {
+                            toast.error("No se pudo guardar la tarifa: " + (err instanceof Error ? err.message : String(err)));
+                          }
                         }} 
                       />
                     </div>
@@ -429,12 +434,17 @@ export function AdminCustomers() {
                       <Select 
                         value={messengerProfile?.vehicle_type || "car"} 
                         onValueChange={async (v) => {
-                          const { data } = await supabase.from("messenger_profiles").upsert({
-                            user_id: viewing.id,
-                            vehicle_type: v,
-                            updated_at: new Date().toISOString()
-                          }).select().single();
-                          setMessengerProfile(data);
+                          try {
+                            const { data, error } = await supabase.from("messenger_profiles").upsert({
+                              user_id: viewing.id,
+                              vehicle_type: v,
+                              updated_at: new Date().toISOString()
+                            }).select().single();
+                            if (error) throw error;
+                            setMessengerProfile(data);
+                          } catch (err: unknown) {
+                            toast.error("No se pudo guardar el vehículo: " + (err instanceof Error ? err.message : String(err)));
+                          }
                         }}
                       >
                         <SelectTrigger>

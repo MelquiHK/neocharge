@@ -116,6 +116,7 @@ export function AdminSocios() {
   const [deleteTarget, setDeleteTarget] = useState<Partner | null>(null);
 
   const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [expandingId, setExpandingId] = useState<string | null>(null);
   const [locationsByPartner, setLocationsByPartner] = useState<Record<string, PartnerLocation[]>>({});
   const [ledgerByPartner, setLedgerByPartner] = useState<Record<string, PartnerLedgerEntry[]>>({});
 
@@ -134,9 +135,16 @@ export function AdminSocios() {
       return;
     }
     setExpandedId(id);
-    const [locs, ledger] = await Promise.all([loadLocations(id), loadLedger(id)]);
-    setLocationsByPartner((p) => ({ ...p, [id]: locs }));
-    setLedgerByPartner((p) => ({ ...p, [id]: ledger }));
+    // Si ya hay datos cacheados, no hace falta mostrar el estado de carga.
+    if (locationsByPartner[id] && ledgerByPartner[id]) return;
+    setExpandingId(id);
+    try {
+      const [locs, ledger] = await Promise.all([loadLocations(id), loadLedger(id)]);
+      setLocationsByPartner((p) => ({ ...p, [id]: locs }));
+      setLedgerByPartner((p) => ({ ...p, [id]: ledger }));
+    } finally {
+      setExpandingId((cur) => (cur === id ? null : cur));
+    }
   };
 
   const reloadExpanded = async (id: string) => {
@@ -153,6 +161,14 @@ export function AdminSocios() {
   const handleSavePartner = async () => {
     if (!editingPartner?.name.trim()) {
       toast.error("El nombre del socio es obligatorio");
+      return;
+    }
+    const normalized = editingPartner.name.trim().toLowerCase();
+    const duplicate = partners.some(
+      (x) => x.id !== editingPartner?.id && x.name.trim().toLowerCase() === normalized
+    );
+    if (duplicate) {
+      toast.error("Ya existe un socio con ese nombre");
       return;
     }
     const ok = await savePartner({
@@ -266,6 +282,7 @@ export function AdminSocios() {
           {partners.map((p) => {
             const bal = balances[p.id] ?? 0;
             const expanded = expandedId === p.id;
+            const expandedLoading = expanded && expandingId === p.id;
             const locs = locationsByPartner[p.id] ?? [];
             const ledger = ledgerByPartner[p.id] ?? [];
             return (
@@ -322,6 +339,10 @@ export function AdminSocios() {
                     )}
                     {p.notes && <p className="text-sm text-muted-foreground">{p.notes}</p>}
 
+                    {expandedLoading ? (
+                      <p className="animate-pulse text-sm text-muted-foreground">Cargando locales y movimientos…</p>
+                    ) : (
+                      <>
                     {/* Locales */}
                     <div>
                       <div className="mb-2 flex items-center justify-between">
@@ -390,6 +411,8 @@ export function AdminSocios() {
                         </div>
                       )}
                     </div>
+                      </>
+                    )}
                   </div>
                 )}
               </AdminCard>

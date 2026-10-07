@@ -6,8 +6,8 @@ import {
   effectiveOwnStock,
   normalizePartnerCurrency,
   partnerMarginUsd as calcPartnerMarginUsd,
-  toUsd,
 } from "@/lib/partner-sales";
+import { BASE_COMMISSION_CUP } from "@/lib/constants";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { toast } from "sonner";
 import {
@@ -51,7 +51,8 @@ interface ProductOption {
 interface PartnerSource {
   partner_id: string;
   partner_name: string;
-  partner_price: number;
+  /** Costo del socio; NULL si el llamante no tiene permiso para verlo (contrato M8 con la RPC). */
+  partner_price: number | null;
   partner_currency: string;
   location_id: string;
   location_name: string;
@@ -66,8 +67,6 @@ interface PartnerSource {
 type SaleSource =
   | { type: "own" }
   | { type: "partner"; source: PartnerSource };
-
-const BASE_COMMISSION_CUP = 2000;
 
 export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarVentaDialogProps) {
   const [products, setProducts] = useState<ProductOption[]>([]);
@@ -149,7 +148,7 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
     setSource(null);
     try {
       let rows: {
-        partner_id: string; partner_name: string; partner_price: number; partner_currency: string;
+        partner_id: string; partner_name: string; partner_price: number | null; partner_currency: string;
         location_id: string; location_name: string; location_address: string;
         attendant_name: string | null; quantity: number;
         pickup_enabled: boolean; delivery_enabled: boolean; priority: number;
@@ -171,7 +170,9 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
         .map((r) => ({
           partner_id: r.partner_id,
           partner_name: r.partner_name,
-          partner_price: Number(r.partner_price),
+          // partner_price puede venir NULL si el llamante es gestor (contrato M8);
+          // en ese caso no se muestra ni se calcula el margen en el cliente.
+          partner_price: r.partner_price == null ? null : Number(r.partner_price),
           partner_currency: normalizePartnerCurrency(r.partner_currency),
           location_id: r.location_id,
           location_name: r.location_name,
@@ -226,13 +227,11 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
   // Comisión: en ventas de socio no hay comisión automática (el margen queda para Mel).
   const commission = isPartnerSale ? 0 : hasMarkup ? 0 : BASE_COMMISSION_CUP;
 
-  // Margen de Mel en una venta de socio (en USD).
+  // Margen de Mel en una venta de socio (en USD). NaN si no hay info de costo
+  // (partner_price NULL: el llamante no tiene permiso para verlo — contrato M8)
+  // o si falta la tasa para convertir.
   const usdToCupRate = rate?.usd_to_cup ?? null;
-  const priceUsd = toUsd(priceNum, currency, usdToCupRate);
-  const partnerPriceUsd = partnerSource
-    ? toUsd(partnerSource.partner_price, partnerSource.partner_currency, usdToCupRate)
-    : NaN;
-  const partnerMarginUsd = partnerSource
+  const partnerMarginUsd = partnerSource?.partner_price != null
     ? calcPartnerMarginUsd(priceNum, currency, partnerSource.partner_price, partnerSource.partner_currency, usdToCupRate)
     : NaN;
 
@@ -252,7 +251,7 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
       toast.error("Elige de dónde se surte la venta.");
       return;
     }
-    if (isPartnerSale && !Number.isFinite(partnerMarginUsd)) {
+    if (isPartnerSale && partnerSource?.partner_price != null && !Number.isFinite(partnerMarginUsd)) {
       toast.error("No se pudo calcular el margen en USD (falta la tasa de cambio).");
       return;
     }
@@ -349,9 +348,28 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
       }
       if (!saved) throw new Error("No se pudo guardar la venta.");
 
-      if (isPartnerSale && partnerSource && Number.isFinite(partnerMarginUsd)) {
+      if (isPartnerSale && partnerSource && partnerSource.partner_price != null && Number.isFinite(partnerMarginUsd)) {
+        if (partnerMarginUsd < 0) {
+          toast.error(
+            `Venta registrada en ${partnerSource.partner_name}. Vendes por debajo del costo del socio: pierdes $${Math.abs(partnerMarginUsd).toFixed(2)} USD.`,
+            { duration: 6000 },
+          );
+        } else if (partnerMarginUsd === 0) {
+          toast(
+            `Venta registrada en ${partnerSource.partner_name}. Margen $0.00 USD: sin ganancia ni pérdida.`,
+            { duration: 6000 },
+          );
+        } else {
+          toast.success(
+            `Venta registrada en ${partnerSource.partner_name}. El socio retiene ${formatMoney(partnerSource.partner_price, partnerSource.partner_currency)} y tu margen de $${partnerMarginUsd.toFixed(2)} USD queda pendiente de recoger.`,
+            { duration: 6000 },
+          );
+        }
+      } else if (isPartnerSale && partnerSource) {
+        // Sin info de costo (llamante sin permiso — contrato M8) o sin tasa
+        // válida: la RPC calcula el hold en el servidor.
         toast.success(
-          `Venta registrada en ${partnerSource.partner_name}. El socio retiene ${formatMoney(partnerSource.partner_price, partnerSource.partner_currency)} y tu margen de $${partnerMarginUsd.toFixed(2)} USD queda pendiente de recoger.`,
+          `Venta registrada en ${partnerSource.partner_name}. Surtido en ${partnerSource.partner_name} — ${partnerSource.location_name}.`,
           { duration: 6000 },
         );
       } else {
@@ -466,12 +484,26 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
                 El cliente paga <span className="font-semibold text-slate-900">{formatMoney(priceNum, currency)}</span>
                 {" "}en {partnerSource.location_name}.
               </div>
-              <div>
-                El socio retiene <span className="font-semibold text-slate-900">{formatMoney(partnerSource.partner_price, partnerSource.partner_currency)}</span>
-                {Number.isFinite(partnerMarginUsd) && (
-                  <> y tu margen de <span className="font-semibold text-emerald-700">${partnerMarginUsd.toFixed(2)} USD</span> queda pendiente de recoger.</>
-                )}
-              </div>
+              {partnerSource.partner_price != null ? (
+                <div>
+                  El socio retiene <span className="font-semibold text-slate-900">{formatMoney(partnerSource.partner_price, partnerSource.partner_currency)}</span>
+                  {Number.isFinite(partnerMarginUsd) && partnerMarginUsd > 0 && (
+                    <> y tu margen de <span className="font-semibold text-emerald-700">${partnerMarginUsd.toFixed(2)} USD</span> queda pendiente de recoger.</>
+                  )}
+                  {Number.isFinite(partnerMarginUsd) && partnerMarginUsd === 0 && (
+                    <> (margen $0.00 USD: sin ganancia ni pérdida).</>
+                  )}
+                </div>
+              ) : (
+                <div className="text-xs text-slate-500">
+                  Surtido en {partnerSource.partner_name} — {partnerSource.location_name}. El margen lo calcula el servidor al guardar.
+                </div>
+              )}
+              {partnerSource.partner_price != null && Number.isFinite(partnerMarginUsd) && partnerMarginUsd < 0 && (
+                <div className="font-semibold text-red-600">
+                  ⚠ Vendes por debajo del costo del socio: pierdes ${Math.abs(partnerMarginUsd).toFixed(2)} USD.
+                </div>
+              )}
               <div className="text-xs text-slate-500">Esta venta no genera comisión automática.</div>
             </div>
           )}

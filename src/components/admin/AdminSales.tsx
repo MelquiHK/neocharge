@@ -13,7 +13,8 @@ import { formatPrice, formatCUP } from "@/lib/format";
 import { BadgeCheck, DollarSign, ShieldCheck, Trash2, Eye, MapPin, Phone, User, FileText, Wallet, ArrowUpRight, CheckCircle2, Clock, TrendingUp, ShieldAlert, AlertCircle, Pencil, Save, HandCoins, Home, Handshake, Truck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { effectiveOwnStock, normalizePartnerCurrency } from "@/lib/partner-sales";
+import { effectiveOwnStock, normalizePartnerCurrency, partnerMarginUsd as calcPartnerMarginUsd } from "@/lib/partner-sales";
+import { BASE_COMMISSION_CUP } from "@/lib/constants";
 import {
   parseSaleDetails,
   buildSaleDetails,
@@ -52,7 +53,8 @@ interface ProductOption {
 interface PartnerSource {
   partner_id: string;
   partner_name: string;
-  partner_price: number;
+  /** Costo del socio; NULL si el llamante no tiene permiso para verlo (contrato M8 con la RPC). */
+  partner_price: number | null;
   partner_currency: "USD" | "CUP";
   location_id: string;
   location_name: string;
@@ -72,8 +74,6 @@ interface StoredLocation {
   id: string;
   name: string;
 }
-
-const DEFAULT_COMMISSION_CUP = 2000;
 
 /** Formatea un monto en su moneda (USD → $X, CUP → X CUP). */
 function formatMoney(value: number, currency: string | null | undefined) {
@@ -99,7 +99,7 @@ export function AdminSales() {
   const [customerPhone, setCustomerPhone] = useState("");
   const [locationName, setLocationName] = useState("");
   const [saleDetails, setSaleDetails] = useState("");
-  const [commissionAmount, setCommissionAmount] = useState<number | string>(DEFAULT_COMMISSION_CUP);
+  const [commissionAmount, setCommissionAmount] = useState<number | string>(BASE_COMMISSION_CUP);
   const [productOptions, setProductOptions] = useState<ProductOption[]>([]);
 
   /* ---------------- Fuente de surtido y entrega ---------------- */
@@ -168,7 +168,7 @@ export function AdminSales() {
     setSource(null);
     try {
       let rows: Array<{
-        partner_id: string; partner_name: string; partner_price: number; partner_currency: string;
+        partner_id: string; partner_name: string; partner_price: number | null; partner_currency: string;
         location_id: string; location_name: string; location_address: string;
         attendant_name: string | null; quantity: number;
         pickup_enabled: boolean; delivery_enabled: boolean; priority: number;
@@ -190,7 +190,9 @@ export function AdminSales() {
         .map((r) => ({
           partner_id: r.partner_id,
           partner_name: r.partner_name,
-          partner_price: Number(r.partner_price),
+          // partner_price puede venir NULL si el llamante es gestor (contrato M8);
+          // en ese caso no se muestra ni se calcula el margen en el cliente.
+          partner_price: r.partner_price == null ? null : Number(r.partner_price),
           partner_currency: normalizePartnerCurrency(r.partner_currency),
           location_id: r.location_id,
           location_name: r.location_name,
@@ -260,6 +262,11 @@ export function AdminSales() {
   const isPartnerSale = source?.type === "partner";
   const partnerSource = isPartnerSale ? (source as { type: "partner"; source: PartnerSource }).source : null;
   const hasSources = ownQty > 0 || partnerSources.length > 0;
+  /* Margen de Mel en una venta de socio (en USD). NaN si el costo viene NULL
+     (llamante sin permiso — contrato M8) o si falta la tasa para convertir. */
+  const partnerMarginUsd = partnerSource?.partner_price != null
+    ? calcPartnerMarginUsd(Number(price || 0), currency, partnerSource.partner_price, partnerSource.partner_currency, rateValue > 0 ? rateValue : null)
+    : NaN;
   /* En ventas de socio no hay comisión (el margen queda para Mel). */
   const effectiveCommission = isPartnerSale ? 0 : Number(commissionAmount || 0);
   /* En ventas de socio tampoco hay markup para el gestor. */
@@ -297,7 +304,7 @@ export function AdminSales() {
       setCommissionAmount(0);
     } else if (wasMel) {
       // Volviendo a un gestor: se restaura el default.
-      setCommissionAmount(DEFAULT_COMMISSION_CUP);
+      setCommissionAmount(BASE_COMMISSION_CUP);
     }
   };
 
@@ -341,7 +348,7 @@ export function AdminSales() {
     setLocationName("");
     setSaleDetails("");
     setSellerKey("mel");
-    setCommissionAmount(isOwner ? 0 : DEFAULT_COMMISSION_CUP);
+    setCommissionAmount(isOwner ? 0 : BASE_COMMISSION_CUP);
     setDeliveryType("recogida");
     setOwnQty(0);
     setPartnerSources([]);
@@ -446,7 +453,17 @@ export function AdminSales() {
 
       await createSale(payload);
       if (isPartnerSale && partnerSource) {
-        toast.success(`Venta registrada en ${partnerSource.partner_name}. El margen queda pendiente de recoger.`, { duration: 5000 });
+        if (partnerSource.partner_price != null && Number.isFinite(partnerMarginUsd)) {
+          if (partnerMarginUsd < 0) {
+            toast.error(`Venta registrada en ${partnerSource.partner_name}. Vendes por debajo del costo del socio: pierdes $${Math.abs(partnerMarginUsd).toFixed(2)} USD.`, { duration: 5000 });
+          } else if (partnerMarginUsd === 0) {
+            toast(`Venta registrada en ${partnerSource.partner_name}. Margen $0.00 USD: sin ganancia ni pérdida.`, { duration: 5000 });
+          } else {
+            toast.success(`Venta registrada en ${partnerSource.partner_name}. El margen queda pendiente de recoger.`, { duration: 5000 });
+          }
+        } else {
+          toast.success(`Venta registrada en ${partnerSource.partner_name}.`, { duration: 5000 });
+        }
       } else {
         toast.success("Venta registrada");
       }
@@ -737,9 +754,26 @@ export function AdminSales() {
                 {isPartnerSale && partnerSource && (
                   <div className="rounded-2xl border border-grape-200 bg-grape-100/60 p-3 text-sm dark:border-grape-800 dark:bg-grape-900/20">
                     <p className="font-semibold">Venta en socio (interno)</p>
-                    <p className="text-muted-foreground">
-                      El socio retiene {formatMoney(partnerSource.partner_price, partnerSource.partner_currency)} y tu margen queda pendiente de recoger.
-                    </p>
+                    {partnerSource.partner_price != null ? (
+                      <p className="text-muted-foreground">
+                        El socio retiene {formatMoney(partnerSource.partner_price, partnerSource.partner_currency)}{" "}
+                        {Number.isFinite(partnerMarginUsd) && partnerMarginUsd > 0 && (
+                          <>y tu margen de <span className="font-semibold text-emerald-700">${partnerMarginUsd.toFixed(2)} USD</span> queda pendiente de recoger.</>
+                        )}
+                        {Number.isFinite(partnerMarginUsd) && partnerMarginUsd === 0 && (
+                          <>(margen $0.00 USD: sin ganancia ni pérdida).</>
+                        )}
+                      </p>
+                    ) : (
+                      <p className="text-muted-foreground">
+                        Surtido en {partnerSource.partner_name} — {partnerSource.location_name}.
+                      </p>
+                    )}
+                    {partnerSource.partner_price != null && Number.isFinite(partnerMarginUsd) && partnerMarginUsd < 0 && (
+                      <p className="font-semibold text-red-600">
+                        ⚠ Vendes por debajo del costo del socio: pierdes ${Math.abs(partnerMarginUsd).toFixed(2)} USD.
+                      </p>
+                    )}
                   </div>
                 )}
               </div>

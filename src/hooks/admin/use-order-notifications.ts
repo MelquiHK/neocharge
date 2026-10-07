@@ -2,6 +2,7 @@ import { useEffect, useState, useCallback, useRef } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { showBrowserNotification } from '@/lib/notifications';
+import { formatMoney } from '@/lib/format';
 import { getUnseenRecords } from '@/hooks/admin/order-notifications.utils';
 
 interface AdminNotification {
@@ -82,11 +83,10 @@ export function useOrderNotifications(enabled: boolean = true) {
       // Solicitar permisos de notificación proactivamente si el usuario tiene privilegios de admin
       // y aún no ha respondido a la solicitud de permisos.
       Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-          console.log("Permisos de notificación concedidos.");
-        } else {
+        if (permission !== "granted") {
           console.warn("Permisos de notificación denegados.");
         }
+        // "granted": no hace falta loguear nada, el flujo continúa normalmente.
       });
     }
   }, [enabled]);
@@ -161,7 +161,7 @@ export function useOrderNotifications(enabled: boolean = true) {
       duration: 10000,
     });
 
-    const formattedAmount = notif.currency === 'USD' ? `$ ${notif.amount}` : `₱ ${notif.amount}`;
+    const formattedAmount = formatMoney(notif.amount, notif.currency);
     void showBrowserNotification(notif.title, {
       body: `${notif.subtitle}\n${formattedAmount}`,
       icon: '/images/logo.png',
