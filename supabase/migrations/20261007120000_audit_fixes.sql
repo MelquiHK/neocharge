@@ -725,3 +725,28 @@ DROP TRIGGER IF EXISTS trg_block_partner_delete_with_balance ON public.partners;
 CREATE TRIGGER trg_block_partner_delete_with_balance
   BEFORE DELETE ON public.partners
   FOR EACH ROW EXECUTE FUNCTION public.block_partner_delete_with_balance();
+
+-- =========================================
+-- FIX delivery_type CHECK (hallazgo de verificación pre-aplicación):
+-- la migración 20260814 definió seller_sales.delivery_type con
+-- CHECK IN ('local','delivery','pickup'), pero la app envía
+-- 'recogida'/'mensajeria' a la RPC. Se relaja el CHECK para aceptar
+-- los valores reales. Idempotente.
+-- =========================================
+DO $$
+DECLARE
+  v_conname text;
+BEGIN
+  SELECT conname INTO v_conname
+  FROM pg_constraint
+  WHERE conrelid = 'public.seller_sales'::regclass
+    AND contype = 'c'
+    AND pg_get_constraintdef(oid) ILIKE '%delivery_type%';
+  IF v_conname IS NOT NULL THEN
+    EXECUTE format('ALTER TABLE public.seller_sales DROP CONSTRAINT %I', v_conname);
+  END IF;
+END $$;
+
+ALTER TABLE public.seller_sales
+  ADD CONSTRAINT seller_sales_delivery_type_check
+  CHECK (delivery_type IN ('local','delivery','pickup','recogida','mensajeria'));
