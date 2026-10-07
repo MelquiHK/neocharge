@@ -120,6 +120,79 @@ export function useAdminPartners() {
     void load();
   }, [load]);
 
+  /**
+   * M5: re-sincroniza products.stock = own_stock + Σ stock en locales
+   * activos de socios activos (con product_partners activo).
+   * Se llama al desactivar/eliminar un socio o un local, para que no
+   * quede stock fantasma invendible en la vitrina.
+   */
+  const resyncProductStocks = useCallback(async (): Promise<void> => {
+    try {
+      // Locales activos de socios activos
+      const { data: locs, error: e1 } = await supabase
+        .from("partner_locations")
+        .select("id, partner_id, partners!inner(is_active)")
+        .eq("is_active", true)
+        .eq("partners.is_active", true);
+      if (e1) throw e1;
+      const locList = (locs ?? []) as { id: string; partner_id: string }[];
+      const locPartner = new Map(locList.map((l) => [l.id, l.partner_id]));
+
+      // Asociaciones producto-socio activas
+      const { data: pps, error: e2 } = await supabase
+        .from("product_partners")
+        .select("product_id, partner_id")
+        .eq("is_active", true);
+      if (e2) throw e2;
+      const activePp = new Set(
+        ((pps ?? []) as { product_id: string; partner_id: string }[]).map(
+          (p) => `${p.product_id}:${p.partner_id}`
+        )
+      );
+
+      // Productos con alguna asociación (activos o no): son los que hay que recalcular
+      const { data: allPp, error: e3 } = await supabase
+        .from("product_partners")
+        .select("product_id");
+      if (e3) throw e3;
+      const productIds = [...new Set(((allPp ?? []) as { product_id: string }[]).map((p) => p.product_id))];
+      if (productIds.length === 0) return;
+
+      // Stock por local (solo locales activos de socios activos)
+      let stockRows: { product_id: string; partner_location_id: string; quantity: number }[] = [];
+      if (locList.length > 0) {
+        const { data: st, error: e4 } = await supabase
+          .from("partner_location_stock")
+          .select("product_id, partner_location_id, quantity")
+          .in("partner_location_id", locList.map((l) => l.id));
+        if (e4) throw e4;
+        stockRows = (st ?? []) as typeof stockRows;
+      }
+      const totals: Record<string, number> = {};
+      for (const r of stockRows) {
+        const pid = locPartner.get(r.partner_location_id);
+        if (!pid) continue;
+        if (!activePp.has(`${r.product_id}:${pid}`)) continue;
+        totals[r.product_id] = (totals[r.product_id] ?? 0) + Math.max(0, Number(r.quantity ?? 0));
+      }
+
+      // own_stock actual de esos productos
+      const { data: prods, error: e5 } = await supabase
+        .from("products")
+        .select("id, own_stock")
+        .in("id", productIds);
+      if (e5) throw e5;
+      for (const p of (prods ?? []) as { id: string; own_stock: number | null }[]) {
+        const total = Math.max(0, Number(p.own_stock ?? 0)) + (totals[p.id] ?? 0);
+        const { error: upd } = await supabase.from("products").update({ stock: total }).eq("id", p.id);
+        if (upd) throw upd;
+      }
+    } catch (error: unknown) {
+      console.error("Error re-sincronizando stock:", error);
+      toast.error("No se pudo re-sincronizar el stock: " + (error instanceof Error ? error.message : String(error)));
+    }
+  }, []);
+
   const savePartner = async (payload: PartnerInput): Promise<boolean> => {
     try {
       if (payload.id) {
@@ -132,6 +205,7 @@ export function useAdminPartners() {
         toast.success("Socio creado");
       }
       await load();
+      await resyncProductStocks();
       return true;
     } catch (error: unknown) {
       toast.error("Error guardando socio: " + (error instanceof Error ? error.message : String(error)));
@@ -145,6 +219,7 @@ export function useAdminPartners() {
       if (error) throw error;
       toast.success("Socio eliminado");
       await load();
+      await resyncProductStocks();
       return true;
     } catch (error: unknown) {
       toast.error("Error eliminando socio: " + (error instanceof Error ? error.message : String(error)));
@@ -181,6 +256,7 @@ export function useAdminPartners() {
         if (error) throw error;
         toast.success("Local creado");
       }
+      await resyncProductStocks();
       return true;
     } catch (error: unknown) {
       toast.error("Error guardando local: " + (error instanceof Error ? error.message : String(error)));
@@ -193,6 +269,7 @@ export function useAdminPartners() {
       const { error } = await supabase.from("partner_locations").delete().eq("id", id);
       if (error) throw error;
       toast.success("Local eliminado");
+      await resyncProductStocks();
       return true;
     } catch (error: unknown) {
       toast.error("Error eliminando local: " + (error instanceof Error ? error.message : String(error)));
@@ -342,5 +419,6 @@ export function useAdminPartners() {
     registerPickup,
     loadProductPartnerData,
     saveProductPartnerData,
+    resyncProductStocks,
   };
 }
