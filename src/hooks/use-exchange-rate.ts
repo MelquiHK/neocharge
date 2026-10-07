@@ -8,8 +8,37 @@ export interface ExchangeRate {
 }
 
 let cached: ExchangeRate | null = null;
-let cachedAt = 0;
-const TTL = 5 * 60 * 1000; // 5 min
+let inflight: Promise<ExchangeRate | null> | null = null;
+
+/**
+ * Invalida la tasa cacheada (llamar después de actualizarla en el admin).
+ * La próxima lectura trae el valor fresco de la BD.
+ */
+export function refreshExchangeRate() {
+  cached = null;
+  inflight = null;
+}
+
+async function fetchRate(): Promise<ExchangeRate | null> {
+  if (cached) return cached;
+  if (inflight) return inflight;
+  inflight = (async () => {
+    const { data, error: queryError } = await supabase
+      .from("exchange_rates")
+      .select("usd_to_cup,extra_cup_chargers,rate_date")
+      .order("rate_date", { ascending: false })
+      .limit(1)
+      .maybeSingle();
+    if (queryError) throw queryError;
+    if (data) cached = data as ExchangeRate;
+    return cached;
+  })();
+  try {
+    return await inflight;
+  } finally {
+    inflight = null;
+  }
+}
 
 export function useExchangeRate() {
   const [rate, setRate] = useState<ExchangeRate | null>(cached);
@@ -17,7 +46,9 @@ export function useExchangeRate() {
   const [error, setError] = useState<Error | null>(null);
 
   useEffect(() => {
-    if (cached && Date.now() - cachedAt < TTL) {
+    // Fuente única por sesión: todos los componentes comparten el mismo
+    // valor cacheado; sin TTL que sirva 780 a unos y 790 a otros.
+    if (cached) {
       setRate(cached);
       setLoading(false);
       return;
@@ -25,19 +56,9 @@ export function useExchangeRate() {
     let cancelled = false;
     (async () => {
       try {
-        const { data, error: queryError } = await supabase
-          .from("exchange_rates")
-          .select("usd_to_cup,extra_cup_chargers,rate_date")
-          .order("rate_date", { ascending: false })
-          .limit(1)
-          .maybeSingle();
+        const fresh = await fetchRate();
         if (cancelled) return;
-        if (queryError) throw queryError;
-        if (data) {
-          cached = data as ExchangeRate;
-          cachedAt = Date.now();
-          setRate(cached);
-        }
+        setRate(fresh);
         setLoading(false);
       } catch (err) {
         if (cancelled) return;

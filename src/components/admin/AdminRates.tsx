@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { refreshExchangeRate } from "@/hooks/use-exchange-rate";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -72,6 +73,7 @@ export function AdminRates() {
     };
     const { error } = await supabase.from("exchange_rates").upsert(payload, { onConflict: "rate_date" });
     if (error) { toast.error(error.message); return; }
+    refreshExchangeRate();
     toast.success("Tasa de hoy actualizada ✓");
     load();
   };
