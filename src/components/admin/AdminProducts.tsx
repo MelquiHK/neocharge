@@ -15,7 +15,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Switch } from "@/components/ui/switch";
 import {
   Copy, Download, Plus, Pencil, Trash2, Image as ImageIcon, X, Star, Sparkles, CheckSquare, Square,
-  Package, Search, Tag, DollarSign, Layers, FolderTree, Eye, Store, QrCode,
+  Package, Search, Tag, DollarSign, Layers, FolderTree, Eye, Store, QrCode, Handshake,
 } from "lucide-react";
 import { toast } from "sonner";
 import QRCode from "qrcode";
@@ -24,8 +24,11 @@ import { formatPrice } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { Product, Category, StoreLocation } from "@/types";
 import { useAdminProducts } from "@/hooks/admin/use-admin-products";
-import { productSchema } from "@/lib/schemas";
 import {
+  useAdminPartners,
+  type PartnerLocation,
+} from "@/hooks/admin/use-admin-partners";
+import { productSchema } from "@/lib/schemas";import {
   AdminSectionHeader,
   AdminFilters,
   AdminTable,
@@ -52,9 +55,26 @@ const empty: Partial<Product> = {
 
 export function AdminProducts() {
   const { products, categories, locations, loading, refresh, deleteProduct } = useAdminProducts();
+  const {
+    partners,
+    needsMigration: partnersNeedMigration,
+    loadLocations: loadPartnerLocations,
+    loadProductPartnerData,
+    saveProductPartnerData,
+  } = useAdminPartners();
   const [editing, setEditing] = useState<Partial<Product> | null>(null);
   const [dialogOpen, setDialogOpen] = useState(false);
   const [productLocs, setProductLocs] = useState<Record<string, number>>({});
+  /** partner_id -> precio del socio (presencia = el socio suple este producto) */
+  const [ppPrices, setPpPrices] = useState<Record<string, number>>({});
+  /** locales de los socios habilitados, con nombre del socio */
+  const [ppLocs, setPpLocs] = useState<(PartnerLocation & { partner_name: string })[]>([]);
+  /** location_id -> unidades en ese local del socio */
+  const [ppStock, setPpStock] = useState<Record<string, number>>({});
+  /** partner_id -> moneda del costo y prioridad de surtido */
+  const [ppMeta, setPpMeta] = useState<Record<string, { currency: string; priority: number }>>({});
+  /** unidades físicas en manos de Mel */
+  const [ownStockInput, setOwnStockInput] = useState(0);
   const [uploading, setUploading] = useState(false);
   const [search, setSearch] = useState("");
   const [categoryFilter, setCategoryFilter] = useState<string>("all");
@@ -63,9 +83,34 @@ export function AdminProducts() {
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [bulkCategoryId, setBulkCategoryId] = useState<string>("none");
 
+  const resetPartnerState = () => {
+    setPpPrices({});
+    setPpLocs([]);
+    setPpStock({});
+    setPpMeta({});
+    setOwnStockInput(0);
+  };
+
+  /** Recarga los locales de los socios habilitados (para los inputs de stock). */
+  const reloadPpLocs = async (prices: Record<string, number>) => {
+    const ids = Object.keys(prices);
+    if (ids.length === 0) {
+      setPpLocs([]);
+      return;
+    }
+    const all: (PartnerLocation & { partner_name: string })[] = [];
+    for (const pid of ids) {
+      const p = partners.find((x) => x.id === pid);
+      const locs = await loadPartnerLocations(pid);
+      locs.forEach((l) => all.push({ ...l, partner_name: p?.name ?? "" }));
+    }
+    setPpLocs(all);
+  };
+
   const openNew = () => {
     setEditing({ ...empty });
     setProductLocs({});
+    resetPartnerState();
     setDialogOpen(true);
   };
 
@@ -75,7 +120,32 @@ export function AdminProducts() {
     const map: Record<string, number> = {};
     (data ?? []).forEach((r: { location_id: string; stock: number }) => { map[r.location_id] = r.stock; });
     setProductLocs(map);
+    setOwnStockInput(Number((p as Partial<Product>).own_stock ?? p.stock ?? 0));
+    if (partnersNeedMigration) {
+      resetPartnerState();
+    } else {
+      const ppd = await loadProductPartnerData(p.id);
+      setPpPrices(ppd.prices);
+      setPpStock(ppd.stock);
+      setPpMeta(ppd.meta);
+      await reloadPpLocs(ppd.prices);
+    }
     setDialogOpen(true);
+  };
+
+  const togglePartner = async (partnerId: string, enabled: boolean, price?: number) => {
+    const next = { ...ppPrices };
+    const nextMeta = { ...ppMeta };
+    if (enabled) {
+      next[partnerId] = price ?? next[partnerId] ?? 0;
+      if (!nextMeta[partnerId]) nextMeta[partnerId] = { currency: "USD", priority: 0 };
+    } else {
+      delete next[partnerId];
+      delete nextMeta[partnerId];
+    }
+    setPpPrices(next);
+    setPpMeta(nextMeta);
+    await reloadPpLocs(next);
   };
 
   const isLowStock = (p: Product) => Number(p.stock ?? 0) <= Number(p.low_stock_threshold ?? 5);
@@ -224,13 +294,17 @@ export function AdminProducts() {
     if (!editing) return;
     
     const slug = editing.slug?.trim() || slugify(editing.name ?? "");
+    const hasPartners = Object.keys(ppPrices).length > 0;
+    const partnerStockTotal = Object.values(ppStock).reduce((a, b) => a + Number(b ?? 0), 0);
+    const ownUnits = hasPartners ? Math.max(0, Number(ownStockInput ?? 0)) : Number(editing.stock ?? 0);
     const dataToValidate = {
       ...editing,
       slug,
       price: Number(editing.price ?? 0),
       cost_price: editing.cost_price ? Number(editing.cost_price) : 0,
       compare_price: editing.compare_price ? Number(editing.compare_price) : null,
-      stock: Number(editing.stock ?? 0),
+      stock: ownUnits + partnerStockTotal,
+      own_stock: ownUnits,
       low_stock_threshold: Number(editing.low_stock_threshold ?? 5),
     };
 
@@ -277,6 +351,12 @@ export function AdminProducts() {
           return;
         }
       }
+    }
+
+    // Sync socios: precios, moneda/prioridad, stock por local y totales (stock = propio + socios)
+    if (productId && !partnersNeedMigration) {
+      const total = await saveProductPartnerData(productId, ownUnits, ppPrices, ppStock, ppMeta);
+      if (total === null) return;
     }
 
     toast.success("Producto guardado");
@@ -641,7 +721,17 @@ export function AdminProducts() {
                 <div className="grid gap-4 sm:grid-cols-2">
                   <div className="space-y-2">
                     <Label>Stock total</Label>
-                    <Input className="h-11" type="number" value={editing.stock ?? 0} onChange={(e) => setEditing({ ...editing, stock: Number(e.target.value) })} />
+                    <Input
+                      className="h-11"
+                      type="number"
+                      value={editing.stock ?? 0}
+                      disabled={Object.keys(ppPrices).length > 0}
+                      title={Object.keys(ppPrices).length > 0 ? "Se calcula solo: unidades propias + stock en socios" : undefined}
+                      onChange={(e) => setEditing({ ...editing, stock: Number(e.target.value) })}
+                    />
+                    {Object.keys(ppPrices).length > 0 && (
+                      <p className="text-xs text-muted-foreground">Se calcula solo en la sección Socios.</p>
+                    )}
                   </div>
                   <div className="space-y-2">
                     <Label>Alerta stock bajo</Label>
@@ -649,6 +739,138 @@ export function AdminProducts() {
                   </div>
                 </div>
               </section>
+
+              {/* Socios (cumplimiento por terceros) */}
+              {!partnersNeedMigration && (
+              <section className="rounded-2xl border border-border/60 bg-muted/20 p-4">
+                <AdminCardTitle icon={Handshake} title="Socios" />
+                <p className="mb-3 text-xs text-muted-foreground">
+                  Si este producto también lo tienen socios (ej: Yusi), márcalos aquí con su precio y cuántas unidades hay en cada local.
+                  En la tienda se verá como un producto normal tuyo; el socio solo se ve aquí y en los avisos internos.
+                </p>
+
+                <div className="mb-4 grid gap-4 sm:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label>Unidades propias (en tu casa)</Label>
+                    <Input
+                      className="h-11"
+                      type="number"
+                      min="0"
+                      value={ownStockInput}
+                      onChange={(e) => setOwnStockInput(Math.max(0, Number(e.target.value)))}
+                    />
+                    {Number(editing.cost_price ?? 0) > 0 && ownStockInput > 0 && (
+                      <p className="text-xs text-muted-foreground">
+                        Inversión propia: <span className="font-mono font-semibold">
+                          ${(ownStockInput * Number(editing.cost_price ?? 0)).toFixed(2)} USD
+                        </span>
+                      </p>
+                    )}
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Stock total (calculado)</Label>
+                    <div className="flex h-11 items-center rounded-md border border-border/60 bg-muted/40 px-3 font-mono font-semibold">
+                      {ownStockInput + Object.values(ppStock).reduce((a, b) => a + Number(b ?? 0), 0)}
+                      <span className="ml-2 text-xs font-normal text-muted-foreground">
+                        = {ownStockInput} propias + {Object.values(ppStock).reduce((a, b) => a + Number(b ?? 0), 0)} en socios
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {partners.filter((p) => p.is_active).length === 0 ? (
+                  <p className="text-sm text-muted-foreground">
+                    No hay socios activos. Créelos en Operaciones → Socios.
+                  </p>
+                ) : (
+                  <div className="space-y-3">
+                    {partners.filter((p) => p.is_active).map((p) => {
+                      const enabled = p.id in ppPrices;
+                      const price = ppPrices[p.id] ?? 0;
+                      const pCurrency = ppMeta[p.id]?.currency ?? "USD";
+                      const margin = pCurrency === "USD" ? Number(editing.price ?? 0) - price : null;
+                      const locs = ppLocs.filter((l) => l.partner_id === p.id);
+                      return (
+                        <div key={p.id} className="rounded-xl border border-border/60 bg-card p-3">
+                          <div className="flex flex-wrap items-center gap-3">
+                            <label className="flex cursor-pointer items-center gap-2 text-sm font-medium">
+                              <Switch checked={enabled} onCheckedChange={(v) => void togglePartner(p.id, v)} />
+                              {p.name}
+                            </label>
+                            {enabled && (
+                              <>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Label className="text-xs text-muted-foreground">Precio socio:</Label>
+                                  <Input
+                                    type="number" step="0.01" min="0"
+                                    value={ppPrices[p.id] ?? ""}
+                                    onChange={(e) => setPpPrices({ ...ppPrices, [p.id]: Math.max(0, Number(e.target.value)) })}
+                                    className="h-10 w-28 text-center font-mono"
+                                  />
+                                  <Select
+                                    value={ppMeta[p.id]?.currency ?? "USD"}
+                                    onValueChange={(v) => setPpMeta({ ...ppMeta, [p.id]: { currency: v, priority: ppMeta[p.id]?.priority ?? 0 } })}
+                                  >
+                                    <SelectTrigger className="h-10 w-24"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="USD">USD</SelectItem>
+                                      <SelectItem value="CUP">CUP</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Label className="text-xs text-muted-foreground" title="Mayor prioridad = se sugiere primero al vender">Prioridad:</Label>
+                                  <Input
+                                    type="number" step="1"
+                                    value={ppMeta[p.id]?.priority ?? 0}
+                                    onChange={(e) => setPpMeta({ ...ppMeta, [p.id]: { currency: ppMeta[p.id]?.currency ?? "USD", priority: Math.trunc(Number(e.target.value)) } })}
+                                    className="h-10 w-16 text-center font-mono"
+                                  />
+                                </div>
+                                <span className="text-xs text-muted-foreground">
+                                  Tu margen: {margin === null ? (
+                                    <span>según tasa del día</span>
+                                  ) : (
+                                    <span className={`font-mono font-semibold ${margin >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                                      ${margin.toFixed(2)}
+                                    </span>
+                                  )} por venta
+                                </span>
+                              </>
+                            )}
+                          </div>
+                          {enabled && (
+                            <div className="mt-3">
+                              {locs.length === 0 ? (
+                                <p className="text-xs text-muted-foreground">Este socio no tiene locales. Agrégalos en Operaciones → Socios.</p>
+                              ) : (
+                                <div className="grid gap-2 sm:grid-cols-2">
+                                  {locs.map((l) => (
+                                    <div key={l.id} className="flex items-center justify-between gap-2 rounded-lg border border-border/40 px-3 py-2">
+                                      <div className="min-w-0">
+                                        <p className="truncate text-sm font-medium">{l.name}</p>
+                                        {l.attendant_name && <p className="truncate text-xs text-muted-foreground">Atiende: {l.attendant_name}</p>}
+                                      </div>
+                                      <div className="flex shrink-0 items-center gap-1.5">
+                                        <Input
+                                          type="number" min="0"
+                                          value={ppStock[l.id] ?? 0}
+                                          onChange={(e) => setPpStock({ ...ppStock, [l.id]: Math.max(0, Number(e.target.value)) })}
+                                          className="h-9 w-20 text-center"
+                                        />
+                                        <span className="text-xs text-muted-foreground">u.</span>
+                                      </div>
+                                    </div>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </section>
+              )}
 
               {/* Categoría y garantía */}
               <section className="rounded-2xl border border-border/60 bg-muted/20 p-4">

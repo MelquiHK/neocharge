@@ -23,11 +23,13 @@ import {
   ChevronRight,
   Wallet,
   BarChart3,
+  Handshake,
 } from "lucide-react";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminProducts } from "@/components/admin/AdminProducts";
 import { AdminCategories } from "@/components/admin/AdminCategories";
 import { AdminLocations } from "@/components/admin/AdminLocations";
+import { AdminSocios } from "@/components/admin/AdminSocios";
 import { AdminOrders } from "@/components/admin/AdminOrders";
 import { AdminCustomers } from "@/components/admin/AdminCustomers";
 import { AdminRates } from "@/components/admin/AdminRates";
@@ -133,6 +135,7 @@ const Admin = () => {
       items: [
         { v: "rates", l: "Tasa USD", icon: TrendingUp, show: isOwner || permissions.can_manage_rates },
         { v: "locations", l: "Locales", icon: MapPin, show: isOwner || permissions.can_manage_locations },
+        { v: "socios", l: "Socios", icon: Handshake, show: isOwner || permissions.can_manage_locations },
         { v: "messenger", l: "Mensajería", icon: Truck, show: isOwner || permissions.can_manage_locations },
       ],
     },
@@ -158,6 +161,7 @@ const Admin = () => {
       case "categories": return <AdminCategories />;
       case "services": return <AdminServices />;
       case "locations": return <AdminLocations />;
+      case "socios": return <AdminSocios />;
       case "messenger": return <AdminMessenger />;
       case "customers": return <AdminCustomers />;
       case "rates": return <AdminRates />;
