@@ -278,7 +278,13 @@ const Checkout = () => {
         shippingCUP,
       });
 
+      // El id se genera en el cliente: los invitados no tienen SELECT en
+      // orders por RLS, así que no se puede depender del RETURNING del insert
+      // para navegar a la página de confirmación.
+      const orderId = crypto.randomUUID();
+
       const orderPayload = {
+        id: orderId,
         user_id: user?.id ?? null,
         customer_name: name.trim(),
         customer_phone: normalizedPhone,
@@ -339,7 +345,7 @@ const Checkout = () => {
       toast.success("¡Pedido enviado! Te contactaremos pronto por WhatsApp para coordinar el pago.");
       setTimeout(() => {
         clearCart();
-        navigate("/");
+        navigate(`/pedido-confirmado/${orderId}`);
       }, 1500);
     } catch (submitError) {
       console.error("Checkout submit error:", submitError);
