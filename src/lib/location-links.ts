@@ -22,7 +22,7 @@ const GE0_ALPHABET =
  * la longitud (27 bits).
  * lat = v/2^27*180-90 ; lng = v/2^27*360-180
  */
-export function decodeGe0(code: string): ParsedCoords | null {
+function decodeGe0(code: string): ParsedCoords | null {
   if (!code || code.length !== 10) return null;
   let latBits = 0;
   let lngBits = 0;
@@ -56,7 +56,7 @@ function makeCoords(
  * ?daddr=, /place/.../@), enlaces de WhatsApp (maps.google.com/maps?q=loc:…)
  * y Apple Maps (?ll=).
  */
-export function extractCoordsFromUrl(url: string): ParsedCoords | null {
+function extractCoordsFromUrl(url: string): ParsedCoords | null {
   if (!url) return null;
 
   // MAPS.ME: https://maps.me/link/ge0/<10 chars>/... o https://ge0.me/<code>/...

@@ -188,17 +188,3 @@ function updateCanonicalTag(url: string): void {
 
   link.setAttribute("href", url);
 }
-
-/**
- * Generate structured data (JSON-LD) for rich snippets
- */
-export function generateStructuredData(type: string, data: Record<string, unknown>): void {
-  const script = document.createElement("script");
-  script.type = "application/ld+json";
-  script.textContent = JSON.stringify({
-    "@context": "https://schema.org",
-    "@type": type,
-    ...data,
-  });
-  document.head.appendChild(script);
-}

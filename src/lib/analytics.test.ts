@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import {
-  classifyReferrer,
   countByReferrer,
   countViewsByDay,
   extractProductSlug,
@@ -10,30 +9,47 @@ import {
 
 const SITE = "https://tienda-neocharge.vercel.app";
 
-describe("classifyReferrer", () => {
+// classifyReferrer es interno: se ejerce vía countByReferrer.
+describe("countByReferrer (clasificación de orígenes)", () => {
+  const labels = (rows: { referrer: string | null }[]) =>
+    Object.fromEntries(countByReferrer(rows, SITE).map((r) => [r.label, r.count]));
+
   it("detecta buscadores y redes", () => {
-    expect(classifyReferrer("https://www.google.com/search?q=cargador", SITE)).toBe("Google");
-    expect(classifyReferrer("https://www.google.com.cu/", SITE)).toBe("Google");
-    expect(classifyReferrer("https://m.facebook.com/algogrupo", SITE)).toBe("Facebook");
-    expect(classifyReferrer("https://www.instagram.com/p/xyz", SITE)).toBe("Instagram");
-    expect(classifyReferrer("https://www.tiktok.com/@neocharge", SITE)).toBe("TikTok");
-    expect(classifyReferrer("https://www.revolico.com/item/123", SITE)).toBe("Revolico");
+    expect(
+      labels([
+        { referrer: "https://www.google.com/search?q=cargador" },
+        { referrer: "https://www.google.com.cu/" },
+        { referrer: "https://m.facebook.com/algogrupo" },
+        { referrer: "https://www.instagram.com/p/xyz" },
+        { referrer: "https://www.tiktok.com/@neocharge" },
+        { referrer: "https://www.revolico.com/item/123" },
+      ])
+    ).toEqual({ Google: 2, Facebook: 1, Instagram: 1, TikTok: 1, Revolico: 1 });
   });
 
   it("directo cuando no hay referrer", () => {
-    expect(classifyReferrer(null, SITE)).toBe("Directo");
-    expect(classifyReferrer("", SITE)).toBe("Directo");
-    expect(classifyReferrer(undefined, SITE)).toBe("Directo");
+    expect(countByReferrer([{ referrer: null }, { referrer: "" }, { referrer: null }], SITE)).toEqual([
+      { label: "Directo", count: 3 },
+    ]);
   });
 
   it("interno cuando viene del propio sitio", () => {
-    expect(classifyReferrer("https://tienda-neocharge.vercel.app/", SITE)).toBe("Interno");
-    expect(classifyReferrer("https://tienda-neocharge.vercel.app/catalogo", SITE)).toBe("Interno");
+    expect(
+      countByReferrer(
+        [
+          { referrer: "https://tienda-neocharge.vercel.app/" },
+          { referrer: "https://tienda-neocharge.vercel.app/catalogo" },
+        ],
+        SITE
+      )
+    ).toEqual([{ label: "Interno", count: 2 }]);
   });
 
   it("otro para orígenes desconocidos", () => {
-    expect(classifyReferrer("https://duckduckgo.com/?q=cargador", SITE)).toBe("Otro");
-    expect(classifyReferrer("not-a-url", SITE)).toBe("Directo");
+    expect(labels([{ referrer: "https://duckduckgo.com/?q=cargador" }, { referrer: "not-a-url" }])).toEqual({
+      Otro: 1,
+      Directo: 1,
+    });
   });
 });
 

@@ -58,26 +58,26 @@ export function avgDailyChange(
 }
 
 /** Proyección lineal simple: última tasa + promedio diario × días. */
-export function projectRate(lastRate: number, avgDaily: number, daysAhead: number): number {
+function projectRate(lastRate: number, avgDaily: number, daysAhead: number): number {
   return lastRate + avgDaily * daysAhead;
 }
 
 /** Fecha proyectada en formato corto D/M. */
-export function projectedDateLabel(now: Date, daysAhead: number): string {
+function projectedDateLabel(now: Date, daysAhead: number): string {
   const d = new Date(now);
   d.setDate(d.getDate() + daysAhead);
   return `${d.getDate()}/${d.getMonth() + 1}`;
 }
 
 /** Fecha proyectada en formato D/M/AAAA (para escenarios lejanos). */
-export function projectedDateFull(now: Date, daysAhead: number): string {
+function projectedDateFull(now: Date, daysAhead: number): string {
   const d = new Date(now);
   d.setDate(d.getDate() + daysAhead);
   return `${d.getDate()}/${d.getMonth() + 1}/${d.getFullYear()}`;
 }
 
 /** Cambio por día calendario entre dos registros consecutivos. */
-export interface DailyChange {
+interface DailyChange {
   date: string; // fecha del registro más reciente (YYYY-MM-DD)
   change: number; // CUP/día
 }
@@ -87,7 +87,7 @@ export interface DailyChange {
  * Normaliza por los días calendario entre registros, así los huecos
  * sin registro no distorsionan. Vacío si hay menos de 2 puntos.
  */
-export function dailyChanges(points: RatePoint[]): DailyChange[] {
+function dailyChanges(points: RatePoint[]): DailyChange[] {
   const s = sortedAsc(points);
   const out: DailyChange[] = [];
   for (let i = 1; i < s.length; i++) {

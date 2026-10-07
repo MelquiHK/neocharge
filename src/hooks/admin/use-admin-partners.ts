@@ -169,27 +169,6 @@ export function useAdminPartners() {
     }
   }, []);
 
-  /** Todos los locales activos de todos los socios (para el diálogo de venta). */
-  const loadAllLocations = useCallback(async (): Promise<(PartnerLocation & { partner_name: string })[]> => {
-    try {
-      const { data, error } = await supabase
-        .from("partner_locations")
-        .select("*, partners!inner(name)")
-        .eq("is_active", true)
-        .order("sort_order");
-      if (error) throw error;
-      return ((data ?? []) as Array<PartnerLocation & { partners: { name: string } }>).map((l) => ({
-        ...l,
-        partner_name: l.partners.name,
-      }));
-    } catch (error: unknown) {
-      if (!isMissingTable(error)) {
-        toast.error("No se pudieron cargar los locales: " + (error instanceof Error ? error.message : String(error)));
-      }
-      return [];
-    }
-  }, []);
-
   const saveLocation = async (payload: PartnerLocationInput & { id?: string }): Promise<boolean> => {
     try {
       if (payload.id) {
@@ -348,68 +327,6 @@ export function useAdminPartners() {
     }
   };
 
-  /**
-   * Descuenta unidades tras una venta y re-sincroniza products.stock.
-   * source: { type: 'own' } | { type: 'partner', locationId }
-   */
-  const decrementStockForSale = async (
-    productId: string,
-    source: { type: "own" } | { type: "partner"; locationId: string },
-    qty = 1
-  ): Promise<boolean> => {
-    try {
-      if (source.type === "own") {
-        const { data, error } = await supabase.from("products").select("stock, own_stock").eq("id", productId).single();
-        if (error) throw error;
-        const row = data as { stock: number | null; own_stock: number | null };
-        const newOwn = Math.max(0, Number(row.own_stock ?? 0) - qty);
-        // El total baja en la misma cantidad (los socios no cambian)
-        const { error: upd } = await supabase
-          .from("products")
-          .update({ own_stock: newOwn, stock: Math.max(0, Number(row.stock ?? 0) - qty) })
-          .eq("id", productId);
-        if (upd) throw upd;
-      } else {
-        const { data, error } = await supabase
-          .from("partner_location_stock")
-          .select("quantity")
-          .eq("product_id", productId)
-          .eq("partner_location_id", source.locationId)
-          .maybeSingle();
-        if (error) throw error;
-        const current = Number((data as { quantity: number } | null)?.quantity ?? 0);
-        const next = Math.max(0, current - qty);
-        if (next === 0) {
-          const { error: del } = await supabase
-            .from("partner_location_stock")
-            .delete()
-            .eq("product_id", productId)
-            .eq("partner_location_id", source.locationId);
-          if (del) throw del;
-        } else {
-          const { error: upd } = await supabase
-            .from("partner_location_stock")
-            .update({ quantity: next })
-            .eq("product_id", productId)
-            .eq("partner_location_id", source.locationId);
-          if (upd) throw upd;
-        }
-        // Re-sincronizar el total
-        const { data: prod, error: e2 } = await supabase.from("products").select("stock").eq("id", productId).single();
-        if (e2) throw e2;
-        const { error: upd2 } = await supabase
-          .from("products")
-          .update({ stock: Math.max(0, Number((prod as { stock: number | null }).stock ?? 0) - qty) })
-          .eq("id", productId);
-        if (upd2) throw upd2;
-      }
-      return true;
-    } catch (error: unknown) {
-      console.error("Error descontando stock:", error);
-      return false;
-    }
-  };
-
   return {
     partners,
     balances,
@@ -419,13 +336,11 @@ export function useAdminPartners() {
     savePartner,
     deletePartner,
     loadLocations,
-    loadAllLocations,
     saveLocation,
     deleteLocation,
     loadLedger,
     registerPickup,
     loadProductPartnerData,
     saveProductPartnerData,
-    decrementStockForSale,
   };
 }

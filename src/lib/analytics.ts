@@ -34,7 +34,7 @@ function hostOf(url: string | null | undefined): string | null {
  * `siteOrigin` (ej. https://tienda-neocharge.vercel.app) permite detectar
  * navegación interna.
  */
-export function classifyReferrer(
+function classifyReferrer(
   referrer: string | null | undefined,
   siteOrigin?: string
 ): ReferrerLabel {

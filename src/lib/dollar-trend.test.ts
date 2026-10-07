@@ -2,12 +2,8 @@ import { describe, expect, it } from "vitest";
 import {
   avgDailyChange,
   chargerImpact,
-  dailyChanges,
   momentum,
   projectMultiModel,
-  projectRate,
-  projectedDateFull,
-  projectedDateLabel,
   scenarioDate,
   sortedAsc,
   volatility,
@@ -59,54 +55,6 @@ describe("avgDailyChange", () => {
   it("ignora puntos fuera de la ventana", () => {
     const avg = avgDailyChange([...pts, { date: "2026-08-01", rate: 600 }], 7, now);
     expect(avg).toBeCloseTo(40 / 7, 5);
-  });
-});
-
-describe("projectRate", () => {
-  it("proyecta linealmente", () => {
-    expect(projectRate(760, 5, 7)).toBe(795);
-    expect(projectRate(760, 0, 30)).toBe(760);
-    expect(projectRate(760, -2, 7)).toBe(746);
-  });
-});
-
-describe("projectedDateLabel", () => {
-  it("formatea D/M", () => {
-    expect(projectedDateLabel(new Date("2026-10-01T12:00:00"), 7)).toBe("8/10");
-  });
-});
-
-describe("projectedDateFull", () => {
-  it("formatea D/M/AAAA", () => {
-    expect(projectedDateFull(new Date("2026-10-01T12:00:00"), 7)).toBe("8/10/2026");
-  });
-});
-
-describe("dailyChanges", () => {
-  it("calcula el cambio por día entre puntos consecutivos", () => {
-    const pts = [
-      { date: "2026-09-29", rate: 745 },
-      { date: "2026-09-30", rate: 750 },
-      { date: "2026-10-01", rate: 760 },
-    ];
-    expect(dailyChanges(pts)).toEqual([
-      { date: "2026-09-30", change: 5 },
-      { date: "2026-10-01", change: 10 },
-    ]);
-  });
-
-  it("normaliza por los días entre registros con huecos", () => {
-    const pts = [
-      { date: "2026-09-27", rate: 735 },
-      { date: "2026-10-01", rate: 755 },
-    ];
-    // 20 CUP en 4 días = 5/día
-    expect(dailyChanges(pts)).toEqual([{ date: "2026-10-01", change: 5 }]);
-  });
-
-  it("vacío con menos de 2 puntos", () => {
-    expect(dailyChanges([])).toEqual([]);
-    expect(dailyChanges([{ date: "2026-10-01", rate: 760 }])).toEqual([]);
   });
 });
 
