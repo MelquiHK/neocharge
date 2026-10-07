@@ -19,6 +19,7 @@ import { toast } from "sonner";
 import ImageViewer from "@/components/product/ImageViewer";
 import { ChargerCalculator } from "@/components/ChargerCalculator";
 import { StockAlertSignup } from "@/components/StockAlertSignup";
+import { Reviews } from "@/components/Reviews";
 import { LowStockBadge } from "@/components/LowStockBadge";
 import { ProductSpecs } from "@/components/ProductSpecs";
 import { batteryTypeChip } from "@/lib/product-display";
@@ -648,6 +649,11 @@ export default function ProductDetail() {
             </TabsContent>
           </Tabs>
         </div>
+      </div>
+
+      {/* Reseñas verificadas (MEJORA 3) */}
+      <div className="mb-16">
+        <Reviews productId={product.id} productName={product.name} />
       </div>
 
       {/* Related Products */}
