@@ -94,9 +94,19 @@ const Auth = () => {
   const handleGoogleLogin = async () => {
     setLoading(true);
     try {
+      // En la app nativa (Capacitor) el WebView corre en localhost y el OAuth
+      // se abre en el navegador del sistema, que no puede volver al localhost
+      // de la app. Ahí redirigimos a la web real para que el login complete.
+      const w = window as unknown as {
+        Capacitor?: { isNativePlatform?: () => boolean };
+      };
+      const isNative = w.Capacitor?.isNativePlatform?.() === true;
+      const redirectTo = isNative
+        ? "https://tienda-neocharge.vercel.app/cuenta"
+        : `${window.location.origin}/cuenta`;
       const { error } = await supabase.auth.signInWithOAuth({
         provider: "google",
-        options: { redirectTo: `${window.location.origin}/cuenta` },
+        options: { redirectTo },
       });
       if (error) throw error;
       // Redirige a Google; al volver, useAuth detecta la sesión.
