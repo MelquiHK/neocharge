@@ -2,6 +2,12 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { buildSaleDetails } from "@/lib/sales";
 import { formatCUP, formatMoney } from "@/lib/format";
+import {
+  effectiveOwnStock,
+  normalizePartnerCurrency,
+  partnerMarginUsd as calcPartnerMarginUsd,
+  toUsd,
+} from "@/lib/partner-sales";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { toast } from "sonner";
 import {
@@ -39,17 +45,22 @@ interface ProductOption {
   currency: string;
   price_cup?: number | null;
   own_stock: number;
+  stock: number;
 }
 
 interface PartnerSource {
   partner_id: string;
   partner_name: string;
   partner_price: number;
+  partner_currency: string;
   location_id: string;
   location_name: string;
   location_address: string;
   attendant_name: string | null;
   quantity: number;
+  pickup_enabled: boolean;
+  delivery_enabled: boolean;
+  priority: number;
 }
 
 type SaleSource =
@@ -103,7 +114,7 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
       try {
         const { data, error } = await supabase
           .from("products")
-          .select("id, name, price, currency, price_cup, own_stock")
+          .select("id, name, price, currency, price_cup, own_stock, stock")
           .eq("is_active", true)
           .order("name");
         if (error) throw error;
@@ -115,6 +126,7 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
             currency: String(p.currency ?? "USD"),
             price_cup: p.price_cup != null ? Number(p.price_cup) : null,
             own_stock: Number((p as { own_stock?: number }).own_stock ?? 0),
+            stock: Number(p.stock ?? 0),
           })),
         );
       } catch (error: unknown) {
@@ -128,68 +140,63 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
   }, [open ]);
 
   // Carga las fuentes de surtido (propio + socios) del producto elegido.
-  const loadSources = async (id: string, own: number) => {
+  // Usa la función controlada get_partner_sale_sources: no expone teléfonos,
+  // notas internas ni costos más allá de lo necesario para el margen.
+  const loadSources = async (id: string, own: number, legacyStock: number) => {
     setLoadingSources(true);
-    setOwnQty(own);
+    setOwnQty(0);
     setPartnerSources([]);
-    setSource(own > 0 ? { type: "own" } : null);
+    setSource(null);
     try {
-      const { data: pp, error: e1 } = await supabase
-        .from("product_partners")
-        .select("partner_id, partner_price")
-        .eq("product_id", id)
-        .eq("is_active", true);
-      if (e1) throw e1;
-      const partnerRows = (pp ?? []) as { partner_id: string; partner_price: number }[];
-      if (partnerRows.length === 0) return;
+      let rows: {
+        partner_id: string; partner_name: string; partner_price: number; partner_currency: string;
+        location_id: string; location_name: string; location_address: string;
+        attendant_name: string | null; quantity: number;
+        pickup_enabled: boolean; delivery_enabled: boolean; priority: number;
+      }[] = [];
+      try {
+        const { data, error } = await supabase.rpc("get_partner_sale_sources", { p_product_id: id });
+        if (error) throw error;
+        rows = (data ?? []) as typeof rows;
+      } catch (rpcError: unknown) {
+        const msg = rpcError instanceof Error ? rpcError.message : String(rpcError);
+        // Si la función no existe (migración pendiente), se sigue solo con lo propio.
+        if (!/does not exist|Could not find/i.test(msg)) throw rpcError;
+        rows = [];
+      }
 
-      const { data: locs, error: e2 } = await supabase
-        .from("partner_location_directory")
-        .select("id, partner_id, partner_name, name, address, attendant_name, is_active")
-        .eq("is_active", true);
-      if (e2) throw e2;
-      const locRows = (locs ?? []) as {
-        id: string; partner_id: string; partner_name: string;
-        name: string; address: string; attendant_name: string | null;
-      }[];
+      const configured = rows.length > 0;
+      const sources: PartnerSource[] = rows
+        .filter((r) => Number(r.quantity) > 0)
+        .map((r) => ({
+          partner_id: r.partner_id,
+          partner_name: r.partner_name,
+          partner_price: Number(r.partner_price),
+          partner_currency: normalizePartnerCurrency(r.partner_currency),
+          location_id: r.location_id,
+          location_name: r.location_name,
+          location_address: r.location_address,
+          attendant_name: r.attendant_name,
+          quantity: Number(r.quantity),
+          pickup_enabled: r.pickup_enabled !== false,
+          delivery_enabled: r.delivery_enabled !== false,
+          priority: Number(r.priority ?? 0),
+        }));
+      sources.sort((a, b) => b.priority - a.priority || a.partner_name.localeCompare(b.partner_name));
 
-      const { data: st, error: e3 } = await supabase
-        .from("partner_location_stock")
-        .select("partner_location_id, quantity")
-        .eq("product_id", id)
-        .gt("quantity", 0);
-      if (e3) throw e3;
-      const stockRows = (st ?? []) as { partner_location_id: string; quantity: number }[];
-      const qtyByLoc: Record<string, number> = {};
-      stockRows.forEach((r) => { qtyByLoc[r.partner_location_id] = Number(r.quantity); });
-
-      const priceByPartner: Record<string, number> = {};
-      partnerRows.forEach((r) => { priceByPartner[r.partner_id] = Number(r.partner_price); });
-
-      const sources: PartnerSource[] = locRows
-        .filter((l) => priceByPartner[l.partner_id] !== undefined && (qtyByLoc[l.id] ?? 0) > 0)
-        .map((l) => ({
-          partner_id: l.partner_id,
-          partner_name: l.partner_name,
-          partner_price: priceByPartner[l.partner_id],
-          location_id: l.id,
-          location_name: l.name,
-          location_address: l.address,
-          attendant_name: l.attendant_name,
-          quantity: qtyByLoc[l.id],
-        }))
-        .sort((a, b) => a.partner_name.localeCompare(b.partner_name) || a.location_name.localeCompare(b.location_name));
+      // Fuente propia: stock propio confirmado; o stock legado si el producto
+      // aún no está configurado en el sistema de socios (transición).
+      const effectiveOwn = effectiveOwnStock(own, legacyStock, configured);
+      setOwnQty(effectiveOwn);
       setPartnerSources(sources);
-      // Si no hay propio, preseleccionar la primera fuente de socio.
-      if (own <= 0 && sources.length > 0) {
+      if (effectiveOwn > 0) {
+        setSource({ type: "own" });
+      } else if (sources.length > 0) {
         setSource({ type: "partner", source: sources[0] });
       }
     } catch (error: unknown) {
-      // Si las tablas de socios no existen aún, se sigue con flujo normal.
       const msg = error instanceof Error ? error.message : String(error);
-      if (!/does not exist|Could not find/i.test(msg)) {
-        toast.error("No se pudieron cargar las fuentes: " + msg);
-      }
+      toast.error("No se pudieron cargar las fuentes: " + msg);
     } finally {
       setLoadingSources(false);
     }
@@ -202,7 +209,7 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
     if (p) {
       setFinalPrice(String(Number(p.price)));
       setCurrency(p.currency.toUpperCase() === "CUP" ? "CUP" : "USD");
-      void loadSources(id, p.own_stock);
+      void loadSources(id, p.own_stock, p.stock);
     }
   };
 
@@ -220,9 +227,13 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
   const commission = isPartnerSale ? 0 : hasMarkup ? 0 : BASE_COMMISSION_CUP;
 
   // Margen de Mel en una venta de socio (en USD).
-  const priceUsd = currency === "USD" ? priceNum : rate && rate.usd_to_cup > 0 ? priceNum / rate.usd_to_cup : NaN;
-  const partnerMarginUsd = partnerSource && Number.isFinite(priceUsd)
-    ? priceUsd - partnerSource.partner_price
+  const usdToCupRate = rate?.usd_to_cup ?? null;
+  const priceUsd = toUsd(priceNum, currency, usdToCupRate);
+  const partnerPriceUsd = partnerSource
+    ? toUsd(partnerSource.partner_price, partnerSource.partner_currency, usdToCupRate)
+    : NaN;
+  const partnerMarginUsd = partnerSource
+    ? calcPartnerMarginUsd(priceNum, currency, partnerSource.partner_price, partnerSource.partner_currency, usdToCupRate)
     : NaN;
 
   const sourceLabel = (s: SaleSource): string =>
@@ -244,6 +255,16 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
     if (isPartnerSale && !Number.isFinite(partnerMarginUsd)) {
       toast.error("No se pudo calcular el margen en USD (falta la tasa de cambio).");
       return;
+    }
+    if (isPartnerSale && partnerSource) {
+      if (deliveryType === "recogida" && !partnerSource.pickup_enabled) {
+        toast.error("Ese local no ofrece recogida. Elige mensajería u otra fuente.");
+        return;
+      }
+      if (deliveryType === "mensajeria" && !partnerSource.delivery_enabled) {
+        toast.error("Ese local no ofrece mensajería. Elige recogida u otra fuente.");
+        return;
+      }
     }
     setSaving(true);
     try {
@@ -300,7 +321,6 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
           p_source_type: isPartnerSale ? "partner" : "own",
           p_partner_id: partnerSource?.partner_id ?? null,
           p_partner_location_id: partnerSource?.location_id ?? null,
-          p_partner_price: partnerSource?.partner_price ?? null,
           p_location_name: locationName,
         });
         if (error) throw error;
@@ -331,7 +351,7 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
 
       if (isPartnerSale && partnerSource && Number.isFinite(partnerMarginUsd)) {
         toast.success(
-          `Venta registrada en ${partnerSource.partner_name}. El socio retiene $${partnerSource.partner_price.toFixed(2)} USD y tu margen de $${partnerMarginUsd.toFixed(2)} USD queda pendiente de recoger.`,
+          `Venta registrada en ${partnerSource.partner_name}. El socio retiene ${formatMoney(partnerSource.partner_price, partnerSource.partner_currency)} y tu margen de $${partnerMarginUsd.toFixed(2)} USD queda pendiente de recoger.`,
           { duration: 6000 },
         );
       } else {
@@ -421,6 +441,11 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
                           {s.attendant_name && (
                             <span className="block text-xs text-slate-400">Atiende: {s.attendant_name}</span>
                           )}
+                          {(!s.pickup_enabled || !s.delivery_enabled) && (
+                            <span className="block text-xs text-amber-600">
+                              {[!s.pickup_enabled ? "sin recogida" : null, !s.delivery_enabled ? "sin mensajería" : null].filter(Boolean).join(" · ")}
+                            </span>
+                          )}
                         </span>
                         {selected && <Badge className="bg-grape-600 text-white border-0">elegido</Badge>}
                       </button>
@@ -442,7 +467,7 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
                 {" "}en {partnerSource.location_name}.
               </div>
               <div>
-                El socio retiene <span className="font-semibold text-slate-900">${partnerSource.partner_price.toFixed(2)} USD</span>
+                El socio retiene <span className="font-semibold text-slate-900">{formatMoney(partnerSource.partner_price, partnerSource.partner_currency)}</span>
                 {Number.isFinite(partnerMarginUsd) && (
                   <> y tu margen de <span className="font-semibold text-emerald-700">${partnerMarginUsd.toFixed(2)} USD</span> queda pendiente de recoger.</>
                 )}

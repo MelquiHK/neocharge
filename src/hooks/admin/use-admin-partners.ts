@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { normalizePartnerCurrency } from "@/lib/partner-sales";
 import { toast } from "sonner";
 
 export interface Partner {
@@ -41,7 +42,14 @@ export interface PartnerLedgerEntry {
 export interface ProductPartnerInfo {
   partner_id: string;
   partner_price: number;
+  partner_currency: string;
+  priority: number;
   is_active: boolean;
+}
+
+export interface ProductPartnerMeta {
+  currency: string;
+  priority: number;
 }
 
 export interface ProductPartnerData {
@@ -49,6 +57,8 @@ export interface ProductPartnerData {
   prices: Record<string, number>;
   /** location_id -> cantidad */
   stock: Record<string, number>;
+  /** partner_id -> moneda y prioridad (se preservan al guardar) */
+  meta: Record<string, ProductPartnerMeta>;
 }
 
 export type PartnerInput = Omit<Partial<Partner>, "created_at"> & { name: string };
@@ -252,21 +262,28 @@ export function useAdminPartners() {
    * Datos de socios de un producto: precios por socio y stock por local.
    */
   const loadProductPartnerData = useCallback(async (productId: string): Promise<ProductPartnerData> => {
-    const empty: ProductPartnerData = { prices: {}, stock: {} };
+    const empty: ProductPartnerData = { prices: {}, stock: {}, meta: {} };
     try {
       const [{ data: pp, error: e1 }, { data: st, error: e2 }] = await Promise.all([
-        supabase.from("product_partners").select("partner_id, partner_price").eq("product_id", productId),
+        supabase.from("product_partners").select("partner_id, partner_price, partner_currency, priority").eq("product_id", productId),
         supabase.from("partner_location_stock").select("partner_location_id, quantity").eq("product_id", productId),
       ]);
       if (e1) throw e1;
       if (e2) throw e2;
       const prices: Record<string, number> = {};
-      ((pp ?? []) as ProductPartnerInfo[]).forEach((r) => { prices[r.partner_id] = Number(r.partner_price); });
+      const meta: Record<string, ProductPartnerMeta> = {};
+      ((pp ?? []) as ProductPartnerInfo[]).forEach((r) => {
+        prices[r.partner_id] = Number(r.partner_price);
+        meta[r.partner_id] = {
+          currency: normalizePartnerCurrency(r.partner_currency),
+          priority: Number(r.priority ?? 0),
+        };
+      });
       const stock: Record<string, number> = {};
       ((st ?? []) as { partner_location_id: string; quantity: number }[]).forEach((r) => {
         stock[r.partner_location_id] = Number(r.quantity ?? 0);
       });
-      return { prices, stock };
+      return { prices, stock, meta };
     } catch (error: unknown) {
       if (!isMissingTable(error)) {
         toast.error("No se pudieron cargar los datos del socio: " + (error instanceof Error ? error.message : String(error)));
@@ -284,15 +301,22 @@ export function useAdminPartners() {
     productId: string,
     ownStock: number,
     partnerPrices: Record<string, number>,
-    locationStock: Record<string, number>
+    locationStock: Record<string, number>,
+    partnerMeta: Record<string, ProductPartnerMeta> = {}
   ): Promise<number | null> => {
     try {
-      // 1. Socios del producto (precios)
+      // 1. Socios del producto (precios + moneda/prioridad)
       const { error: delPP } = await supabase.from("product_partners").delete().eq("product_id", productId);
       if (delPP) throw delPP;
       const ppRows = Object.entries(partnerPrices)
         .filter(([, price]) => Number(price) >= 0)
-        .map(([partner_id, partner_price]) => ({ product_id: productId, partner_id, partner_price: Number(partner_price) }));
+        .map(([partner_id, partner_price]) => ({
+          product_id: productId,
+          partner_id,
+          partner_price: Number(partner_price),
+          partner_currency: partnerMeta[partner_id]?.currency === "CUP" ? "CUP" : "USD",
+          priority: Math.trunc(Number(partnerMeta[partner_id]?.priority ?? 0)),
+        }));
       if (ppRows.length > 0) {
         const { error } = await supabase.from("product_partners").insert(ppRows);
         if (error) throw error;

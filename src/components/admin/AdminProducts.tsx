@@ -71,6 +71,8 @@ export function AdminProducts() {
   const [ppLocs, setPpLocs] = useState<(PartnerLocation & { partner_name: string })[]>([]);
   /** location_id -> unidades en ese local del socio */
   const [ppStock, setPpStock] = useState<Record<string, number>>({});
+  /** partner_id -> moneda del costo y prioridad de surtido */
+  const [ppMeta, setPpMeta] = useState<Record<string, { currency: string; priority: number }>>({});
   /** unidades físicas en manos de Mel */
   const [ownStockInput, setOwnStockInput] = useState(0);
   const [uploading, setUploading] = useState(false);
@@ -85,6 +87,7 @@ export function AdminProducts() {
     setPpPrices({});
     setPpLocs([]);
     setPpStock({});
+    setPpMeta({});
     setOwnStockInput(0);
   };
 
@@ -124,6 +127,7 @@ export function AdminProducts() {
       const ppd = await loadProductPartnerData(p.id);
       setPpPrices(ppd.prices);
       setPpStock(ppd.stock);
+      setPpMeta(ppd.meta);
       await reloadPpLocs(ppd.prices);
     }
     setDialogOpen(true);
@@ -131,12 +135,16 @@ export function AdminProducts() {
 
   const togglePartner = async (partnerId: string, enabled: boolean, price?: number) => {
     const next = { ...ppPrices };
+    const nextMeta = { ...ppMeta };
     if (enabled) {
       next[partnerId] = price ?? next[partnerId] ?? 0;
+      if (!nextMeta[partnerId]) nextMeta[partnerId] = { currency: "USD", priority: 0 };
     } else {
       delete next[partnerId];
+      delete nextMeta[partnerId];
     }
     setPpPrices(next);
+    setPpMeta(nextMeta);
     await reloadPpLocs(next);
   };
 
@@ -345,9 +353,9 @@ export function AdminProducts() {
       }
     }
 
-    // Sync socios: precios, stock por local y totales (stock = propio + socios)
+    // Sync socios: precios, moneda/prioridad, stock por local y totales (stock = propio + socios)
     if (productId && !partnersNeedMigration) {
-      const total = await saveProductPartnerData(productId, ownUnits, ppPrices, ppStock);
+      const total = await saveProductPartnerData(productId, ownUnits, ppPrices, ppStock, ppMeta);
       if (total === null) return;
     }
 
@@ -779,7 +787,8 @@ export function AdminProducts() {
                     {partners.filter((p) => p.is_active).map((p) => {
                       const enabled = p.id in ppPrices;
                       const price = ppPrices[p.id] ?? 0;
-                      const margin = Number(editing.price ?? 0) - price;
+                      const pCurrency = ppMeta[p.id]?.currency ?? "USD";
+                      const margin = pCurrency === "USD" ? Number(editing.price ?? 0) - price : null;
                       const locs = ppLocs.filter((l) => l.partner_id === p.id);
                       return (
                         <div key={p.id} className="rounded-xl border border-border/60 bg-card p-3">
@@ -790,19 +799,40 @@ export function AdminProducts() {
                             </label>
                             {enabled && (
                               <>
-                                <div className="flex items-center gap-2">
-                                  <Label className="text-xs text-muted-foreground">Precio socio (USD):</Label>
+                                <div className="flex flex-wrap items-center gap-2">
+                                  <Label className="text-xs text-muted-foreground">Precio socio:</Label>
                                   <Input
                                     type="number" step="0.01" min="0"
                                     value={ppPrices[p.id] ?? ""}
                                     onChange={(e) => setPpPrices({ ...ppPrices, [p.id]: Math.max(0, Number(e.target.value)) })}
                                     className="h-10 w-28 text-center font-mono"
                                   />
+                                  <Select
+                                    value={ppMeta[p.id]?.currency ?? "USD"}
+                                    onValueChange={(v) => setPpMeta({ ...ppMeta, [p.id]: { currency: v, priority: ppMeta[p.id]?.priority ?? 0 } })}
+                                  >
+                                    <SelectTrigger className="h-10 w-24"><SelectValue /></SelectTrigger>
+                                    <SelectContent>
+                                      <SelectItem value="USD">USD</SelectItem>
+                                      <SelectItem value="CUP">CUP</SelectItem>
+                                    </SelectContent>
+                                  </Select>
+                                  <Label className="text-xs text-muted-foreground" title="Mayor prioridad = se sugiere primero al vender">Prioridad:</Label>
+                                  <Input
+                                    type="number" step="1"
+                                    value={ppMeta[p.id]?.priority ?? 0}
+                                    onChange={(e) => setPpMeta({ ...ppMeta, [p.id]: { currency: ppMeta[p.id]?.currency ?? "USD", priority: Math.trunc(Number(e.target.value)) } })}
+                                    className="h-10 w-16 text-center font-mono"
+                                  />
                                 </div>
                                 <span className="text-xs text-muted-foreground">
-                                  Tu margen: <span className={`font-mono font-semibold ${margin >= 0 ? "text-emerald-600" : "text-destructive"}`}>
-                                    ${margin.toFixed(2)}
-                                  </span> por venta
+                                  Tu margen: {margin === null ? (
+                                    <span>según tasa del día</span>
+                                  ) : (
+                                    <span className={`font-mono font-semibold ${margin >= 0 ? "text-emerald-600" : "text-destructive"}`}>
+                                      ${margin.toFixed(2)}
+                                    </span>
+                                  )} por venta
                                 </span>
                               </>
                             )}
