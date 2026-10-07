@@ -14,13 +14,28 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<AdminPermissions>(NO_PERMS);
   const [loading, setLoading] = useState(true);
 
-  const loadAuthData = useCallback(async (userId: string, email?: string) => {
+  const loadAuthData = useCallback(async (userId: string, email?: string, userMetadata?: Record<string, unknown>) => {
     try {
       const [{ data: roles }, { data: permData }, { data: profileData }] = await Promise.all([
         supabase.from("user_roles").select("role").eq("user_id", userId),
         supabase.from("admin_permissions").select("*").eq("user_id", userId).maybeSingle(),
         supabase.from("profiles").select("*").eq("id", userId).maybeSingle(),
       ]);
+
+    let profile = profileData as Profile | null;
+    if (!profile) {
+      // Primer login (p. ej. OAuth con Google): crear la fila en profiles.
+      const fullName =
+        (userMetadata?.["full_name"] as string | undefined) ??
+        (userMetadata?.["name"] as string | undefined) ??
+        null;
+      const { data: created } = await supabase
+        .from("profiles")
+        .insert({ id: userId, email: email ?? null, full_name: fullName })
+        .select()
+        .single();
+      if (created) profile = created as Profile;
+    }
 
     const normalizedEmail = email?.toLowerCase() ?? undefined;
     const isOwnerByEmail = !!normalizedEmail && normalizedEmail === OWNER_ADMIN_EMAIL.toLowerCase();
@@ -35,7 +50,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     else if (roleList.includes("cliente")) primaryRole = "cliente";
 
     setRole(primaryRole);
-    setProfile(profileData as Profile);
+    setProfile(profile);
 
     const resolvedPermissions = {
       is_owner: primaryRole === "owner" || !!permData?.is_owner || isOwnerByEmail,
@@ -63,7 +78,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       setUser(newSession?.user ?? null);
       if (newSession?.user) {
         const u = newSession.user;
-        setTimeout(() => loadAuthData(u.id, u.email ?? undefined), 0);
+        setTimeout(() => loadAuthData(u.id, u.email ?? undefined, u.user_metadata ?? undefined), 0);
       } else {
         setRole("user");
         setProfile(null);
@@ -74,7 +89,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
       setSession(currentSession);
       setUser(currentSession?.user ?? null);
-      if (currentSession?.user) loadAuthData(currentSession.user.id, currentSession.user.email ?? undefined);
+      if (currentSession?.user) loadAuthData(currentSession.user.id, currentSession.user.email ?? undefined, currentSession.user.user_metadata ?? undefined);
       setLoading(false);
     }).catch((err) => {
       // Si getSession() rechaza (storage corrupto/bloqueado), salir del loader
