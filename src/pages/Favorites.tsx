@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { useSEO } from "@/hooks/use-seo";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
@@ -20,13 +21,15 @@ export default function FavoritesPage() {
       setProductsLoading(true);
       setError(null);
       try {
-        const { data, error } = await supabase
-          .from("products")
-          .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,currency,price_cup,extra_cup_per_usd,warranty_type")
-          .eq("is_active", true);
+        const { data } = await fetchWithCache(CACHE_KEYS.products, () =>
+          supabase
+            .from("products")
+            .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,currency,price_cup,extra_cup_per_usd,warranty_type")
+            .eq("is_active", true)
+            .then(r => { if (r.error) throw r.error; return r.data; })
+        );
 
-        if (error) throw error;
-        setAllProducts(data as Product[]);
+        setAllProducts((data ?? []) as Product[]);
       } catch (err: unknown) {
         console.error("Error loading all products:", err);
         setError("No se pudieron cargar los productos. Intenta de nuevo más tarde.");
