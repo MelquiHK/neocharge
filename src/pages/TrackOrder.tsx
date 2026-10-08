@@ -30,7 +30,7 @@ const STATUS_BADGE: Record<string, string> = {
   pending: "bg-amber-500/15 text-amber-700 border-amber-500/30",
   confirmed: "bg-brand-500/15 text-brand-700 border-brand-500/30",
   preparing: "bg-grape-500/15 text-grape-700 border-grape-500/30",
-  shipped: "bg-sky-500/15 text-sky-700 border-sky-500/30",
+  shipped: " bg-brand-500/15  text-brand-700 border-brand-500/30",
   delivered: "bg-emerald-500/15 text-emerald-700 border-emerald-500/30",
   cancelled: "bg-red-500/15 text-red-700 border-red-500/30",
 };

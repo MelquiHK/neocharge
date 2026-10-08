@@ -45,7 +45,7 @@
   animation: nc-wash-pulse 9s ease-in-out infinite;
 }
 .nc-wash-b {
-  background: radial-gradient(50% 45% at 18% 82%, rgba(38, 99, 242, 0.16), transparent 70%);
+  background: radial-gradient(50% 45% at 18% 82%, rgba(158, 95, 143, 0.16), transparent 70%);
   animation: nc-wash-pulse 13s ease-in-out infinite reverse;
 }
 @keyframes nc-wash-pulse {
@@ -55,7 +55,7 @@
 
 /* ---------- Shimmer líquido en el titular (modo claro, brand) ---------- */
 .nc-text-shimmer {
-  background: linear-gradient(110deg, #1d4ed8 20%, #3b82f6 40%, #eff6ff 50%, #3b82f6 60%, #1d4ed8 80%);
+  background: linear-gradient(110deg, #7c4a6e 20%, #B58FA9 40%, #F1D4D9 50%, #B58FA9 60%, #7c4a6e 80%);
   background-size: 220% auto;
   -webkit-background-clip: text;
   background-clip: text;
@@ -195,11 +195,11 @@
   width: 35%;
   background: linear-gradient(100deg,
     transparent 0%,
-    rgba(147, 197, 253, 0) 18%,
+    rgba(181, 143, 169, 0) 18%,
     rgba(186, 230, 253, 0.22) 42%,
     rgba(255, 255, 255, 0.38) 50%,
     rgba(186, 230, 253, 0.22) 58%,
-    rgba(147, 197, 253, 0) 82%,
+    rgba(181, 143, 169, 0) 82%,
     transparent 100%);
   transform: skewX(-14deg);
   opacity: 0;
@@ -235,6 +235,6 @@
     background: none;
     -webkit-background-clip: initial;
     background-clip: initial;
-    color: #93c5fd;
+    color: #d8b3c9;
   }
 }

@@ -265,7 +265,7 @@ export function AdminAnalytics() {
                   <div key={r.label} className="flex items-center gap-3">
                     <span className="w-24 shrink-0 text-sm font-semibold">{r.label}</span>
                     <div className="flex-1">
-                      <Bar pct={(r.count / Math.max(1, totalViews)) * 100} tone="bg-sky-500" />
+                      <Bar pct={(r.count / Math.max(1, totalViews)) * 100} tone=" bg-brand-500" />
                     </div>
                     <span className="w-16 shrink-0 text-right text-sm font-bold">
                       {r.count}
