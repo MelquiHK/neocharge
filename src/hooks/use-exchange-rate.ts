@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import { getSupabase } from "@/integrations/supabase/lazy-client";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 
 export interface ExchangeRate {
   usd_to_cup: number;
@@ -25,15 +26,19 @@ async function fetchRate(): Promise<ExchangeRate | null> {
   inflight = (async () => {
     // El cliente Supabase se carga bajo demanda (chunk asíncrono, fuera del
     // bundle inicial) para no bloquear el primer paint.
-    const supabase = await getSupabase();
-    const { data, error: queryError } = await supabase
-      .from("exchange_rates")
-      .select("usd_to_cup,extra_cup_chargers,rate_date")
-      .order("rate_date", { ascending: false })
-      .limit(1)
-      .maybeSingle();
-    if (queryError) throw queryError;
-    if (data) cached = data as ExchangeRate;
+    // Offline: se sirve la última tasa guardada.
+    const { data } = await fetchWithCache<ExchangeRate>(CACHE_KEYS.exchangeRate, async () => {
+      const supabase = await getSupabase();
+      const { data, error: queryError } = await supabase
+        .from("exchange_rates")
+        .select("usd_to_cup,extra_cup_chargers,rate_date")
+        .order("rate_date", { ascending: false })
+        .limit(1)
+        .maybeSingle();
+      if (queryError) throw queryError;
+      return data as ExchangeRate | null;
+    });
+    if (data) cached = data;
     return cached;
   })();
   try {
