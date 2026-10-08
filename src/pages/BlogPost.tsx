@@ -2,6 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ArrowRight, Calendar, ChevronLeft, ShoppingBag, Zap } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { normalizeArticleContent, renderMarkdown } from "@/lib/markdown";
 import { Button } from "@/components/ui/button";
 
@@ -77,32 +78,31 @@ const BlogPost = () => {
     let cancelled = false;
     (async () => {
       try {
-        const { data, error } = await supabase
-          .from("blog_posts")
-          .select("id,title,slug,excerpt,content,image_url,images,created_at")
-          .eq("slug", slug)
-          .eq("is_published", true)
-          .maybeSingle();
+        const { data } = await fetchWithCache(`blog_post_${slug}`, () =>
+          supabase
+            .from("blog_posts")
+            .select("id,title,slug,excerpt,content,image_url,images,created_at")
+            .eq("slug", slug)
+            .eq("is_published", true)
+            .maybeSingle()
+            .then(r => { if (r.error && r.error.code !== "PGRST116") throw r.error; return r.data; })
+        );
         if (cancelled) return;
-        if (error) {
-          console.error("BlogPost error:", error);
-          if (error.code !== "PGRST116") {
-            setPost(null);
-          }
-        } else {
-          const current = (data as Post | null) ?? null;
-          setPost(current);
-          // Artículos relacionados: otros publicados, los más recientes.
-          if (current) {
-            const { data: rel } = await supabase
+        const current = (data as Post | null) ?? null;
+        setPost(current);
+        // Artículos relacionados: otros publicados, los más recientes.
+        if (current) {
+          const { data: rel } = await fetchWithCache(CACHE_KEYS.blog, () =>
+            supabase
               .from("blog_posts")
               .select("id,title,slug,excerpt,image_url,created_at")
               .eq("is_published", true)
               .neq("id", current.id)
               .order("created_at", { ascending: false })
-              .limit(3);
-            if (!cancelled) setRelated((rel as Post[] | null) ?? []);
-          }
+              .limit(3)
+              .then(r => { if (r.error) throw r.error; return r.data; })
+          );
+          if (!cancelled) setRelated((rel as Post[] | null) ?? []);
         }
         setLoading(false);
       } catch (err) {

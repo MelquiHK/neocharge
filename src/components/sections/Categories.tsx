@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Headphones, MessageCircle } from "lucide-react";
 import { getSupabase } from "@/integrations/supabase/lazy-client";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { responsiveImage } from "@/lib/responsive-image";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
@@ -25,9 +26,16 @@ export function Categories() {
     let cancelled = false;
     const load = async () => {
       const supabase = await getSupabase();
+      // Offline: categorías y portadas salen del caché / semilla local.
       const [{ data: c }, { data: p }] = await Promise.all([
-        supabase.from("categories").select("id,name,slug,description").order("sort_order"),
-        supabase.from("products").select("id,images,main_image_index,category_id").eq("is_active", true),
+        fetchWithCache(CACHE_KEYS.categories, () =>
+          supabase.from("categories").select("id,name,slug,description").order("sort_order")
+            .then(r => { if (r.error) throw r.error; return r.data; })
+        ),
+        fetchWithCache(CACHE_KEYS.products, () =>
+          supabase.from("products").select("id,images,main_image_index,category_id").eq("is_active", true)
+            .then(r => { if (r.error) throw r.error; return r.data; })
+        ),
       ]);
       if (cancelled) return;
       if (c) setCats(c as Cat[]);
