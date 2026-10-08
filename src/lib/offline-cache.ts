@@ -50,6 +50,50 @@ export function hasCache(key: string): boolean {
   }
 }
 
+/**
+ * Siembra la "base de datos local" desde el archivo empaquetado en la app
+ * (public/offline-seed.json, generado en el build con
+ * scripts/export-offline-seed.mjs). Solo rellena las claves que estén vacías:
+ * nunca pisa datos más frescos guardados por la red.
+ *
+ * Llamar una vez al arrancar la app.
+ */
+export async function seedFromBundle(): Promise<void> {
+  try {
+    // Si ya hay datos, no hace falta la semilla.
+    if (hasCache(CACHE_KEYS.products)) return;
+    // Ruta absoluta desde la raíz: funciona tanto en la web como en la app
+    // nativa (http://localhost/offline-seed.json).
+    const res = await fetch(`${import.meta.env.BASE_URL}offline-seed.json`);
+    if (!res.ok) return;
+    const seed = await res.json();
+    const data = seed?.data;
+    if (!data || typeof data !== "object") return;
+    for (const [key, value] of Object.entries(data)) {
+      if (value != null && !hasCache(key)) {
+        // La semilla se guarda como si fuera fresca: es lo mejor que hay
+        // hasta que la red traiga datos nuevos.
+        saveToCache(key, value);
+      }
+    }
+  } catch {
+    // Sin semilla o sin acceso: la app sigue funcionando online.
+  }
+}
+
+/**
+ * Lee el caché sin importar su antigüedad (último recurso offline).
+ */
+function loadStale<T>(key: string): T | null {
+  try {
+    const raw = localStorage.getItem(PREFIX + key);
+    if (!raw) return null;
+    return (JSON.parse(raw) as CacheEnvelope).data as T;
+  } catch {
+    return null;
+  }
+}
+
 export interface CachedResult<T> {
   data: T | null;
   /** true si los datos vinieron del caché (sin conexión o fallo de red). */
@@ -66,8 +110,9 @@ export async function fetchWithCache<T>(
   maxAgeMs: number = DEFAULT_MAX_AGE,
 ): Promise<CachedResult<T>> {
   // Sin conexión: ir directo al caché, sin intentar la red.
+  // Se acepta aunque esté vencido: datos viejos > pantalla vacía.
   if (typeof navigator !== "undefined" && !navigator.onLine) {
-    return { data: loadFromCache<T>(key, maxAgeMs), fromCache: true };
+    return { data: loadFromCache<T>(key, maxAgeMs) ?? loadStale<T>(key), fromCache: true };
   }
   try {
     const data = await fetcher();
@@ -77,7 +122,7 @@ export async function fetchWithCache<T>(
     }
     throw new Error("empty response");
   } catch {
-    return { data: loadFromCache<T>(key, maxAgeMs), fromCache: true };
+    return { data: loadFromCache<T>(key, maxAgeMs) ?? loadStale<T>(key), fromCache: true };
   }
 }
 
@@ -87,4 +132,6 @@ export const CACHE_KEYS = {
   categories: "categories_v1",
   exchangeRate: "exchange_rate_v1",
   featured: "featured_v1",
+  services: "services_v1",
+  blog: "blog_v1",
 } as const;

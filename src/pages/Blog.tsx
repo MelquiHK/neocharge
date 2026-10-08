@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, Bell, Calendar, Sparkles, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { useSEO } from "@/hooks/use-seo";
 import { showBrowserNotification } from "@/lib/notifications";
 import { PostCoverFallback } from "@/pages/BlogPost";
@@ -117,11 +118,14 @@ const Blog = () => {
 
   useEffect(() => {
     const loadPosts = async () => {
-      const { data } = await supabase
-        .from("blog_posts")
-        .select("id,title,slug,excerpt,image_url,images,created_at")
-        .eq("is_published", true)
-        .order("created_at", { ascending: false });
+      const { data } = await fetchWithCache(CACHE_KEYS.blog, () =>
+        supabase
+          .from("blog_posts")
+          .select("id,title,slug,excerpt,image_url,images,created_at")
+          .eq("is_published", true)
+          .order("created_at", { ascending: false })
+          .then(r => { if (r.error) throw r.error; return r.data; })
+      );
 
       if (data) {
         setPosts(data as Post[]);

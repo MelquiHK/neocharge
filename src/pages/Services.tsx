@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { Service } from "@/types";
@@ -30,20 +31,18 @@ export default function Services() {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .eq("is_active", true)
-        .order("sort_order", { ascending: true });
-      if (error) {
-        console.error(error);
-        setServices([]);
-      } else {
-        const nextServices = (data ?? []) as Service[];
-        setServices(nextServices);
-        if (!selectedServiceIdRef.current && nextServices.length > 0) {
-          setSelectedServiceId(nextServices[0].id);
-        }
+      const { data } = await fetchWithCache(CACHE_KEYS.services, () =>
+        supabase
+          .from("services")
+          .select("*")
+          .eq("is_active", true)
+          .order("sort_order", { ascending: true })
+          .then(r => { if (r.error) throw r.error; return r.data; })
+      );
+      const nextServices = (data ?? []) as Service[];
+      setServices(nextServices);
+      if (!selectedServiceIdRef.current && nextServices.length > 0) {
+        setSelectedServiceId(nextServices[0].id);
       }
       setLoading(false);
     };
