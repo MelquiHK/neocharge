@@ -179,7 +179,7 @@ export function AdminOrders() {
       (viewing.delivery_method === "delivery" ? `📍 Entrega: ${viewing.customer_address}\n` : `🏪 Recoger en: ${viewing.pickup_location}\n`) +
       (courier ? `🛵 Mensajero: ${courier}\n` : "") +
       `\nGracias por tu compra. ¡Te avisamos cuando salga en camino!`;
-    const phone = viewing.customer_phone.replace(/\D/g, "");
+    const phone = (viewing.customer_phone ?? "").replace(/\D/g, "");
     const link = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     window.open(link, "_blank");
     await supabase.from("orders").update({ receipt_sent_at: new Date().toISOString() }).eq("id", viewing.id);
@@ -216,7 +216,7 @@ export function AdminOrders() {
             <AlertDialogContent>
               <AlertDialogHeader>
                 <AlertDialogTitle>¿Eliminar {selected.size} pedidos?</AlertDialogTitle>
-                <AlertDialogDescription>Esta acción no se puede deshacer.</AlertDialogDescription>
+                <AlertDialogDescription>Se borran permanentemente y dejarán de contar en los ingresos del Resumen. Esta acción no se puede deshacer.</AlertDialogDescription>
               </AlertDialogHeader>
               <AlertDialogFooter>
                 <AlertDialogCancel>Cancelar</AlertDialogCancel>
@@ -322,7 +322,7 @@ export function AdminOrders() {
                 <div className="space-y-1 rounded-2xl border border-border/60 bg-card p-3.5">
                   <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">Cliente</p>
                   <p className="font-semibold">{viewing.customer_name}</p>
-                  <a href={`https://wa.me/${viewing.customer_phone.replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
+                  <a href={`https://wa.me/${(viewing.customer_phone ?? "").replace(/\D/g, "")}`} target="_blank" rel="noreferrer" className="inline-flex items-center gap-1 text-xs text-primary hover:underline">
                     <MessageCircle className="h-3 w-3" /> {viewing.customer_phone}
                   </a>
                 </div>
@@ -404,7 +404,7 @@ export function AdminOrders() {
                   return (
                     <>
                       <div className="flex justify-between gap-2 text-sm">
-                        <span className="text-muted-foreground">Producto</span>
+                        <span className="text-muted-foreground">Subtotal</span>
                         <span className="text-right">{formatPrice(Number(viewing.subtotal || 0))} / {formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0))}</span>
                       </div>
                       <div className="flex justify-between gap-2 text-sm">
@@ -433,7 +433,8 @@ export function AdminOrders() {
                 <Button variant="ghost" className="mr-auto h-10 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /> Eliminar</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
-                <AlertDialogHeader><AlertDialogTitle>¿Eliminar pedido?</AlertDialogTitle></AlertDialogHeader>
+                <AlertDialogHeader><AlertDialogTitle>¿Eliminar pedido?</AlertDialogTitle>
+                <AlertDialogDescription>Se borra permanentemente y dejará de contar en los ingresos del Resumen.</AlertDialogDescription></AlertDialogHeader>
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
                   <AlertDialogAction onClick={() => { if (viewing) { removeOne(viewing.id); setViewing(null); } }} className="bg-destructive">Eliminar</AlertDialogAction>

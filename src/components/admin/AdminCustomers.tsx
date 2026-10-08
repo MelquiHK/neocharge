@@ -503,21 +503,17 @@ export function AdminCustomers() {
                   </div>
                 </div>
               )}
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="w-full h-11">Eliminar Cliente</Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>¿Estás seguro de eliminar este cliente?</AlertDialogTitle>
-                  <AlertDialogDescription>Esta acción no se puede deshacer. Se eliminarán permanentemente el cliente y todos sus datos.</AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction onClick={deleteUser} className="bg-destructive">Eliminar</AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+            {/* Eliminar cliente: deshabilitado porque supabase.auth.admin.deleteUser
+                exige la llave service_role y el admin usa la llave pública (siempre
+                daba 403). Se reactivará con una Edge Function. */}
+            <Button
+              variant="destructive"
+              className="h-11 w-full opacity-40"
+              disabled
+              title="Eliminar clientes requiere una función de servidor (próximamente)"
+            >
+              Eliminar Cliente
+            </Button>
             </div>
           )}
         </DialogContent>

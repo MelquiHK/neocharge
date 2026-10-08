@@ -147,7 +147,7 @@ export function AdminRates() {
 
           <section className="overflow-hidden rounded-3xl border border-border/60 bg-card shadow-soft">
             <div className="p-5 pb-4 sm:p-6 sm:pb-4">
-              <AdminCardTitle icon={Calendar} title="Historial (30 días)" className="mb-0" />
+              <AdminCardTitle icon={Calendar} title="Historial (90 días)" className="mb-0" />
             </div>
             {rates.length === 0 ? (
               <div className="px-5 pb-5 sm:px-6 sm:pb-6">

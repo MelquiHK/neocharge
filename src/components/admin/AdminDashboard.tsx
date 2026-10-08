@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatPrice, formatCUP } from "@/lib/format";
+import { havanaDate, startOfHavanaDayISO, startOfHavanaMonthISO } from "@/lib/havana-date";
 import { useAdminSales } from "@/hooks/admin/use-admin-sales";
 import { computeOwnerSalesSummary, computeSalesTotalsBySeller } from "@/lib/sales";
 import { useCashbox } from "@/hooks/admin/use-cashbox";
@@ -47,6 +48,7 @@ interface DashboardProduct {
   stock?: number | null;
   low_stock_threshold?: number | null;
   cost_price?: number | string | null;
+  is_active?: boolean | null;
 }
 
 interface DashboardOrder {
@@ -75,6 +77,13 @@ function orderStatusTone(status?: string | null): "success" | "warning" | "dange
       return "warning";
     case "confirmed":
     case "confirmado":
+      return "info";
+    case "preparing":
+    case "preparando":
+      return "primary";
+    case "shipped":
+    case "enviado":
+    case "en_camino":
       return "info";
     case "completed":
     case "completado":
@@ -107,25 +116,33 @@ export function AdminDashboard() {
 
   useEffect(() => {
     const load = async () => {
-      const today = new Date();
-      const startMonth = new Date(today.getFullYear(), today.getMonth(), 1).toISOString();
-      const startDay = new Date(today.getFullYear(), today.getMonth(), today.getDate()).toISOString();
+      const startMonth = startOfHavanaMonthISO();
+      const startDay = startOfHavanaDayISO();
 
-      const [{ count: pCount }, { data: products }, { data: ordersMonth }, { data: ordersToday }, { data: pendingOrders }, { count: cCount }, { data: recentOrders }, traffic, top, recentV, todayRate] = await Promise.all([
-        supabase.from("products").select("*", { count: "exact", head: true }),
-        supabase.from("products").select("id,stock,low_stock_threshold,cost_price").eq("is_active", true),
-        supabase.from("orders").select("total,items,payment_currency,exchange_rate").gte("created_at", startMonth),
+      const [{ count: pCount }, { data: products }, { data: ordersMonth }, { data: ordersToday }, { data: pendingOrders }, { data: roleRows }, { data: recentOrders }, traffic, top, recentV, todayRate] = await Promise.all([
+        supabase.from("products").select("*", { count: "exact", head: true }).eq("is_active", true),
+        supabase.from("products").select("id,stock,low_stock_threshold,cost_price,is_active"),
+        supabase.from("orders").select("total,items,payment_currency,exchange_rate").gte("created_at", startMonth).neq("status", "cancelled"),
         supabase.from("orders").select("id").gte("created_at", startDay),
         supabase.from("orders").select("id").eq("status", "pending"),
-        supabase.from("profiles").select("*", { count: "exact", head: true }),
+        supabase.from("user_roles").select("user_id").in("role", ["admin", "owner"]),
         supabase.from("orders").select("*").order("created_at", { ascending: false }).limit(8),
         supabase.rpc("traffic_stats", { days: 7 }),
         supabase.rpc("traffic_top_pages", { days: 7, limit_count: 8 }),
         supabase.rpc("traffic_recent_views", { limit_count: 12 }),
-        supabase.from("exchange_rates").select("id,usd_to_cup").eq("rate_date", new Date().toISOString().slice(0, 10)).maybeSingle(),
+        supabase.from("exchange_rates").select("id,usd_to_cup").eq("rate_date", havanaDate()).maybeSingle(),
       ]);
 
-      const lowStock = (products ?? []).filter((p: DashboardProduct) => (p.stock ?? 0) <= (p.low_stock_threshold ?? 5)).length;
+      // Clientes = perfiles menos administradores/dueños.
+      const adminIds = new Set((roleRows ?? []).map((r: { user_id: string }) => r.user_id));
+      let customersQuery = supabase.from("profiles").select("*", { count: "exact", head: true });
+      if (adminIds.size > 0) {
+        customersQuery = customersQuery.not("id", "in", `(${[...adminIds].join(",")})`);
+      }
+      const { count: cCount } = await customersQuery;
+
+      const activeProducts = (products ?? []).filter((p: DashboardProduct) => p.is_active);
+      const lowStock = activeProducts.filter((p: DashboardProduct) => (p.stock ?? 0) <= (p.low_stock_threshold ?? 5)).length;
       const revenue = (ordersMonth ?? []).reduce((s, o: DashboardOrder) => {
         // Si el pedido fue en CUP, lo convertimos a USD para la analítica consolidada
         if (o.payment_currency === "CUP") {
@@ -376,8 +393,8 @@ export function AdminDashboard() {
               </tr>
             </AdminTableHead>
             <tbody>
-              {recent.map((o) => (
-                <tr key={o.id} className={adminTr}>
+              {recent.map((o, i) => (
+                <tr key={o.id ?? `recent-${i}`} className={adminTr}>
                   <td className={`${adminTd} font-medium`}>{o.customer_name}</td>
                   <td className={`${adminTd} text-muted-foreground`}>{o.customer_phone}</td>
                   <td className={`${adminTd} font-bold text-primary`}>
@@ -387,7 +404,7 @@ export function AdminDashboard() {
                     <StatusBadge tone={orderStatusTone(o.status)}>{o.status}</StatusBadge>
                   </td>
                   <td className={`${adminTd} whitespace-nowrap text-xs text-muted-foreground`}>
-                    {new Date(o.created_at).toLocaleString("es-CU")}
+                    {o.created_at ? new Date(o.created_at).toLocaleString("es-CU") : "—"}
                   </td>
                 </tr>
               ))}
@@ -403,7 +420,7 @@ export function AdminDashboard() {
             title="Top páginas (7d)"
             action={rateMissing ? (
               <Button asChild size="sm" variant="secondary" className="min-h-9">
-                <a href="/admin" title="Ve a Tasa USD en el panel">Falta tasa USD hoy</a>
+                <a href="/admin#tab=rates" title="Ve a Tasa USD en el panel">Falta tasa USD hoy</a>
               </Button>
             ) : undefined}
           />

@@ -165,7 +165,7 @@ export function useOrderNotifications(enabled: boolean = true) {
       metadata: payload,
     };
 
-    setNotifications((prev) => [notif, ...prev]);
+    setNotifications((prev) => [notif, ...prev].slice(0, 40));
     setUnreadCount((prev) => prev + 1);
 
     playNotificationSound();
@@ -286,9 +286,15 @@ export function useOrderNotifications(enabled: boolean = true) {
       return;
     }
 
-    loadRecentNotifications();
+    // La carga inicial DEBE terminar antes de arrancar el poll/realtime:
+    // si no, el primer poll corre con maxKnownTime=0 y notifica todo
+    // (hasta 50 avisos de una vez en conexiones lentas).
+    let cancelled = false;
+    let intervalId = 0;
+    const loadedRef = { current: false };
 
     const pollForNewRecords = async () => {
+      if (!loadedRef.current || cancelled) return;
       try {
         const [{ data: orderData, error: orderError }, { data: saleData, error: saleError }] = await Promise.all([
           supabase
@@ -322,12 +328,17 @@ export function useOrderNotifications(enabled: boolean = true) {
       }
     };
 
-    const intervalId = window.setInterval(() => {
-      void pollForNewRecords();
-    }, 10000);
+    const startListening = async () => {
+      await loadRecentNotifications();
+      if (cancelled) return;
+      loadedRef.current = true;
 
-    const channel = sharedRealtimeState.channel ?? supabase
-      .channel('admin-notifications')
+      intervalId = window.setInterval(() => {
+        void pollForNewRecords();
+      }, 10000);
+
+      const channel = sharedRealtimeState.channel ?? supabase
+        .channel('admin-notifications')
       .on(
         'postgres_changes',
         {
@@ -360,20 +371,25 @@ export function useOrderNotifications(enabled: boolean = true) {
     sharedRealtimeState.channel = channel;
     sharedRealtimeState.subscribers += 1;
 
-    if (!channel.state || channel.state === 'closed') {
-      channel.subscribe((status, err) => {
-        if (status === 'SUBSCRIBED') {
-          setIsListening(true);
-        } else {
-          setIsListening(false);
-        }
-        if (err) {
-          console.error('Realtime order subscription error:', err);
-        }
-      });
-    }
+      if (!channel.state || channel.state === 'closed') {
+        channel.subscribe((status, err) => {
+          if (cancelled) return;
+          if (status === 'SUBSCRIBED') {
+            setIsListening(true);
+          } else {
+            setIsListening(false);
+          }
+          if (err) {
+            console.error('Realtime order subscription error:', err);
+          }
+        });
+      }
+    };
+
+    void startListening();
 
     return () => {
+      cancelled = true;
       window.clearInterval(intervalId);
 
       sharedRealtimeState.subscribers = Math.max(0, sharedRealtimeState.subscribers - 1);
@@ -392,11 +408,17 @@ export function useOrderNotifications(enabled: boolean = true) {
   };
 
   // Marcar todo como visto: persiste la marca para que el contador
-  // no vuelva a subir en la próxima visita.
+  // no vuelva a subir en la próxima visita. También apaga el parpadeo
+  // del título (en móvil el evento focus puede no dispararse).
   const markAllAsRead = useCallback(() => {
     lastSeenRef.current = Date.now();
     setLastSeen();
     setUnreadCount(0);
+    if (flashIntervalRef.current) {
+      clearInterval(flashIntervalRef.current);
+      flashIntervalRef.current = null;
+      document.title = "Admin — NeoCharge";
+    }
   }, []);
 
   // Limpiar notificaciones leídas (solo memoria)

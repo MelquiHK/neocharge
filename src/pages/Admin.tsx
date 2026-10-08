@@ -47,7 +47,11 @@ import { cn } from "@/lib/utils";
 
 const Admin = () => {
   const { user, isAdmin, permissions, loading, signOut } = useAuth();
-  const [activeTab, setActiveTab] = useState("dashboard");
+  const [activeTab, setActiveTab] = useState(() => {
+    // Permite enlaces directos a pestañas: /admin#tab=rates
+    const m = window.location.hash.match(/tab=([a-z]+)/);
+    return m ? m[1] : "dashboard";
+  });
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const { notifications, unreadCount, markAllAsRead } = useOrderNotifications(true);
@@ -180,6 +184,11 @@ const Admin = () => {
   const goTo = (v: string) => {
     setActiveTab(v);
     setSidebarOpen(false);
+    try {
+      window.history.replaceState(null, "", `#tab=${v}`);
+    } catch {
+      // sin historial disponible: no es crítico
+    }
   };
 
   const SidebarContent = () => (
@@ -334,7 +343,7 @@ const Admin = () => {
             {unreadCount > 0 && (
               <button
                 onClick={() => { markAllAsRead(); goTo("orders"); }}
-                className="flex animate-pulse items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400"
+                className="flex items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400"
                 title="Ver pedidos y marcar como vistos"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
@@ -376,7 +385,7 @@ const Admin = () => {
                         notifications.slice(0, 30).map((n) => (
                           <button
                             key={n.id}
-                            onClick={() => { markAllAsRead(); setNotifOpen(false); goTo(n.type === "order" ? "orders" : "sales"); }}
+                            onClick={() => { setNotifOpen(false); goTo(n.type === "order" ? "orders" : "sales"); }}
                             className="flex w-full items-start gap-3 border-b border-border/40 px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted/60"
                           >
                             <span className="mt-0.5 text-lg leading-none">
