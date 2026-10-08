@@ -5,11 +5,13 @@ import { cn } from "@/lib/utils";
 interface LogoProps {
   className?: string;
   showText?: boolean;
+  /** Si se provee, intercepta el clic (llamar e.preventDefault() para no ir al inicio). */
+  onClick?: (e: React.MouseEvent<HTMLAnchorElement>) => void;
 }
 
-export function Logo({ className, showText = true }: LogoProps) {
+export function Logo({ className, showText = true, onClick }: LogoProps) {
   return (
-    <Link to="/" className={cn("flex items-center gap-2.5 group", className)} aria-label="NeoCharge inicio">
+    <Link to="/" onClick={onClick} className={cn("flex items-center gap-2.5 group", className)} aria-label="NeoCharge inicio">
       <div className="relative">
         <div className="absolute inset-0 bg-gradient-primary rounded-xl blur-md opacity-50 group-hover:opacity-80 transition-opacity" />
         <div className="relative w-10 h-10 rounded-xl bg-gradient-primary flex items-center justify-center shadow-glow">
