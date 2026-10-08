@@ -16,13 +16,13 @@ interface WelcomeTransitionProps {
 }
 
 /**
- * Animación de bienvenida a pantalla completa.
+ * Animación de bienvenida ÉPICA a pantalla completa.
  *
  * Cuando el cliente toca el icono de la tienda:
- *  1. Un velo malva se despliega con el logo floreciendo (bloom).
- *  2. Aparece el mensaje de bienvenida.
- *  3. Navega al destino (login si es invitado, panel si ya entró).
- *  4. El velo se disuelve.
+ *  1. Un velo ciruela oscuro se despliega.
+ *  2. Triple anillo expansivo + el logo florece con brillo intenso.
+ *  3. El título aparece con barrido de brillo.
+ *  4. Destello final, navega al destino y el velo se disuelve.
  *
  * Solo usa transform/opacity para no tumbar el rendimiento en móviles.
  */
@@ -33,8 +33,8 @@ export function WelcomeTransition({ data, onNavigate, onDone }: WelcomeTransitio
     if (!data) return;
     setLeaving(false);
 
-    const NAVIGATE_AT = 950;
-    const DONE_AT = 1350;
+    const NAVIGATE_AT = 1150;
+    const DONE_AT = 1550;
 
     const t1 = window.setTimeout(() => {
       onNavigate(data.to);
@@ -55,20 +55,26 @@ export function WelcomeTransition({ data, onNavigate, onDone }: WelcomeTransitio
 
   return (
     <div
-      className={cn("nc-welcome-veil", leaving && "nc-welcome-veil--leaving")}
+      className={cn("nc-welcome-veil nc-welcome-veil--epic", leaving && "nc-welcome-veil--leaving")}
       role="status"
       aria-label={data.title}
     >
-      {/* Anillo expansivo */}
+      {/* Triple anillo expansivo */}
       <div className="nc-welcome-ring" aria-hidden />
       <div className="nc-welcome-ring nc-welcome-ring--late" aria-hidden />
+      <div className="nc-welcome-ring nc-welcome-ring--later" aria-hidden />
+
+      {/* Resplandor central */}
+      <div className="nc-welcome-glow" aria-hidden />
 
       <div className="nc-welcome-core">
-        <div className="nc-welcome-logo">
-          <Zap className="w-10 h-10 text-white" strokeWidth={2.5} fill="currentColor" />
+        <div className="nc-welcome-logo nc-welcome-logo--epic">
+          <Zap className="nc-welcome-zap" strokeWidth={2.5} fill="currentColor" />
         </div>
-        <p className="nc-welcome-title">{data.title}</p>
-        <p className="nc-welcome-subtitle">{data.subtitle}</p>
+        <p className="nc-welcome-title nc-welcome-title--epic">
+          <span className="nc-welcome-title-shine">{data.title}</span>
+        </p>
+        <p className="nc-welcome-subtitle nc-welcome-subtitle--epic">{data.subtitle}</p>
       </div>
     </div>
   );
