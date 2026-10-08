@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { Service } from "@/types";
@@ -57,14 +58,16 @@ export default function ServiceDetail() {
         setLoading(false);
         return;
       }
-      const { data, error } = await supabase
-        .from("services")
-        .select("*")
-        .eq("slug", slug)
-        .eq("is_active", true)
-        .maybeSingle();
-      if (error || !data) {
-        console.error(error);
+      const { data } = await fetchWithCache(`service_${slug}`, () =>
+        supabase
+          .from("services")
+          .select("*")
+          .eq("slug", slug)
+          .eq("is_active", true)
+          .maybeSingle()
+          .then(r => { if (r.error && r.error.code !== "PGRST116") throw r.error; return r.data; })
+      );
+      if (!data) {
         setNotFound(true);
         setService(null);
       } else {

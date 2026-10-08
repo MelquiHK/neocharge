@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { ArrowRight, MessageCircle, ShieldCheck, Star, Truck, Zap } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { getSupabase } from "@/integrations/supabase/lazy-client";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { responsiveImage } from "@/lib/responsive-image";
 import { formatPrice } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -39,19 +40,27 @@ export function Hero() {
     const load = async () => {
       try {
         const supabase = await getSupabase();
-        const [featuredRes, countRes] = await Promise.all([
-          supabase
-            .from("products")
-            .select("id,name,slug,price,currency,images,main_image_index")
-            .eq("is_active", true)
-            .eq("is_featured", true)
-            .limit(8),
-          supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true),
+        // Offline: el destacado y el conteo salen del caché / semilla local.
+        const [{ data: featuredData }, { data: countData }] = await Promise.all([
+          fetchWithCache<SpotlightProduct[]>(CACHE_KEYS.featured, () =>
+            supabase
+              .from("products")
+              .select("id,name,slug,price,currency,images,main_image_index")
+              .eq("is_active", true)
+              .eq("is_featured", true)
+              .limit(8)
+              .then(r => { if (r.error) throw r.error; return r.data as SpotlightProduct[]; })
+          ),
+          fetchWithCache<{ count: number }>("product_count_v1", async () => {
+            const r = await supabase.from("products").select("id", { count: "exact", head: true }).eq("is_active", true);
+            if (r.error) throw r.error;
+            return { count: r.count ?? 0 };
+          }),
         ]);
         if (cancelled) return;
-        const featured = (featuredRes.data ?? []) as SpotlightProduct[];
+        const featured = (featuredData ?? []) as SpotlightProduct[];
         setSpotlight(featured.find((p) => p.slug === BEST_SELLER_SLUG) ?? featured[0] ?? null);
-        if (typeof countRes.count === "number") setProductCount(countRes.count);
+        if (typeof countData?.count === "number") setProductCount(countData.count);
       } catch {
         /* el hero funciona igual sin los datos en vivo */
       }
