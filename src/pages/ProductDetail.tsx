@@ -7,7 +7,7 @@ import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSEO } from "@/hooks/use-seo";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { Product } from "@/types";
-import { computeDisplayPrice, formatPrice, formatCUP, formatMoney, hasSaneDiscount, warrantyTypeLabel, type DisplayPrice } from "@/lib/format";
+import { computeDisplayPrice, formatPrice, formatCUP, formatMoney, hasSaneDiscount, warrantyTypeLabel, isChargerWarranty, type DisplayPrice } from "@/lib/format";
 import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { responsiveImage } from "@/lib/responsive-image";
 import { Button } from "@/components/ui/button";
@@ -126,9 +126,9 @@ export default function ProductDetail() {
 
         const { data: chargers, error: chargerError } = await supabase
           .from("products")
-          .select("id,name,slug,price,currency,price_cup,extra_cup_per_usd,warranty_type,specifications,images,main_image_index,stock")
+          .select("id,name,slug,price,currency,price_cup,extra_cup_per_usd,warranty_type,battery_type,specifications,images,main_image_index,stock")
           .eq("is_active", true)
-          .eq("warranty_type", "charger")
+          .in("warranty_type", ["charger", "charger-1w"])
           .order("created_at", { ascending: false })
           .limit(24);
         if (chargerError) console.error("Charger products error:", chargerError);
@@ -137,7 +137,7 @@ export default function ProductDetail() {
         if (data.category_id) {
           const { data: rel, error: relError } = await supabase
             .from("products")
-            .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,category_id,description,specifications,currency,price_cup,extra_cup_per_usd,warranty_type")
+            .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,category_id,description,specifications,currency,price_cup,extra_cup_per_usd,warranty_type,battery_type")
             .eq("is_active", true)
             .eq("category_id", data.category_id)
             .neq("id", data.id)
@@ -558,7 +558,7 @@ export default function ProductDetail() {
       </div>
 
       <div className="grid gap-10 lg:grid-cols-[1.35fr_0.8fr] mb-16">
-        {product.warranty_type === "charger" ? (
+        {isChargerWarranty(product.warranty_type) ? (
           <div>
             <div className="glass rounded-3xl p-6 hover-lift">
               <h2 className="font-display text-2xl font-bold mb-3">Calculadora de cargador</h2>

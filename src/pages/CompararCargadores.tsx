@@ -51,7 +51,7 @@ const CompararCargadores = () => {
               "id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,category_id,description,specifications,currency,price_cup,extra_cup_per_usd,warranty_type"
             )
             .eq("is_active", true)
-            .eq("warranty_type", "charger")
+            .in("warranty_type", ["charger", "charger-1w"])
             .order("price", { ascending: true })
             .then(r => { if (r.error) throw r.error; return r.data; })
         );
