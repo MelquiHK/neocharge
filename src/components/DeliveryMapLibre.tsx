@@ -53,7 +53,7 @@ function pinEl(): HTMLElement {
   const el = document.createElement("div");
   el.innerHTML =
     `<div style="width:30px;height:30px;border-radius:50% 50% 50% 0;` +
-    `transform:rotate(-45deg);background:#2563eb;border:3px solid white;` +
+    `transform:rotate(-45deg);background:#9e5f8f;border:3px solid white;` +
     `box-shadow:0 2px 8px rgba(0,0,0,.4);"></div>`;
   return el;
 }

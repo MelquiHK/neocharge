@@ -301,60 +301,81 @@ Por favor, revisa mis pagos. ¡Gracias!`;
         aria-hidden
       />
 
-      <div className="relative container-page py-12 space-y-8">
-        <header className="flex flex-col sm:flex-row sm:items-end justify-between gap-6 border-b border-slate-200/70 pb-10">
-          <div className="space-y-3">
-            <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full glass text-brand-800 text-xs font-bold uppercase tracking-widest">
-              {role === "owner" ? "Dueño Supremo" : role === "admin" ? "Administrador" : role === "gestor" ? "Gestor de Ventas" : role === "mensajero" ? "Mensajero" : "Perfil de Cliente"}
+      <div className="relative container-page py-8 md:py-12 space-y-8">
+        {/* Héroe de la cuenta */}
+        <header className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-900 via-brand-700 to-brand-500 p-7 sm:p-10 text-white shadow-xl shadow-brand-500/25 animate-fade-in-up">
+          <div
+            className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/10 blur-3xl pointer-events-none"
+            aria-hidden
+          />
+          <div
+            className="absolute -bottom-28 -left-20 w-80 h-80 rounded-full bg-black/25 blur-3xl pointer-events-none"
+            aria-hidden
+          />
+          <div className="relative flex flex-col gap-6">
+            <div className="flex flex-col sm:flex-row sm:items-center gap-5">
+              <div className="w-20 h-20 rounded-full overflow-hidden border-4 border-white/30 shadow-lg shrink-0 bg-white/10 flex items-center justify-center">
+                {profile?.avatar_url ? (
+                  <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
+                ) : (
+                  <User className="w-9 h-9 text-white/70" />
+                )}
+              </div>
+              <div className="space-y-2">
+                <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-white/15 backdrop-blur text-white text-xs font-bold uppercase tracking-widest">
+                  {role === "owner" ? "Dueño Supremo" : role === "admin" ? "Administrador" : role === "gestor" ? "Gestor de Ventas" : role === "mensajero" ? "Mensajero" : "Perfil de Cliente"}
+                </div>
+                <h1 className="font-display text-4xl sm:text-5xl font-bold tracking-tight">Mi cuenta</h1>
+                <p className="text-white/75 font-light">{user.email}</p>
+              </div>
             </div>
-            <h1 className="font-display text-5xl font-bold tracking-tight nc-title-gradient">Mi cuenta</h1>
-            <p className="text-lg text-muted-foreground font-light">{user.email}</p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            {isAdmin && (
-              <Button asChild className="rounded-full glass text-slate-700 hover:bg-white/90 font-semibold">
-                <Link to="/admin"><LayoutDashboard className="w-4 h-4" /> Panel admin</Link>
+            <div className="flex flex-wrap gap-2.5">
+              {isAdmin && (
+                <Button asChild className="rounded-full bg-white text-brand-900 hover:bg-brand-50 font-bold shadow-lg h-11 px-5">
+                  <Link to="/admin"><LayoutDashboard className="w-4 h-4 mr-2" /> Panel admin</Link>
+                </Button>
+              )}
+              {isMensajero && (
+                <Button asChild className="rounded-full bg-white text-brand-900 hover:bg-brand-50 font-bold shadow-lg h-11 px-5">
+                  <Link to="/mensajeria"><Map className="w-4 h-4 mr-2" /> Panel Mensajero</Link>
+                </Button>
+              )}
+              <Button
+                onClick={() => setEditing(!editing)}
+                className="rounded-full bg-white/15 backdrop-blur border border-white/25 text-white hover:bg-white/25 font-semibold h-11 px-5"
+              >
+                {editing ? "Cancelar" : "Editar perfil"}
               </Button>
-            )}
-            {isMensajero && (
-              <Button asChild className="rounded-full bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white hover:brightness-105 font-bold shadow-glow-brand-sm">
-                <Link to="/mensajeria"><Map className="w-4 h-4" /> Panel Mensajero</Link>
+              <Button
+                onClick={signOut}
+                className="rounded-full bg-red-500/20 backdrop-blur border border-red-300/30 text-red-100 hover:bg-red-500/30 font-semibold h-11 px-5"
+              >
+                <LogOut className="w-4 h-4 mr-2" /> Cerrar sesión
               </Button>
-            )}
-            <Button onClick={() => setEditing(!editing)} className="rounded-full glass text-slate-700 hover:bg-white/90 font-semibold">
-              {editing ? "Cancelar" : "Editar perfil"}
-            </Button>
-            <Button onClick={signOut} className="rounded-full bg-red-500/10 border border-red-300/40 text-red-600 hover:bg-red-500/15 font-semibold">
-              <LogOut className="w-4 h-4" /> Cerrar sesión
-            </Button>
+            </div>
           </div>
         </header>
 
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1 space-y-6">
-            <section className="glass-strong rounded-[2rem] p-6 space-y-4">
-              <div className="flex flex-col items-center text-center space-y-3">
-                <div className="w-24 h-24 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border-4 border-brand-200/70 shadow-glow-brand-sm">
-                  {profile?.avatar_url ? (
-                    <img src={profile.avatar_url} alt="Avatar" className="w-full h-full object-cover" />
-                  ) : (
-                    <User className="w-12 h-12 text-slate-400" />
-                  )}
-                </div>
-                <div>
-                  <h3 className="font-display text-xl font-bold nc-title-gradient">{profile?.full_name || profile?.username}</h3>
-                  <p className="text-sm text-slate-400">@{profile?.username}</p>
-                </div>
+            <section className="bg-white/85 backdrop-blur-xl rounded-[2rem] p-6 sm:p-7 space-y-5 shadow-xl shadow-brand-500/10 border border-white animate-fade-in-up" style={{ animationDelay: "100ms" }}>
+              <div className="text-center space-y-1.5">
+                <h3 className="font-display text-2xl font-bold nc-title-gradient">{profile?.full_name || profile?.username}</h3>
+                <p className="text-sm text-slate-400">@{profile?.username}</p>
               </div>
 
-              <div className="space-y-3 pt-4 border-t border-slate-200/70">
-                <div className="flex items-center gap-2 text-sm text-slate-700">
-                  <Phone className="w-4 h-4 text-brand-600" />
-                  <span>{profile?.phone || "Sin teléfono"}</span>
+              <div className="space-y-3 pt-5 border-t border-brand-100">
+                <div className="flex items-center gap-3 text-sm">
+                  <span className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center shrink-0">
+                    <Phone className="w-4 h-4 text-brand-700" />
+                  </span>
+                  <span className="font-medium text-slate-700">{profile?.phone || "Sin teléfono"}</span>
                 </div>
-                <div className="flex items-start gap-2 text-sm">
-                  <Info className="w-4 h-4 text-brand-600 mt-1" />
-                  <p className="text-slate-400 italic">{(profile as ProfileWithBio | null)?.bio || "Sin biografía"}</p>
+                <div className="flex items-start gap-3 text-sm">
+                  <span className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center shrink-0">
+                    <Info className="w-4 h-4 text-brand-700" />
+                  </span>
+                  <p className="text-slate-500 italic pt-1.5">{(profile as ProfileWithBio | null)?.bio || "Sin biografía"}</p>
                 </div>
               </div>
             </section>

@@ -139,7 +139,7 @@ export function flyToCart(source: HTMLElement | null, imageUrl?: string | null) 
       img.style.cssText = "width:100%;height:100%;object-fit:cover;display:block";
       ghost.appendChild(img);
     } else {
-      ghost.style.background = "linear-gradient(135deg,#2563eb,#7c3aed)";
+      ghost.style.background = "linear-gradient(135deg,#9e5f8f,#7c3aed)";
     }
 
     const remove = () => ghost.remove();
