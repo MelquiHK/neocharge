@@ -6,6 +6,7 @@ import { OfflineBanner } from "@/components/OfflineBanner";
 import { Outlet } from "react-router-dom";
 import { useCart } from "@/hooks/use-cart";
 import { ensureNcFx } from "@/lib/fly-to-cart";
+import { seedFromBundle } from "@/lib/offline-cache";
 import { Info } from "lucide-react";
 
 // El sheet del carrito (y con él radix dialog/sheet) NO va en el bundle
@@ -21,6 +22,9 @@ export function SiteLayout() {
     // Los keyframes del fly-to-cart deben existir desde el primer paint
     // (antes se inyectaban al montar el CartSheet).
     ensureNcFx();
+    // Siembra la base de datos local desde el archivo empaquetado en la app:
+    // así hay productos aunque sea la primera vez y no haya internet.
+    void seedFromBundle();
   }, []);
 
   useEffect(() => {
