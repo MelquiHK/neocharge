@@ -20,7 +20,8 @@ export const productSchema = z.object({
   is_active: z.boolean().default(true),
   is_featured: z.boolean().default(false),
   sort_order: z.number().int().default(0),
-  warranty_type: z.enum(["electronics", "charger", "no-warranty"]).nullable(),
+  warranty_type: z.enum(["electronics", "charger", "charger-1w", "no-warranty"]).nullable(),
+  battery_type: z.enum(["litio", "gel", "lifepo4"]).nullable().optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;

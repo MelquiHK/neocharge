@@ -900,8 +900,24 @@ export function AdminProducts() {
                       <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="charger">Cargador (24h prueba + cambio)</SelectItem>
+                        <SelectItem value="charger-1w">Cargador (1 semana de garantía)</SelectItem>
                         <SelectItem value="electronics">Electrónica (prueba en local, sin devolución)</SelectItem>
                         <SelectItem value="no-warranty">Sin garantía</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  <div className="space-y-2">
+                    <Label>Tipo de batería <span className="text-muted-foreground font-normal">(cargadores)</span></Label>
+                    <Select
+                      value={editing.battery_type ?? "none"}
+                      onValueChange={(v) => setEditing({ ...editing, battery_type: v === "none" ? null : v })}
+                    >
+                      <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="none">Sin especificar</SelectItem>
+                        <SelectItem value="litio">Litio (Li-ion)</SelectItem>
+                        <SelectItem value="gel">Gel / plomo-ácido</SelectItem>
+                        <SelectItem value="lifepo4">LiFePO4</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>

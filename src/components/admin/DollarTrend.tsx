@@ -132,7 +132,7 @@ export function DollarTrend({ rates }: { rates: DollarRateRow[] }) {
           .from("products")
           .select("name,price")
           .eq("is_active", true)
-          .eq("warranty_type", "charger")
+          .in("warranty_type", ["charger", "charger-1w"])
           .order("price", { ascending: false });
         if (error) throw error;
         if (alive) setChargers((data ?? []) as ChargerPrice[]);

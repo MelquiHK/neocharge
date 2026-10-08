@@ -41,6 +41,16 @@ export function hasSaneDiscount(price: number, comparePrice: number | null | und
 }
 
 /**
+ * Tipos de garantía que identifican un cargador (24h o 1 semana).
+ * Usar esto en vez de comparar con "charger" directamente.
+ */
+export const CHARGER_WARRANTY_TYPES = ["charger", "charger-1w"] as const;
+
+export function isChargerWarranty(warrantyType: string | null | undefined): boolean {
+  return warrantyType === "charger" || warrantyType === "charger-1w";
+}
+
+/**
  * Etiqueta legible en español para los valores de `warranty_type` de la
  * tabla products. Nunca se muestra el valor crudo al cliente.
  */
@@ -48,6 +58,8 @@ export function warrantyTypeLabel(warrantyType: string | null | undefined): stri
   switch ((warrantyType ?? "").toLowerCase()) {
     case "charger":
       return "Garantía del cargador";
+    case "charger-1w":
+      return "Garantía de 1 semana";
     case "electronics":
       return "Garantía de electrónica";
     default:
@@ -106,7 +118,7 @@ export type DisplayPrice = { usd: number | null; cup: number | null; primary: "U
 
 export function computeDisplayPrice(product: PriceableProduct, rate: ExchangeRate | null): DisplayPrice {
   const currency = (product.currency ?? "USD").toUpperCase();
-  const isCharger = product.warranty_type === "charger";
+  const isCharger = isChargerWarranty(product.warranty_type);
 
   if (!rate) {
     if (currency === "CUP") {
