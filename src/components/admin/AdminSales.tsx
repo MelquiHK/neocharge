@@ -638,7 +638,7 @@ export function AdminSales() {
       />
 
       {!isOwner && (
-        <AdminCard className="border-primary/20 bg-gradient-to-r from-primary/5 to-blue-500/5">
+        <AdminCard className="border-primary/20 bg-gradient-to-r from-primary/5 to-brand-500/5">
           <div className="flex items-center gap-2 text-sm font-semibold text-primary">
             <ShieldCheck className="h-4 w-4" /> Panel de gestor
           </div>

@@ -76,12 +76,12 @@ export function AdminCardTitle({
 type StatTone = "blue" | "emerald" | "amber" | "violet" | "rose" | "sky" | "slate";
 
 const statToneTile: Record<StatTone, string> = {
-  blue: "bg-blue-500/10 text-blue-600 dark:text-blue-400",
+  blue: "bg-brand-500/10 text-brand-600 dark:text-brand-400",
   emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
   amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   violet: "bg-violet-500/10 text-violet-600 dark:text-violet-400",
   rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
-  sky: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+  sky: "bg-brand-500/10 text-brand-600 dark:text-brand-400",
   slate: "bg-slate-500/10 text-slate-600 dark:text-slate-400",
 };
 
@@ -157,7 +157,7 @@ const badgeToneClasses: Record<BadgeTone, string> = {
   success: "border-emerald-500/25 bg-emerald-500/10 text-emerald-700 dark:text-emerald-400",
   warning: "border-amber-500/25 bg-amber-500/10 text-amber-700 dark:text-amber-400",
   danger: "border-red-500/25 bg-red-500/10 text-red-700 dark:text-red-400",
-  info: "border-blue-500/25 bg-blue-500/10 text-blue-700 dark:text-blue-400",
+  info: "border-brand-500/25 bg-brand-500/10 text-brand-700 dark:text-brand-400",
   neutral: "border-slate-500/25 bg-slate-500/10 text-slate-600 dark:text-slate-400",
   primary: "border-primary/25 bg-primary/10 text-primary",
 };

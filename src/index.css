@@ -42,10 +42,10 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222 35% 14%;
 
-    /* Marca: azul eléctrico NeoCharge (como la app Staff) */
-    --primary: 224 88% 55%;          /* brand-600 #2663f2 */
+    /* Marca: malva NeoCharge (paleta Moon Pink / Dusty Mauve / Night Plum) */
+    --primary: 319 28% 50%;          /* malva profundo #9e5f8f */
     --primary-foreground: 0 0% 100%;
-    --primary-glow: 217 91% 60%;     /* brand-500 #3b82f6 */
+    --primary-glow: 319 35% 68%;      /* malva claro #c795b6 */
 
     /* Acento: morado vibrante */
     --accent: 262 83% 58%;           /* grape-600 #7c3aed */
@@ -67,15 +67,15 @@
 
     --border: 220 18% 88%;
     --input: 220 18% 92%;
-    --ring: 224 88% 55%;
+    --ring: 319 28% 50%;
 
     --radius: 1.25rem;
 
     /* Gradientes */
-    --gradient-primary: linear-gradient(135deg, #3b82f6 0%, #2663f2 55%, #7c3aed 100%);
-    --gradient-accent: linear-gradient(135deg, #bfdbfe 0%, #93c5fd 100%);
-    --gradient-hero: linear-gradient(160deg, #fbfdff 0%, #f1f5fb 45%, #e9f0fe 100%);
-    --gradient-glow: radial-gradient(circle, hsl(224 88% 55% / 0.35) 0%, transparent 70%);
+    --gradient-primary: linear-gradient(135deg, #c795b6 0%, #B58FA9 55%, #8a557d 100%);
+    --gradient-accent: linear-gradient(135deg, #F1D4D9 0%, #e6b3c0 100%);
+    --gradient-hero: linear-gradient(160deg, #ffffff 0%, #fdf2f4 45%, #f9e5ea 100%);
+    --gradient-glow: radial-gradient(circle, hsl(319 28% 50% / 0.35) 0%, transparent 70%);
     --gradient-shine: linear-gradient(120deg, transparent 30%, hsl(0 0% 100% / 0.7) 50%, transparent 70%);
 
     /* Sombras suaves multicapa estilo Staff */
@@ -84,7 +84,7 @@
     --shadow-md: 0 8px 32px rgba(31, 41, 55, 0.08), 0 2px 4px hsl(222 30% 11% / 0.04);
     --shadow-lg: 0 12px 40px rgba(31, 41, 55, 0.12), 0 4px 12px hsl(222 30% 11% / 0.05);
     --shadow-xl: 0 20px 60px rgba(31, 41, 55, 0.16), 0 8px 24px hsl(222 30% 11% / 0.06);
-    --shadow-glow: 0 0 24px hsl(224 88% 55% / 0.45);
+    --shadow-glow: 0 0 24px hsl(319 28% 50% / 0.45);
     --shadow-accent-glow: 0 0 24px hsl(262 83% 58% / 0.40);
 
     --transition-base: cubic-bezier(0.22, 1, 0.36, 1);
@@ -126,13 +126,13 @@
     @apply text-foreground antialiased;
     /* Refuerzo del bloqueo de zoom de página (ver comentario en html) */
     touch-action: pan-x pan-y;
-    /* Fondo claro elegante estilo Staff: base gris-azulada muy clara con
-       resplandores sutiles de brand (lima) y azul, fijos al hacer scroll */
+    /* Fondo claro elegante: base blanca con
+       resplandores sutiles de malva y rosado, fijos al hacer scroll */
     background:
-      radial-gradient(600px 400px at 15% 0%, rgba(147, 197, 253, 0.35), transparent 70%),
-      radial-gradient(700px 500px at 90% 10%, rgba(147, 197, 253, 0.30), transparent 70%),
-      radial-gradient(800px 600px at 50% 110%, rgba(147, 197, 253, 0.22), transparent 70%),
-      linear-gradient(160deg, #fbfdff 0%, #f1f5fb 45%, #eef7e4 100%);
+      radial-gradient(600px 400px at 15% 0%, rgba(181, 143, 169, 0.35), transparent 70%),
+      radial-gradient(700px 500px at 90% 10%, rgba(241, 212, 217, 0.55), transparent 70%),
+      radial-gradient(800px 600px at 50% 110%, rgba(181, 143, 169, 0.22), transparent 70%),
+      linear-gradient(160deg, #ffffff 0%, #fdf3f5 45%, #f9e8ec 100%);
     background-attachment: fixed;
     color: #1e293b;
     font-family: 'Plus Jakarta Sans', ui-sans-serif, system-ui, sans-serif;
@@ -168,13 +168,13 @@
     background: transparent;
   }
   ::-webkit-scrollbar-thumb {
-    background: linear-gradient(180deg, #3b82f6, #2663f2);
+    background: linear-gradient(180deg, #c795b6, #9e5f8f);
     border-radius: 8px;
     border: 2px solid transparent;
     background-clip: content-box;
   }
   ::-webkit-scrollbar-thumb:hover {
-    background: linear-gradient(180deg, #2663f2, #1d4ed8);
+    background: linear-gradient(180deg, #9e5f8f, #7c4a6e);
     background-clip: content-box;
     border: 2px solid transparent;
   }
@@ -191,14 +191,14 @@
 
   /* ---- Cristal de agua: superficie translúcida con brillo superior ---- */
   .glass-water {
-    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(219, 234, 254, 0.38));
+    background: linear-gradient(135deg, rgba(255, 255, 255, 0.55), rgba(241, 212, 217, 0.38));
     -webkit-backdrop-filter: blur(22px) saturate(1.5);
     backdrop-filter: blur(22px) saturate(1.5);
     border: 1px solid rgba(255, 255, 255, 0.65);
     box-shadow:
       inset 0 1px 1px rgba(255, 255, 255, 0.75),
       inset 0 -1px 1px rgba(255, 255, 255, 0.25),
-      0 8px 32px rgba(38, 99, 242, 0.14);
+      0 8px 32px rgba(158, 95, 143, 0.14);
   }
 
   /* ---- Superficies glass estilo Staff ---- */
@@ -266,7 +266,7 @@
   }
 
   .text-gradient {
-    background: linear-gradient(120deg, #0f172a 0%, #1e40af 55%, #7c3aed 100%);
+    background: linear-gradient(120deg, #2b2130 0%, #514254 55%, #9e5f8f 100%);
     -webkit-background-clip: text;
     background-clip: text;
     -webkit-text-fill-color: transparent;

@@ -106,7 +106,7 @@ function StatCard({
 
 const MOMENTUM_META = {
   acelerando: { icon: Rocket, text: "text-rose-600 dark:text-rose-400", bg: "bg-rose-500/10 border-rose-500/30", desc: "La subida se está acelerando: el ritmo de los últimos 7 días supera al de los 7 anteriores." },
-  estable: { icon: Minus, text: "text-sky-600 dark:text-sky-400", bg: "bg-sky-500/10 border-sky-500/30", desc: "Ritmo estable: la subida de los últimos 7 días va pareja con la de los 7 anteriores." },
+  estable: { icon: Minus, text: " text-brand-600 dark:text-brand-400", bg: " bg-brand-500/10 border-brand-500/30", desc: "Ritmo estable: la subida de los últimos 7 días va pareja con la de los 7 anteriores." },
   frenando: { icon: Snail, text: "text-emerald-600 dark:text-emerald-400", bg: "bg-emerald-500/10 border-emerald-500/30", desc: "La subida se está frenando: el ritmo de los últimos 7 días es menor que el de los 7 anteriores." },
 } as const;
 

@@ -244,7 +244,7 @@ export function Hero() {
       {/* Divisor de ondas de agua hacia la sección clara siguiente */}
       <div className="nc-waves" aria-hidden>
         <svg className="nc-wave nc-wave-b" viewBox="0 0 2880 120" preserveAspectRatio="none">
-          <path d={WAVE_PATH} fill="#dbeafe" opacity="0.6" />
+          <path d={WAVE_PATH} fill="#F1D4D9" opacity="0.6" />
         </svg>
         <svg className="nc-wave nc-wave-a" viewBox="0 0 2880 120" preserveAspectRatio="none">
           <path d={WAVE_PATH} fill="#ffffff" />

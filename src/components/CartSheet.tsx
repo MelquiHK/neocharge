@@ -51,7 +51,7 @@ export function CartSheet() {
         {items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">
             <div className="relative">
-              <div className="absolute inset-0 -m-4 rounded-full bg-gradient-to-br from-primary/20 via-cyan-400/10 to-transparent blur-2xl" aria-hidden />
+              <div className="absolute inset-0 -m-4 rounded-full bg-gradient-to-br from-primary/20 via-brand-300/20 to-transparent blur-2xl" aria-hidden />
               <div className="relative w-20 h-20 rounded-full bg-secondary flex items-center justify-center">
                 <ShoppingBag className="w-9 h-9 text-muted-foreground" />
               </div>

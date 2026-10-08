@@ -23,7 +23,7 @@ function statusBadge(status: string | null | undefined) {
   switch ((status ?? "").toLowerCase()) {
     case "approved":
       return (
-        <Badge className="bg-blue-100 text-blue-700 border border-blue-200">Aprobada</Badge>
+        <Badge className="bg-brand-100 text-brand-700 border border-brand-200">Aprobada</Badge>
       );
     case "paid":
       return (

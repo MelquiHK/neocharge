@@ -41,7 +41,7 @@ export function CTA() {
                 a un mensaje de distancia
               </span>
             </h2>
-            <p className="text-lg md:text-xl text-blue-100 font-light leading-relaxed max-w-2xl mx-auto">
+            <p className="text-lg md:text-xl text-brand-100 font-light leading-relaxed max-w-2xl mx-auto">
               Explora el catálogo, confirma por WhatsApp y recibe en La Habana. Sin enredos: garantía real
               y pagas en USD o CUP al recibir.
             </p>
@@ -49,7 +49,7 @@ export function CTA() {
               <Button
                 asChild
                 size="xl"
-                className="btn-shine bg-white text-brand-700 hover:bg-blue-50 rounded-2xl font-bold shadow-xl transition-all duration-300 hover:-translate-y-0.5"
+                className="btn-shine bg-white text-brand-700 hover:bg-brand-50 rounded-2xl font-bold shadow-xl transition-all duration-300 hover:-translate-y-0.5"
               >
                 <Link to="/tienda" className="flex items-center gap-2.5">
                   Explorar la tienda <ArrowRight className="w-5 h-5" />
