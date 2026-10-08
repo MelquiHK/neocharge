@@ -1,105 +1,96 @@
-# Neocharge - E-commerce de Electrónica
+<div align="center">
 
-Tienda online moderna con integración Supabase, construida con Vite + React + TypeScript.
+<img src="docs/logo.png" alt="NeoCharge" width="120" />
 
-## Características
+# NeoCharge
 
-- **Autenticación:** Email/password con Supabase Auth
-- **Panel admin:** Dashboard con roles y permisos granulares
-- **Carrito persistente:** localStorage + Context API
-- **Favoritos unificados:** localStorage + sync Supabase
-- **Integración WhatsApp:** Checkout directo a WhatsApp
-- **Mensajería:** Sistema de entregas con mensajeros
-- **PWA:** Instalable como app móvil
-- **Responsive:** Diseño mobile-first
+**La tienda de electrónica de La Habana — en la web y en tu bolsillo.**
 
-## Prerequisitos
+[![Website](https://img.shields.io/badge/web-tienda--neocharge.vercel.app-9e5f8f?style=for-the-badge)](https://tienda-neocharge.vercel.app)
+[![Android](https://img.shields.io/badge/Android-APK_v1.0.10-514254?style=for-the-badge&logo=android)](https://tienda-neocharge.vercel.app/descargas)
+[![Supabase](https://img.shields.io/badge/backend-Supabase-3fcf8f?style=for-the-badge&logo=supabase)](https://supabase.com)
 
-- Node.js 18+
-- npm
-- Cuenta Supabase
+Cargadores para motos eléctricas, audio, piezas y accesorios. Garantía real, entrega a domicilio en La Habana y pago en USD o CUP al recibir.
 
-## Instalación
+[🌐 Ver la tienda](https://tienda-neocharge.vercel.app) · [📱 Descargar la app Android](https://tienda-neocharge.vercel.app/descargas) · [💬 WhatsApp directo](https://wa.me/5363180910)
+
+</div>
+
+---
+
+## ✨ Qué tiene
+
+| Área | Detalles |
+|------|----------|
+| 🛒 **Tienda completa** | Catálogo, categorías, buscador, filtros, favoritos, comparador de cargadores |
+| 💬 **Checkout por WhatsApp** | El pedido se confirma directo por WhatsApp, pago en efectivo USD/CUP al recibir |
+| 📱 **App Android nativa** | APK firmada (v1.0.10), funciona **sin internet**: trae la base de datos empaquetada |
+| 📶 **Modo offline** | Productos, categorías, tasa, servicios y blog disponibles sin conexión |
+| 👤 **Cuentas** | Registro y login (email + Google), perfil, historial de pedidos |
+| 🛠️ **Panel admin** | Dashboard con roles y permisos granulares, caja, mensajería, socios |
+| 💱 **Tasa automática** | Precios en CUP actualizados con la tasa USD del día |
+| 🎨 **Diseño propio** | Paleta malva (Moon Pink · Dusty Mauve · Night Plum), PWA instalable |
+
+## 📸 Así se ve
+
+<div align="center">
+
+| Inicio | Tienda | Producto |
+|:---:|:---:|:---:|
+| <img src="docs/screenshots/01-hero.jpg" width="220" /> | <img src="docs/screenshots/02-tienda.jpg" width="220" /> | <img src="docs/screenshots/03-producto.jpg" width="220" /> |
+
+</div>
+
+## 🛠️ Stack
+
+**Frontend:** React 18 · TypeScript · Vite · Tailwind CSS · shadcn/ui · React Router · TanStack Query
+**Backend:** Supabase (PostgreSQL · Auth · Storage · Realtime)
+**Móvil:** Capacitor (APK Android) · PWA con service worker
+**Deploy:** Vercel
+
+## 📁 Estructura
+
+```
+src/
+├── pages/            # Tienda, producto, checkout, cuenta, admin, blog, servicios…
+├── components/       # UI reutilizable, secciones, admin, layout
+├── hooks/            # use-cart, use-exchange-rate, use-online…
+├── lib/              # offline-cache, formateo, utilidades
+├── integrations/     # Cliente Supabase (lazy, fuera del bundle inicial)
+└── types/            # Tipos TypeScript
+
+supabase/migrations/ # Migraciones SQL
+public/
+├── descargas/       # APK firmada (enlace permanente de descarga)
+└── offline-seed.json # Base de datos empaquetada para modo offline
+scripts/
+└── export-offline-seed.mjs  # Genera la semilla offline desde Supabase
+```
+
+## 🚀 Desarrollo
 
 ```bash
 git clone https://github.com/MelquiHK/neocharge.git
 cd neocharge
 npm install
-cp .env.example .env.local
+cp .env.example .env        # pon tus credenciales de Supabase
+npm run dev                 # http://localhost:8080
 ```
 
-Editar `.env.local` con tus credenciales de Supabase (ver `.env.example`).
+| Script | Qué hace |
+|--------|----------|
+| `npm run dev` | Servidor de desarrollo |
+| `npm run build` | Build de producción |
+| `npm run test` | Tests (Vitest) |
+| `npm run lint` | ESLint |
+| `node scripts/export-offline-seed.mjs` | Regenera `public/offline-seed.json` |
 
-## Desarrollo
+La **app Android** se compila con el build manual en `../app-android/manual-build/` (Capacitor + apksigner, sin Android Studio).
 
-```bash
-npm run dev
-```
+---
 
-Servidor en `http://localhost:8080`
+<div align="center">
 
-## Scripts
+Hecho con 💜 en La Habana · NeoCharge © 2026
 
-```bash
-npm run dev          # Desarrollo local
-npm run build        # Build producción
-npm run build:dev    # Build en modo development
-npm run lint         # ESLint
-npm run preview      # Previsualizar build
-npm run test         # Tests (Vitest)
-npm run test:watch   # Tests en modo watch
-```
-
-## Estructura del proyecto
-
-```
-src/
-├── App.tsx              # Router + providers globales
-├── pages/               # Páginas (tienda, admin, blog, etc.)
-├── components/
-│   ├── admin/           # Panel administrativo
-│   ├── sections/        # Secciones del homepage
-│   └── ui/              # Componentes shadcn/ui
-├── contexts/            # AuthContext, CartContext
-├── hooks/               # Hooks personalizados
-├── integrations/supabase/
-├── lib/                 # Utilidades (whatsapp, pricing, seo)
-└── types/               # Tipos TypeScript
-
-supabase/
-├── migrations/          # Migraciones de BD (fuente de verdad)
-└── scripts/             # SQL manual (RLS, fixes)
-
-docs/                    # Documentación completa del proyecto
-```
-
-## Variables de entorno
-
-| Variable | Descripción |
-|----------|-------------|
-| `VITE_SUPABASE_URL` | URL del proyecto Supabase |
-| `VITE_SUPABASE_PUBLISHABLE_KEY` | API key pública (anon) |
-| `VITE_SUPABASE_PROJECT_ID` | ID del proyecto |
-
-## Deploy en Vercel
-
-1. Conectar repositorio en [vercel.com](https://vercel.com)
-2. Agregar las variables de entorno anteriores
-3. Build command: `npm run build`
-4. Output directory: `dist`
-
-Ver [docs/DEPLOYMENT_GUIDE.md](./docs/DEPLOYMENT_GUIDE.md) para detalle completo.
-
-## Documentación
-
-Toda la documentación está en la carpeta [`docs/`](./docs/):
-
-- [Setup local](./docs/SETUP.md)
-- [Base de datos](./docs/DB_SETUP.md)
-- [Arquitectura](./docs/ANALISIS_PROYECTO_COMPLETO.md)
-- [Roadmap de mejoras](./docs/MEJORAS_RECOMENDADAS_2026.md)
-- [Índice completo](./docs/README.md)
-
-## Licencia
-
-MIT
+</div>
