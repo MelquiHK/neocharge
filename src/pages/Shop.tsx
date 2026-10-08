@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { cn } from "@/lib/utils";
 import { displayCategoryName } from "@/lib/format";
 import { ensureNcFx } from "@/lib/fly-to-cart";
@@ -78,13 +79,20 @@ const ShopPage = () => {
   useEffect(() => {
     const load = async () => {
       setLoading(true);
+      // Offline: si no hay internet, se sirven los datos guardados.
       const [catRes, prodRes] = await Promise.all([
-        supabase.from("categories").select("id,name,slug").order("sort_order"),
-        supabase
-          .from("products")
-          .select("id,name,slug,description,price,compare_price,images,main_image_index,stock,is_featured,category_id,currency,price_cup,extra_cup_per_usd,warranty_type,created_at,sort_order")
-          .eq("is_active", true)
-          .order("created_at", { ascending: false }),
+        fetchWithCache(CACHE_KEYS.categories, () =>
+          supabase.from("categories").select("id,name,slug").order("sort_order")
+            .then(r => { if (r.error) throw r.error; return r.data; })
+        ),
+        fetchWithCache(CACHE_KEYS.products, () =>
+          supabase
+            .from("products")
+            .select("id,name,slug,description,price,compare_price,images,main_image_index,stock,is_featured,category_id,currency,price_cup,extra_cup_per_usd,warranty_type,created_at,sort_order")
+            .eq("is_active", true)
+            .order("created_at", { ascending: false })
+            .then(r => { if (r.error) throw r.error; return r.data; })
+        ),
       ]);
       const categoriesById = new Map((catRes.data ?? []).map((cat) => [cat.id, cat.name]));
       if (catRes.data) setCategories(catRes.data);

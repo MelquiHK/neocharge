@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { fetchWithCache } from "@/lib/offline-cache";
 import { useCart } from "@/hooks/use-cart";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSEO } from "@/hooks/use-seo";
@@ -87,24 +88,24 @@ export default function ProductDetail() {
 
         setLoading(true);
         setLoadError(null);
-        const { data, error } = await supabase
-          .from("products")
-          .select("*")
-          .eq("slug", slug)
-          .eq("is_active", true)
-          .maybeSingle();
-
-        if (error && error.code !== "PGRST116") {
-          console.error("Error loading product:", error);
-          setLoadError("No pudimos cargar el producto. Intenta de nuevo más tarde.");
-          setProduct(null);
-          setRelated([]);
-          setLocStock([]);
-          return;
-        }
+        // Offline: el producto se sirve del caché si no hay internet.
+        const { data, fromCache } = await fetchWithCache(`product_${slug}`, () =>
+          supabase
+            .from("products")
+            .select("*")
+            .eq("slug", slug)
+            .eq("is_active", true)
+            .maybeSingle()
+            .then(r => {
+              if (r.error && r.error.code !== "PGRST116") throw r.error;
+              return r.data;
+            })
+        );
 
         if (!data) {
-          setLoadError("Producto no encontrado.");
+          setLoadError(fromCache
+            ? "Sin conexión y este producto no está guardado. Conéctate para verlo."
+            : "Producto no encontrado.");
           setProduct(null);
           setRelated([]);
           setLocStock([]);
