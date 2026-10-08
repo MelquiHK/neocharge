@@ -3,7 +3,7 @@ import { supabase } from '@/integrations/supabase/client';
 import { useToast } from '@/hooks/use-toast';
 import { showBrowserNotification } from '@/lib/notifications';
 import { formatMoney } from '@/lib/format';
-import { getUnseenRecords } from '@/hooks/admin/order-notifications.utils';
+import { getUnseenRecords, isGenuinelyNew } from '@/hooks/admin/order-notifications.utils';
 
 interface AdminNotification {
   id: string;
@@ -41,6 +41,28 @@ const sharedRealtimeState = {
   subscribers: 0,
 };
 
+// Marca persistente de "hasta cuándo ya vio las notificaciones".
+// Sin esto el contador volvía a N en cada recarga (el bug del "17 nuevos").
+const LAST_SEEN_KEY = "neocharge:admin:notifications-seen-at";
+
+function getLastSeen(): number {
+  try {
+    const raw = localStorage.getItem(LAST_SEEN_KEY);
+    const t = raw ? Date.parse(raw) : NaN;
+    return Number.isFinite(t) ? t : 0;
+  } catch {
+    return 0;
+  }
+}
+
+function setLastSeen(when: Date = new Date()) {
+  try {
+    localStorage.setItem(LAST_SEEN_KEY, when.toISOString());
+  } catch {
+    // almacenamiento no disponible: el contador se recalcula en memoria
+  }
+}
+
 function unsubscribeSharedRealtimeChannel() {
   const channel = sharedRealtimeState.channel;
   if (!channel) return;
@@ -57,6 +79,11 @@ export function useOrderNotifications(enabled: boolean = true) {
   const [isListening, setIsListening] = useState(false);
   const { toast } = useToast();
   const seenRecordIdsRef = useRef<Set<string>>(new Set());
+  // created_at más nuevo que ya conocemos: solo lo más nuevo que esto
+  // dispara notificación. Evita el bug de notificar pedidos viejos
+  // (la carga inicial traía 15 y el poll 25 -> los 10 viejos "revivían").
+  const maxKnownTimeRef = useRef<number>(0);
+  const lastSeenRef = useRef<number>(getLastSeen());
   const flashIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
@@ -169,7 +196,9 @@ export function useOrderNotifications(enabled: boolean = true) {
     });
   }, [toast, playNotificationSound]);
 
-  // Cargar notificaciones previas no leídas
+  // Cargar notificaciones previas: NUNCA dispara avisos, solo puebla la lista
+  // y calcula cuántas son realmente nuevas (más nuevas que la última vez
+  // que Mel las marcó como vistas).
   const loadRecentNotifications = useCallback(async () => {
     try {
       const [{ data: orderData, error: orderError }, { data: saleData, error: saleError }] = await Promise.all([
@@ -212,12 +241,37 @@ export function useOrderNotifications(enabled: boolean = true) {
 
       const allNotifs = [...orderNotifs, ...saleNotifs].sort((a, b) => new Date(b.created_at).getTime() - new Date(a.created_at).getTime());
       setNotifications(allNotifs);
-      setUnreadCount(allNotifs.length);
       seenRecordIdsRef.current = new Set(allNotifs.map((notif) => notif.id));
+      maxKnownTimeRef.current = allNotifs.reduce(
+        (m, n) => Math.max(m, new Date(n.created_at).getTime() || 0),
+        0,
+      );
+
+      // Primera vez en este navegador: arrancar el "visto" en ahora para no
+      // contar el historial viejo como nuevo.
+      if (!lastSeenRef.current) {
+        lastSeenRef.current = Date.now();
+        setLastSeen();
+        setUnreadCount(0);
+      } else {
+        setUnreadCount(allNotifs.filter((n) => new Date(n.created_at).getTime() > lastSeenRef.current).length);
+      }
     } catch (error) {
       console.error('Error loading notifications:', error);
     }
   }, []);
+
+  // Entrada única para registros que llegan por poll o realtime:
+  // solo avisa si es REALMENTE nuevo (más nuevo que todo lo conocido).
+  const handleIncomingRecord = useCallback((payload: OrderPayload | SalePayload, type: 'order' | 'sale') => {
+    if (isGenuinelyNew(payload.created_at, maxKnownTimeRef.current)) {
+      maxKnownTimeRef.current = new Date(payload.created_at).getTime();
+      pushNotification(payload, type);
+    } else {
+      // Viejo o ya visto: solo registrar el id para no re-evaluarlo.
+      if (payload.id) seenRecordIdsRef.current.add(payload.id);
+    }
+  }, [pushNotification]);
 
   // Configurar escucha en tiempo real
   useEffect(() => {
@@ -255,13 +309,13 @@ export function useOrderNotifications(enabled: boolean = true) {
         const unseenOrders = getUnseenRecords(seenRecordIdsRef.current, orderData || []);
         unseenOrders.forEach((order: OrderPayload) => {
           if (!order.id) return;
-          pushNotification(order, 'order');
+          handleIncomingRecord(order, 'order');
         });
 
         const unseenSales = getUnseenRecords(seenRecordIdsRef.current, saleData || []);
         unseenSales.forEach((sale: SalePayload) => {
           if (!sale.id) return;
-          pushNotification(sale, 'sale');
+          handleIncomingRecord(sale, 'sale');
         });
       } catch (error) {
         console.error('Error polling notifications:', error);
@@ -284,7 +338,7 @@ export function useOrderNotifications(enabled: boolean = true) {
         (payload) => {
           const newOrder = payload.new as unknown as OrderPayload;
           if (newOrder?.id) {
-            pushNotification(newOrder, 'order');
+            handleIncomingRecord(newOrder, 'order');
           }
         }
       )
@@ -298,7 +352,7 @@ export function useOrderNotifications(enabled: boolean = true) {
         (payload) => {
           const newSale = payload.new as unknown as SalePayload;
           if (newSale?.id) {
-            pushNotification(newSale, 'sale');
+            handleIncomingRecord(newSale, 'sale');
           }
         }
       );
@@ -328,7 +382,7 @@ export function useOrderNotifications(enabled: boolean = true) {
         unsubscribeSharedRealtimeChannel();
       }
     };
-  }, [enabled, loadRecentNotifications, pushNotification]);
+  }, [enabled, loadRecentNotifications, handleIncomingRecord]);
 
   // Pedir permisos para notificaciones
   const requestNotificationPermission = () => {
@@ -337,7 +391,15 @@ export function useOrderNotifications(enabled: boolean = true) {
     }
   };
 
-  // Limpiar notificaciones leídas
+  // Marcar todo como visto: persiste la marca para que el contador
+  // no vuelva a subir en la próxima visita.
+  const markAllAsRead = useCallback(() => {
+    lastSeenRef.current = Date.now();
+    setLastSeen();
+    setUnreadCount(0);
+  }, []);
+
+  // Limpiar notificaciones leídas (solo memoria)
   const clearNotifications = () => {
     setNotifications([]);
     setUnreadCount(0);
@@ -348,6 +410,7 @@ export function useOrderNotifications(enabled: boolean = true) {
     unreadCount,
     isListening,
     clearNotifications,
+    markAllAsRead,
     requestNotificationPermission,
   };
 }

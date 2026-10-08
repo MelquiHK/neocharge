@@ -24,6 +24,8 @@ import {
   Wallet,
   BarChart3,
   Handshake,
+  Bell,
+  CheckCheck,
 } from "lucide-react";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminProducts } from "@/components/admin/AdminProducts";
@@ -47,7 +49,8 @@ const Admin = () => {
   const { user, isAdmin, permissions, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState("dashboard");
   const [sidebarOpen, setSidebarOpen] = useState(false);
-  const { unreadCount } = useOrderNotifications(true);
+  const [notifOpen, setNotifOpen] = useState(false);
+  const { notifications, unreadCount, markAllAsRead } = useOrderNotifications(true);
 
   useEffect(() => {
     document.title = "Admin — NeoCharge";
@@ -327,16 +330,72 @@ const Admin = () => {
             </nav>
           </div>
 
-          <div className="flex shrink-0 items-center gap-2 sm:gap-3">
+          <div className="relative flex shrink-0 items-center gap-2 sm:gap-3">
             {unreadCount > 0 && (
               <button
-                onClick={() => goTo("orders")}
+                onClick={() => { markAllAsRead(); goTo("orders"); }}
                 className="flex animate-pulse items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400"
+                title="Ver pedidos y marcar como vistos"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
                 {unreadCount} nuevo{unreadCount === 1 ? "" : "s"}
               </button>
             )}
+            <div className="relative">
+              <button
+                onClick={() => setNotifOpen((v) => !v)}
+                className="relative rounded-full border border-border/70 p-2 transition-colors hover:bg-muted"
+                aria-label="Notificaciones"
+              >
+                <Bell className="h-4 w-4" />
+                {unreadCount > 0 && (
+                  <span className="absolute -right-1 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[10px] font-bold text-white">
+                    {unreadCount > 99 ? "99+" : unreadCount}
+                  </span>
+                )}
+              </button>
+              {notifOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setNotifOpen(false)} />
+                  <div className="absolute right-0 z-50 mt-2 w-80 max-w-[calc(100vw-2rem)] overflow-hidden rounded-2xl border border-border/70 bg-background shadow-2xl">
+                    <div className="flex items-center justify-between border-b border-border/60 px-4 py-3">
+                      <p className="text-sm font-bold">Notificaciones</p>
+                      <button
+                        onClick={() => { markAllAsRead(); setNotifOpen(false); }}
+                        className="inline-flex items-center gap-1 text-xs font-semibold text-primary hover:underline"
+                      >
+                        <CheckCheck className="h-3.5 w-3.5" /> Marcar vistas
+                      </button>
+                    </div>
+                    <div className="max-h-80 overflow-y-auto">
+                      {notifications.length === 0 ? (
+                        <p className="px-4 py-8 text-center text-sm text-muted-foreground">
+                          Sin notificaciones por ahora.
+                        </p>
+                      ) : (
+                        notifications.slice(0, 30).map((n) => (
+                          <button
+                            key={n.id}
+                            onClick={() => { markAllAsRead(); setNotifOpen(false); goTo(n.type === "order" ? "orders" : "sales"); }}
+                            className="flex w-full items-start gap-3 border-b border-border/40 px-4 py-3 text-left transition-colors last:border-0 hover:bg-muted/60"
+                          >
+                            <span className="mt-0.5 text-lg leading-none">
+                              {n.type === "order" ? "🎉" : "📈"}
+                            </span>
+                            <span className="min-w-0 flex-1">
+                              <span className="block truncate text-sm font-semibold">{n.subtitle}</span>
+                              <span className="block text-xs text-muted-foreground">
+                                {new Date(n.created_at).toLocaleString("es-CU", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" })}
+                              </span>
+                            </span>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+                </>
+              )}
+            </div>
             <Link
               to="/"
               className="inline-flex items-center gap-2 rounded-full border border-border/70 px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted sm:px-4"
