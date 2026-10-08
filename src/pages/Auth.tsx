@@ -8,7 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
-import { ArrowLeft, LogIn, UserPlus } from "lucide-react";
+import { ArrowLeft, Bell, Heart, LogIn, ShoppingBag, UserPlus } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
 import "@/components/sections/visual-effects.css";
 
@@ -117,9 +117,15 @@ const Auth = () => {
     }
   };
 
+  const benefits = [
+    { icon: ShoppingBag, text: "Sigue tus pedidos en tiempo real" },
+    { icon: Heart, text: "Guarda tus favoritos y cómpralos después" },
+    { icon: Bell, text: "Entérate primero de ofertas y novedades" },
+  ];
+
   return (
     <div className="relative overflow-hidden">
-      {/* Lavados de color + orbes */}
+      {/* Lavados de color estáticos */}
       <div className="nc-wash-a" aria-hidden />
       <div className="nc-wash-b" aria-hidden />
       <div
@@ -131,148 +137,180 @@ const Auth = () => {
         aria-hidden
       />
 
-      <div className="relative container-page py-10 md:py-16">
-        <div className="max-w-md mx-auto">
+      <div className="relative container-page py-8 md:py-14">
+        <div className="max-w-5xl mx-auto">
           <Link
             to="/"
-            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-brand-700 mb-8 transition-colors"
+            className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-brand-700 mb-6 md:mb-8 transition-colors animate-fade-in"
           >
             <ArrowLeft className="w-4 h-4" /> Volver al inicio
           </Link>
 
-          {/* Tarjeta de vidrio líquido */}
-          <div className="glass-strong rounded-[2.5rem] p-8 sm:p-10">
-            <div className="flex flex-col items-center gap-4 text-center">
-              <div className="nc-icon-tile rounded-3xl p-4 mb-1">
-                <Logo showText={false} />
+          <div className="grid lg:grid-cols-2 gap-6 lg:gap-10 items-stretch">
+            {/* Panel de marca (desktop) / cabecera (móvil) */}
+            <div className="relative overflow-hidden rounded-[2rem] bg-gradient-to-br from-brand-900 via-brand-700 to-brand-500 p-8 sm:p-10 text-white flex flex-col justify-between min-h-[280px] lg:min-h-0 animate-fade-in-up shadow-xl shadow-brand-500/25">
+              <div
+                className="absolute -top-24 -right-24 w-72 h-72 rounded-full bg-white/10 blur-3xl pointer-events-none"
+                aria-hidden
+              />
+              <div
+                className="absolute -bottom-28 -left-20 w-80 h-80 rounded-full bg-brand-900/40 blur-3xl pointer-events-none"
+                aria-hidden
+              />
+
+              <div className="relative">
+                <div className="w-14 h-14 rounded-2xl bg-white/15 backdrop-blur flex items-center justify-center shadow-lg">
+                  <Logo showText={false} />
+                </div>
+                <h1 className="font-display text-3xl sm:text-4xl font-bold tracking-tight mt-6 leading-tight">
+                  {mode === "login" ? (
+                    <>¡Hola de nuevo!</>
+                  ) : (
+                    <>Únete a <span className="text-brand-200">NeoCharge</span></>
+                  )}
+                </h1>
+                <p className="text-white/80 text-base font-light leading-relaxed mt-3 max-w-sm">
+                  {mode === "login"
+                    ? "Entra y sigue comprando como te gusta: rápido, seguro y con garantía real."
+                    : "Crea tu cuenta gratis y vive la experiencia premium de la tienda."}
+                </p>
               </div>
-              <h1 className="font-display text-3xl font-bold tracking-tight nc-title-gradient">
-                {mode === "login" ? "¡Hola de nuevo!" : "Únete a NeoCharge"}
-              </h1>
-              <p className="text-base text-muted-foreground font-light leading-relaxed">
-                {mode === "login"
-                  ? "Entra para gestionar tus compras y favoritos."
-                  : "Crea tu cuenta y vive la experiencia premium."}
-              </p>
+
+              <ul className="relative space-y-3.5 mt-8">
+                {benefits.map((b) => (
+                  <li key={b.text} className="flex items-center gap-3 text-white/90">
+                    <span className="w-9 h-9 rounded-xl bg-white/15 backdrop-blur flex items-center justify-center shrink-0">
+                      <b.icon className="w-4 h-4" />
+                    </span>
+                    <span className="text-sm font-medium">{b.text}</span>
+                  </li>
+                ))}
+              </ul>
             </div>
 
-            {/* Tabs píldora de vidrio */}
+            {/* Tarjeta del formulario */}
             <div
-              className="grid grid-cols-2 gap-1 p-1.5 rounded-full glass mt-8"
-              role="tablist"
-              aria-label="Modo de autenticación"
+              className="bg-white/85 backdrop-blur-xl rounded-[2rem] p-7 sm:p-10 shadow-xl shadow-brand-500/10 border border-white animate-fade-in-up"
+              style={{ animationDelay: "120ms" }}
             >
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === "login"}
-                onClick={() => setMode("login")}
-                className={cn(
-                  "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
-                  mode === "login"
-                    ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm"
-                    : "text-muted-foreground hover:text-brand-800",
-                )}
+              {/* Tabs píldora */}
+              <div
+                className="grid grid-cols-2 gap-1 p-1.5 rounded-full bg-brand-100/70"
+                role="tablist"
+                aria-label="Modo de autenticación"
               >
-                <LogIn className="w-4 h-4" /> Iniciar
-              </button>
-              <button
-                type="button"
-                role="tab"
-                aria-selected={mode === "signup"}
-                onClick={() => setMode("signup")}
-                className={cn(
-                  "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
-                  mode === "signup"
-                    ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm"
-                    : "text-muted-foreground hover:text-brand-800",
-                )}
-              >
-                <UserPlus className="w-4 h-4" /> Crear cuenta
-              </button>
-            </div>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === "login"}
+                  onClick={() => setMode("login")}
+                  className={cn(
+                    "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
+                    mode === "login"
+                      ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm"
+                      : "text-muted-foreground hover:text-brand-800",
+                  )}
+                >
+                  <LogIn className="w-4 h-4" /> Iniciar
+                </button>
+                <button
+                  type="button"
+                  role="tab"
+                  aria-selected={mode === "signup"}
+                  onClick={() => setMode("signup")}
+                  className={cn(
+                    "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
+                    mode === "signup"
+                      ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm"
+                      : "text-muted-foreground hover:text-brand-800",
+                  )}
+                >
+                  <UserPlus className="w-4 h-4" /> Crear cuenta
+                </button>
+              </div>
 
-            <form onSubmit={handleSubmit} className="space-y-4 mt-7">
-              {mode === "signup" && (
+              <form onSubmit={handleSubmit} className="space-y-4 mt-7">
+                {mode === "signup" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="name" className="text-slate-700 font-medium">Nombre completo</Label>
+                    <Input
+                      id="name"
+                      value={name}
+                      onChange={(e) => setName(e.target.value)}
+                      required
+                      placeholder="Juan Pérez"
+                      autoComplete="name"
+                      className="nc-input h-12"
+                    />
+                  </div>
+                )}
                 <div className="space-y-2">
-                  <Label htmlFor="name" className="text-slate-700 font-medium">Nombre completo</Label>
+                  <Label htmlFor="email" className="text-slate-700 font-medium">Correo</Label>
                   <Input
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
+                    id="email"
+                    type="email"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
                     required
-                    placeholder="Juan Pérez"
-                    autoComplete="name"
+                    placeholder="tu@correo.com"
+                    autoComplete="email"
                     className="nc-input h-12"
                   />
                 </div>
-              )}
-              <div className="space-y-2">
-                <Label htmlFor="email" className="text-slate-700 font-medium">Correo</Label>
-                <Input
-                  id="email"
-                  type="email"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  required
-                  placeholder="tu@correo.com"
-                  autoComplete="email"
-                  className="nc-input h-12"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="password" className="text-slate-700 font-medium">Contraseña</Label>
-                <Input
-                  id="password"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  required
-                  minLength={6}
-                  placeholder="Mínimo 6 caracteres"
-                  autoComplete={mode === "login" ? "current-password" : "new-password"}
-                  className="nc-input h-12"
-                />
+                <div className="space-y-2">
+                  <Label htmlFor="password" className="text-slate-700 font-medium">Contraseña</Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    required
+                    minLength={6}
+                    placeholder="Mínimo 6 caracteres"
+                    autoComplete={mode === "login" ? "current-password" : "new-password"}
+                    className="nc-input h-12"
+                  />
+                </div>
+
+                <Button
+                  type="submit"
+                  size="lg"
+                  className="nc-btn-primary w-full h-13 text-base nc-btn-shine"
+                  disabled={loading}
+                >
+                  {loading ? "Procesando..." : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+                </Button>
+              </form>
+
+              {/* Divisor */}
+              <div className="flex items-center gap-3 my-6">
+                <div className="flex-1 h-px bg-brand-200/70" />
+                <span className="text-xs text-muted-foreground font-medium">o</span>
+                <div className="flex-1 h-px bg-brand-200/70" />
               </div>
 
+              {/* Entrar con Google */}
               <Button
-                type="submit"
+                type="button"
+                variant="outline"
                 size="lg"
-                className="nc-btn-primary w-full h-13 text-base nc-btn-shine"
+                className="w-full h-13 text-base font-semibold bg-white hover:bg-brand-50 border-brand-200"
+                onClick={handleGoogleLogin}
                 disabled={loading}
               >
-                {loading ? "Procesando..." : mode === "login" ? "Iniciar sesión" : "Crear cuenta"}
+                <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" aria-hidden>
+                  <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
+                  <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
+                  <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"/>
+                  <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
+                </svg>
+                Continuar con Google
               </Button>
-            </form>
 
-            {/* Divisor */}
-            <div className="flex items-center gap-3 my-6">
-              <div className="flex-1 h-px bg-slate-200" />
-              <span className="text-xs text-muted-foreground font-medium">o</span>
-              <div className="flex-1 h-px bg-slate-200" />
+              <p className="text-xs text-muted-foreground text-center mt-6 leading-relaxed">
+                Comprar como invitado también es posible —<br />puedes hacer pedidos sin cuenta.
+              </p>
             </div>
-
-            {/* Entrar con Google */}
-            <Button
-              type="button"
-              variant="outline"
-              size="lg"
-              className="w-full h-13 text-base font-semibold bg-white hover:bg-slate-50 border-slate-200"
-              onClick={handleGoogleLogin}
-              disabled={loading}
-            >
-              <svg className="w-5 h-5 mr-2" viewBox="0 0 24 24" aria-hidden>
-                <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
-                <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
-                <path fill="#FBBC05" d="M5.84 14.1c-.22-.66-.35-1.36-.35-2.1s.13-1.44.35-2.1V7.06H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.94l3.66-2.84z"/>
-                <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.06l3.66 2.84c.87-2.6 3.3-4.52 6.16-4.52z"/>
-              </svg>
-              Continuar con Google
-            </Button>
-
-            <p className="text-xs text-muted-foreground text-center mt-6 leading-relaxed">
-              Comprar como invitado también es posible —<br />puedes hacer pedidos sin cuenta.
-            </p>
           </div>
         </div>
       </div>

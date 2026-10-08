@@ -1,8 +1,9 @@
 import { Suspense, lazy, useEffect, useState } from "react";
-import { Link, NavLink, useLocation } from "react-router-dom";
+import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Menu, ShoppingBag, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { WelcomeTransition, type WelcomeData } from "@/components/WelcomeTransition";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { cn } from "@/lib/utils";
@@ -38,8 +39,25 @@ export function Header({ className }: { className?: string }) {
   const { itemCount, openCart } = useCart();
   const { user } = useAuth();
   const location = useLocation();
+  const navigate = useNavigate();
   const [bump, setBump] = useState(false);
   const [prevCount, setPrevCount] = useState(itemCount);
+  const [welcome, setWelcome] = useState<WelcomeData | null>(null);
+
+  // El icono de la tienda es la puerta de la cuenta: si el cliente no ha
+  // entrado, lo lleva al login con animación de bienvenida; si ya entró,
+  // lo lleva a su panel. (El enlace "Inicio" del menú sigue yendo al home.)
+  const handleLogoClick = (e: React.MouseEvent<HTMLAnchorElement>) => {
+    e.preventDefault();
+    if (welcome) return;
+    const to = user ? "/cuenta" : "/auth";
+    if (location.pathname === to) return;
+    setWelcome({
+      to,
+      title: user ? "¡Hola de nuevo!" : "¡Bienvenido a NeoCharge!",
+      subtitle: user ? "Abriendo tu panel..." : "Entra o crea tu cuenta en segundos",
+    });
+  };
 
   useEffect(() => {
     if (itemCount > prevCount) {
@@ -79,7 +97,7 @@ export function Header({ className }: { className?: string }) {
               : "glass-water h-20",
           )}
         >
-          <Logo />
+          <Logo onClick={handleLogoClick} />
 
           <nav className="hidden lg:flex items-center gap-1" aria-label="Principal">
             {links.map((l) => (
@@ -176,6 +194,13 @@ export function Header({ className }: { className?: string }) {
           </div>
         )}
       </div>
+
+      {/* Animación de bienvenida al tocar el icono de la tienda */}
+      <WelcomeTransition
+        data={welcome}
+        onNavigate={(to) => navigate(to)}
+        onDone={() => setWelcome(null)}
+      />
     </header>
   );
 }

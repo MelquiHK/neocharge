@@ -238,3 +238,114 @@
     color: #d8b3c9;
   }
 }
+
+/* ---------- Transición de bienvenida (logo → login/perfil) ---------- */
+.nc-welcome-veil {
+  position: fixed;
+  inset: 0;
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background:
+    radial-gradient(60% 50% at 50% 42%, rgba(241, 212, 217, 0.9), transparent 70%),
+    radial-gradient(45% 40% at 50% 60%, rgba(181, 143, 169, 0.35), transparent 70%),
+    linear-gradient(160deg, #fffbfd 0%, #f9eef2 55%, #f3e2e9 100%);
+  animation: nc-welcome-veil-in 0.45s ease-out both;
+  pointer-events: all;
+}
+.nc-welcome-veil--leaving {
+  animation: nc-welcome-veil-out 0.4s ease-in both;
+}
+@keyframes nc-welcome-veil-in {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+@keyframes nc-welcome-veil-out {
+  from { opacity: 1; }
+  to { opacity: 0; }
+}
+
+.nc-welcome-ring {
+  position: absolute;
+  left: 50%;
+  top: 42%;
+  width: 120px;
+  height: 120px;
+  margin: -60px 0 0 -60px;
+  border-radius: 9999px;
+  border: 2px solid rgba(158, 95, 143, 0.45);
+  animation: nc-welcome-ring 1.1s ease-out both;
+  pointer-events: none;
+}
+.nc-welcome-ring--late {
+  animation-delay: 0.18s;
+  border-color: rgba(181, 143, 169, 0.35);
+}
+@keyframes nc-welcome-ring {
+  0% { transform: scale(0.4); opacity: 0; }
+  25% { opacity: 1; }
+  100% { transform: scale(3.2); opacity: 0; }
+}
+
+.nc-welcome-core {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  padding: 0 2rem;
+}
+
+.nc-welcome-logo {
+  width: 88px;
+  height: 88px;
+  border-radius: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #b58fa9 0%, #9e5f8f 55%, #7c4a70 100%);
+  box-shadow:
+    0 18px 45px -10px rgba(158, 95, 143, 0.55),
+    0 0 0 10px rgba(241, 212, 217, 0.5);
+  animation: nc-welcome-bloom 0.9s cubic-bezier(0.22, 1.4, 0.36, 1) both;
+}
+@keyframes nc-welcome-bloom {
+  0% { transform: scale(0.5); opacity: 0; }
+  60% { transform: scale(1.06); opacity: 1; }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.nc-welcome-title {
+  margin-top: 1.4rem;
+  font-family: var(--font-display, inherit);
+  font-size: 1.9rem;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  background: linear-gradient(100deg, #514254 10%, #9e5f8f 55%, #b58fa9 90%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  animation: nc-welcome-rise 0.7s ease-out 0.25s both;
+}
+.nc-welcome-subtitle {
+  margin-top: 0.5rem;
+  font-size: 0.95rem;
+  color: rgba(81, 66, 84, 0.75);
+  animation: nc-welcome-rise 0.7s ease-out 0.38s both;
+}
+@keyframes nc-welcome-rise {
+  from { transform: translateY(14px); opacity: 0; }
+  to { transform: translateY(0); opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .nc-welcome-veil,
+  .nc-welcome-veil--leaving,
+  .nc-welcome-ring,
+  .nc-welcome-logo,
+  .nc-welcome-title,
+  .nc-welcome-subtitle {
+    animation-duration: 0.01s !important;
+  }
+}
