@@ -56,7 +56,7 @@ function ProductCardSkeleton() {
   );
 }
 
-const emptySuggestions = ["Cargador 72V", "Audífonos", "72V/5A"];
+const emptySuggestions = ["Cargador 72V", "Amplificador", "72V/5A"];
 
 const ShopPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
