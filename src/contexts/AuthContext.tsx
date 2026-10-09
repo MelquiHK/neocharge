@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState, useCallback, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useCallback, type ReactNode } from "react";
 import { getSupabase } from "@/integrations/supabase/lazy-client";
 import type { Session, User } from "@supabase/supabase-js";
 import { NO_PERMS, type AdminPermissions, type UserRole, type Profile } from "@/types";
