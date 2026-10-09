@@ -161,22 +161,28 @@ export function AdminCustomers() {
   const updateRole = async (newRole: UserRole) => {
     if (!viewing) return;
     try {
-      // First remove existing roles to keep it simple (one role per user in this logic)
-      await supabase.from("user_roles").delete().eq("user_id", viewing.id);
-      
-      // Add new role
-      const { error } = await supabase.from("user_roles").insert({
-        user_id: viewing.id,
-        role: newRole as UserRole
-      });
+      // Upsert en vez de borrar+insertar: si el insert falla, el usuario
+      // conserva su rol anterior en lugar de quedarse sin ningún rol.
+      const { error } = await supabase.from("user_roles").upsert(
+        { user_id: viewing.id, role: newRole as UserRole },
+        { onConflict: "user_id,role" }
+      );
 
       if (error) throw error;
-      
+
+      // Recién ahora se borran los roles anteriores: un solo rol por usuario,
+      // pero solo después de que el nuevo quedó guardado.
+      await supabase.from("user_roles").delete().eq("user_id", viewing.id).neq("role", newRole as UserRole);
+
       setViewing({ ...viewing, role: newRole });
       toast.success(`Rol actualizado a ${newRole}`);
       load();
     } catch (error: unknown) {
-      toast.error("Error al actualizar rol: " + (error instanceof Error ? error.message : String(error)));
+      const msg =
+        error instanceof Error ? error.message
+        : typeof error === "object" && error !== null && "message" in error ? String((error as { message: unknown }).message)
+        : (() => { try { return JSON.stringify(error); } catch { return String(error); } })();
+      toast.error("Error al actualizar rol: " + msg);
     }
   };
 

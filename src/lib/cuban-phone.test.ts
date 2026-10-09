@@ -6,6 +6,12 @@ describe("normalizeCubanPhone", () => {
     expect(normalizeCubanPhone("58427265")).toBe("5358427265");
   });
 
+  it("acepta móviles que empiezan con 6 (series nuevas de ETECSA)", () => {
+    expect(normalizeCubanPhone("63180910")).toBe("5363180910");
+    expect(normalizeCubanPhone("+53 63180910")).toBe("5363180910");
+    expect(normalizeCubanPhone("5363180910")).toBe("5363180910");
+  });
+
   it("acepta formatos con espacios, guiones y +53", () => {
     expect(normalizeCubanPhone("53 5842 7265")).toBe("5358427265");
     expect(normalizeCubanPhone("+53 5842-7265")).toBe("5358427265");
@@ -22,7 +28,7 @@ describe("normalizeCubanPhone", () => {
   });
 
   it("rechaza números que no son móviles cubanos", () => {
-    expect(normalizeCubanPhone("5312345678")).toBeNull(); // no empieza por 5 tras el 53
+    expect(normalizeCubanPhone("5312345678")).toBeNull(); // no empieza por 5 o 6 tras el 53
   });
 });
 
