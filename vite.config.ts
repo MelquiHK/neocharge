@@ -56,7 +56,9 @@ export default defineConfig(({ mode }) => ({
         navigateFallbackDenylist: [/^\/descargas\/.*\.apk$/],
         // Las imágenes NO se precachean (ahorra ~2MB en la primera carga):
         // se sirven con caché en tiempo de ejecución más abajo.
-        globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest,woff2}'],
+        // offline-seed.json SÍ se precachea: es el paquete de datos inicial
+        // que permite usar la app en la primera instalación sin internet.
+        globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest,woff2}', 'offline-seed.json'],
         cleanupOutdatedCaches: true,
         maximumFileSizeToCacheInBytes: 3 * 1024 * 1024,
         runtimeCaching: [
@@ -66,6 +68,21 @@ export default defineConfig(({ mode }) => ({
             options: {
               cacheName: 'neocharge-images',
               expiration: { maxEntries: 80, maxAgeSeconds: 30 * 24 * 60 * 60 },
+            },
+          },
+          {
+            // Lecturas GET a la API de Supabase: red primero, caché de 5 min
+            // como respaldo. Es una segunda red de seguridad además del caché
+            // de la app (IndexedDB): si una lectura del catálogo no pasó por
+            // fetchWithCache, igual funciona offline unos minutos.
+            // Los POST (pedidos, auth) nunca se cachean.
+            urlPattern: ({ url }) => url.hostname.endsWith('.supabase.co') && url.pathname.startsWith('/rest/v1/'),
+            handler: 'NetworkFirst',
+            options: {
+              cacheName: 'neocharge-api',
+              networkTimeoutSeconds: 8,
+              expiration: { maxEntries: 50, maxAgeSeconds: 5 * 60 },
+              cacheableResponse: { statuses: [0, 200] },
             },
           },
         ],

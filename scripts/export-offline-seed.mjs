@@ -17,10 +17,14 @@ import { fileURLToPath } from "node:url";
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 
 function loadEnv() {
-  const env = {};
-  for (const line of readFileSync(join(root, ".env"), "utf8").split("\n")) {
-    const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
-    if (m) env[m[1]] = m[2];
+  const env = { ...process.env };
+  try {
+    for (const line of readFileSync(join(root, ".env"), "utf8").split("\n")) {
+      const m = line.match(/^\s*([A-Z0-9_]+)\s*=\s*(.*?)\s*$/);
+      if (m && !env[m[1]]) env[m[1]] = m[2];
+    }
+  } catch {
+    // Sin archivo .env (p. ej. en Vercel): se usan las vars de entorno.
   }
   return env;
 }
@@ -29,8 +33,9 @@ const env = loadEnv();
 const URL = env.VITE_SUPABASE_URL;
 const KEY = env.VITE_SUPABASE_PUBLISHABLE_KEY;
 if (!URL || !KEY) {
-  console.error("Falta VITE_SUPABASE_URL o VITE_SUPABASE_PUBLISHABLE_KEY en .env");
-  process.exit(1);
+  // No romper el build: se conserva la semilla anterior si existe.
+  console.warn("export-offline-seed: falta VITE_SUPABASE_URL o VITE_SUPABASE_PUBLISHABLE_KEY; se usa la semilla anterior.");
+  process.exit(0);
 }
 
 async function get(table, select, params = "") {
@@ -44,6 +49,7 @@ async function get(table, select, params = "") {
 
 const seed = { exportedAt: new Date().toISOString(), data: {} };
 
+try {
 // Productos activos (mismo select que la tienda)
 seed.data.products_v1 = await get(
   "products",
@@ -80,3 +86,8 @@ console.log(`Semilla escrita en public/offline-seed.json (${kb} KB):`,
   `${seed.data.categories_v1.length} categorías,`,
   `${seed.data.services_v1.length} servicios,`,
   `${seed.data.blog_v1.length} posts.`);
+} catch (e) {
+  // No romper el build por un fallo de red: se conserva la semilla anterior.
+  console.warn("export-offline-seed: no se pudo descargar el catálogo:", e?.message ?? e);
+  process.exit(0);
+}

@@ -16,6 +16,7 @@ import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { normalizeCubanPhone } from "@/lib/cuban-phone";
 import { validateStoredRefCode, clearStoredRefCode } from "@/lib/referral";
+import { queuePendingOrder } from "@/lib/offline/pending-orders";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
 import { useSEO } from "@/hooks/use-seo";
@@ -221,14 +222,24 @@ const Checkout = () => {
     // M11: la recogida es genérica (sin local específico); el local exacto se
     // coordina por WhatsApp (ver nota arriba). No hay validación de local.
 
+    // Pedido offline: sin conexión no se puede cotizar el envío (OSRM) ni
+    // verificar el stock en vivo. Solo se permite "recoger en local": el
+    // pedido se encola y se envía solo cuando vuelva internet.
+    const isOfflineOrder = typeof navigator !== "undefined" && !navigator.onLine;
+    if (isOfflineOrder && delivery === "delivery") {
+      toast.error("Sin conexión no podemos calcular el costo del envío. Elige «Recoger en local» o inténtalo cuando tengas internet.");
+      return;
+    }
+
     setSubmitting(true);
 
     try {
       // M10/H4/H11: revalidar el stock en vivo antes de insertar el pedido.
       // El carrito vive en localStorage y el stock pudo cambiar entre que el
       // cliente añadió los productos y confirma. null = sin control de stock.
+      // (Offline se omite: no hay cómo verificar; el admin confirma por WhatsApp.)
       const itemIds = items.map((it) => it.id).filter(Boolean) as string[];
-      if (itemIds.length > 0) {
+      if (!isOfflineOrder && itemIds.length > 0) {
         const { data: liveStocks, error: stockError } = await supabase
           .from("products")
           .select("id,stock")
@@ -268,7 +279,8 @@ const Checkout = () => {
       // Abrir la ventana de WhatsApp ANTES de los awaits: en móvil los
       // popups abiertos después de una espera se bloquean. Se navega
       // a la URL real cuando el pedido quede guardado.
-      const waWindow = window.open("about:blank", "_blank");
+      // (Offline no se abre: WhatsApp tampoco tiene conexión.)
+      const waWindow = isOfflineOrder ? null : window.open("about:blank", "_blank");
 
       const mapLink = coords
         ? `https://www.google.com/maps/search/?api=1&query=${coords.lat},${coords.lng}`
@@ -327,15 +339,30 @@ const Checkout = () => {
         ...(refCode ? { ref_code: refCode } : {}),
       };
 
-      const { error } = await supabase.from("orders").insert(orderPayload);
-      if (error) {
-        console.error("Order save error:", error);
-        toast.error(error.message || "No se pudo guardar el pedido. Intenta de nuevo.");
-        return;
+      if (isOfflineOrder) {
+        // Sin conexión: el pedido se encola y viaja solo cuando vuelva internet.
+        await queuePendingOrder(orderId, orderPayload as Record<string, unknown>);
+      } else {
+        const { error } = await supabase.from("orders").insert(orderPayload);
+        if (error) {
+          console.error("Order save error:", error);
+          toast.error(error.message || "No se pudo guardar el pedido. Intenta de nuevo.");
+          return;
+        }
       }
 
       // El referido se consume con la compra: no se arrastra a otro pedido.
       clearStoredRefCode();
+
+      if (isOfflineOrder) {
+        // Sin WhatsApp ni confirmación en vivo: el pedido se envía solo.
+        toast.success("Sin conexión: tu pedido quedó guardado y se enviará automáticamente cuando vuelva internet.");
+        setTimeout(() => {
+          clearCart();
+          navigate(`/pedido-confirmado/${orderId}?pending=1`);
+        }, 1500);
+        return;
+      }
 
       const waMessage = buildWhatsAppMessage({
         items,

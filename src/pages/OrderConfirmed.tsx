@@ -1,10 +1,11 @@
 import { useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
-import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Package, Truck } from "lucide-react";
+import { Link, useParams, useSearchParams } from "react-router-dom";
+import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Package, Truck, WifiOff } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatMoney } from "@/lib/format";
 import { orderStatusLabel, shortOrderId } from "@/lib/order-status";
 import { useSEO } from "@/hooks/use-seo";
+import { getPendingOrder } from "@/lib/offline/pending-orders";
 
 const WHATSAPP_NUMBER = "5363180910";
 
@@ -31,9 +32,12 @@ interface ConfirmedOrder {
 const OrderConfirmed = () => {
   useSEO("orderConfirmed");
   const { id } = useParams<{ id: string }>();
+  const [searchParams] = useSearchParams();
   const [order, setOrder] = useState<ConfirmedOrder | null>(null);
   const [loading, setLoading] = useState(true);
   const [notFound, setNotFound] = useState(false);
+  // Pedido hecho sin conexión: vive en la cola local hasta que vuelva internet.
+  const [isPendingSync, setIsPendingSync] = useState(false);
 
   useEffect(() => {
     const load = async () => {
@@ -41,6 +45,28 @@ const OrderConfirmed = () => {
         setLoading(false);
         setNotFound(true);
         return;
+      }
+      // 1) ¿Es un pedido encolado offline? Se muestra desde la cola local.
+      if (searchParams.get("pending") === "1") {
+        const queued = await getPendingOrder(id);
+        if (queued) {
+          const p = queued.payload as Record<string, unknown>;
+          setOrder({
+            id: String(p.id ?? id),
+            created_at: new Date(queued.queuedAt).toISOString(),
+            status: "pending",
+            total: Number(p.total ?? 0),
+            total_cup: (p.total_cup as number | null) ?? null,
+            payment_currency: String(p.payment_currency ?? "USD"),
+            items: (Array.isArray(p.items) ? p.items : []) as ConfirmedOrderItem[],
+            customer_name: String(p.customer_name ?? ""),
+            delivery_method: String(p.delivery_method ?? "pickup"),
+          });
+          setIsPendingSync(true);
+          setLoading(false);
+          return;
+        }
+        // Ya se envió al volver la conexión: cae al RPC normal.
       }
       // Los invitados no tienen SELECT en orders por RLS: se lee por RPC pública.
       const { data, error } = await supabase
@@ -55,7 +81,7 @@ const OrderConfirmed = () => {
       setLoading(false);
     };
     load();
-  }, [id]);
+  }, [id, searchParams]);
 
   if (loading) {
     return (
@@ -99,6 +125,12 @@ const OrderConfirmed = () => {
           </div>
 
           <div className="space-y-2">
+            {isPendingSync && (
+              <div className="mx-auto max-w-md flex items-center justify-center gap-2 px-4 py-2.5 rounded-full bg-amber-500/15 border border-amber-500/30 text-amber-700 dark:text-amber-300 text-sm font-medium">
+                <WifiOff className="w-4 h-4 shrink-0" />
+                <span>Pedido guardado sin conexión — se enviará solo cuando vuelva internet</span>
+              </div>
+            )}
             <p className="text-xs font-bold uppercase tracking-widest text-brand-600">
               Pedido recibido
             </p>
