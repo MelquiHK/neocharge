@@ -6,7 +6,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   setting_key: "default",
   warranty_intro: "Cada producto que sale de nuestros locales se prueba antes de entregarse. Esta es nuestra política clara y honesta para que compres con total tranquilidad.",
   warranty_chargers_title: "Prueba al momento de la entrega",
-  warranty_chargers_text: "Al recibir tu cargador, puedes probarlo en el momento. Si no enciende o presenta algún problema, tienes derecho a cambiarlo por otro o pedir la devolución de tu dinero.",
+  warranty_chargers_text: "Al recibir tu cargador, puedes probarlo en el momento. Si no enciende o presenta algún problema, tienes derecho a cambiarlo por otro o pedir la devolución de tu dinero. Además, los cargadores tienen 1 semana de garantía: si falla dentro de esa semana por defecto de fábrica, te lo cambiamos sin costo.",
   warranty_electronics_title: "Productos de electrónica",
   warranty_electronics_text: "Los demás productos de electrónica se prueban en el lugar al momento de la entrega. Si vienen sellados de fábrica, se entregan en sus condiciones originales y no requieren prueba.",
   warranty_important_title: "Importante",
@@ -18,7 +18,7 @@ const DEFAULT_SETTINGS: SiteSettings = {
   support_phone: "+53 6318-0910",
   support_email: "neocharge0@gmail.com",
   support_address: "D entre 21 y 23, Vedado, La Habana",
-  support_hours: "Atención 24 horas, todos los días",
+  support_hours: "Atención de 8am a 8pm, todos los días",
   locations_intro: "Compra en cualquiera de nuestros locales. Activa los filtros y revisa stock en tiempo real para cada punto de venta.",
 };
 

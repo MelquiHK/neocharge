@@ -32,7 +32,7 @@ const Contact = () => {
   const phone = settings.support_phone ?? "+53 6318-0910";
   const emailValue = settings.support_email ?? "neocharge0@gmail.com";
   const address = settings.support_address ?? "Calle D entre 21 y 23, Vedado, La Habana";
-  const hours = settings.support_hours ?? "Atención 24 horas, todos los días";
+  const hours = settings.support_hours ?? "Atención de 8am a 8pm, todos los días";
 
   const cards = [
     {
@@ -82,7 +82,7 @@ const Contact = () => {
             Hablemos
           </h1>
           <p className="text-xl text-muted-foreground font-light leading-relaxed">
-            Estamos disponibles <span className="font-semibold text-brand-800">24 horas</span> para resolver tus dudas. <br className="hidden md:block" />
+            Estamos disponibles <span className="font-semibold text-brand-800">de 8am a 8pm</span> para resolver tus dudas. <br className="hidden md:block" />
             Elige el canal que prefieras y te responderemos al instante.
           </p>
         </header>

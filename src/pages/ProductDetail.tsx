@@ -75,6 +75,7 @@ export default function ProductDetail() {
   const [activeImage, setActiveImage] = useState(0);
   const [quantity, setQuantity] = useState(1);
   const [viewerOpen, setViewerOpen] = useState(false);
+  const [descExpanded, setDescExpanded] = useState(false);
   
   const { isFavorite, toggleFavorite } = useUnifiedFavorites();
   const liked = product ? isFavorite(product.id) : false;
@@ -146,7 +147,21 @@ export default function ProductDetail() {
             .neq("id", data.id)
             .limit(4);
           if (relError) console.error("Related products error:", relError);
-          if (rel) setRelated(rel as Product[]);
+          let relatedList = (rel ?? []) as Product[];
+          // Si la categoría aporta pocos, rellenar con destacados de otras
+          // categorías para que la sección no quede casi vacía.
+          if (relatedList.length < 4) {
+            const exclude = [data.id, ...relatedList.map((p) => p.id)];
+            const { data: fill } = await supabase
+              .from("products")
+              .select("id,name,slug,price,compare_price,images,main_image_index,stock,is_featured,category_id,description,specifications,currency,price_cup,extra_cup_per_usd,warranty_type,battery_type")
+              .eq("is_active", true)
+              .not("id", "in", `(${exclude.join(",")})`)
+              .order("is_featured", { ascending: false })
+              .limit(4 - relatedList.length);
+            if (fill) relatedList = [...relatedList, ...(fill as Product[])];
+          }
+          setRelated(relatedList);
         }
       } catch (err) {
         console.error("ProductDetail error:", err);
@@ -460,7 +475,18 @@ export default function ProductDetail() {
           {product.description && (
             <div className="glass rounded-3xl p-5 border-brand-200/60 hover-lift">
               <h3 className="font-semibold mb-3">Descripción</h3>
-              <p className="text-muted-foreground leading-relaxed whitespace-pre-wrap">{product.description}</p>
+              <p className={`text-muted-foreground leading-relaxed whitespace-pre-wrap ${!descExpanded && product.description.length > 280 ? "line-clamp-4" : ""}`}>
+                {product.description}
+              </p>
+              {product.description.length > 280 && (
+                <button
+                  type="button"
+                  onClick={() => setDescExpanded((v) => !v)}
+                  className="mt-2 text-sm font-semibold text-primary hover:underline"
+                >
+                  {descExpanded ? "Leer menos" : "Leer más"}
+                </button>
+              )}
             </div>
           )}
 

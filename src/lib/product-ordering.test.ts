@@ -15,7 +15,7 @@ describe("sortProductsForShop", () => {
     expect(sorted.map((p) => p.id)).toEqual(["2", "4", "3", "1"]);
   });
 
-  it("sorts newest products after featured items when requested", () => {
+  it("sorts newest products purely by date when requested (featured not pinned)", () => {
     const products = [
       { id: "a", is_featured: false, sort_order: 0, created_at: "2024-01-01T00:00:00Z" },
       { id: "b", is_featured: true, sort_order: 0, created_at: "2024-02-01T00:00:00Z" },
@@ -24,7 +24,7 @@ describe("sortProductsForShop", () => {
 
     const sorted = sortProductsForShop(products, "new");
 
-    expect(sorted.map((p) => p.id)).toEqual(["b", "c", "a"]);
+    expect(sorted.map((p) => p.id)).toEqual(["c", "b", "a"]);
   });
 
   it("sorts by category type after featured items", () => {
@@ -48,6 +48,7 @@ describe("sortProductsForShop", () => {
     ];
 
     expect(sortProductsForShop(products, "manual").map((p) => p.id)).toEqual(["4", "3", "2", "1"]);
-    expect(sortProductsForShop(products, "price-asc").map((p) => p.id)).toEqual(["4", "3", "2", "1"]);
+    // En price-asc los destacados NO se fijan: agotados al final, ordenados por precio.
+    expect(sortProductsForShop(products, "price-asc").map((p) => p.id)).toEqual(["4", "3", "1", "2"]);
   });
 });

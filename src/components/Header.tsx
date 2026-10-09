@@ -1,6 +1,6 @@
 import { Suspense, lazy, useEffect, useState } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
-import { Menu, ShoppingBag, User, X } from "lucide-react";
+import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { WelcomeTransition, type WelcomeData } from "@/components/WelcomeTransition";
@@ -45,6 +45,16 @@ export function Header({ className }: { className?: string }) {
   const [bump, setBump] = useState(false);
   const [prevCount, setPrevCount] = useState(itemCount);
   const [welcome, setWelcome] = useState<WelcomeData | null>(null);
+  const [searchOpen, setSearchOpen] = useState(false);
+  const [searchTerm, setSearchTerm] = useState("");
+
+  const submitSearch = (e?: React.FormEvent) => {
+    e?.preventDefault();
+    const q = searchTerm.trim();
+    if (!q) return;
+    setSearchOpen(false);
+    navigate(`/tienda?q=${encodeURIComponent(q)}`);
+  };
 
   // El icono de la tienda es la puerta de la cuenta: si el cliente no ha
   // entrado, lo lleva al login con animación de bienvenida; si ya entró,
@@ -129,6 +139,37 @@ export function Header({ className }: { className?: string }) {
           </nav>
 
           <div className="flex items-center gap-2">
+            {/* Buscador: siempre visible, expande al tocar */}
+            {searchOpen ? (
+              <form onSubmit={submitSearch} className="flex items-center gap-1 animate-fade-in" role="search">
+                <input
+                  autoFocus
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  onKeyDown={(e) => e.key === "Escape" && setSearchOpen(false)}
+                  placeholder="Buscar productos…"
+                  aria-label="Buscar productos"
+                  className="h-10 w-40 sm:w-56 rounded-full bg-secondary/70 border border-border px-4 text-sm outline-none focus:border-primary/50 placeholder:text-muted-foreground"
+                />
+                <button
+                  type="button"
+                  onClick={() => setSearchOpen(false)}
+                  className="rounded-full h-10 w-10 flex items-center justify-center hover:bg-secondary transition-colors"
+                  aria-label="Cerrar buscador"
+                >
+                  <X className="w-5 h-5" />
+                </button>
+              </form>
+            ) : (
+              <button
+                onClick={() => setSearchOpen(true)}
+                className="rounded-full h-10 w-10 flex items-center justify-center hover:bg-secondary transition-colors"
+                aria-label="Buscar productos"
+              >
+                <Search className="w-5 h-5" />
+              </button>
+            )}
+
             {/* Account (chunk asíncrono: no bloquea el primer paint) */}
             <Suspense fallback={<AccountMenuFallback />}>
               <AccountMenu />
@@ -138,7 +179,7 @@ export function Header({ className }: { className?: string }) {
             <button
               onClick={openCart}
               className="relative rounded-full h-10 w-10 flex items-center justify-center hover:bg-secondary transition-colors"
-              aria-label={`Carrito (${itemCount} productos)`}
+              aria-label={`Carrito (${itemCount} ${itemCount === 1 ? "producto" : "productos"})`}
             >
               <ShoppingBag className="w-5 h-5" />
               {itemCount > 0 && (

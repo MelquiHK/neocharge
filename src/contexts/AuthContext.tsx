@@ -14,6 +14,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [permissions, setPermissions] = useState<AdminPermissions>(NO_PERMS);
   const [loading, setLoading] = useState(true);
   const [authDataReady, setAuthDataReady] = useState(false);
+  // Id del usuario cuyos roles ya se resolvieron. Evita que un TOKEN_REFRESHED
+  // (u otro evento sin cambio de usuario) desmonte las páginas con guardia
+  // de rol y pierda su estado local (p. ej. el recorrido del mensajero).
+  const resolvedUserId = useRef<string | null>(null);
 
   const loadAuthData = useCallback(async (userId: string, email?: string, userMetadata?: Record<string, unknown>) => {
     // El cliente Supabase viaja en un chunk asíncrono (fuera del bundle
@@ -74,9 +78,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // rol por defecto ("user") en vez de dejar una promesa rechazada sin manejar.
       console.error("Error cargando datos de autenticación:", err);
     } finally {
+      resolvedUserId.current = userId;
       setAuthDataReady(true);
     }
   }, []);
+
+  // Nota: resolvedUserId se fija aquí también por si loadAuthData se llama
+  // desde refreshPermissions u otra vía sin pasar por onAuthStateChange.
 
   useEffect(() => {
     let cancelled = false;
@@ -88,13 +96,22 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       .then((supabase) => {
         if (cancelled) return;
         const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+          const newUserId = newSession?.user?.id ?? null;
+          const userChanged = newUserId !== resolvedUserId.current;
           setSession(newSession);
           setUser(newSession?.user ?? null);
           if (newSession?.user) {
-            const u = newSession.user;
-            setAuthDataReady(false);
-            setTimeout(() => loadAuthData(u.id, u.email ?? undefined, u.user_metadata ?? undefined), 0);
+            // Solo recargar roles si el usuario cambió de verdad (login/logout/
+            // cambio de cuenta). Un TOKEN_REFRESHED no toca authDataReady: las
+            // páginas con guardia no se desmontan ni pierden su estado.
+            if (userChanged) {
+              resolvedUserId.current = newUserId;
+              const u = newSession.user;
+              setAuthDataReady(false);
+              setTimeout(() => loadAuthData(u.id, u.email ?? undefined, u.user_metadata ?? undefined), 0);
+            }
           } else {
+            resolvedUserId.current = null;
             setRole("user");
             setProfile(null);
             setPermissions(NO_PERMS);

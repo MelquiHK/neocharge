@@ -22,7 +22,9 @@ export function CartSheet() {
     totalUSD,
     totalCUP,
     completeUSD,
-    completeCUP
+    completeCUP,
+    priceNotice,
+    dismissPriceNotice
   } = useCart();
   // Sin tasa no se inventan conversiones: un total incompleto se muestra como "—".
   const shownTotalUSD = completeUSD ? formatPrice(totalUSD) : "—";
@@ -46,6 +48,20 @@ export function CartSheet() {
             </SheetTitle>
           </div>
         </SheetHeader>
+
+        {priceNotice && items.length > 0 && (
+          <div className="mx-4 mt-4 flex items-start gap-2 rounded-xl border border-amber-300/60 bg-amber-50 p-3 text-xs text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+            <span className="flex-1">{priceNotice}</span>
+            <button
+              type="button"
+              onClick={dismissPriceNotice}
+              className="rounded-md p-1 hover:bg-amber-200/50"
+              aria-label="Cerrar aviso"
+            >
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
 
         {items.length === 0 ? (
           <div className="flex-1 flex flex-col items-center justify-center px-6 text-center gap-4">

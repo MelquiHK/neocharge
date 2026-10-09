@@ -5,6 +5,7 @@ export interface ProductOrderingItem {
   created_at?: string | null;
   category_name?: string | null;
   price?: number | null;
+  currency?: string | null;
   name?: string | null;
   stock?: number | null;
 }
@@ -16,8 +17,24 @@ function isOutOfStock(item: ProductOrderingItem): boolean {
 
 export type ProductSortValue = "manual" | "new" | "old" | "name" | "type" | "price-asc" | "price-desc";
 
-export function sortProductsForShop<T extends ProductOrderingItem>(items: T[], sort: ProductSortValue): T[] {
+export interface SortOptions {
+  /** Fijar destacados arriba (solo para el orden "manual"; al ordenar por
+   *  precio/nombre el usuario espera un orden real, no destacados fijos). */
+  pinFeatured?: boolean;
+  /** Normaliza el precio a una moneda común para comparar (p. ej. CUP→USD).
+   *  Sin esto, 3,000 CUP ordena como "más caro" que $1,690 USD. */
+  toUsd?: (item: ProductOrderingItem) => number;
+}
+
+export function sortProductsForShop<T extends ProductOrderingItem>(
+  items: T[],
+  sort: ProductSortValue,
+  opts: SortOptions = {},
+): T[] {
   const list = [...items];
+  const pinFeatured = opts.pinFeatured ?? sort === "manual";
+  const priceOf = (item: T): number =>
+    opts.toUsd ? opts.toUsd(item) : Number(item.price ?? 0);
 
   list.sort((a, b) => {
     const outA = isOutOfStock(a);
@@ -27,11 +44,13 @@ export function sortProductsForShop<T extends ProductOrderingItem>(items: T[], s
       return outA ? 1 : -1;
     }
 
-    const featuredA = !!a.is_featured;
-    const featuredB = !!b.is_featured;
+    if (pinFeatured) {
+      const featuredA = !!a.is_featured;
+      const featuredB = !!b.is_featured;
 
-    if (featuredA !== featuredB) {
-      return featuredA ? -1 : 1;
+      if (featuredA !== featuredB) {
+        return featuredA ? -1 : 1;
+      }
     }
 
     if (sort === "manual") {
@@ -64,14 +83,14 @@ export function sortProductsForShop<T extends ProductOrderingItem>(items: T[], s
     }
 
     if (sort === "price-asc") {
-      const priceA = Number(a.price ?? 0);
-      const priceB = Number(b.price ?? 0);
+      const priceA = priceOf(a);
+      const priceB = priceOf(b);
       if (priceA !== priceB) return priceA - priceB;
     }
 
     if (sort === "price-desc") {
-      const priceA = Number(a.price ?? 0);
-      const priceB = Number(b.price ?? 0);
+      const priceA = priceOf(a);
+      const priceB = priceOf(b);
       if (priceA !== priceB) return priceB - priceA;
     }
 

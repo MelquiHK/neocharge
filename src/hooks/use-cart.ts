@@ -34,6 +34,9 @@ export interface CartContextValue {
   itemCount: number;
   paymentCurrency: "USD" | "CUP";
   setPaymentCurrency: (currency: "USD" | "CUP") => void;
+  /** Aviso cuando los precios del carrito se revalidaron contra el catálogo y cambiaron. */
+  priceNotice: string | null;
+  dismissPriceNotice: () => void;
 }
 
 export const CartContext = createContext<CartContextValue | undefined>(undefined);

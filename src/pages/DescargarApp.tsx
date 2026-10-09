@@ -14,10 +14,12 @@ import {
 import { Button } from "@/components/ui/button";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
 import { useSEO } from "@/hooks/use-seo";
+import { CURRENT_VERSION } from "@/data/app-versions";
 
 const APK_URL = "/descargas/neocharge-tienda.apk";
-const APK_VERSION = "1.0.10";
-const APK_SIZE = "6.0 MB";
+// Versión y tamaño siempre desde la fuente única (@/data/app-versions).
+const APK_VERSION = CURRENT_VERSION.version;
+const APK_SIZE = CURRENT_VERSION.size;
 
 /**
  * Página de descarga/instalación de la app de NeoCharge.

@@ -78,7 +78,7 @@ export function Hero() {
 
   const stats = [
     { value: productCount !== null ? String(productCount) : "···", label: "Productos disponibles" },
-    { value: "24 horas", label: "Atención por WhatsApp" },
+    { value: "8am–8pm", label: "Atención por WhatsApp" },
     { value: "USD · CUP", label: "Pagas al recibir" },
   ];
 

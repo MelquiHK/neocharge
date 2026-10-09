@@ -432,7 +432,18 @@ const Checkout = () => {
               </div>
               <div className="space-y-2">
                 <Label htmlFor="phone">WhatsApp *</Label>
-                <Input id="phone" value={phone} onChange={(e) => setPhone(e.target.value)} required placeholder="+53 5XXXXXXX" />
+                <Input
+                  id="phone"
+                  value={phone}
+                  onChange={(e) => setPhone(e.target.value)}
+                  required
+                  placeholder="+53 5XXXXXXX"
+                  aria-invalid={phone.length > 0 && !normalizeCubanPhone(phone) ? true : undefined}
+                  className={phone.length > 0 && !normalizeCubanPhone(phone) ? "border-destructive" : ""}
+                />
+                {phone.length > 0 && !normalizeCubanPhone(phone) && (
+                  <p className="text-xs text-destructive">Escribe un móvil cubano válido (ej. 5842 7265).</p>
+                )}
               </div>
             </div>
           </section>
@@ -658,7 +669,32 @@ const Checkout = () => {
             />
           </section>
 
-          <Button type="submit" variant="hero" size="xl" className="w-full" disabled={submitting || (delivery === "delivery" && (quoting || !quoteValid))}>
+          {/* Total visible junto al botón: en móvil el resumen lateral queda
+              debajo del formulario y el total no se veía antes de confirmar. */}
+          <div className="nc-card p-4 flex items-center justify-between lg:hidden">
+            <span className="font-display font-bold">Total a pagar</span>
+            <div className="text-right">
+              <span className="text-primary font-bold block">
+                {completeUSD ? formatMoney(totalUSD + shippingUSD, "USD") : "—"}
+              </span>
+              <span className="text-[10px] text-muted-foreground block">
+                {completeCUP ? formatMoney(totalCUP + shippingCUP, "CUP") : "—"}
+              </span>
+            </div>
+          </div>
+
+          <Button
+            type="submit"
+            variant="hero"
+            size="xl"
+            className="w-full"
+            disabled={
+              submitting ||
+              !name.trim() ||
+              !normalizeCubanPhone(phone) ||
+              (delivery === "delivery" && (quoting || !quoteValid))
+            }
+          >
             {submitting ? <><Loader2 className="w-5 h-5 animate-spin" /> Enviando...</> : <><MessageCircle className="w-5 h-5" /> Confirmar pedido</>}
           </Button>
 
@@ -751,13 +787,13 @@ const Checkout = () => {
                   </div>
                 )}
               </div>
-              <div className="flex items-center justify-between font-display font-bold text-base pt-2 border-t border-border">
+              <div className="flex items-center justify-between font-display font-bold text-lg pt-3 border-t-2 border-primary/30 bg-primary/5 -mx-2 px-2 py-2 rounded-xl">
                 <span>Total a pagar</span>
                 <div className="text-right">
-                  <span className="text-primary text-base block">
+                  <span className="text-primary text-xl block">
                     {completeUSD ? formatMoney(totalUSD + shippingUSD, "USD") : "—"}
                   </span>
-                  <span className="text-[10px] text-muted-foreground block">
+                  <span className="text-xs text-muted-foreground block">
                     {completeCUP ? formatMoney(totalCUP + shippingCUP, "CUP") : "—"}
                   </span>
                 </div>

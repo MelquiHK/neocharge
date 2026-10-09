@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import { Suspense, lazy } from "react";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
@@ -95,6 +95,15 @@ const App = () => (
                   <Route path="/pedido-confirmado/:id" element={<Suspense fallback={<LoadingPlaceholder />}><OrderConfirmed /></Suspense>} />
                   <Route path="/rastrear" element={<Suspense fallback={<LoadingPlaceholder />}><TrackOrder /></Suspense>} />
                   <Route path="/ajustes" element={<Suspense fallback={<LoadingPlaceholder />}><Settings /></Suspense>} />
+
+                  {/* Aliases intuitivos: quien adivina la URL no debe rebotar en 404 */}
+                  <Route path="/faq" element={<Navigate to="/preguntas-frecuentes" replace />} />
+                  <Route path="/contact" element={<Navigate to="/contacto" replace />} />
+                  <Route path="/nosotros" element={<Navigate to="/sobre-nosotros" replace />} />
+                  <Route path="/about" element={<Navigate to="/sobre-nosotros" replace />} />
+                  <Route path="/rastrear-pedido" element={<Navigate to="/rastrear" replace />} />
+                  <Route path="/settings" element={<Navigate to="/ajustes" replace />} />
+                  <Route path="/garantia-y-envios" element={<Navigate to="/garantia" replace />} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Route>

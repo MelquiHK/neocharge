@@ -133,7 +133,7 @@ const Account = () => {
       setFormData({
         full_name: profile.full_name || "",
         username: profile.username || "",
-        phone: profile.phone || "",
+        phone: profile.phone ? formatCubanPhoneDisplay(profile.phone) : "",
         bio: (profile as ProfileWithBio | null)?.bio || "",
         avatar_url: profile.avatar_url || ""
       });

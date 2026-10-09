@@ -115,7 +115,7 @@ export function Footer() {
               </li>
               <li className="flex items-center gap-2 text-muted-foreground">
                 <Clock className="w-4 h-4 shrink-0 text-primary" />
-                <span>Atención 24 horas</span>
+                <span>Atención 8am–8pm</span>
               </li>
             </ul>
           </div>

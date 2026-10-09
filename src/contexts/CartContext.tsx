@@ -1,6 +1,7 @@
-import { startTransition, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useRef, useState, type ReactNode } from "react";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { computeDisplayPrice } from "@/lib/format";
+import { getSupabase } from "@/integrations/supabase/lazy-client";
 import { CartContext, type CartItem, type CartContextValue } from "@/hooks/use-cart";
 
 /** Preferencia de moneda guardada desde Ajustes. El carrito la respeta al arrancar. */
@@ -21,6 +22,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [isOpen, setIsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
   const [paymentCurrency, setPaymentCurrency] = useState<"USD" | "CUP">(readPreferredCurrency);
+  // Aviso de precios revalidados contra el catálogo (se muestra en el CartSheet).
+  const [priceNotice, setPriceNotice] = useState<string | null>(null);
+  const dismissPriceNotice = useCallback(() => setPriceNotice(null), []);
+  const revalidatedRef = useRef(false);
 
   useEffect(() => {
     try {
@@ -31,6 +36,80 @@ export function CartProvider({ children }: { children: ReactNode }) {
     }
     setHydrated(true);
   }, []);
+
+  // Revalidar los precios guardados contra el catálogo en vivo: si un precio
+  // cambió desde que se añadió al carrito, se actualiza y se avisa al cliente.
+  // Si el producto ya no existe o está inactivo, se quita del carrito.
+  useEffect(() => {
+    if (!hydrated || revalidatedRef.current || items.length === 0) return;
+    revalidatedRef.current = true;
+    (async () => {
+      try {
+        const supabase = await getSupabase();
+        const ids = items.map((i) => i.id);
+        const { data, error } = await supabase
+          .from("products")
+          .select("id,price,currency,price_cup,extra_cup_per_usd,stock,is_active")
+          .in("id", ids);
+        if (error || !data) return;
+        const byId = new Map(data.map((p) => [String(p.id), p]));
+        const changed: string[] = [];
+        const removed: string[] = [];
+        let next = items;
+        for (const item of items) {
+          const live = byId.get(String(item.id));
+          if (!live || live.is_active === false) {
+            removed.push(item.name);
+            next = next.filter((i) => i.id !== item.id);
+            continue;
+          }
+          const priceChanged =
+            Number(live.price) !== Number(item.price) ||
+            String(live.currency ?? "") !== String(item.currency ?? "") ||
+            Number(live.price_cup ?? 0) !== Number(item.price_cup ?? 0) ||
+            Number(live.extra_cup_per_usd ?? 0) !== Number(item.extra_cup_per_usd ?? 0);
+          const stockChanged = live.stock != null && Number(live.stock) !== Number(item.stock ?? -1);
+          if (priceChanged || stockChanged) {
+            changed.push(item.name);
+            next = next.map((i) =>
+              i.id === item.id
+                ? {
+                    ...i,
+                    price: Number(live.price),
+                    currency: live.currency ?? i.currency,
+                    price_cup: live.price_cup != null ? Number(live.price_cup) : i.price_cup,
+                    extra_cup_per_usd:
+                      live.extra_cup_per_usd != null ? Number(live.extra_cup_per_usd) : i.extra_cup_per_usd,
+                    stock: live.stock != null ? Number(live.stock) : i.stock,
+                  }
+                : i,
+            );
+          }
+        }
+        if (changed.length > 0 || removed.length > 0) {
+          setItems(next);
+          const parts: string[] = [];
+          if (changed.length > 0)
+            parts.push(
+              changed.length === 1
+                ? `El precio de "${changed[0]}" cambió y se actualizó.`
+                : `Se actualizaron los precios de ${changed.length} productos.`,
+            );
+          if (removed.length > 0)
+            parts.push(
+              removed.length === 1
+                ? `"${removed[0]}" ya no está disponible y se quitó del carrito.`
+                : `${removed.length} productos ya no están disponibles y se quitaron del carrito.`,
+            );
+          setPriceNotice(parts.join(" "));
+        }
+      } catch (e) {
+        console.warn("Cart: price revalidation failed", e);
+      }
+    })();
+    // Solo al hidratar; los cambios posteriores ya vienen del catálogo en vivo.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [hydrated]);
 
   useEffect(() => {
     if (!hydrated) return;
@@ -129,8 +208,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
       itemCount,
       paymentCurrency,
       setPaymentCurrency: (currency: "USD" | "CUP") => setPaymentCurrency(currency),
+      priceNotice,
+      dismissPriceNotice,
     };
-  }, [items, addItem, removeItem, updateQuantity, clearCart, isOpen, openCart, closeCart, exchangeRate, paymentCurrency, roundToNearestWhole]);
+  }, [items, addItem, removeItem, updateQuantity, clearCart, isOpen, openCart, closeCart, exchangeRate, paymentCurrency, roundToNearestWhole, priceNotice, dismissPriceNotice]);
 
   return <CartContext.Provider value={value}>{children}</CartContext.Provider>;
 }

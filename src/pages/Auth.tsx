@@ -47,11 +47,23 @@ const Auth = () => {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
+    // Supabase devuelve los errores en inglés: traducir los comunes al español.
+    const translateAuthError = (raw: string | null | undefined, fallback: string): string => {
+      const msg = (raw ?? "").toLowerCase();
+      if (msg.includes("invalid login credentials")) return "Correo o contraseña incorrectos.";
+      if (msg.includes("email not confirmed")) return "Confirma tu correo antes de iniciar sesión.";
+      if (msg.includes("user already registered") || msg.includes("already registered"))
+        return "Este correo ya está registrado. Intenta iniciar sesión.";
+      if (msg.includes("password should be at least")) return "La contraseña debe tener al menos 6 caracteres.";
+      if (msg.includes("unable to validate email") || msg.includes("invalid email")) return "El correo no es válido.";
+      if (msg.includes("too many requests") || msg.includes("rate limit")) return "Demasiados intentos. Espera un momento e inténtalo de nuevo.";
+      return raw ?? fallback;
+    };
     try {
       if (mode === "login") {
         const { error } = await supabase.auth.signInWithPassword({ email, password });
         if (error) {
-          const message = error.message ?? "No se pudo iniciar sesión.";
+          const message = translateAuthError(error.message, "No se pudo iniciar sesión.");
           console.error("Login failed:", message);
           toast.error(message);
           return;
@@ -80,7 +92,7 @@ const Auth = () => {
           },
         });
         if (error) {
-          const message = error.message ?? "No se pudo crear la cuenta.";
+          const message = translateAuthError(error.message, "No se pudo crear la cuenta.");
           console.error("Signup failed:", message);
           toast.error(message);
           return;

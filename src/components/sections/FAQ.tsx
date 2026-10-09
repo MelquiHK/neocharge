@@ -40,7 +40,7 @@ const faqs = [
   },
   {
     q: "¿Cómo puedo contactarlos?",
-    a: "Estamos disponibles por WhatsApp al +53 6318-0910, las 24 horas.",
+    a: "Estamos disponibles por WhatsApp al +53 6318-0910, de 8am a 8pm.",
   },
 ];
 

@@ -12,6 +12,7 @@ import { ensureNcFx } from "@/lib/fly-to-cart";
 import { useSEO } from "@/hooks/use-seo";
 import { useAuth } from "@/hooks/use-auth";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
+import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { sortProductsForShop, type ProductSortValue } from "@/lib/product-ordering";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 
@@ -59,14 +60,23 @@ const emptySuggestions = ["Cargador 72V", "Audífonos", "72V/5A"];
 
 const ShopPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
+  // Búsqueda desde el header (?q=...): se lee ANTES de inicializar el estado.
+  const initialQ = searchParams.get("q") ?? "";
   const [products, setProducts] = useState<(Product & { category_id: string | null; category_name?: string | null; created_at?: string | null })[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState("");
+  const [search, setSearch] = useState(initialQ);
   const [sort, setSort] = useState<Sort>("manual");
+
+  // Si llega ?q= nuevo (p. ej. buscar dos veces desde el header), aplicarlo.
+  useEffect(() => {
+    const q = searchParams.get("q") ?? "";
+    setSearch((prev) => (prev === q ? prev : q));
+  }, [searchParams]);
 
   const { user } = useAuth();
   const { toggleFavorite, isFavorite } = useUnifiedFavorites();
+  const { rate } = useExchangeRate();
 
   const activeCat = searchParams.get("cat") ?? "all";
 
@@ -118,8 +128,20 @@ const ShopPage = () => {
         const q = search.trim().toLowerCase();
         list = list.filter((p) => (p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)) ?? false);
       }
-      return sortProductsForShop(list, sort);
-    }, [products, categories, activeCat, search, sort, isFavorite]);
+      return sortProductsForShop(list, sort, {
+        toUsd: (item) => {
+          const price = Number(item.price ?? 0);
+          // Normalizar a USD para comparar: los productos en CUP se convierten
+          // con la tasa actual (si no hay tasa, se comparan tal cual).
+          const currency = (item.currency ?? "USD").toUpperCase();
+          if (currency === "CUP" && rate) {
+            const r = Number(rate.usd_to_cup);
+            if (r > 0) return price / r;
+          }
+          return price;
+        },
+      });
+    }, [products, categories, activeCat, search, sort, isFavorite, rate]);
 
   const activeCategory = useMemo(
     () => categories.find((category) => category.slug === activeCat),

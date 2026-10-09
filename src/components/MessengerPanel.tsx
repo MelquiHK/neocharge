@@ -122,6 +122,8 @@ export function MessengerPanel() {
   const { user } = useAuth();
   const [rate, setRate] = useState(300);
   const [rateSaved, setRateSaved] = useState(true);
+  // true hasta que la tarifa guardada llega de la BD: evita el flash del 300.
+  const [rateLoading, setRateLoading] = useState(true);
   const [savingRate, setSavingRate] = useState(false);
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [route, setRoute] = useState<[number, number][]>([]);
@@ -159,6 +161,7 @@ export function MessengerPanel() {
         setRate(Number(mProfile.rate_per_km));
         setRateSaved(true);
       }
+      setRateLoading(false);
       if (points) {
         setSalePoints(
           points.map((p) => ({
@@ -421,6 +424,9 @@ export function MessengerPanel() {
                 <DollarSign className="w-3 h-3" /> Mi Tarifa por KM (CUP)
               </Label>
               <div className="relative">
+                {rateLoading ? (
+                  <div className="h-10 rounded-xl bg-muted animate-pulse" aria-label="Cargando tarifa" />
+                ) : (
                 <Input
                   type="number"
                   min={0}
@@ -429,10 +435,11 @@ export function MessengerPanel() {
                   onBlur={flushRate}
                   className="rounded-xl pr-10"
                 />
+                )}
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
                   {savingRate ? (
                     <span className="text-[10px] uppercase font-bold animate-pulse">Guardando…</span>
-                  ) : rateSaved ? (
+                  ) : !rateLoading && rateSaved ? (
                     <Check className="w-4 h-4 text-green-600" />
                   ) : null}
                 </span>
