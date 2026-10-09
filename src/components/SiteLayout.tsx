@@ -36,9 +36,18 @@ export function SiteLayout() {
     return () => window.clearTimeout(t);
   }, []);
 
+  // El drawer del carrito se monta SOLO cuando su chunk ya está cargado.
+  // Sin esto, el lazy() suspende dentro de un update urgente y React
+  // lanza el error #306 ("Algo salió mal") al abrir el carrito.
   useEffect(() => {
-    if (isOpen) setSheetReady(true);
-  }, [isOpen]);
+    if (!isOpen || sheetReady) return;
+    let cancelled = false;
+    import("@/components/CartSheet").then(
+      () => { if (!cancelled) setSheetReady(true); },
+      (err) => { console.error("[cart] no se pudo cargar el drawer:", err); },
+    );
+    return () => { cancelled = true; };
+  }, [isOpen, sheetReady]);
 
   return (
     <div className="min-h-screen flex flex-col">
