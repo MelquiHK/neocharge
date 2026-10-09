@@ -1,11 +1,12 @@
 import { Suspense, lazy, useEffect, useState } from "react";
-import { Link, NavLink, useLocation, useNavigate } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Menu, ShoppingBag, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
 import { WelcomeTransition, type WelcomeData } from "@/components/WelcomeTransition";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
+import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { cn } from "@/lib/utils";
 
 // El menú de cuenta (radix dropdown-menu) no bloquea el primer paint: se
@@ -38,6 +39,7 @@ export function Header({ className }: { className?: string }) {
   const [mobileOpen, setMobileOpen] = useState(false);
   const { itemCount, openCart } = useCart();
   const { user } = useAuth();
+  const { rate } = useExchangeRate();
   const location = useLocation();
   const navigate = useNavigate();
   const [bump, setBump] = useState(false);
@@ -191,6 +193,10 @@ export function Header({ className }: { className?: string }) {
                 </NavLink>
               )}
             </nav>
+            {/* Tasa del día (visible en móvil; en escritorio va en la barra superior) */}
+            <p className="mt-3 px-4 text-xs text-muted-foreground">
+              Tasa hoy: {rate ? `${Math.round(rate.usd_to_cup)} CUP/USD · elTOQUE` : "—"}
+            </p>
           </div>
         )}
       </div>

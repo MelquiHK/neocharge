@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
 import { formatPrice, formatCUP, formatMoney, computeDisplayPrice, hasSaneDiscount } from "@/lib/format";
 import { responsiveImage } from "@/lib/responsive-image";
+import { useDataSaver, DATA_SAVER_WIDTHS } from "@/lib/data-saver";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { cn } from "@/lib/utils";
@@ -24,6 +25,8 @@ interface ProductCardProps {
 function ProductCardComponent({ product, variant = "default", isFavorite: propIsFavorite, onToggleFavorite: propOnToggleFavorite }: ProductCardProps) {
   const { addItem, items } = useCart();
   const { rate } = useExchangeRate();
+  const [dataSaver] = useDataSaver();
+  const imgWidths = dataSaver ? DATA_SAVER_WIDTHS : undefined;
   const { isFavorite: checkFavorite, toggleFavorite } = useUnifiedFavorites();
 
   const isFavorite = propIsFavorite ?? checkFavorite(product.id);
@@ -114,7 +117,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
 
               {/* Main Image */}
               {mainImage && (() => {
-                const ri = responsiveImage(mainImage, "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px");
+                const ri = responsiveImage(mainImage, "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px", imgWidths);
                 return (
                   <img
                     src={ri.src}
@@ -141,7 +144,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
 
               {/* Hover Image */}
               {hoverImage && (() => {
-                const ri = responsiveImage(hoverImage, "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px");
+                const ri = responsiveImage(hoverImage, "(max-width: 640px) 50vw, (max-width: 1024px) 33vw, 300px", imgWidths);
                 return (
                   <img
                     src={ri.src}
@@ -244,16 +247,18 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
             </button>
           </div>
 
-          {/* Price Section — mt-auto la pega al fondo para parejar las cards */}
+          {/* Price Section — mt-auto la pega al fondo para parejar las cards.
+              Siempre ambas monedas: la nativa grande y la convertida en pequeño.
+              Sin tasa no se inventa conversión: la secundaria se omite. */}
           <div className="space-y-1.5 mt-auto">
             <div className="flex items-baseline gap-2 flex-wrap">
               {display.primary === "USD" ? (
                 <span className="text-xl font-display font-bold text-gray-900 dark:text-white">
-                  {formatPrice(display.usd!)}
+                  {display.usd != null ? formatPrice(display.usd) : "—"}
                 </span>
               ) : (
                 <span className="text-xl font-display font-bold text-gray-900 dark:text-white">
-                  {formatCUP(display.cup!)}
+                  {display.cup != null ? formatCUP(display.cup) : "—"}
                 </span>
               )}
               {showCompare && (
@@ -262,8 +267,14 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
                 </span>
               )}
             </div>
-            {display.primary === "USD" && display.cup != null && (
-              <p className="text-xs text-gray-500 dark:text-gray-400">≈ {formatCUP(display.cup)}</p>
+            {display.primary === "USD" ? (
+              display.cup != null && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">≈ {formatCUP(display.cup)}</p>
+              )
+            ) : (
+              display.usd != null && (
+                <p className="text-xs text-gray-500 dark:text-gray-400">≈ {formatPrice(display.usd)}</p>
+              )
             )}
           </div>
 

@@ -27,15 +27,14 @@ describe("computeDisplayPrice sin tasa (rate null)", () => {
 
 describe("regla de cotización de envío en checkout", () => {
   // La validación vive en Checkout.tsx (handleSubmit): mensajería exige
-  // coordenadas + cotización exitosa y vigente. Aquí se documenta el contrato
-  // que debe cumplirse: sin quote no hay shippingCUP distinto de cero válido.
-  it("sin cotización el shippingCUP es 0 y el pedido de mensajería debe bloquearse", () => {
+  // coordenadas + cotización vigente. Si el demo público de OSRM falla,
+  // use-delivery-quote produce una estimación local marcada como
+  // `approximate: true` (nunca null con coords): la venta NO se bloquea y
+  // el costo final se confirma por WhatsApp.
+  it("sin cotización el shippingCUP es 0", () => {
     const quote: { priceCUP: number } | null = null;
     const shippingCUP = quote?.priceCUP ?? 0;
     expect(shippingCUP).toBe(0);
-    // El checkout bloquea el envío si !quoteValid (ver Checkout.tsx).
-    const quoteValid = quote !== null;
-    expect(quoteValid).toBe(false);
   });
 
   it("con cotización el shippingCUP viene de la ruta, no de un valor manual", () => {

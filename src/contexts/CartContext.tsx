@@ -3,13 +3,24 @@ import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { computeDisplayPrice } from "@/lib/format";
 import { CartContext, type CartItem, type CartContextValue } from "@/hooks/use-cart";
 
+/** Preferencia de moneda guardada desde Ajustes. El carrito la respeta al arrancar. */
+export const PREFERRED_CURRENCY_KEY = "nc-preferred-currency";
+
+function readPreferredCurrency(): "USD" | "CUP" {
+  try {
+    return window.localStorage.getItem(PREFERRED_CURRENCY_KEY) === "CUP" ? "CUP" : "USD";
+  } catch {
+    return "USD";
+  }
+}
+
 const STORAGE_KEY = "neocharge_cart_v1";
 
 export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
-  const [paymentCurrency, setPaymentCurrency] = useState<"USD" | "CUP">("USD");
+  const [paymentCurrency, setPaymentCurrency] = useState<"USD" | "CUP">(readPreferredCurrency);
 
   useEffect(() => {
     try {

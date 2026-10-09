@@ -15,7 +15,6 @@ export function CartSheet() {
     closeCart, 
     updateQuantity, 
     removeItem, 
-    total, 
     itemCount, 
     clearCart,
     paymentCurrency,
@@ -97,22 +96,31 @@ export function CartSheet() {
                     >
                       {item.name}
                     </Link>
-                    <p className="text-base font-bold text-primary mt-1">
+                    <div className="mt-1">
                       {(() => {
-                        // Sin tasa no se inventa conversión: se muestra el precio
-                        // nativo disponible, nunca un 0 engañoso.
+                        // Ambas monedas siempre: la de pago en grande y la
+                        // otra en pequeño. Sin tasa no se inventa conversión:
+                        // se muestra el precio nativo disponible, nunca un 0.
                         const usd = item.displayPriceUSD ?? null;
                         const cup = item.displayPriceCUP ?? null;
-                        if (paymentCurrency === "USD") {
-                          if (usd !== null) return formatPrice(usd);
-                          if (cup !== null) return formatCUP(cup);
-                        } else {
-                          if (cup !== null) return formatCUP(cup);
-                          if (usd !== null) return formatPrice(usd);
-                        }
-                        return "—";
+                        const main =
+                          paymentCurrency === "USD"
+                            ? usd !== null ? formatPrice(usd) : cup !== null ? formatCUP(cup) : "—"
+                            : cup !== null ? formatCUP(cup) : usd !== null ? formatPrice(usd) : "—";
+                        const secondary =
+                          paymentCurrency === "USD"
+                            ? cup !== null && usd !== null ? `≈ ${formatCUP(cup)}` : null
+                            : usd !== null && cup !== null ? `≈ ${formatPrice(usd)}` : null;
+                        return (
+                          <>
+                            <p className="text-base font-bold text-primary">{main}</p>
+                            {secondary && (
+                              <p className="text-xs text-muted-foreground">{secondary}</p>
+                            )}
+                          </>
+                        );
                       })()}
-                    </p>
+                    </div>
 
                     <div className="flex items-center justify-between mt-2">
                       <div className="flex items-center border border-border rounded-full">

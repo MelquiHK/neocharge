@@ -4,6 +4,7 @@ import { AlertTriangle, CheckCircle2, Loader2, MessageCircle, Package, Truck } f
 import { supabase } from "@/integrations/supabase/client";
 import { formatMoney } from "@/lib/format";
 import { orderStatusLabel, shortOrderId } from "@/lib/order-status";
+import { useSEO } from "@/hooks/use-seo";
 
 const WHATSAPP_NUMBER = "5363180910";
 
@@ -28,6 +29,7 @@ interface ConfirmedOrder {
 }
 
 const OrderConfirmed = () => {
+  useSEO("orderConfirmed");
   const { id } = useParams<{ id: string }>();
   const [order, setOrder] = useState<ConfirmedOrder | null>(null);
   const [loading, setLoading] = useState(true);

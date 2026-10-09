@@ -19,6 +19,17 @@ interface Post {
 }
 
 const NOTIF_DISMISSED_KEY = "neocharge-blog-notif-dismissed";
+// Preferencia maestra de Ajustes ("nc-notif-blog"): si el usuario desactivó
+// los avisos del blog, no se notifica aunque el permiso exista.
+const BLOG_NOTIF_KEY = "nc-notif-blog";
+
+function blogNotifEnabled(): boolean {
+  try {
+    return window.localStorage.getItem(BLOG_NOTIF_KEY) !== "0";
+  } catch {
+    return true;
+  }
+}
 
 const formatDate = (iso: string) =>
   new Date(iso).toLocaleDateString("es-CU", {
@@ -88,6 +99,11 @@ const Blog = () => {
     setNotificationPermission(permission);
 
     if (permission === "granted") {
+      try {
+        window.localStorage.setItem(BLOG_NOTIF_KEY, "1");
+      } catch {
+        /* sin almacenamiento */
+      }
       await showBrowserNotification("📝 Notificaciones activadas", {
         body: "Recibirás avisos cuando haya artículos nuevos en el blog.",
         icon: "/images/logo.png",
@@ -97,6 +113,7 @@ const Blog = () => {
 
   const notifyNewPost = (article: Post) => {
     if (!article?.id) return;
+    if (!blogNotifEnabled()) return;
     if (lastSeenPostIdRef.current && lastSeenPostIdRef.current === article.id) return;
 
     setPosts((prev) => (prev.some((post) => post.id === article.id) ? prev : [article, ...prev]));

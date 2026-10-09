@@ -10,16 +10,22 @@ export function useSEO(
   pageKey: keyof typeof seoConfig,
   overrides?: Partial<MetaTags>
 ): void {
+  // Los overrides suelen pasarse como objeto inline: se serializan para que
+  // el efecto solo se re-ejecute cuando los valores cambian de verdad
+  // (y no en cada render por identidad nueva del objeto).
+  const overridesKey = JSON.stringify(overrides ?? null);
+
   useEffect(() => {
     const baseTags = seoConfig[pageKey];
-    const mergedTags = {
+    const mergedTags: MetaTags = {
       ...baseTags,
-      ...overrides,
+      ...(overrides ?? {}),
     };
 
     updateMetaTags(mergedTags);
 
     // Scroll to top when page loads
     window.scrollTo(0, 0);
-  }, [pageKey, overrides]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pageKey, overridesKey]);
 }

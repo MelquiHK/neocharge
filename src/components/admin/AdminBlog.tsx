@@ -397,17 +397,17 @@ export function AdminBlog() {
                         <div className="inline-flex gap-1.5">
                           {p.slug && (
                             <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl" asChild>
-                              <a href={`/blog`} target="_blank" rel="noreferrer" title="Ver blog">
+                              <a href={`/blog`} target="_blank" rel="noreferrer" title="Ver blog" aria-label="Ver blog">
                                 <ExternalLink className="h-4 w-4" />
                               </a>
                             </Button>
                           )}
-                          <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl" onClick={() => openEditPost(p)} title="Editar">
+                          <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl" onClick={() => openEditPost(p)} title="Editar" aria-label="Editar artículo">
                             <Pencil className="h-4 w-4" />
                           </Button>
                           <AlertDialog>
                             <AlertDialogTrigger asChild>
-                              <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-destructive" title="Eliminar">
+                              <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-destructive" title="Eliminar" aria-label="Eliminar artículo">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </AlertDialogTrigger>
@@ -462,12 +462,12 @@ export function AdminBlog() {
                     <td className={`${adminTd} text-muted-foreground`}>{c.slug}</td>
                     <td className={`${adminTd} text-right`}>
                       <div className="inline-flex gap-1.5">
-                        <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl" onClick={() => openEditCategory(c)} title="Editar">
+                        <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl" onClick={() => openEditCategory(c)} title="Editar" aria-label="Editar categoría">
                           <Pencil className="h-4 w-4" />
                         </Button>
                         <AlertDialog>
                           <AlertDialogTrigger asChild>
-                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-destructive" title="Eliminar">
+                            <Button size="icon" variant="ghost" className="h-10 w-10 rounded-xl text-destructive" title="Eliminar" aria-label="Eliminar categoría">
                               <Trash2 className="h-4 w-4" />
                             </Button>
                           </AlertDialogTrigger>

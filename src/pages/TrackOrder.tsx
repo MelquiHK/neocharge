@@ -14,6 +14,7 @@ import {
   shortOrderId,
 } from "@/lib/order-status";
 import { cn } from "@/lib/utils";
+import { useSEO } from "@/hooks/use-seo";
 
 interface TrackedOrder {
   id: string;
@@ -91,6 +92,7 @@ function OrderTimeline({ status }: { status: string }) {
 }
 
 const TrackOrder = () => {
+  useSEO("trackOrder");
   const [phone, setPhone] = useState("");
   const [orders, setOrders] = useState<TrackedOrder[] | null>(null);
   const [searchedPhone, setSearchedPhone] = useState<string | null>(null);

@@ -49,6 +49,48 @@
     <priority>0.6</priority>
   </url>
   <url>
+    <loc>https://tienda-neocharge.vercel.app/servicios</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tienda-neocharge.vercel.app/comparar-cargadores</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://tienda-neocharge.vercel.app/descargar-app</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tienda-neocharge.vercel.app/descargas</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.6</priority>
+  </url>
+  <url>
+    <loc>https://tienda-neocharge.vercel.app/rastrear</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tienda-neocharge.vercel.app/favoritos</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.5</priority>
+  </url>
+  <url>
+    <loc>https://tienda-neocharge.vercel.app/mensajeria</loc>
+    <lastmod>2026-10-09</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.4</priority>
+  </url>
+  <url>
     <loc>https://tienda-neocharge.vercel.app/legales/terminos</loc>
     <lastmod>2026-10-07</lastmod>
     <changefreq>yearly</changefreq>

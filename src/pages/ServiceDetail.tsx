@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
+import { fetchWithCache } from "@/lib/offline-cache";
 import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { Service } from "@/types";

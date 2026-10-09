@@ -7,15 +7,16 @@ import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSEO } from "@/hooks/use-seo";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { Product } from "@/types";
-import { computeDisplayPrice, formatPrice, formatCUP, formatMoney, hasSaneDiscount, warrantyTypeLabel, isChargerWarranty, type DisplayPrice } from "@/lib/format";
+import { computeDisplayPrice, formatPrice, formatCUP, formatMoney, hasSaneDiscount, warrantyTypeLabel, hasWarranty, isChargerWarranty, type DisplayPrice } from "@/lib/format";
 import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { responsiveImage } from "@/lib/responsive-image";
+import { useDataSaver, DATA_SAVER_WIDTHS } from "@/lib/data-saver";
 import { Button } from "@/components/ui/button";
 import { SITE_URL } from "@/lib/seo";
 import { getWhatsAppLink } from "@/lib/whatsapp";
 import { buildShareImage } from "@/lib/share-image";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Heart, Share2, ArrowLeft, ArrowRight, ChevronLeft, ChevronRight, MapPin, Clock, Truck, Expand, Zap, MessageCircle } from "lucide-react";
+import { Heart, Share2, ArrowLeft, ArrowRight, MapPin, Clock, Truck, Expand, Zap, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import ImageViewer from "@/components/product/ImageViewer";
 import { ChargerCalculator } from "@/components/ChargerCalculator";
@@ -63,6 +64,8 @@ function displayConvertedLine(display: DisplayPrice): string | null {
 export default function ProductDetail() {
   const { slug } = useParams<{ slug: string }>();  const { addItem } = useCart();
   const { rate: exchangeRate } = useExchangeRate();
+  const [dataSaver] = useDataSaver();
+  const imgWidths = dataSaver ? DATA_SAVER_WIDTHS : undefined;
   const [product, setProduct] = useState<Product | null>(null);
   const [related, setRelated] = useState<Product[]>([]);
   const [chargerOptions, setChargerOptions] = useState<Product[]>([]);
@@ -335,7 +338,7 @@ export default function ProductDetail() {
           <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted">
             {mainImage ? (
               (() => {
-                const ri = responsiveImage(mainImage, "(max-width: 1024px) 100vw, 600px");
+                const ri = responsiveImage(mainImage, "(max-width: 1024px) 100vw, 600px", imgWidths);
                 return (
                   <button
                     type="button"
@@ -518,6 +521,7 @@ export default function ProductDetail() {
                 size="icon"
                 onClick={handleShare}
                 className="w-12 h-12"
+                aria-label="Compartir producto"
               >
                 <Share2 className="w-5 h-5" />
               </Button>
@@ -529,13 +533,20 @@ export default function ProductDetail() {
             <StockAlertSignup productId={product.id} productName={product.name} />
           )}
 
-          {/* Warranty */}
-          {product.warranty_type && (
-            <div className="glass rounded-2xl p-4 text-sm border-brand-200/60">
-              <p className="font-semibold text-brand-800 mb-1">✓ {warrantyTypeLabel(product.warranty_type)}</p>
-              <p className="text-muted-foreground">Todos nuestros productos incluyen garantía completa y soporte técnico.</p>
-            </div>
-          )}
+          {/* Warranty: nunca se promete garantía de más */}
+          <div className="glass rounded-2xl p-4 text-sm border-brand-200/60">
+            {hasWarranty(product.warranty_type) ? (
+              <>
+                <p className="font-semibold text-brand-800 mb-1">✓ {warrantyTypeLabel(product.warranty_type)}</p>
+                <p className="text-muted-foreground">Todos nuestros productos incluyen garantía completa y soporte técnico.</p>
+              </>
+            ) : (
+              <p className="text-muted-foreground">
+                <span className="font-semibold text-foreground">Sin garantía:</span> este producto se vende
+                tal como se describe. Si tienes dudas, pregúntanos por WhatsApp antes de comprar.
+              </p>
+            )}
+          </div>
 
           {/* Delivery: entrelazado con la calculadora de envío */}
           <Link
@@ -684,6 +695,22 @@ export default function ProductDetail() {
           </div>
         </div>
       )}
+
+      {/* Botón flotante "Preguntar por WhatsApp": discreto (44px), abre el
+          chat con el producto citado en el mensaje. z-30: queda por debajo
+          del drawer del carrito. */}
+      <button
+        type="button"
+        onClick={() => {
+          const message = `Hola NeoCharge, me interesa el *${product.name}* (${displayPriceLabel(display)}). ¿Sigue disponible?`;
+          window.open(getWhatsAppLink(message), "_blank");
+        }}
+        aria-label={`Preguntar por ${product.name} en WhatsApp`}
+        title="Preguntar por WhatsApp"
+        className="fixed bottom-5 right-4 z-30 w-11 h-11 rounded-full bg-[#25D366] text-white flex items-center justify-center shadow-lg shadow-green-900/30 hover:scale-105 active:scale-95 transition-transform"
+      >
+        <MessageCircle className="w-5 h-5" aria-hidden="true" />
+      </button>
     </div>
   );
 }

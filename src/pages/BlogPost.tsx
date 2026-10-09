@@ -5,6 +5,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { normalizeArticleContent, renderMarkdown } from "@/lib/markdown";
 import { Button } from "@/components/ui/button";
+import { useSEO } from "@/hooks/use-seo";
 
 type Post = {
   id: string;
@@ -59,6 +60,18 @@ const BlogPost = () => {
   const [post, setPost] = useState<Post | null>(null);
   const [related, setRelated] = useState<Post[]>([]);
   const [loading, setLoading] = useState(true);
+
+  // Título y descripción dinámicos del artículo (el título genérico del
+  // seoConfig solo se usa mientras carga).
+  useSEO(
+    "blogPost",
+    post
+      ? {
+          title: `${post.title} — Blog — NeoCharge`,
+          ...(post.excerpt ? { description: post.excerpt } : {}),
+        }
+      : undefined
+  );
 
   const images = useMemo(() => {
     const fromArray = Array.isArray(post?.images) ? post!.images!.filter(Boolean) : [];
@@ -117,10 +130,7 @@ const BlogPost = () => {
     };
   }, [slug]);
 
-  useEffect(() => {
-    if (post?.title) document.title = `${post.title} — Blog — NeoCharge`;
-    else document.title = "Blog — NeoCharge";
-  }, [post?.title]);
+  // (El título dinámico lo gestiona useSEO("blogPost") con overrides.)
 
   if (loading) {
     return (
@@ -194,14 +204,14 @@ const BlogPost = () => {
             </div>
             {images.length > 1 && (
               <div className="grid grid-cols-3 md:grid-cols-6 gap-3 p-4 bg-card">
-                {images.slice(1).map((src) => (
+                {images.slice(1).map((src, i) => (
                   <div
                     key={src}
                     className="aspect-square rounded-2xl overflow-hidden bg-secondary"
                   >
                     <img
                       src={src}
-                      alt=""
+                      alt={`${post.title} — imagen ${i + 2}`}
                       loading="lazy"
                       decoding="async"
                       className="w-full h-full object-cover"

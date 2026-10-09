@@ -29,9 +29,11 @@ export interface ResponsiveImage {
 /**
  * @param url URL original de la imagen
  * @param sizes valor del atributo sizes según el layout donde se muestra
+ * @param widths anchos a pedir (por defecto [400, 800, 1200]).
+ *   En modo ahorro de datos se pasa DATA_SAVER_WIDTHS ([200, 400]).
  */
-export function responsiveImage(url: string, sizes: string): ResponsiveImage {
-  const entries = WIDTHS.map((w) => {
+export function responsiveImage(url: string, sizes: string, widths: number[] = WIDTHS): ResponsiveImage {
+  const entries = widths.map((w) => {
     const rw = toRenderUrl(url, w);
     return rw ? `${rw} ${w}w` : null;
   }).filter(Boolean) as string[];
@@ -39,7 +41,7 @@ export function responsiveImage(url: string, sizes: string): ResponsiveImage {
   if (entries.length === 0) {
     return { src: url };
   }
-  // src apunta a la versión mediana por defecto.
-  const fallback = toRenderUrl(url, 800) ?? url;
+  // src apunta a la versión mediana del conjunto pedido.
+  const fallback = toRenderUrl(url, widths[Math.min(1, widths.length - 1)]) ?? url;
   return { src: fallback, srcSet: entries.join(", "), sizes };
 }

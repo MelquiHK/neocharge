@@ -10,7 +10,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { toast } from "sonner";
 import { formatPrice, formatCUP } from "@/lib/format";
-import { BadgeCheck, DollarSign, ShieldCheck, Trash2, Eye, MapPin, Phone, User, FileText, Wallet, ArrowUpRight, CheckCircle2, Clock, TrendingUp, ShieldAlert, AlertCircle, Pencil, Save, HandCoins, Home, Handshake, Truck } from "lucide-react";
+import { DollarSign, ShieldCheck, Trash2, Eye, MapPin, Phone, User, FileText, Wallet, ArrowUpRight, CheckCircle2, Clock, TrendingUp, ShieldAlert, AlertCircle, Pencil, Save, HandCoins, Home, Handshake, Truck } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { effectiveOwnStock, normalizePartnerCurrency, partnerMarginUsd as calcPartnerMarginUsd } from "@/lib/partner-sales";
@@ -69,11 +69,6 @@ interface PartnerSource {
 type SaleSource =
   | { type: "own" }
   | { type: "partner"; source: PartnerSource };
-
-interface StoredLocation {
-  id: string;
-  name: string;
-}
 
 /** Formatea un monto en su moneda (USD → $X, CUP → X CUP). */
 function formatMoney(value: number, currency: string | null | undefined) {

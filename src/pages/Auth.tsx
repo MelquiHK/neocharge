@@ -8,6 +8,7 @@ import { useAuth } from "@/hooks/use-auth";
 import { Logo } from "@/components/Logo";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { normalizeCubanPhone } from "@/lib/cuban-phone";
 import { ArrowLeft, Bell, Heart, LogIn, ShoppingBag, UserPlus } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
 import "@/components/sections/visual-effects.css";
@@ -20,6 +21,8 @@ const Auth = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
+  const [phoneError, setPhoneError] = useState("");
   const [loading, setLoading] = useState(false);
 
   const nextDestination = useMemo(() => {
@@ -56,13 +59,24 @@ const Auth = () => {
         toast.success("¡Bienvenido de nuevo!");
         navigate(nextDestination);
       } else {
+        // El teléfono es obligatorio al crear cuenta: se usa para rastrear
+        // pedidos, coordinar entregas por WhatsApp y alertas de stock.
+        const normalizedPhone = normalizeCubanPhone(phone);
+        if (!normalizedPhone) {
+          setPhoneError("Escribe un móvil cubano válido (ej. 5XXX XXXX).");
+          setLoading(false);
+          return;
+        }
+        setPhoneError("");
         const redirectUrl = `${window.location.origin}/`;
         const { error } = await supabase.auth.signUp({
           email,
           password,
           options: {
             emailRedirectTo: redirectUrl,
-            data: { full_name: name, username: email.split("@")[0] },
+            // El trigger handle_new_user copia user_metadata->>'phone'
+            // a profiles.phone al crear el usuario.
+            data: { full_name: name, username: email.split("@")[0], phone: normalizedPhone },
           },
         });
         if (error) {
@@ -203,7 +217,7 @@ const Auth = () => {
                   type="button"
                   role="tab"
                   aria-selected={mode === "login"}
-                  onClick={() => setMode("login")}
+                  onClick={() => { setMode("login"); setPhoneError(""); }}
                   className={cn(
                     "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
                     mode === "login"
@@ -217,7 +231,7 @@ const Auth = () => {
                   type="button"
                   role="tab"
                   aria-selected={mode === "signup"}
-                  onClick={() => setMode("signup")}
+                  onClick={() => { setMode("signup"); setPhoneError(""); }}
                   className={cn(
                     "py-2.5 rounded-full text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2",
                     mode === "signup"
@@ -242,6 +256,32 @@ const Auth = () => {
                       autoComplete="name"
                       className="nc-input h-12"
                     />
+                  </div>
+                )}
+                {mode === "signup" && (
+                  <div className="space-y-2">
+                    <Label htmlFor="phone" className="text-slate-700 font-medium">Teléfono móvil</Label>
+                    <Input
+                      id="phone"
+                      type="tel"
+                      value={phone}
+                      onChange={(e) => {
+                        setPhone(e.target.value);
+                        if (phoneError) setPhoneError("");
+                      }}
+                      required
+                      placeholder="5XXX XXXX"
+                      autoComplete="tel"
+                      inputMode="tel"
+                      aria-invalid={!!phoneError}
+                      aria-describedby={phoneError ? "phone-error" : undefined}
+                      className={cn("nc-input h-12", phoneError && "border-red-400 focus-visible:ring-red-300")}
+                    />
+                    {phoneError ? (
+                      <p id="phone-error" role="alert" className="text-xs text-red-600 font-medium">{phoneError}</p>
+                    ) : (
+                      <p className="text-xs text-slate-400">Lo usamos para tus pedidos y coordinar la entrega por WhatsApp.</p>
+                    )}
                   </div>
                 )}
                 <div className="space-y-2">

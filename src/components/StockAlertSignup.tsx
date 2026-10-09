@@ -13,12 +13,25 @@ interface Props {
 /**
  * "Avísame cuando haya": el cliente deja su WhatsApp y el bot de NeoCharge
  * le escribe cuando el producto vuelve a tener stock.
+ * Respeta la preferencia de Ajustes ("nc-notif-stock"): si el usuario
+ * desactivó las alertas de stock, el aviso no se muestra.
  */
+const STOCK_NOTIF_KEY = "nc-notif-stock";
+
 export function StockAlertSignup({ productId, productName }: Props) {
   const [open, setOpen] = useState(false);
   const [phone, setPhone] = useState("");
   const [loading, setLoading] = useState(false);
   const [done, setDone] = useState(false);
+
+  // Preferencia de Ajustes: sin alertas de stock, no se muestra el aviso.
+  let stockNotifOn = true;
+  try {
+    stockNotifOn = window.localStorage.getItem(STOCK_NOTIF_KEY) !== "0";
+  } catch {
+    /* sin almacenamiento: se muestra */
+  }
+  if (!stockNotifOn) return null;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -108,6 +121,7 @@ export function StockAlertSignup({ productId, productName }: Props) {
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           disabled={loading}
+          aria-label="Tu número de WhatsApp"
           className="flex-1 min-w-0 h-11 px-4 rounded-2xl border border-slate-200/80 bg-white/80 backdrop-blur text-base outline-none focus:border-brand-400 focus:ring-2 focus:ring-brand-200/60 placeholder:text-muted-foreground/70"
         />
         <Button

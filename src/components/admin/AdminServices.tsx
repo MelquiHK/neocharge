@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useMemo, useState } from "react";
 import { AlertDialogTrigger } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { ArrowDown, ArrowUp, Pencil, Plus, Trash2, Wrench } from "lucide-react";
 import { toast } from "sonner";
@@ -104,12 +104,6 @@ export function AdminServices() {
     }
     refresh();
   };
-
-  const groupedCategories = useMemo(() => {
-    const categories = new Set<string>();
-    services.forEach((service) => { if (service.category) categories.add(service.category); });
-    return Array.from(categories).sort((a, b) => a.localeCompare(b, "es", { sensitivity: "base" }));
-  }, [services]);
 
   return (
     <div className="space-y-6">

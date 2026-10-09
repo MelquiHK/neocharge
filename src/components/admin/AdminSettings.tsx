@@ -4,7 +4,6 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { useAdminSettings } from "@/hooks/admin/use-admin-settings";
-import { toast } from "sonner";
 import { Settings, ShieldCheck, Headset, MapPin, Save } from "lucide-react";
 import { AdminCard, AdminCardTitle, AdminSectionHeader } from "./ui";
 

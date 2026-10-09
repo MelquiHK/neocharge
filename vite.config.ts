@@ -23,6 +23,7 @@ export default defineConfig(({ mode }) => ({
       manifest: {
         name: 'NeoCharge - Electrónica de Próxima Generación',
         short_name: 'NeoCharge',
+        lang: 'es',
         description: 'Tu tienda de electrónica de confianza en La Habana. Calidad premium, garantía y entrega 24h.',
         theme_color: '#9e5f8f',
         background_color: '#f9eef2',
@@ -31,7 +32,7 @@ export default defineConfig(({ mode }) => ({
         icons: [
           {
             src: 'favicon.ico',
-            sizes: '64x64',
+            sizes: '16x16 32x32 48x48',
             type: 'image/x-icon'
           },
           {

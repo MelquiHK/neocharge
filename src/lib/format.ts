@@ -53,6 +53,10 @@ export function isChargerWarranty(warrantyType: string | null | undefined): bool
 /**
  * Etiqueta legible en español para los valores de `warranty_type` de la
  * tabla products. Nunca se muestra el valor crudo al cliente.
+ *
+ * REGLA DE HONESTIDAD: un valor ausente, nulo o desconocido NUNCA se
+ * presenta como garantía incluida. Es preferible decir "Sin garantía"
+ * que prometer de más.
  */
 export function warrantyTypeLabel(warrantyType: string | null | undefined): string {
   switch ((warrantyType ?? "").toLowerCase()) {
@@ -62,9 +66,21 @@ export function warrantyTypeLabel(warrantyType: string | null | undefined): stri
       return "Garantía de 1 semana";
     case "electronics":
       return "Garantía de electrónica";
+    case "no-warranty":
+      return "Sin garantía";
     default:
-      return "Garantía incluida";
+      return "Sin garantía";
   }
+}
+
+/**
+ * ¿El producto tiene algún tipo de garantía real? Se usa para decidir
+ * si se muestra el bloque de garantía en verde o el aviso neutro de
+ * "Sin garantía".
+ */
+export function hasWarranty(warrantyType: string | null | undefined): boolean {
+  const v = (warrantyType ?? "").toLowerCase();
+  return v === "charger" || v === "charger-1w" || v === "electronics";
 }
 
 /**

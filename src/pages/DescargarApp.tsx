@@ -13,6 +13,7 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { usePwaInstall } from "@/hooks/use-pwa-install";
+import { useSEO } from "@/hooks/use-seo";
 
 const APK_URL = "/descargas/neocharge-tienda.apk";
 const APK_VERSION = "1.0.10";
@@ -23,6 +24,7 @@ const APK_SIZE = "6.0 MB";
  * La burbuja flotante lleva aquí a los visitantes que no tienen la app.
  */
 export default function DescargarApp() {
+  useSEO("descargarApp");
   const { canInstall, installed, isIOS, promptInstall } = usePwaInstall();
   const [installing, setInstalling] = useState(false);
   const [accepted, setAccepted] = useState(false);

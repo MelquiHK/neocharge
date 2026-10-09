@@ -13,6 +13,8 @@ interface CheckoutPayload {
   notes?: string;
   shippingUSD?: number;
   shippingCUP?: number;
+  /** true si el costo de envío es una estimación aproximada (OSRM no respondió) */
+  shippingApproximate?: boolean;
   subtotalUSD?: number | null;
   subtotalCUP?: number | null;
 }
@@ -58,7 +60,8 @@ export function buildWhatsAppMessage(p: CheckoutPayload): string {
   lines.push("");
   lines.push(`💰 *PRODUCTO:* ${productoParts.join(" / ") || "—"}`);
   if (p.deliveryMethod === "delivery" && (shippingCup > 0 || shippingUsd > 0)) {
-    lines.push(`🚚 *MENSAJERÍA:* ${formatCurrencyAmount(shippingCup, "CUP")}`);
+    const approxNote = p.shippingApproximate ? " (estimación aproximada, a confirmar)" : "";
+    lines.push(`🚚 *MENSAJERÍA:* ${formatCurrencyAmount(shippingCup, "CUP")}${approxNote}`);
   } else if (p.deliveryMethod === "pickup") {
     lines.push("🏪 *RECOGIDA EN LOCAL*");
   }

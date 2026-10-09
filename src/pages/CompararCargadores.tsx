@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from "react";
 import { Link } from "react-router-dom";
 import { ArrowRight, BatteryCharging, Check, Clock3, Info } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
+import { fetchWithCache } from "@/lib/offline-cache";
 import { useSEO } from "@/hooks/use-seo";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";

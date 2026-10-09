@@ -39,8 +39,9 @@ export const seoConfig: Record<string, MetaTags> = {
       "Descubre los detalles del cargador. Especificaciones técnicas, garantía y envíos.",
   },
   checkout: {
-    title: "Carrito de Compras - NeoCharge",
-    description: "Completa tu compra de forma segura en NeoCharge.",
+    title: "Finalizar pedido — NeoCharge",
+    description:
+      "Finaliza tu compra en NeoCharge: paga en USD o CUP y elige mensajería a domicilio o recogida en el local.",
   },
   auth: {
     title: "Iniciar Sesión - NeoCharge",
@@ -48,7 +49,23 @@ export const seoConfig: Record<string, MetaTags> = {
   },
   account: {
     title: "Mi Cuenta - NeoCharge",
-    description: "Gestiona tu perfil, pedidos y preferencias en NeoCharge.",
+    description:
+      "Gestiona tu perfil, tus pedidos y tus favoritos en tu cuenta de NeoCharge.",
+  },
+  settings: {
+    title: "Ajustes - NeoCharge",
+    description:
+      "Personaliza tu experiencia en NeoCharge: ahorro de datos, moneda preferida, perfil y notificaciones.",
+  },
+  admin: {
+    title: "Administración — NeoCharge",
+    description:
+      "Panel de administración de la tienda NeoCharge: pedidos, productos, tasas y reportes.",
+  },
+  mensajeria: {
+    title: "Panel de mensajería — NeoCharge",
+    description:
+      "Panel del mensajero NeoCharge: pedidos asignados y rutas de entrega en La Habana.",
   },
   about: {
     title: "Sobre Nosotros - NeoCharge",
@@ -67,7 +84,33 @@ export const seoConfig: Record<string, MetaTags> = {
   },
   blogPost: {
     title: "Artículo - NeoCharge Blog",
-    description: "Descubre los últimos artículos del blog de NeoCharge.",
+    description:
+      "Lee el artículo completo en el blog de NeoCharge: consejos sobre cargadores, tecnología y electrónica en Cuba.",
+  },
+  notFound: {
+    title: "Página no encontrada — NeoCharge",
+    description:
+      "La página que buscas no existe o fue movida. Vuelve a la tienda NeoCharge.",
+  },
+  descargarApp: {
+    title: "Descargar la app — NeoCharge",
+    description:
+      "Instala la app de NeoCharge en tu Android: compra más rápido, recibe avisos de ofertas y lleva la tienda en tu bolsillo.",
+  },
+  descargas: {
+    title: "Descargas — NeoCharge",
+    description:
+      "Descarga el APK oficial de la tienda NeoCharge para Android y consulta el historial de versiones.",
+  },
+  orderConfirmed: {
+    title: "Pedido confirmado — NeoCharge",
+    description:
+      "Tu pedido se registró correctamente. Te contactaremos por WhatsApp para coordinar la entrega.",
+  },
+  trackOrder: {
+    title: "Rastrear pedido — NeoCharge",
+    description:
+      "Consulta el estado de tu pedido en NeoCharge con tu número de orden o tu teléfono.",
   },
   garantia: {
     title: "Garantía y Envíos - NeoCharge",
@@ -136,21 +179,20 @@ export function updateMetaTags(config: MetaTags): void {
     updateMetaTag("og:image", absolute);
   }
 
-  // Update canonical URL
-  if (config.canonicalUrl) {
-    updateCanonicalTag(config.canonicalUrl);
-  }
+  // Canonical + og:url: siempre la URL actual de la página, salvo que la
+  // configuración traiga un canonicalUrl explícito. Así ninguna página
+  // queda canónica a "/" por olvido.
+  const canonical =
+    config.canonicalUrl ||
+    `${window.location.origin}${window.location.pathname}`;
+  updateCanonicalTag(canonical);
+  updateMetaTag("og:url", canonical);
 
-  // Add viewport for mobile
-  updateMetaTag("viewport", "width=device-width, initial-scale=1");
-
-  // Add theme color
-  updateMetaTag(
-    "theme-color",
-    getComputedStyle(document.documentElement).getPropertyValue(
-      "--primary"
-    ) || "#000000"
-  );
+  // OJO: el viewport del index.html es deliberado (user-scalable=no
+  // documentado para la tienda) — no se toca aquí.
+  // Theme-color fijo de marca: el triplete HSL leído de --primary
+  // ("319 28% 50%") no es un valor válido para content.
+  updateMetaTag("theme-color", "#9e5f8f");
 }
 
 /**

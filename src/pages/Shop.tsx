@@ -164,6 +164,7 @@ const ShopPage = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               className="pl-11 h-11 rounded-xl border-0 bg-secondary/60 focus-visible:ring-1"
+              aria-label="Buscar productos"
             />
             {search && (
               <button
@@ -181,6 +182,7 @@ const ShopPage = () => {
               value={sort}
               onChange={(e) => setSort(e.target.value as Sort)}
               className="h-11 rounded-xl border-0 bg-secondary/60 px-3 text-sm font-medium focus:outline-none focus:ring-1 focus:ring-ring"
+              aria-label="Ordenar productos"
             >
               {sortOptions.map((o) => (
                 <option key={o.value} value={o.value}>{o.label}</option>

@@ -64,7 +64,7 @@ const About = () => {
       <section className="container-page py-20 text-center space-y-6 max-w-2xl">
         <h2 className="font-display text-4xl font-bold">¿Conversamos?</h2>
         <p className="text-muted-foreground text-lg">
-          Visítanos en D entre 21 y 23, Vedado, o escríbenos por WhatsApp.
+          Visítanos en Calle D entre 21 y 23, Vedado, o escríbenos por WhatsApp.
         </p>
         <Button asChild variant="hero" size="lg">
           <Link to="/contacto">Contáctanos</Link>

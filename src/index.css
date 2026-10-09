@@ -676,3 +676,21 @@
   }
   .marquee-track { animation: none; }
 }
+
+/* Modo ahorro de datos (Ajustes): misma guarda que reduced-motion,
+   activada por el toggle del usuario vía data-data-saver="1" en <html>. */
+[data-data-saver="1"] .fx-float,
+[data-data-saver="1"] .fx-wave,
+[data-data-saver="1"] .fx-gradient-pan,
+[data-data-saver="1"] .fx-shine:hover::after,
+[data-data-saver="1"] .fx-water::before,
+[data-data-saver="1"] .nc-float {
+  animation: none !important;
+}
+[data-data-saver="1"] *,
+[data-data-saver="1"] *::before,
+[data-data-saver="1"] *::after {
+  animation-duration: 0.01ms !important;
+  transition-duration: 0.01ms !important;
+}
+[data-data-saver="1"] .marquee-track { animation: none !important; }

@@ -5,6 +5,7 @@ import {
   formatMoney,
   formatPrice,
   hasSaneDiscount,
+  hasWarranty,
   warrantyTypeLabel,
 } from "./format";
 
@@ -74,10 +75,21 @@ describe("warrantyTypeLabel", () => {
     expect(warrantyTypeLabel("electronics")).toBe("Garantía de electrónica");
   });
 
-  it("nunca devuelve el valor crudo", () => {
-    expect(warrantyTypeLabel("otro-valor")).toBe("Garantía incluida");
-    expect(warrantyTypeLabel(null)).toBe("Garantía incluida");
-    expect(warrantyTypeLabel(undefined)).toBe("Garantía incluida");
+  it("nunca devuelve el valor crudo ni promete garantía de más", () => {
+    expect(warrantyTypeLabel("no-warranty")).toBe("Sin garantía");
+    expect(warrantyTypeLabel("otro-valor")).toBe("Sin garantía");
+    expect(warrantyTypeLabel(null)).toBe("Sin garantía");
+    expect(warrantyTypeLabel(undefined)).toBe("Sin garantía");
+  });
+
+  it("hasWarranty distingue garantía real de ausencia", () => {
+    expect(hasWarranty("charger")).toBe(true);
+    expect(hasWarranty("charger-1w")).toBe(true);
+    expect(hasWarranty("electronics")).toBe(true);
+    expect(hasWarranty("no-warranty")).toBe(false);
+    expect(hasWarranty(null)).toBe(false);
+    expect(hasWarranty(undefined)).toBe(false);
+    expect(hasWarranty("otro-valor")).toBe(false);
   });
 });
 

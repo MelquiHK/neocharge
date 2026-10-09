@@ -15,8 +15,10 @@ import { formatMoney, formatCUP, formatPrice } from "@/lib/format";
 import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { normalizeCubanPhone } from "@/lib/cuban-phone";
+import { validateStoredRefCode, clearStoredRefCode } from "@/lib/referral";
 import { toast } from "sonner";
 import { cn } from "@/lib/utils";
+import { useSEO } from "@/hooks/use-seo";
 // Los mapas (maplibre-gl ~1MB) se cargan solo cuando el usuario los abre,
 // para no inflar el chunk inicial del checkout.
 const DeliveryRouteMap = lazy(() => import("@/components/DeliveryRouteMap").then((m) => ({ default: m.DeliveryRouteMap })));
@@ -31,6 +33,7 @@ function MapFallback() {
 }
 
 const Checkout = () => {
+  useSEO("checkout");
   const navigate = useNavigate();
   const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP, completeUSD, completeCUP, removeItem, updateQuantity } = useCart();
   // Sin tasa no se inventan conversiones: un total incompleto se muestra como "—".
@@ -80,9 +83,7 @@ const Checkout = () => {
       quotedCoords.lat === coords.lat &&
       quotedCoords.lng === coords.lng);
 
-  useEffect(() => {
-    document.title = "Finalizar pedido — NeoCharge";
-  }, []);
+  // (El título y los meta tags los gestiona useSEO("checkout").)
 
   // Cotizar el envío automáticamente cuando hay ubicación GPS (solo mensajería).
   useEffect(() => {
@@ -201,6 +202,8 @@ const Checkout = () => {
     }
     // Mensajería: exigir cotización válida. Sin ella no se puede enviar el pedido,
     // para no registrar un envío con costo cero o inventado.
+    // Una cotización "aproximada" (respaldo local cuando OSRM falla) SÍ es
+    // válida: el costo final se confirma por WhatsApp y no se bloquea la venta.
     if (delivery === "delivery") {
       if (quoting) {
         toast.error("Espera a que calculemos el costo del envío…");
@@ -283,6 +286,19 @@ const Checkout = () => {
       // para navegar a la página de confirmación.
       const orderId = crypto.randomUUID();
 
+      // Si el envío es una estimación aproximada (OSRM no respondió), dejarlo
+      // por escrito para el admin: el costo final se confirma por WhatsApp.
+      const shippingNote =
+        delivery === "delivery" && quote?.approximate
+          ? "Envío: estimación aproximada (OSRM no disponible); confirmar costo final por WhatsApp."
+          : null;
+      const adminNotes = [notes.trim(), shippingNote].filter((s): s is string => !!s).join(" | ") || null;
+
+      // Programa de referidos: se resuelve ANTES del payload para incluir
+      // ref_code solo cuando hay un código válido (así el checkout no se
+      // rompe si la columna aún no existe en la BD viva).
+      const refCode = await validateStoredRefCode();
+
       const orderPayload = {
         id: orderId,
         user_id: user?.id ?? null,
@@ -298,13 +314,17 @@ const Checkout = () => {
         total: breakdown.totalUSD ?? 0,
         total_cup: breakdown.totalCUP,
         exchange_rate: rate ?? null,
-        admin_notes: notes.trim() || null,
+        admin_notes: adminNotes,
         status: "pending",
         latitude: coords?.lat ?? null,
         longitude: coords?.lng ?? null,
         location_link: mapLink,
         payment_method: paymentCurrency === "USD" ? "cash_usd" : "cash_cup",
         payment_currency: paymentCurrency,
+        // Programa de referidos: atribuye la venta al gestor cuyo enlace
+        // trajo al cliente. Solo se incluye si hay código válido — así el
+        // checkout no se rompe si la columna ref_code aún no existe en la BD.
+        ...(refCode ? { ref_code: refCode } : {}),
       };
 
       const { error } = await supabase.from("orders").insert(orderPayload);
@@ -313,6 +333,9 @@ const Checkout = () => {
         toast.error(error.message || "No se pudo guardar el pedido. Intenta de nuevo.");
         return;
       }
+
+      // El referido se consume con la compra: no se arrastra a otro pedido.
+      clearStoredRefCode();
 
       const waMessage = buildWhatsAppMessage({
         items,
@@ -325,6 +348,7 @@ const Checkout = () => {
         notes: notes.trim() || undefined,
         shippingUSD,
         shippingCUP,
+        shippingApproximate: quote?.approximate ?? false,
         subtotalUSD: completeUSD ? totalUSD : null,
         subtotalCUP: completeCUP ? totalCUP : null,
       });
@@ -555,6 +579,11 @@ const Checkout = () => {
                         </span>
                         <span className="font-display text-xl font-bold whitespace-nowrap">= {formatCUP(quote.priceCUP)}</span>
                       </div>
+                      {quote.approximate && (
+                        <p className="text-xs text-amber-600 bg-amber-50 border border-amber-200 rounded-xl p-3">
+                          Estimación aproximada — el costo final del envío se confirma por WhatsApp.
+                        </p>
+                      )}
                       {quotedCoords && (
                         <Suspense fallback={<MapFallback />}>
                           <DeliveryRouteMap origin={origin} dest={quotedCoords} />
@@ -661,7 +690,7 @@ const Checkout = () => {
             </div>
             <div className="border-t border-border pt-4 space-y-2 text-sm">
               <div className="flex items-center justify-between">
-                <span className="text-muted-foreground">Producto</span>
+                <span className="text-muted-foreground">Subtotal</span>
                 <span>{shownTotalUSD} / {shownTotalCUP}</span>
               </div>
               <div className="space-y-2 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-3">

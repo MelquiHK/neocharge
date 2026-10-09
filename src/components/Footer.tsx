@@ -74,10 +74,12 @@ export function Footer() {
             <h4 className="font-display font-bold text-foreground">Tienda</h4>
             <ul className="space-y-2.5 text-sm">
               <li><Link to="/tienda" className="text-muted-foreground hover:text-primary transition-colors">Todos los productos</Link></li>
-              <li><Link to="/tienda?cat=cargadores" className="text-muted-foreground hover:text-primary transition-colors">Cargadores</Link></li>
-              <li><Link to="/tienda?cat=cables" className="text-muted-foreground hover:text-primary transition-colors">Cables</Link></li>
-              <li><Link to="/tienda?cat=baterias" className="text-muted-foreground hover:text-primary transition-colors">Baterías</Link></li>
+              <li><Link to="/tienda?cat=cargadores-72v" className="text-muted-foreground hover:text-primary transition-colors">Cargadores 72V</Link></li>
+              <li><Link to="/tienda?cat=cargador-48v" className="text-muted-foreground hover:text-primary transition-colors">Cargadores 48V</Link></li>
+              <li><Link to="/tienda?cat=audio" className="text-muted-foreground hover:text-primary transition-colors">Audio</Link></li>
+              <li><Link to="/tienda?cat=piezas" className="text-muted-foreground hover:text-primary transition-colors">Piezas</Link></li>
               <li><Link to="/tienda?cat=accesorios" className="text-muted-foreground hover:text-primary transition-colors">Accesorios</Link></li>
+              <li><Link to="/tienda?cat=energia-casa" className="text-muted-foreground hover:text-primary transition-colors">Energía para el hogar</Link></li>
               <li><Link to="/rastrear" className="text-muted-foreground hover:text-primary transition-colors">Rastrear pedido</Link></li>
               <li><Link to="/descargas" className="text-muted-foreground hover:text-primary transition-colors">Descargar app</Link></li>
             </ul>
@@ -101,7 +103,7 @@ export function Footer() {
             <ul className="space-y-3 text-sm">
               <li className="flex items-start gap-2 text-muted-foreground">
                 <MapPin className="w-4 h-4 mt-0.5 shrink-0 text-primary" />
-                <span>D entre 21 y 23, Vedado, La Habana</span>
+                <span>Calle D entre 21 y 23, Vedado, La Habana</span>
               </li>
               <li className="flex items-center gap-2">
                 <Phone className="w-4 h-4 shrink-0 text-primary" />

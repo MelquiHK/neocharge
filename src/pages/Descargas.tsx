@@ -10,12 +10,14 @@ import {
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { APP_VERSIONS, CURRENT_VERSION } from "@/data/app-versions";
+import { useSEO } from "@/hooks/use-seo";
 
 /**
  * Página de descargas de la app NeoCharge con historial de versiones.
  * El APK se sirve desde /descargas/neocharge-tienda.apk (enlace permanente).
  */
 export default function Descargas() {
+  useSEO("descargas");
   const [openKey, setOpenKey] = useState<string | null>(null);
 
   return (

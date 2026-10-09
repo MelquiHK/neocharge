@@ -85,7 +85,6 @@ export function useOrderNotifications(enabled: boolean = true) {
   const maxKnownTimeRef = useRef<number>(0);
   const lastSeenRef = useRef<number>(getLastSeen());
   const flashIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
-  const channelRef = useRef<ReturnType<typeof supabase.channel> | null>(null);
 
   // Limpiar destellos de título al enfocar la pestaña
   useEffect(() => {

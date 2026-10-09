@@ -31,7 +31,7 @@ const Contact = () => {
   const whatsappUrl = settings.whatsapp_url ?? "https://wa.me/5363180910";
   const phone = settings.support_phone ?? "+53 6318-0910";
   const emailValue = settings.support_email ?? "neocharge0@gmail.com";
-  const address = settings.support_address ?? "D entre 21 y 23, Vedado, La Habana";
+  const address = settings.support_address ?? "Calle D entre 21 y 23, Vedado, La Habana";
   const hours = settings.support_hours ?? "Atención 24 horas, todos los días";
 
   const cards = [

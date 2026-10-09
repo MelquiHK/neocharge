@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import {
-  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger,
+  Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle,
 } from "@/components/ui/dialog";
 import {
   AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription,
@@ -21,8 +21,7 @@ import { toast } from "sonner";
 import QRCode from "qrcode";
 import { SITE_URL } from "@/lib/seo";
 import { formatPrice } from "@/lib/format";
-import { Badge } from "@/components/ui/badge";
-import { Product, Category, StoreLocation } from "@/types";
+import { Product } from "@/types";
 import { useAdminProducts } from "@/hooks/admin/use-admin-products";
 import {
   useAdminPartners,

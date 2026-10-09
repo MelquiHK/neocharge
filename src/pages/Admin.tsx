@@ -26,6 +26,7 @@ import {
   Handshake,
   Bell,
   CheckCheck,
+  Share2,
 } from "lucide-react";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminProducts } from "@/components/admin/AdminProducts";
@@ -37,6 +38,7 @@ import { AdminCustomers } from "@/components/admin/AdminCustomers";
 import { AdminRates } from "@/components/admin/AdminRates";
 import { AdminBlog } from "@/components/admin/AdminBlog";
 import { AdminSales } from "@/components/admin/AdminSales";
+import { AdminReferrals } from "@/components/admin/AdminReferrals";
 import { AdminAnalytics } from "@/components/admin/AdminAnalytics";
 import { AdminCashbox } from "@/components/admin/AdminCashbox";
 import { AdminServices } from "@/components/admin/AdminServices";
@@ -44,21 +46,32 @@ import { AdminMessenger } from "@/components/admin/AdminMessenger";
 import { AdminSettings } from "@/components/admin/AdminSettings";
 import { useOrderNotifications } from "@/hooks/admin/use-order-notifications";
 import { cn } from "@/lib/utils";
+import { useSEO } from "@/hooks/use-seo";
 
 const Admin = () => {
-  const { user, isAdmin, permissions, loading, signOut } = useAuth();
+  useSEO("admin");  const { user, isAdmin, permissions, loading, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState(() => {
     // Permite enlaces directos a pestañas: /admin#tab=rates
     const m = window.location.hash.match(/tab=([a-z]+)/);
     return m ? m[1] : "dashboard";
   });
+
+  // Si ya estás en /admin y haces clic en un enlace con otro #tab=...
+  // (p. ej. "Falta tasa USD hoy" → /admin#tab=rates), el hash cambia sin
+  // recargar: este listener conmuta la pestaña en vivo.
+  useEffect(() => {
+    const onHashChange = () => {
+      const m = window.location.hash.match(/tab=([a-z]+)/);
+      if (m) setActiveTab(m[1]);
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, []);
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const [notifOpen, setNotifOpen] = useState(false);
   const { notifications, unreadCount, markAllAsRead } = useOrderNotifications(true);
 
-  useEffect(() => {
-    document.title = "Admin — NeoCharge";
-  }, []);
+  // (El título y los meta tags los gestiona useSEO("admin").)
 
   // El panel se comporta como una app: sin pellizco para ampliar.
   // Al salir del panel se restaura el viewport original (la tienda conserva el zoom).
@@ -126,6 +139,7 @@ const Admin = () => {
         { v: "analytics", l: "Analytics", icon: BarChart3, show: isOwner || permissions.can_view_finances || permissions.can_manage_orders },
         { v: "cashbox", l: "Caja", icon: Wallet, show: isOwner || permissions.can_view_finances },
         { v: "customers", l: "Clientes", icon: Users, show: isOwner || permissions.can_manage_customers },
+        { v: "referrals", l: "Referidos", icon: Share2, show: isOwner || permissions.can_manage_orders || permissions.can_view_finances },
       ],
     },
     {
@@ -175,6 +189,7 @@ const Admin = () => {
       case "settings": return <AdminSettings />;
       case "blog": return <AdminBlog />;
       case "sales": return <AdminSales />;
+      case "referrals": return <AdminReferrals />;
       case "analytics": return <AdminAnalytics />;
       case "cashbox": return <AdminCashbox />;
       default: return <AdminDashboard />;

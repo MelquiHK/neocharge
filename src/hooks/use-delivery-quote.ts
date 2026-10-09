@@ -5,11 +5,37 @@ export interface DeliveryQuote {
   km: number;
   priceCUP: number;
   pricePerKm: number;
+  /**
+   * true cuando el demo público de OSRM no respondió y se usó la
+   * estimación local (línea recta × factor de carretera). El precio
+   * final del envío se confirma por WhatsApp; nunca bloquea la venta.
+   */
+  approximate: boolean;
 }
 
 // Mismo origen y tarifa que /calcular-envio (site_settings.delivery_config).
 const DEFAULT_ORIGIN = { lat: 23.13474182, lng: -82.39116033 };
 const FALLBACK_RATE = 250;
+// La distancia por carretera suele superar a la línea recta: factor de
+// corrección para la estimación local cuando OSRM no responde.
+const ROAD_FACTOR = 1.3;
+const OSRM_TIMEOUT_MS = 8000;
+
+/**
+ * Distancia en línea recta (fórmula haversiana). Solo se usa como
+ * respaldo local cuando el demo público de OSRM falla o expira.
+ */
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371;
+  const dLat = ((bLat - aLat) * Math.PI) / 180;
+  const dLng = ((bLng - aLng) * Math.PI) / 180;
+  const s1 = Math.sin(dLat / 2);
+  const s2 = Math.sin(dLng / 2);
+  const h =
+    s1 * s1 +
+    Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * s2 * s2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
 
 /**
  * Cotiza el envío por carretera (OSRM) desde el local origen hasta unas
@@ -64,27 +90,44 @@ export function useDeliveryQuote() {
       setQuoting(true);
       setQuoteError(null);
       try {
-        const res = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${lng},${lat}?overview=false`,
-        );
-        const data = await res.json();
-        if (data.code === "Ok" && data.routes?.[0]) {
-          const km = data.routes[0].distance / 1000;
-          const q: DeliveryQuote = {
-            km,
-            priceCUP: Math.round(km * pricePerKm),
-            pricePerKm,
-          };
-          setQuote(q);
-          setQuotedCoords({ lat, lng });
-          return q;
+        const ctrl = new AbortController();
+        const timer = window.setTimeout(() => ctrl.abort(), OSRM_TIMEOUT_MS);
+        try {
+          const res = await fetch(
+            `https://router.project-osrm.org/route/v1/driving/${origin.lng},${origin.lat};${lng},${lat}?overview=false`,
+            { signal: ctrl.signal },
+          );
+          const data = await res.json();
+          if (data.code === "Ok" && data.routes?.[0]) {
+            const km = data.routes[0].distance / 1000;
+            const q: DeliveryQuote = {
+              km,
+              priceCUP: Math.round(km * pricePerKm),
+              pricePerKm,
+              approximate: false,
+            };
+            setQuote(q);
+            setQuotedCoords({ lat, lng });
+            return q;
+          }
+          throw new Error("OSRM sin ruta");
+        } finally {
+          window.clearTimeout(timer);
         }
-        throw new Error("OSRM sin ruta");
       } catch {
-        setQuote(null);
-        setQuotedCoords(null);
-        setQuoteError("No pudimos calcular la ruta ahora mismo. Inténtalo de nuevo o calcúlala en /calcular-envio.");
-        return null;
+        // Respaldo local: el demo público de OSRM puede caer, limitar el uso
+        // o tardar demasiado. Mejor una estimación honesta marcada como
+        // aproximada que bloquear la venta del cliente.
+        const km = haversineKm(origin.lat, origin.lng, lat, lng) * ROAD_FACTOR;
+        const q: DeliveryQuote = {
+          km,
+          priceCUP: Math.round(km * pricePerKm),
+          pricePerKm,
+          approximate: true,
+        };
+        setQuote(q);
+        setQuotedCoords({ lat, lng });
+        return q;
       } finally {
         setQuoting(false);
       }

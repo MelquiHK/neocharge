@@ -351,17 +351,17 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
       if (isPartnerSale && partnerSource && partnerSource.partner_price != null && Number.isFinite(partnerMarginUsd)) {
         if (partnerMarginUsd < 0) {
           toast.error(
-            `Venta registrada en ${partnerSource.partner_name}. Vendes por debajo del costo del socio: pierdes $${Math.abs(partnerMarginUsd).toFixed(2)} USD.`,
+            `Venta registrada en ${partnerSource.partner_name}. Vendes por debajo del costo del socio: pierdes $${Math.abs(partnerMarginUsd).toFixed(2)}.`,
             { duration: 6000 },
           );
         } else if (partnerMarginUsd === 0) {
           toast(
-            `Venta registrada en ${partnerSource.partner_name}. Margen $0.00 USD: sin ganancia ni pérdida.`,
+            `Venta registrada en ${partnerSource.partner_name}. Margen $0.00: sin ganancia ni pérdida.`,
             { duration: 6000 },
           );
         } else {
           toast.success(
-            `Venta registrada en ${partnerSource.partner_name}. El socio retiene ${formatMoney(partnerSource.partner_price, partnerSource.partner_currency)} y tu margen de $${partnerMarginUsd.toFixed(2)} USD queda pendiente de recoger.`,
+            `Venta registrada en ${partnerSource.partner_name}. El socio retiene ${formatMoney(partnerSource.partner_price, partnerSource.partner_currency)} y tu margen de $${partnerMarginUsd.toFixed(2)} queda pendiente de recoger.`,
             { duration: 6000 },
           );
         }
@@ -488,10 +488,10 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
                 <div>
                   El socio retiene <span className="font-semibold text-slate-900">{formatMoney(partnerSource.partner_price, partnerSource.partner_currency)}</span>
                   {Number.isFinite(partnerMarginUsd) && partnerMarginUsd > 0 && (
-                    <> y tu margen de <span className="font-semibold text-emerald-700">${partnerMarginUsd.toFixed(2)} USD</span> queda pendiente de recoger.</>
+                    <> y tu margen de <span className="font-semibold text-emerald-700">${partnerMarginUsd.toFixed(2)}</span> queda pendiente de recoger.</>
                   )}
                   {Number.isFinite(partnerMarginUsd) && partnerMarginUsd === 0 && (
-                    <> (margen $0.00 USD: sin ganancia ni pérdida).</>
+                    <> (margen $0.00: sin ganancia ni pérdida).</>
                   )}
                 </div>
               ) : (
@@ -501,7 +501,7 @@ export function RegistrarVentaDialog({ open, onOpenChange, onSaved }: RegistrarV
               )}
               {partnerSource.partner_price != null && Number.isFinite(partnerMarginUsd) && partnerMarginUsd < 0 && (
                 <div className="font-semibold text-red-600">
-                  ⚠ Vendes por debajo del costo del socio: pierdes ${Math.abs(partnerMarginUsd).toFixed(2)} USD.
+                  ⚠ Vendes por debajo del costo del socio: pierdes ${Math.abs(partnerMarginUsd).toFixed(2)}.
                 </div>
               )}
               <div className="text-xs text-slate-500">Esta venta no genera comisión automática.</div>

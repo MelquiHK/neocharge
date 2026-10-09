@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import { X, ChevronLeft, ChevronRight } from "lucide-react";
 import { responsiveImage } from "@/lib/responsive-image";
+import { useDataSaver } from "@/lib/data-saver";
 
 /**
  * Visor de imágenes a pantalla completa, hecho a medida para NeoCharge.
@@ -49,6 +50,9 @@ export default function ImageViewer({
   const [translate, setTranslate] = useState<Point>({ x: 0, y: 0 });
   const [animating, setAnimating] = useState(false);
   const [fullLoaded, setFullLoaded] = useState(false);
+  // Ahorro de datos: versiones más livianas en el visor.
+  const [dataSaver] = useDataSaver();
+  const fullWidth = dataSaver ? 800 : 1600;
 
   const containerRef = useRef<HTMLDivElement>(null);
   const pointers = useRef(new Map<number, Point>());
@@ -72,7 +76,7 @@ export default function ImageViewer({
   const small = responsiveImage(src, "100vw").srcSet
     ? variantUrl(src, 400)
     : src;
-  const full = variantUrl(src, 1600);
+  const full = variantUrl(src, fullWidth);
 
   const goTo = useCallback(
     (next: number) => {
@@ -91,9 +95,9 @@ export default function ImageViewer({
     if (count < 2) return;
     [(index + 1) % count, (index - 1 + count) % count].forEach((i) => {
       const im = new Image();
-      im.src = variantUrl(images[i], 1600);
+      im.src = variantUrl(images[i], fullWidth);
     });
-  }, [index, count, images]);
+  }, [index, count, images, fullWidth]);
 
   // Bloquear el scroll de la página mientras el visor está abierto.
   useEffect(() => {

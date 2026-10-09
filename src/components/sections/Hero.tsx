@@ -6,7 +6,6 @@ import { getSupabase } from "@/integrations/supabase/lazy-client";
 import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { responsiveImage } from "@/lib/responsive-image";
 import { formatPrice } from "@/lib/format";
-import { cn } from "@/lib/utils";
 
 interface SpotlightProduct {
   id: string;

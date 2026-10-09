@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import { LayoutDashboard, LogOut, User } from "lucide-react";
+import { LayoutDashboard, LogOut, Settings, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -46,6 +46,11 @@ export function AccountMenu() {
         <DropdownMenuItem asChild>
           <Link to="/cuenta" className="cursor-pointer">
             <User className="w-4 h-4 mr-2" /> Mi cuenta
+          </Link>
+        </DropdownMenuItem>
+        <DropdownMenuItem asChild>
+          <Link to="/ajustes" className="cursor-pointer">
+            <Settings className="w-4 h-4 mr-2" /> Ajustes
           </Link>
         </DropdownMenuItem>
         {isAdmin && (

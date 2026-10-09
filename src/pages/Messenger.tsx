@@ -1,17 +1,14 @@
-import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
 import { useAuth } from "@/hooks/use-auth";
 import { MessengerPanel } from "@/components/MessengerPanel";
 import { Button } from "@/components/ui/button";
 import { Link } from "react-router-dom";
 import { ChevronLeft, Map } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 
 const MessengerPage = () => {
+  useSEO("mensajeria");
   const { user, isMensajero, isAdmin, loading } = useAuth();
-
-  useEffect(() => {
-    document.title = "Panel de Mensajería — NeoCharge";
-  }, []);
 
   if (loading) return null;
 

@@ -44,6 +44,7 @@ const DescargarApp = lazy(() => import("./pages/DescargarApp.tsx"));
 const Descargas = lazy(() => import("./pages/Descargas.tsx"));
 const OrderConfirmed = lazy(() => import("./pages/OrderConfirmed.tsx"));
 const TrackOrder = lazy(() => import("./pages/TrackOrder.tsx"));
+const Settings = lazy(() => import("./pages/Settings.tsx"));
 
 // Loading placeholder component
 const LoadingPlaceholder = () => (
@@ -93,6 +94,7 @@ const App = () => (
                   <Route path="/descargas" element={<Suspense fallback={<LoadingPlaceholder />}><Descargas /></Suspense>} />
                   <Route path="/pedido-confirmado/:id" element={<Suspense fallback={<LoadingPlaceholder />}><OrderConfirmed /></Suspense>} />
                   <Route path="/rastrear" element={<Suspense fallback={<LoadingPlaceholder />}><TrackOrder /></Suspense>} />
+                  <Route path="/ajustes" element={<Suspense fallback={<LoadingPlaceholder />}><Settings /></Suspense>} />
                   {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
                   <Route path="*" element={<NotFound />} />
                 </Route>

@@ -8,13 +8,15 @@ import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { formatPrice, formatCUP } from "@/lib/format";
 import { getWhatsAppLink } from "@/lib/whatsapp";
-import { Package, LogOut, LayoutDashboard, User, Phone, Info, Save, MessageSquare, Wallet, CheckCircle, Clock, Map, Calculator, Send, Plus } from "lucide-react";
+import { Package, LogOut, LayoutDashboard, User, Phone, Info, Save, MessageSquare, Wallet, CheckCircle, Clock, Map, Send, Plus, Settings } from "lucide-react";
 import { toast } from "sonner";
 import "@/components/sections/visual-effects.css";
 import { computeSalesTotalsBySeller, type SellerSale } from "@/lib/sales";
+import { normalizeCubanPhone, formatCubanPhoneDisplay } from "@/lib/cuban-phone";
 import { RegistrarVentaDialog } from "@/components/gestor/RegistrarVentaDialog";
 import { VentasHistorial } from "@/components/gestor/VentasHistorial";
 import { SolicitudesPago } from "@/components/gestor/SolicitudesPago";
+import { useSEO } from "@/hooks/use-seo";
 
 interface Order {
   id: string;
@@ -29,7 +31,81 @@ interface ProfileWithBio {
   [key: string]: unknown;
 }
 
+const PhonePrompt = ({
+  onSaved,
+}: {
+  onSaved: () => void;
+}) => {
+  // Quienes entran con Google no pasan por el formulario de registro:
+  // se les pide el teléfono aquí, sin bloquear el resto de la cuenta.
+  const { user } = useAuth();
+  const [phone, setPhone] = useState("");
+  const [error, setError] = useState("");
+  const [saving, setSaving] = useState(false);
+
+  const save = async () => {
+    const normalized = normalizeCubanPhone(phone);
+    if (!normalized) {
+      setError("Escribe un móvil cubano válido (ej. 5XXX XXXX).");
+      return;
+    }
+    if (!user) return;
+    setSaving(true);
+    try {
+      const { error: dbError } = await supabase
+        .from("profiles")
+        .update({ phone: normalized, updated_at: new Date().toISOString() })
+        .eq("id", user.id);
+      if (dbError) throw dbError;
+      toast.success("Teléfono guardado. ¡Gracias!");
+      onSaved();
+    } catch (err: unknown) {
+      toast.error("No se pudo guardar el teléfono: " + (err instanceof Error ? err.message : String(err)));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  return (
+    <section className="rounded-[2rem] border-2 border-dashed border-brand-300 bg-brand-50/80 p-6 sm:p-7 animate-fade-in-up">
+      <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+        <span className="w-12 h-12 rounded-2xl bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 flex items-center justify-center shrink-0 shadow-glow-brand-sm">
+          <Phone className="w-5 h-5 text-white" />
+        </span>
+        <div className="flex-1 space-y-1">
+          <h2 className="font-display text-xl font-bold nc-title-gradient">Completa tu teléfono</h2>
+          <p className="text-sm text-slate-500">
+            Lo necesitamos para rastrear tus pedidos y coordinar la entrega por WhatsApp.
+          </p>
+        </div>
+      </div>
+      <div className="mt-4 flex flex-col sm:flex-row gap-3">
+        <Input
+          type="tel"
+          value={phone}
+          onChange={(e) => {
+            setPhone(e.target.value);
+            if (error) setError("");
+          }}
+          placeholder="5XXX XXXX"
+          inputMode="tel"
+          autoComplete="tel"
+          aria-label="Teléfono móvil"
+          className="nc-input h-12 sm:max-w-xs"
+        />
+        <Button onClick={save} disabled={saving} className="nc-btn-primary h-12 px-6 font-bold">
+          {saving ? "Guardando..." : "Guardar teléfono"}
+        </Button>
+      </div>
+      {error && (
+        <p role="alert" className="text-xs text-red-600 font-medium mt-2">{error}</p>
+      )}
+    </section>
+  );
+};
+
 const Account = () => {
+  useSEO("account");
   const { user, profile, role, isGestor, isMensajero, isAdmin, signOut, loading, refreshProfile } = useAuth();
   const [orders, setOrders] = useState<Order[]>([]);
   const [editing, setEditing] = useState(false);
@@ -50,9 +126,7 @@ const Account = () => {
   const [saleDialogOpen, setSaleDialogOpen] = useState(false);
   const [hasPendingRequest, setHasPendingRequest] = useState(false);
 
-  useEffect(() => {
-    document.title = "Mi cuenta — NeoCharge";
-  }, []);
+  // (El título y los meta tags los gestiona useSEO("account").)
 
   useEffect(() => {
     if (profile) {
@@ -145,7 +219,7 @@ const handleAvatarUpload = async (file: File) => {
       const fileName = `${user.id}-${Date.now()}-${Math.random().toString(36).substring(2, 8)}.${fileExt}`; // Nombre más único
       const filePath = `avatars/${user.id}/${fileName}`;
 
-      const { error: uploadError, data } = await supabase.storage
+      const { error: uploadError } = await supabase.storage
         .from('avatars')
         .upload(filePath, file, {
           cacheControl: '3600',
@@ -173,6 +247,16 @@ const handleAvatarUpload = async (file: File) => {
     let newAvatarUrl = formData.avatar_url;
 
     try {
+      // El teléfono, si se escribe, debe ser un móvil cubano válido.
+      let normalizedPhone: string | null = null;
+      if (formData.phone.trim()) {
+        normalizedPhone = normalizeCubanPhone(formData.phone);
+        if (!normalizedPhone) {
+          toast.error("El teléfono no es un móvil cubano válido (ej. 5XXX XXXX).");
+          setSaving(false);
+          return;
+        }
+      }
       if (selectedFile) {
         const uploadedUrl = await handleAvatarUpload(selectedFile);
         if (uploadedUrl) {
@@ -191,7 +275,7 @@ const handleAvatarUpload = async (file: File) => {
         .update({
           full_name: formData.full_name,
           username: formData.username,
-          phone: formData.phone,
+          phone: normalizedPhone,
           bio: formData.bio,
           avatar_url: newAvatarUrl, // Use the new URL (or existing if no upload)
           updated_at: new Date().toISOString()
@@ -347,6 +431,12 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                 {editing ? "Cancelar" : "Editar perfil"}
               </Button>
               <Button
+                asChild
+                className="rounded-full bg-white/15 backdrop-blur border border-white/25 text-white hover:bg-white/25 font-semibold h-11 px-5"
+              >
+                <Link to="/ajustes"><Settings className="w-4 h-4 mr-2" /> Ajustes</Link>
+              </Button>
+              <Button
                 onClick={signOut}
                 className="rounded-full bg-red-500/20 backdrop-blur border border-red-300/30 text-red-100 hover:bg-red-500/30 font-semibold h-11 px-5"
               >
@@ -355,6 +445,11 @@ Por favor, revisa mis pagos. ¡Gracias!`;
             </div>
           </div>
         </header>
+
+        {/* Teléfono pendiente (p. ej. cuentas creadas con Google) */}
+        {profile && !profile.phone && (
+          <PhonePrompt onSaved={() => refreshProfile()} />
+        )}
 
         <div className="grid lg:grid-cols-3 gap-8">
           <div className="lg:col-span-1 space-y-6">
@@ -369,7 +464,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                   <span className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center shrink-0">
                     <Phone className="w-4 h-4 text-brand-700" />
                   </span>
-                  <span className="font-medium text-slate-700">{profile?.phone || "Sin teléfono"}</span>
+                  <span className="font-medium text-slate-700">{profile?.phone ? formatCubanPhoneDisplay(profile.phone) : "Sin teléfono"}</span>
                 </div>
                 <div className="flex items-start gap-3 text-sm">
                   <span className="w-9 h-9 rounded-xl bg-brand-100 flex items-center justify-center shrink-0">
@@ -397,7 +492,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                     <Input value={formData.phone} onChange={e => setFormData({...formData, phone: e.target.value})} className="nc-input h-12" />
                   </div>
                   <div className="space-y-1">
-                    <Label className="text-slate-700 font-medium">Foto de Perfil</Label>
+                    <Label htmlFor="avatar-upload" className="text-slate-700 font-medium">Foto de Perfil</Label>
                     <div className="flex items-center gap-4">
                       <div className="w-20 h-20 rounded-full bg-brand-100 flex items-center justify-center overflow-hidden border border-brand-200/70">
                         {selectedFile ? (
@@ -410,6 +505,7 @@ Por favor, revisa mis pagos. ¡Gracias!`;
                       </div>
                       <Input
                         type="file"
+                        id="avatar-upload"
                         accept="image/*"
                         onChange={e => {
                           if (e.target.files && e.target.files[0]) {

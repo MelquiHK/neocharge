@@ -2,13 +2,14 @@ import { Link, useLocation } from "react-router-dom";
 import { useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { ArrowLeft, Home, Search, Truck, Zap } from "lucide-react";
+import { useSEO } from "@/hooks/use-seo";
 
 const NotFound = () => {
+  useSEO("notFound");
   const location = useLocation();
 
   useEffect(() => {
     console.error("404:", location.pathname);
-    document.title = "Página no encontrada — NeoCharge";
   }, [location.pathname]);
 
   return (
