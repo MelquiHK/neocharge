@@ -1,4 +1,4 @@
-import { Suspense, lazy, useEffect, useState } from "react";
+import { Suspense, lazy, startTransition, useEffect, useState } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { InstallAppBubble } from "@/components/InstallAppBubble";
@@ -37,13 +37,14 @@ export function SiteLayout() {
   }, []);
 
   // El drawer del carrito se monta SOLO cuando su chunk ya está cargado.
-  // Sin esto, el lazy() suspende dentro de un update urgente y React
-  // lanza el error #306 ("Algo salió mal") al abrir el carrito.
+  // El setSheetReady VA en startTransition: el primer render de un lazy()
+  // suspende siempre (aunque el módulo ya esté en caché) y fuera de una
+  // transición React lanza el error #306 ("Algo salió mal").
   useEffect(() => {
     if (!isOpen || sheetReady) return;
     let cancelled = false;
     import("@/components/CartSheet").then(
-      () => { if (!cancelled) setSheetReady(true); },
+      () => { if (!cancelled) startTransition(() => setSheetReady(true)); },
       (err) => { console.error("[cart] no se pudo cargar el drawer:", err); },
     );
     return () => { cancelled = true; };
