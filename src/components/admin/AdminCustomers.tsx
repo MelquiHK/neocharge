@@ -430,7 +430,11 @@ export function AdminCustomers() {
                             if (error) throw error;
                             setMessengerProfile(data);
                           } catch (err: unknown) {
-                            toast.error("No se pudo guardar la tarifa: " + (err instanceof Error ? err.message : String(err)));
+                            const msg =
+                              err instanceof Error ? err.message
+                              : typeof err === "object" && err !== null && "message" in err ? String((err as { message: unknown }).message)
+                              : (() => { try { return JSON.stringify(err); } catch { return String(err); } })();
+                            toast.error("No se pudo guardar la tarifa: " + msg);
                           }
                         }} 
                       />

@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from "react-leaflet";
 import L from "leaflet";
 import "leaflet/dist/leaflet.css";
@@ -9,19 +9,74 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card } from "@/components/ui/card";
 import { toast } from "sonner";
-import { 
-  MapPin, 
-  Navigation, 
-  Trash2, 
-  Plus, 
-  Calculator, 
-  DollarSign, 
-  Store, 
-  Info, 
-  LocateFixed, 
-  Crosshair 
+import {
+  MapPin,
+  Navigation,
+  Trash2,
+  Calculator,
+  DollarSign,
+  Store,
+  Info,
+  LocateFixed,
+  Crosshair,
+  Share2,
+  Check,
+  ChevronDown,
+  Bike,
+  Plus,
 } from "lucide-react";
 import { formatCUP } from "@/lib/format";
+
+// Factor de corrección línea-recta -> carretera (mismo que use-delivery-quote)
+const ROAD_FACTOR = 1.3;
+const OSRM_TIMEOUT_MS = 8000;
+
+// Distancia en línea recta (fórmula haversiana). Respaldo local cuando OSRM falla.
+function haversineKm(aLat: number, aLng: number, bLat: number, bLng: number): number {
+  const R = 6371;
+  const dLat = ((bLat - aLat) * Math.PI) / 180;
+  const dLng = ((bLng - aLng) * Math.PI) / 180;
+  const s1 = Math.sin(dLat / 2);
+  const s2 = Math.sin(dLng / 2);
+  const h =
+    s1 * s1 +
+    Math.cos((aLat * Math.PI) / 180) * Math.cos((bLat * Math.PI) / 180) * s2 * s2;
+  return 2 * R * Math.asin(Math.sqrt(h));
+}
+
+// Marcador numerado para las paradas
+function numberedIcon(n: number): L.DivIcon {
+  return L.divIcon({
+    className: "nc-waypoint-marker",
+    html: `<div style="
+      width:30px;height:30px;border-radius:50%;
+      background:linear-gradient(135deg,#9e5f8f,#6d4c6e);
+      color:#fff;font-weight:800;font-size:13px;
+      display:flex;align-items:center;justify-content:center;
+      border:2px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.35);
+    ">${n}</div>`,
+    iconSize: [30, 30],
+    iconAnchor: [15, 15],
+    popupAnchor: [0, -14],
+  });
+}
+
+// Marcador del local (punto de venta)
+function storeIcon(): L.DivIcon {
+  return L.divIcon({
+    className: "nc-store-marker",
+    html: `<div style="
+      width:32px;height:32px;border-radius:12px;
+      background:#fff;color:#9e5f8f;
+      display:flex;align-items:center;justify-content:center;
+      border:2px solid #9e5f8f;box-shadow:0 2px 8px rgba(0,0,0,.3);
+      font-size:16px;
+    ">🏪</div>`,
+    iconSize: [32, 32],
+    iconAnchor: [16, 16],
+    popupAnchor: [0, -14],
+  });
+}
 
 // Fix Leaflet marker icons (sin @ts-ignore: acceso tipado al prototipo)
 delete (L.Icon.Default.prototype as unknown as { _getIconUrl?: unknown })._getIconUrl;
@@ -52,9 +107,12 @@ function MapController({ center }: { center?: [number, number] | null }) {
 export function MessengerPanel() {
   const { user } = useAuth();
   const [rate, setRate] = useState(300);
+  const [rateSaved, setRateSaved] = useState(true);
+  const [savingRate, setSavingRate] = useState(false);
   const [waypoints, setWaypoints] = useState<Waypoint[]>([]);
   const [route, setRoute] = useState<[number, number][]>([]);
   const [distance, setDistance] = useState(0); // in km
+  const [approximate, setApproximate] = useState(false);
   const [loading, setLoading] = useState(false);
   interface SalePoint {
     id: string;
@@ -66,9 +124,11 @@ export function MessengerPanel() {
   const [salePoints, setSalePoints] = useState<SalePoint[]>([]);
 
   // Estados para añadir coordenadas manualmente
+  const [showCoordForm, setShowCoordForm] = useState(false);
   const [coordInput, setCoordInput] = useState("");
   const [coordLabel, setCoordLabel] = useState("");
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+  const rateDebounce = useRef<number | null>(null);
 
   // Fetch messenger rate and sale points
   useEffect(() => {
@@ -79,7 +139,10 @@ export function MessengerPanel() {
         supabase.from("sale_points").select("*").eq("is_active", true)
       ]);
 
-      if (mProfile) setRate(Number(mProfile.rate_per_km));
+      if (mProfile) {
+        setRate(Number(mProfile.rate_per_km));
+        setRateSaved(true);
+      }
       if (points) {
         setSalePoints(
           points.map((p) => ({
@@ -95,23 +158,72 @@ export function MessengerPanel() {
     load();
   }, [user]);
 
+  // Guardar la tarifa en el perfil del mensajero (con debounce)
+  const persistRate = useCallback(async (value: number) => {
+    if (!user) return;
+    if (!Number.isFinite(value) || value < 0) return;
+    setSavingRate(true);
+    try {
+      const { error } = await supabase.from("messenger_profiles").upsert(
+        { user_id: user.id, rate_per_km: value, updated_at: new Date().toISOString() },
+        { onConflict: "user_id" }
+      );
+      if (error) throw error;
+      setRateSaved(true);
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : String(err);
+      toast.error("No se pudo guardar tu tarifa: " + msg);
+      setRateSaved(false);
+    } finally {
+      setSavingRate(false);
+    }
+  }, [user]);
+
+  const handleRateChange = (value: number) => {
+    setRate(value);
+    setRateSaved(false);
+    if (rateDebounce.current) window.clearTimeout(rateDebounce.current);
+    rateDebounce.current = window.setTimeout(() => persistRate(value), 900);
+  };
+
   const calculateRoute = useCallback(async () => {
     if (waypoints.length < 2) return;
     setLoading(true);
+    setApproximate(false);
     try {
       const coords = waypoints.map(w => `${w.lng},${w.lat}`).join(";");
-      const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
-      const data = await res.json();
-      
-      if (data.code === "Ok") {
-        const routeCoords = data.routes[0].geometry.coordinates.map((c: number[]) => [c[1], c[0]]);
-        setRoute(routeCoords);
-        setDistance(data.routes[0].distance / 1000); // meters to km
-      } else {
-        toast.error("No se pudo calcular la ruta por carretera.");
+      const ctrl = new AbortController();
+      const timer = window.setTimeout(() => ctrl.abort(), OSRM_TIMEOUT_MS);
+      let ok = false;
+      try {
+        const res = await fetch(
+          `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
+          { signal: ctrl.signal }
+        );
+        const data = await res.json();
+        if (data.code === "Ok") {
+          const routeCoords = data.routes[0].geometry.coordinates.map((c: number[]) => [c[1], c[0]]);
+          setRoute(routeCoords);
+          setDistance(data.routes[0].distance / 1000); // meters to km
+          ok = true;
+        }
+      } catch {
+        ok = false; // timeout o error de red -> respaldo local
+      } finally {
+        window.clearTimeout(timer);
       }
-    } catch (error) {
-      toast.error("Error al conectar con el servicio de mapas.");
+      if (!ok) {
+        // Respaldo local: suma de tramos en línea recta con factor de carretera
+        let km = 0;
+        for (let i = 1; i < waypoints.length; i++) {
+          km += haversineKm(waypoints[i - 1].lat, waypoints[i - 1].lng, waypoints[i].lat, waypoints[i].lng);
+        }
+        km *= ROAD_FACTOR;
+        setDistance(km);
+        setRoute([]);
+        setApproximate(true);
+        toast.info("Mapa sin conexión: distancia aproximada (línea recta).");
+      }
     } finally {
       setLoading(false);
     }
@@ -123,6 +235,7 @@ export function MessengerPanel() {
     } else {
       setRoute([]);
       setDistance(0);
+      setApproximate(false);
     }
   }, [waypoints, calculateRoute]);
 
@@ -149,6 +262,7 @@ export function MessengerPanel() {
     setWaypoints([]);
     setRoute([]);
     setDistance(0);
+    setApproximate(false);
   };
 
   // Función para procesar y agregar coordenadas ingresadas por el usuario
@@ -210,6 +324,42 @@ export function MessengerPanel() {
     );
   };
 
+  // Compartir el resumen de la ruta por WhatsApp
+  const handleShareRoute = async () => {
+    if (waypoints.length < 2 || distance <= 0) {
+      toast.error("Añade al menos 2 paradas para compartir la ruta.");
+      return;
+    }
+    const price = Math.round(distance * rate);
+    const lines = [
+      "🛵 *NeoCharge Mensajería*",
+      "",
+      `📏 Distancia: ${distance.toFixed(2)} km${approximate ? " (aprox.)" : ""}`,
+      `💰 Precio: ${formatCUP(price)} (${rate} CUP/km)`,
+      "",
+      "📍 *Recorrido:*",
+      ...waypoints.map((w, i) => `${i + 1}. ${w.label}`),
+    ];
+    const text = lines.join("\n");
+    // Intentar compartir nativo (móvil), si no, copiar al portapapeles
+    if (navigator.share) {
+      try {
+        await navigator.share({ title: "Ruta NeoCharge", text });
+        return;
+      } catch {
+        // el usuario canceló -> caer al portapapeles
+      }
+    }
+    try {
+      await navigator.clipboard.writeText(text);
+      toast.success("Resumen copiado. Pégalo en WhatsApp para compartirlo.");
+    } catch {
+      toast.error("No se pudo copiar el resumen.");
+    }
+  };
+
+  const price = Math.round(distance * rate);
+
   return (
     <div className="grid lg:grid-cols-12 gap-6 p-4 max-w-[1600px] mx-auto">
       {/* Left Sidebar: Controls & Info */}
@@ -230,22 +380,35 @@ export function MessengerPanel() {
               <Label className="text-xs font-bold uppercase text-muted-foreground flex items-center gap-2">
                 <DollarSign className="w-3 h-3" /> Mi Tarifa por KM (CUP)
               </Label>
-              <Input 
-                type="number" 
-                value={rate} 
-                onChange={e => setRate(Number(e.target.value))} 
-                className="rounded-xl"
-              />
+              <div className="relative">
+                <Input
+                  type="number"
+                  min={0}
+                  value={rate}
+                  onChange={e => handleRateChange(Number(e.target.value))}
+                  className="rounded-xl pr-10"
+                />
+                <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
+                  {savingRate ? (
+                    <span className="text-[10px] uppercase font-bold animate-pulse">Guardando…</span>
+                  ) : rateSaved ? (
+                    <Check className="w-4 h-4 text-green-600" />
+                  ) : null}
+                </span>
+              </div>
+              <p className="text-[10px] text-muted-foreground">
+                Se guarda automáticamente en tu perfil de mensajero.
+              </p>
             </div>
 
             <div className="pt-4 border-t border-border">
               <Label className="text-xs font-bold uppercase text-muted-foreground mb-3 block">Puntos de Venta</Label>
               <div className="grid grid-cols-1 gap-2">
                 {salePoints.map(p => (
-                  <Button 
-                    key={p.id} 
-                    variant="outline" 
-                    size="sm" 
+                  <Button
+                    key={p.id}
+                    variant="outline"
+                    size="sm"
                     onClick={() => addSalePoint(p)}
                     className="justify-start rounded-xl h-auto py-2 text-left"
                   >
@@ -260,6 +423,51 @@ export function MessengerPanel() {
                   <p className="text-[10px] text-muted-foreground italic">No hay puntos de venta configurados.</p>
                 )}
               </div>
+            </div>
+
+            <div className="pt-4 border-t border-border">
+              <div className="flex items-center gap-2 mb-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleGetCurrentLocation}
+                  className="flex-1 rounded-xl text-xs font-bold"
+                >
+                  <LocateFixed className="w-4 h-4 mr-2" />
+                  Mi ubicación
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => setShowCoordForm(v => !v)}
+                  className="flex-1 rounded-xl text-xs font-bold"
+                >
+                  <Crosshair className="w-4 h-4 mr-2" />
+                  Coordenadas
+                  <ChevronDown className={`w-3 h-3 ml-1 transition-transform ${showCoordForm ? "rotate-180" : ""}`} />
+                </Button>
+              </div>
+
+              {showCoordForm && (
+                <form onSubmit={handleAddCustomCoordinates} className="space-y-2 p-3 rounded-2xl bg-secondary/30 border border-border/50">
+                  <Input
+                    placeholder="Latitud, Longitud (Ej: 23.1259, -82.3791)"
+                    value={coordInput}
+                    onChange={e => setCoordInput(e.target.value)}
+                    className="rounded-xl text-xs"
+                    inputMode="decimal"
+                  />
+                  <Input
+                    placeholder="Etiqueta (opcional)"
+                    value={coordLabel}
+                    onChange={e => setCoordLabel(e.target.value)}
+                    className="rounded-xl text-xs"
+                  />
+                  <Button type="submit" size="sm" className="w-full rounded-xl text-xs font-bold">
+                    <Plus className="w-3 h-3 mr-1" /> Añadir parada
+                  </Button>
+                </form>
+              )}
             </div>
 
             <div className="pt-4 border-t border-border">
@@ -279,11 +487,12 @@ export function MessengerPanel() {
                       <p className="text-xs font-semibold truncate">{w.label}</p>
                       <p className="text-[10px] text-muted-foreground">{w.lat.toFixed(4)}, {w.lng.toFixed(4)}</p>
                     </div>
-                    <Button 
-                      variant="ghost" 
-                      size="icon" 
+                    <Button
+                      variant="ghost"
+                      size="icon"
                       onClick={() => removeWaypoint(w.id)}
-                      className="w-8 h-8 opacity-0 group-hover:opacity-100 transition-opacity"
+                      className="w-8 h-8 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity"
+                      aria-label={`Quitar ${w.label}`}
                     >
                       <Trash2 className="w-3 h-3 text-destructive" />
                     </Button>
@@ -310,52 +519,90 @@ export function MessengerPanel() {
                 <div>
                   <p className="text-[10px] uppercase font-bold opacity-80">Distancia Total</p>
                   <p className="text-3xl font-display font-bold">{distance.toFixed(2)} km</p>
+                  {approximate && (
+                    <p className="text-[10px] uppercase font-bold text-amber-200 mt-1">≈ Aproximada</p>
+                  )}
                 </div>
                 <div className="text-right">
                   <p className="text-[10px] uppercase font-bold opacity-80">Precio Sugerido</p>
-                  <p className="text-3xl font-display font-bold">{formatCUP(Math.round(distance * rate))}</p>
+                  <p className="text-3xl font-display font-bold">{formatCUP(price)}</p>
                 </div>
               </div>
               <div className="flex items-center gap-2 text-[10px] bg-white/20 p-2 rounded-xl border border-white/20">
-                <Info className="w-3 h-3" />
-                <span>Calculado basado en recorrido real por carretera.</span>
+                <Info className="w-3 h-3 shrink-0" />
+                <span>{approximate
+                  ? "Estimación por línea recta: confirma el precio final con el cliente."
+                  : "Calculado basado en recorrido real por carretera."}</span>
               </div>
+              <Button
+                onClick={handleShareRoute}
+                className="w-full rounded-2xl bg-white text-brand-700 hover:bg-white/90 font-bold"
+              >
+                <Share2 className="w-4 h-4 mr-2" />
+                Compartir ruta por WhatsApp
+              </Button>
             </div>
           </Card>
         )}
       </div>
 
       {/* Right Content: Map */}
-      <div className="lg:col-span-8 h-[700px] lg:h-auto min-h-[500px] relative">
+      <div className="lg:col-span-8 h-[70vh] lg:h-auto min-h-[500px] relative">
         <div className="absolute inset-0 rounded-3xl overflow-hidden border border-border/50 shadow-soft">
-          <MapContainer 
-            center={[23.1136, -82.3666]} 
-            zoom={13} 
+          <MapContainer
+            center={[23.1136, -82.3666]}
+            zoom={13}
             style={{ height: "100%", width: "100%" }}
             className="z-0"
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+              url="https://{s}.tile.openstreetmap.org/{z}/{y}.png"
             />
+            <MapController center={mapCenter} />
             <MapEvents onMapClick={addWaypoint} />
-            
-            {waypoints.map((w, i) => (
-              <Marker key={w.id} position={[w.lat, w.lng]}>
+
+            {salePoints.map(p => (
+              <Marker key={`sp-${p.id}`} position={[Number(p.lat), Number(p.lng)]} icon={storeIcon()}>
                 <Popup>
                   <div className="text-xs">
-                    <p className="font-bold">{w.label}</p>
-                    <p className="text-muted-foreground">Parada #{i + 1}</p>
+                    <p className="font-bold">🏪 {p.name}</p>
+                    {p.address && <p className="text-muted-foreground">{p.address}</p>}
+                  </div>
+                </Popup>
+              </Marker>
+            ))}
+
+            {waypoints.map((w, i) => (
+              <Marker key={w.id} position={[w.lat, w.lng]} icon={numberedIcon(i + 1)}>
+                <Popup>
+                  <div className="text-xs">
+                    <p className="font-bold">{i + 1}. {w.label}</p>
+                    <p className="text-muted-foreground">{w.lat.toFixed(5)}, {w.lng.toFixed(5)}</p>
                   </div>
                 </Popup>
               </Marker>
             ))}
 
             {route.length > 0 && (
-              <Polyline positions={route} color="#65a30d" weight={4} opacity={0.7} dashArray="10, 10" />
+              <Polyline positions={route} color="#9e5f8f" weight={5} opacity={0.85} />
             )}
           </MapContainer>
+
+          {/* Botón flotante de GPS sobre el mapa (móvil) */}
+          <button
+            onClick={handleGetCurrentLocation}
+            aria-label="Usar mi ubicación actual"
+            className="absolute top-4 right-4 z-[500] w-11 h-11 rounded-2xl bg-white shadow-lg border border-border/50 flex items-center justify-center text-primary active:scale-95 transition-transform"
+          >
+            <LocateFixed className="w-5 h-5" />
+          </button>
         </div>
+
+        <p className="mt-2 text-[11px] text-muted-foreground flex items-center gap-1.5 px-1">
+          <Bike className="w-3.5 h-3.5" />
+          Toca el mapa para añadir paradas · arrastra para moverte · pellizca para zoom
+        </p>
       </div>
     </div>
   );
