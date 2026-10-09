@@ -1,4 +1,4 @@
-import { Suspense, lazy, startTransition, useEffect, useState } from "react";
+import { useEffect, useState, type ComponentType } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { InstallAppBubble } from "@/components/InstallAppBubble";
@@ -9,14 +9,23 @@ import { ensureNcFx } from "@/lib/fly-to-cart";
 import { seedFromBundle } from "@/lib/offline-cache";
 import { Info } from "lucide-react";
 
-// El sheet del carrito (y con él radix dialog/sheet) NO va en el bundle
-// inicial: se carga la primera vez que el usuario abre el carrito y queda
-// montado desde entonces (se conserva la animación de cierre).
-const CartSheet = lazy(() => import("@/components/CartSheet"));
+// El drawer del carrito va en chunk separado, pero SIN React.lazy():
+// el lazy() suspende en su primer render y eso rompía la app con el
+// error #306 al abrir el carrito. En su lugar se carga el módulo con
+// import() y se guarda el componente ya resuelto en estado: el render
+// nunca suspende y el #306 es imposible.
+type CartSheetComponent = ComponentType;
+let cartSheetPromise: Promise<CartSheetComponent> | null = null;
+function getCartSheet(): Promise<CartSheetComponent> {
+  if (!cartSheetPromise) {
+    cartSheetPromise = import("@/components/CartSheet").then((m) => m.CartSheet);
+  }
+  return cartSheetPromise;
+}
 
 export function SiteLayout() {
   const { paymentCurrency, isOpen } = useCart();
-  const [sheetReady, setSheetReady] = useState(false);
+  const [CartSheetComp, setCartSheetComp] = useState<CartSheetComponent | null>(null);
 
   useEffect(() => {
     // Los keyframes del fly-to-cart deben existir desde el primer paint
@@ -26,8 +35,8 @@ export function SiteLayout() {
     // así hay productos aunque sea la primera vez y no haya internet.
     void seedFromBundle();
     // Precarga el chunk del carrito en idle: la primera apertura es
-    // instantánea y nunca suspende dentro del clic (React #306).
-    const preload = () => import("@/components/CartSheet");
+    // instantánea (el módulo ya está evaluado cuando el usuario hace clic).
+    const preload = () => { void getCartSheet(); };
     if ("requestIdleCallback" in window) {
       const id = (window as unknown as { requestIdleCallback: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback(() => { void preload(); }, { timeout: 4000 });
       return () => (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id);
@@ -36,19 +45,17 @@ export function SiteLayout() {
     return () => window.clearTimeout(t);
   }, []);
 
-  // El drawer del carrito se monta SOLO cuando su chunk ya está cargado.
-  // El setSheetReady VA en startTransition: el primer render de un lazy()
-  // suspende siempre (aunque el módulo ya esté en caché) y fuera de una
-  // transición React lanza el error #306 ("Algo salió mal").
+  // El drawer se monta cuando su componente ya está resuelto.
+  // Como no hay lazy(), este setState nunca provoca una suspensión.
   useEffect(() => {
-    if (!isOpen || sheetReady) return;
+    if (!isOpen || CartSheetComp) return;
     let cancelled = false;
-    import("@/components/CartSheet").then(
-      () => { if (!cancelled) startTransition(() => setSheetReady(true)); },
+    getCartSheet().then(
+      (Comp) => { if (!cancelled) setCartSheetComp(() => Comp); },
       (err) => { console.error("[cart] no se pudo cargar el drawer:", err); },
     );
     return () => { cancelled = true; };
-  }, [isOpen, sheetReady]);
+  }, [isOpen, CartSheetComp]);
 
   return (
     <div className="min-h-screen flex flex-col">
@@ -66,11 +73,7 @@ export function SiteLayout() {
         <Outlet />
       </main>
       <Footer />
-      {sheetReady && (
-        <Suspense fallback={null}>
-          <CartSheet />
-        </Suspense>
-      )}
+      {CartSheetComp ? <CartSheetComp /> : null}
       <InstallAppBubble />
     </div>
   );
