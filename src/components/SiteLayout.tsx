@@ -25,6 +25,15 @@ export function SiteLayout() {
     // Siembra la base de datos local desde el archivo empaquetado en la app:
     // así hay productos aunque sea la primera vez y no haya internet.
     void seedFromBundle();
+    // Precarga el chunk del carrito en idle: la primera apertura es
+    // instantánea y nunca suspende dentro del clic (React #306).
+    const preload = () => import("@/components/CartSheet");
+    if ("requestIdleCallback" in window) {
+      const id = (window as unknown as { requestIdleCallback: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback(() => { void preload(); }, { timeout: 4000 });
+      return () => (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id);
+    }
+    const t = window.setTimeout(() => { void preload(); }, 2500);
+    return () => window.clearTimeout(t);
   }, []);
 
   useEffect(() => {

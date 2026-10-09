@@ -8,9 +8,28 @@ export interface AppVersion {
 
 export const APP_VERSIONS: AppVersion[] = [
   {
+    version: "1.0.12",
+    date: "2026-10-09",
+    apkUrl: "/descargas/neocharge-tienda.apk",
+    size: "5.8 MB",
+    highlights: [
+      "Icono limpio: rayo blanco en cuadro malva, sin fondo oscuro (favicon y app)",
+      "Corrección crítica: el carrito ya no rompe la app al abrirlo por primera vez",
+    ],
+  },
+  {
+    version: "1.0.11",
+    date: "2026-10-09",
+    apkUrl: "",
+    size: "6.1 MB",
+    highlights: [
+      "Icono morado del rayo de vidrio (reemplazado en 1.0.12 por el icono limpio)",
+    ],
+  },
+  {
     version: "1.0.10",
     date: "2026-10-07",
-    apkUrl: "/descargas/neocharge-tienda.apk",
+    apkUrl: "",
     size: "6.2 MB",
     highlights: [
       "Login con Google funcionando en la app instalada",

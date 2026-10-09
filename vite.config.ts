@@ -49,6 +49,10 @@ export default defineConfig(({ mode }) => ({
       },
       // Esto genera el Service Worker automáticamente en el build
       workbox: {
+        // El APK nunca debe caer en el fallback de navegación de la SPA:
+        // si el SW sirviera index.html para el .apk, el navegador vería el 404
+        // de la app en vez de descargar el archivo.
+        navigateFallbackDenylist: [/^\/descargas\/.*\.apk$/],
         // Las imágenes NO se precachean (ahorra ~2MB en la primera carga):
         // se sirven con caché en tiempo de ejecución más abajo.
         globPatterns: ['**/*.{js,css,html,ico,svg,webmanifest,woff2}'],

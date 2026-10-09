@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
+import { startTransition, useCallback, useEffect, useMemo, useState, type ReactNode } from "react";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { computeDisplayPrice } from "@/lib/format";
 import { CartContext, type CartItem, type CartContextValue } from "@/hooks/use-cart";
@@ -65,7 +65,10 @@ export function CartProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const clearCart = useCallback(() => setItems([]), []);
-  const openCart = useCallback(() => setIsOpen(true), []);
+  // El CartSheet va en chunk lazy: abrirlo en un evento síncrono mientras el
+  // chunk aún no cargó suspendía dentro del input y rompía la app (React #306).
+  // Con startTransition React espera al chunk en vez de lanzar el error.
+  const openCart = useCallback(() => startTransition(() => setIsOpen(true)), []);
   const closeCart = useCallback(() => setIsOpen(false), []);
 
   const { rate: exchangeRate } = useExchangeRate();
