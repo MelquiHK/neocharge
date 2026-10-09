@@ -13,6 +13,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [profile, setProfile] = useState<Profile | null>(null);
   const [permissions, setPermissions] = useState<AdminPermissions>(NO_PERMS);
   const [loading, setLoading] = useState(true);
+  const [authDataReady, setAuthDataReady] = useState(false);
 
   const loadAuthData = useCallback(async (userId: string, email?: string, userMetadata?: Record<string, unknown>) => {
     // El cliente Supabase viaja en un chunk asíncrono (fuera del bundle
@@ -72,6 +73,8 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       // Si la carga de roles/permisos falla (p. ej. bache de red), el usuario queda con el
       // rol por defecto ("user") en vez de dejar una promesa rechazada sin manejar.
       console.error("Error cargando datos de autenticación:", err);
+    } finally {
+      setAuthDataReady(true);
     }
   }, []);
 
@@ -89,11 +92,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setUser(newSession?.user ?? null);
           if (newSession?.user) {
             const u = newSession.user;
+            setAuthDataReady(false);
             setTimeout(() => loadAuthData(u.id, u.email ?? undefined, u.user_metadata ?? undefined), 0);
           } else {
             setRole("user");
             setProfile(null);
             setPermissions(NO_PERMS);
+            setAuthDataReady(true);
           }
         });
         unsubscribe = () => subscription.unsubscribe();
@@ -103,18 +108,19 @@ export function AuthProvider({ children }: { children: ReactNode }) {
           setSession(currentSession);
           setUser(currentSession?.user ?? null);
           if (currentSession?.user) loadAuthData(currentSession.user.id, currentSession.user.email ?? undefined, currentSession.user.user_metadata ?? undefined);
+          else setAuthDataReady(true);
           setLoading(false);
         }).catch((err) => {
           // Si getSession() rechaza (storage corrupto/bloqueado), salir del loader
           // en vez de dejar la app atorada en la pantalla de carga.
           console.error("Error obteniendo la sesión:", err);
-          if (!cancelled) setLoading(false);
+          if (!cancelled) { setLoading(false); setAuthDataReady(true); }
         });
       })
       .catch((err) => {
         // Si el chunk de Supabase no pudo cargarse, no dejar la app en loader eterno.
         console.error("Error cargando el cliente de Supabase:", err);
-        if (!cancelled) setLoading(false);
+        if (!cancelled) { setLoading(false); setAuthDataReady(true); }
       });
 
     return () => {
@@ -151,12 +157,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       isGestor: role === "gestor",
       isMensajero: role === "mensajero",
       permissions, 
-      loading, 
+      loading,
+      authDataReady,
       signOut, 
       refreshPermissions,
       refreshProfile
     }),
-    [user, session, role, profile, permissions, loading, signOut, refreshPermissions, refreshProfile],
+    [user, session, role, profile, permissions, loading, authDataReady, signOut, refreshPermissions, refreshProfile],
   );
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

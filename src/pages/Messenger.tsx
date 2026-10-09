@@ -8,9 +8,11 @@ import { useSEO } from "@/hooks/use-seo";
 
 const MessengerPage = () => {
   useSEO("mensajeria");
-  const { user, isMensajero, isAdmin, loading } = useAuth();
+  const { user, isMensajero, isAdmin, loading, authDataReady } = useAuth();
 
-  if (loading) return null;
+  // Esperar a que los roles se resuelvan: si no, una recarga directa
+  // redirigiría a /cuenta antes de saber que es mensajero.
+  if (loading || !authDataReady) return null;
 
   // Allow messengers, admins and owners
   if (!user || (!isMensajero && !isAdmin)) {

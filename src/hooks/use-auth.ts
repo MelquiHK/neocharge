@@ -13,6 +13,9 @@ export interface AuthContextValue {
   profile: Profile | null;
   permissions: AdminPermissions;
   loading: boolean;
+  /** true cuando los roles/permisos ya se resolvieron (o no hay sesión). Evita
+   *  redirecciones prematuras en páginas con guardia de rol al recargar directo. */
+  authDataReady: boolean;
   signOut: () => Promise<void>;
   refreshPermissions: () => Promise<void>;
   refreshProfile: () => Promise<void>;

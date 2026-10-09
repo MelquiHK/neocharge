@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatCUP } from "@/lib/format";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
+import { safeErrorMessage } from "@/lib/error-message";
 
 interface SolicitudesPagoProps {
   userId: string;
@@ -77,7 +78,7 @@ export function SolicitudesPago({ userId }: SolicitudesPagoProps) {
         })),
       );
     } catch (error: unknown) {
-      toast.error("No se pudieron cargar tus solicitudes de pago: " + (error instanceof Error ? error.message : String(error)));
+      toast.error("No se pudieron cargar tus solicitudes de pago: " + safeErrorMessage(error));
     } finally {
       setLoading(false);
     }

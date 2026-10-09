@@ -49,7 +49,7 @@ import { cn } from "@/lib/utils";
 import { useSEO } from "@/hooks/use-seo";
 
 const Admin = () => {
-  useSEO("admin");  const { user, isAdmin, permissions, loading, signOut } = useAuth();
+  useSEO("admin");  const { user, isAdmin, permissions, loading, authDataReady, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState(() => {
     // Permite enlaces directos a pestañas: /admin#tab=rates
     const m = window.location.hash.match(/tab=([a-z]+)/);
@@ -87,7 +87,7 @@ const Admin = () => {
     };
   }, []);
 
-  if (loading)
+  if (loading || !authDataReady)
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950">
         <div className="flex flex-col items-center gap-5">

@@ -26,6 +26,7 @@ import {
   Plus,
 } from "lucide-react";
 import { formatCUP } from "@/lib/format";
+import { safeErrorMessage } from "@/lib/error-message";
 
 // Factor de corrección línea-recta -> carretera (mismo que use-delivery-quote)
 const ROAD_FACTOR = 1.3;
@@ -135,6 +136,7 @@ export function MessengerPanel() {
     lng: number | string;
   }
   const [salePoints, setSalePoints] = useState<SalePoint[]>([]);
+  const [pointsLoading, setPointsLoading] = useState(true);
 
   // Estados para añadir coordenadas manualmente
   const [showCoordForm, setShowCoordForm] = useState(false);
@@ -168,6 +170,7 @@ export function MessengerPanel() {
           })),
         );
       }
+      setPointsLoading(false);
     };
     load();
   }, [user]);
@@ -185,8 +188,7 @@ export function MessengerPanel() {
       if (error) throw error;
       setRateSaved(true);
     } catch (err) {
-      const msg = err instanceof Error ? err.message : String(err);
-      toast.error("No se pudo guardar tu tarifa: " + msg);
+      toast.error("No se pudo guardar tu tarifa: " + safeErrorMessage(err));
       setRateSaved(false);
     } finally {
       setSavingRate(false);
@@ -196,8 +198,18 @@ export function MessengerPanel() {
   const handleRateChange = (value: number) => {
     setRate(value);
     setRateSaved(false);
+    setSavingRate(true); // honesto desde el primer instante: no recargar aún
     if (rateDebounce.current) window.clearTimeout(rateDebounce.current);
     rateDebounce.current = window.setTimeout(() => persistRate(value), 900);
+  };
+
+  // Guardar de inmediato al salir del campo (no esperar al debounce)
+  const flushRate = () => {
+    if (rateDebounce.current) {
+      window.clearTimeout(rateDebounce.current);
+      rateDebounce.current = null;
+      void persistRate(rate);
+    }
   };
 
   const calculateRoute = useCallback(async () => {
@@ -364,20 +376,25 @@ export function MessengerPanel() {
       ...waypoints.map((w, i) => `${i + 1}. ${w.label}`),
     ];
     const text = lines.join("\n");
-    // Intentar compartir nativo (móvil), si no, copiar al portapapeles
+    // 1) Compartir nativo (móvil) 2) Abrir WhatsApp con el texto listo 3) Portapapeles
     if (navigator.share) {
       try {
         await navigator.share({ title: "Ruta NeoCharge", text });
         return;
       } catch {
-        // el usuario canceló -> caer al portapapeles
+        // el usuario canceló -> seguir al siguiente método
       }
+    }
+    if (/Android|iPhone|iPad|iPod/i.test(navigator.userAgent)) {
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
+      return;
     }
     try {
       await navigator.clipboard.writeText(text);
       toast.success("Resumen copiado. Pégalo en WhatsApp para compartirlo.");
     } catch {
-      toast.error("No se pudo copiar el resumen.");
+      // último recurso: abrir WhatsApp Web con el texto
+      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, "_blank", "noopener");
     }
   };
 
@@ -409,6 +426,7 @@ export function MessengerPanel() {
                   min={0}
                   value={rate}
                   onChange={e => handleRateChange(Number(e.target.value))}
+                  onBlur={flushRate}
                   className="rounded-xl pr-10"
                 />
                 <span className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground">
@@ -427,7 +445,11 @@ export function MessengerPanel() {
             <div className="pt-4 border-t border-border">
               <Label className="text-xs font-bold uppercase text-muted-foreground mb-3 block">Puntos de Venta</Label>
               <div className="grid grid-cols-1 gap-2">
-                {salePoints.map(p => (
+                {pointsLoading ? (
+                  <p className="text-[10px] text-muted-foreground italic animate-pulse">Cargando puntos de venta…</p>
+                ) : salePoints.length === 0 ? (
+                  <p className="text-[10px] text-muted-foreground italic">No hay puntos de venta configurados.</p>
+                ) : salePoints.map(p => (
                   <Button
                     key={p.id}
                     variant="outline"
@@ -442,9 +464,6 @@ export function MessengerPanel() {
                     </div>
                   </Button>
                 ))}
-                {salePoints.length === 0 && (
-                  <p className="text-[10px] text-muted-foreground italic">No hay puntos de venta configurados.</p>
-                )}
               </div>
             </div>
 
@@ -562,7 +581,7 @@ export function MessengerPanel() {
                 className="w-full rounded-2xl bg-white text-brand-700 hover:bg-white/90 font-bold"
               >
                 <Share2 className="w-4 h-4 mr-2" />
-                Compartir ruta por WhatsApp
+                Compartir ruta
               </Button>
             </div>
           </Card>
