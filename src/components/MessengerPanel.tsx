@@ -93,14 +93,27 @@ interface Waypoint {
   label: string;
 }
 
-// Controlador para mover y centrar suavemente el mapa cuando se añaden coordenadas
-function MapController({ center }: { center?: [number, number] | null }) {
+// Controlador para mover y centrar suavemente el mapa:
+// - center: vuela a un punto (al añadir una parada)
+// - bounds: encuadra todo el recorrido (al calcular la ruta)
+function MapController({
+  center,
+  bounds,
+}: {
+  center?: [number, number] | null;
+  bounds?: [number, number][] | null;
+}) {
   const map = useMap();
   useEffect(() => {
-    if (center) {
+    if (bounds && bounds.length >= 2) {
+      map.flyToBounds(L.latLngBounds(bounds.map(([lat, lng]) => [lat, lng] as [number, number])), {
+        padding: [40, 40],
+        duration: 1.2,
+      });
+    } else if (center) {
       map.flyTo(center, Math.max(map.getZoom(), 14), { duration: 1.2 });
     }
-  }, [center, map]);
+  }, [center, bounds, map]);
   return null;
 }
 
@@ -128,6 +141,7 @@ export function MessengerPanel() {
   const [coordInput, setCoordInput] = useState("");
   const [coordLabel, setCoordLabel] = useState("");
   const [mapCenter, setMapCenter] = useState<[number, number] | null>(null);
+  const [mapBounds, setMapBounds] = useState<[number, number][] | null>(null);
   const rateDebounce = useRef<number | null>(null);
 
   // Fetch messenger rate and sale points
@@ -195,6 +209,7 @@ export function MessengerPanel() {
       const ctrl = new AbortController();
       const timer = window.setTimeout(() => ctrl.abort(), OSRM_TIMEOUT_MS);
       let ok = false;
+      let routeCoords: [number, number][] | null = null;
       try {
         const res = await fetch(
           `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
@@ -202,7 +217,7 @@ export function MessengerPanel() {
         );
         const data = await res.json();
         if (data.code === "Ok") {
-          const routeCoords = data.routes[0].geometry.coordinates.map((c: number[]) => [c[1], c[0]]);
+          routeCoords = data.routes[0].geometry.coordinates.map((c: number[]) => [c[1], c[0]]);
           setRoute(routeCoords);
           setDistance(data.routes[0].distance / 1000); // meters to km
           ok = true;
@@ -222,7 +237,12 @@ export function MessengerPanel() {
         setDistance(km);
         setRoute([]);
         setApproximate(true);
+        setMapBounds(waypoints.map(w => [w.lat, w.lng] as [number, number]));
+        setMapCenter(null);
         toast.info("Mapa sin conexión: distancia aproximada (línea recta).");
+      } else {
+        setMapBounds(routeCoords ?? waypoints.map(w => [w.lat, w.lng] as [number, number]));
+        setMapCenter(null);
       }
     } finally {
       setLoading(false);
@@ -247,6 +267,7 @@ export function MessengerPanel() {
       label
     };
     setWaypoints(prev => [...prev, newWp]);
+    setMapBounds(null);
     setMapCenter([lat, lng]);
   };
 
@@ -263,6 +284,8 @@ export function MessengerPanel() {
     setRoute([]);
     setDistance(0);
     setApproximate(false);
+    setMapBounds(null);
+    setMapCenter(null);
   };
 
   // Función para procesar y agregar coordenadas ingresadas por el usuario
@@ -557,9 +580,9 @@ export function MessengerPanel() {
           >
             <TileLayer
               attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-              url="https://{s}.tile.openstreetmap.org/{z}/{y}.png"
+              url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
             />
-            <MapController center={mapCenter} />
+            <MapController center={mapCenter} bounds={mapBounds} />
             <MapEvents onMapClick={addWaypoint} />
 
             {salePoints.map(p => (
@@ -593,7 +616,7 @@ export function MessengerPanel() {
           <button
             onClick={handleGetCurrentLocation}
             aria-label="Usar mi ubicación actual"
-            className="absolute top-4 right-4 z-[500] w-11 h-11 rounded-2xl bg-white shadow-lg border border-border/50 flex items-center justify-center text-primary active:scale-95 transition-transform"
+            className="absolute bottom-4 right-4 z-10 w-11 h-11 rounded-2xl bg-white shadow-lg border border-border/50 flex items-center justify-center text-primary active:scale-95 transition-transform"
           >
             <LocateFixed className="w-5 h-5" />
           </button>
