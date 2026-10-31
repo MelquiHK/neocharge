@@ -8,9 +8,20 @@ export interface AppVersion {
 
 export const APP_VERSIONS: AppVersion[] = [
   {
+    version: "2.1.0",
+    date: "2026-10-30",
+    apkUrl: "/descargas/neocharge-tienda.apk",
+    size: "38 MB",
+    highlights: [
+      "App nativa nueva: ya no es un acceso a la web — catálogo completo sin conexión y mucho más rápida",
+      "Pago en euros (EUR) además de USD y CUP, igual que en la tienda web",
+      "Panel de administración integrado: con una cuenta admin gestionas la tienda desde la app",
+    ],
+  },
+  {
     version: "1.0.12",
     date: "2026-10-09",
-    apkUrl: "/descargas/neocharge-tienda.apk",
+    apkUrl: "",
     size: "5.8 MB",
     highlights: [
       "Icono limpio: rayo blanco en cuadro malva, sin fondo oscuro (favicon y app)",
