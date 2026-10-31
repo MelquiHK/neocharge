@@ -28,12 +28,14 @@ interface Rate {
   rate_date: string;
   usd_to_cup: number;
   extra_cup_chargers: number;
+  eur_to_cup?: number | null;
   notes: string | null;
 }
 
 export function AdminRates() {
   const [rates, setRates] = useState<Rate[]>([]);
   const [todayRate, setTodayRate] = useState<string>("");
+  const [todayEur, setTodayEur] = useState<string>("");
   const [extra, setExtra] = useState<string>("10");
   const [notes, setNotes] = useState("");
   const [loading, setLoading] = useState(true);
@@ -42,6 +44,7 @@ export function AdminRates() {
     setLoading(true);
     const { data } = await supabase.from("exchange_rates").select("*").order("rate_date", { ascending: false }).limit(90);
     setRates((data ?? []) as Rate[]);
+    let eurFromRow = 0;
     if (data && data.length > 0) {
       const today = new Date().toISOString().split("T")[0];
       const todays = data.find((r: Rate) => r.rate_date === today);
@@ -49,10 +52,21 @@ export function AdminRates() {
         setTodayRate(String(todays.usd_to_cup));
         setExtra(String(todays.extra_cup_chargers));
         setNotes(todays.notes ?? "");
+        if (todays.eur_to_cup) { setTodayEur(String(todays.eur_to_cup)); eurFromRow = Number(todays.eur_to_cup); }
       } else {
         setTodayRate(String(data[0].usd_to_cup));
         setExtra(String(data[0].extra_cup_chargers));
+        if (data[0].eur_to_cup) { setTodayEur(String(data[0].eur_to_cup)); eurFromRow = Number(data[0].eur_to_cup); }
       }
+    }
+    // Fallback EUR: si la columna eur_to_cup aún no existe en la BD, la
+    // tasa EUR vive en site_settings ('eur_rate'), que es lo que lee la
+    // tienda pública mientras tanto.
+    if (!eurFromRow) {
+      const { data: setting } = await supabase.from("site_settings").select("value").eq("key", "eur_rate").maybeSingle();
+      const v = (setting as { value?: { eur_to_cup?: unknown } } | null)?.value;
+      const eur = Number(v?.eur_to_cup);
+      if (Number.isFinite(eur) && eur > 0) setTodayEur(String(eur));
     }
     setLoading(false);
   };
@@ -64,17 +78,42 @@ export function AdminRates() {
     // La tasa debe ser > 0: con 0 o negativa el RPC de ventas no puede
     // calcular el margen del socio y el hold se pierde en silencio.
     if (!todayRate || isNaN(rateNum) || rateNum <= 0) { toast.error("La tasa debe ser un número mayor que 0"); return; }
+    const eurNum = Number(todayEur);
+    if (todayEur && (isNaN(eurNum) || eurNum <= 0)) { toast.error("La tasa EUR debe ser un número mayor que 0 (o déjala vacía)"); return; }
     const today = new Date().toISOString().split("T")[0];
-    const payload = {
+    const basePayload = {
       rate_date: today,
       usd_to_cup: Number(todayRate),
       extra_cup_chargers: Number(extra) || 0,
       notes: notes.trim() || null,
     };
-    const { error } = await supabase.from("exchange_rates").upsert(payload, { onConflict: "rate_date" });
-    if (error) { toast.error(error.message); return; }
+    // EUR junto a la USD en la misma fila. Si la columna eur_to_cup aún no
+    // existe en la BD, el upsert falla: se reintenta sin EUR (la USD nunca
+    // se bloquea por el EUR) y el EUR queda guardado en site_settings.
+    let eurInColumn = false;
+    if (todayEur) {
+      const { error } = await supabase.from("exchange_rates").upsert({ ...basePayload, eur_to_cup: eurNum }, { onConflict: "rate_date" });
+      if (!error) {
+        eurInColumn = true;
+      } else {
+        const retry = await supabase.from("exchange_rates").upsert(basePayload, { onConflict: "rate_date" });
+        if (retry.error) { toast.error(retry.error.message); return; }
+      }
+    } else {
+      const { error } = await supabase.from("exchange_rates").upsert(basePayload, { onConflict: "rate_date" });
+      if (error) { toast.error(error.message); return; }
+    }
+    // La tasa EUR también se guarda SIEMPRE en site_settings ('eur_rate'):
+    // es el respaldo que lee la tienda si la columna no está disponible.
+    if (todayEur) {
+      const { error: settingsError } = await supabase.from("site_settings").upsert(
+        { key: "eur_rate", value: { eur_to_cup: eurNum, rate_date: today, fuente: "elTOQUE" } },
+        { onConflict: "key" },
+      );
+      if (settingsError) console.error("No se pudo guardar el respaldo EUR en site_settings:", settingsError.message);
+    }
     refreshExchangeRate();
-    toast.success("Tasa de hoy actualizada ✓");
+    toast.success(eurInColumn || !todayEur ? "Tasa de hoy actualizada ✓" : "Tasa USD actualizada ✓ · EUR guardado como respaldo (falta la columna eur_to_cup en la BD)");
     load();
   };
 
@@ -86,8 +125,8 @@ export function AdminRates() {
     <div className="space-y-6 max-w-3xl">
       <AdminSectionHeader
         icon={TrendingUp}
-        title="Tasa USD"
-        description="Actualiza la tasa de cambio USD/CUP de la tienda."
+        title="Tasas USD y EUR"
+        description="Actualiza las tasas de cambio USD/CUP y EUR/CUP de la tienda (elTOQUE)."
       />
 
       {loading ? (
@@ -111,6 +150,11 @@ export function AdminRates() {
                 <Input type="number" step="0.01" value={extra} onChange={(e) => setExtra(e.target.value)} className="h-14 text-lg font-semibold" placeholder="10" />
                 <p className="text-xs text-muted-foreground">Se suman a la tasa base para cargadores</p>
               </div>
+              <div className="space-y-2">
+                <Label>1 EUR = ___ CUP</Label>
+                <Input type="number" step="0.01" value={todayEur} onChange={(e) => setTodayEur(e.target.value)} className="h-14 text-2xl font-bold" placeholder="960" />
+                <p className="text-xs text-muted-foreground">Tasa elTOQUE del euro. Los clientes pueden pagar en euros en efectivo a este cambio, sin extra.</p>
+              </div>
             </div>
 
             <div className="space-y-2">
@@ -127,6 +171,9 @@ export function AdminRates() {
                 <p className="font-bold">Vista previa:</p>
                 <p>• Producto en USD: precio × {Number(todayRate || 0)} CUP</p>
                 <p>• Cargador (USD → CUP): precio × {Number(todayRate || 0) + Number(extra || 0)} CUP</p>
+                {Number(todayEur || 0) > 0 && (
+                  <p>• Pago en euros: precio USD × {Number(todayRate || 0)} ÷ {Number(todayEur || 0)} EUR (sin extra)</p>
+                )}
               </div>
             )}
           </AdminCard>
@@ -139,7 +186,7 @@ export function AdminRates() {
             <AdminStat
               icon={TrendingUp}
               label="Última tasa registrada"
-              value={`1 USD = ${current.usd_to_cup} CUP`}
+              value={`1 USD = ${current.usd_to_cup} CUP${current.eur_to_cup ? ` · 1 EUR = ${current.eur_to_cup} CUP` : ""}`}
               sub={`${new Date(current.rate_date).toLocaleDateString("es-CU", { weekday: "long", day: "numeric", month: "long" })}${current.extra_cup_chargers ? ` · +${current.extra_cup_chargers} CUP cargadores` : ""}`}
               tone="emerald"
             />
@@ -163,6 +210,7 @@ export function AdminRates() {
                   <tr>
                     <th className={adminTh}>Fecha</th>
                     <th className={adminTh}>Tasa</th>
+                    <th className={adminTh}>Tasa EUR</th>
                     <th className={adminTh}>Extra cargadores</th>
                   </tr>
                 </AdminTableHead>
@@ -181,6 +229,11 @@ export function AdminRates() {
                       <td className={adminTd}>
                         <span className="font-display text-base font-bold whitespace-nowrap">
                           1 USD = {r.usd_to_cup} CUP
+                        </span>
+                      </td>
+                      <td className={adminTd}>
+                        <span className="whitespace-nowrap text-muted-foreground">
+                          {r.eur_to_cup ? `1 EUR = ${r.eur_to_cup} CUP` : "—"}
                         </span>
                       </td>
                       <td className={adminTd}>

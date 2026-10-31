@@ -236,7 +236,7 @@ export function Header({ className }: { className?: string }) {
             </nav>
             {/* Tasa del día (visible en móvil; en escritorio va en la barra superior) */}
             <p className="mt-3 px-4 text-xs text-muted-foreground">
-              Tasa hoy: {rate ? `${Math.round(rate.usd_to_cup)} CUP/USD · elTOQUE` : "—"}
+              Tasa hoy: {rate ? `${Math.round(rate.usd_to_cup)} CUP/USD${rate.eur_to_cup ? ` · ${Math.round(rate.eur_to_cup)} CUP/EUR` : ""} · elTOQUE` : "—"}
             </p>
           </div>
         )}

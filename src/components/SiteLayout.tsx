@@ -26,7 +26,7 @@ function getCartSheet(): Promise<CartSheetComponent> {
 }
 
 export function SiteLayout() {
-  const { paymentCurrency, isOpen } = useCart();
+  const { isOpen } = useCart();
   const { rate } = useExchangeRate();
   const [CartSheetComp, setCartSheetComp] = useState<CartSheetComponent | null>(null);
 
@@ -68,7 +68,7 @@ export function SiteLayout() {
       <div className="bg-brand-200/50 border-b border-brand-400/25 py-2 hidden md:block backdrop-blur-xl">
         <div className="container-page flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-brand-800">
           <Info className="w-3 h-3" />
-          Precios actualizados · Tasa hoy: {rate ? `${Math.round(rate.usd_to_cup)} CUP/USD · elTOQUE` : "—"} · Pagos aceptados en {paymentCurrency === "USD" ? "USD y CUP" : "CUP y USD"} · Entrega en 24h
+          Precios actualizados · Tasa hoy: {rate ? `${Math.round(rate.usd_to_cup)} CUP/USD${rate.eur_to_cup ? ` · ${Math.round(rate.eur_to_cup)} CUP/EUR` : ""} · elTOQUE` : "—"} · Pagos aceptados en USD, EUR y CUP · Entrega en 24h
         </div>
       </div>
       

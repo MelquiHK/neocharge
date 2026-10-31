@@ -11,7 +11,7 @@ import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { useDeliveryQuote } from "@/hooks/use-delivery-quote";
 import { supabase } from "@/integrations/supabase/client";
-import { formatMoney, formatCUP, formatPrice } from "@/lib/format";
+import { formatMoney, formatCUP, formatEUR, formatPrice } from "@/lib/format";
 import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { normalizeCubanPhone } from "@/lib/cuban-phone";
@@ -798,6 +798,14 @@ const Checkout = () => {
                   </span>
                 </div>
               </div>
+              {rate?.eur_to_cup && completeCUP && (
+                <p className="text-xs text-muted-foreground rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3">
+                  💶 ¿Prefieres pagar en euros? También aceptamos <strong>euros en efectivo</strong> al
+                  cambio de hoy (1 EUR = {Math.round(rate.eur_to_cup)} CUP, elTOQUE): este pedido serían
+                  ≈ <strong>{formatEUR((totalCUP + shippingCUP) / rate.eur_to_cup)}</strong>. El monto
+                  exacto se confirma al coordinar la entrega.
+                </p>
+              )}
             </div>
           </div>
         </aside>

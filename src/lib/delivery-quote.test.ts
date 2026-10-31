@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { computeDisplayPrice } from "./format";
 
-const RATE = { usd_to_cup: 460, extra_cup_chargers: 0, rate_date: "2026-09-25" };
+const RATE = { usd_to_cup: 460, extra_cup_chargers: 0, rate_date: "2026-09-25", eur_to_cup: null };
 
 describe("computeDisplayPrice sin tasa (rate null)", () => {
   it("no inventa conversión CUP para un producto en USD", () => {

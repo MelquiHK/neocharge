@@ -7,7 +7,7 @@ import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSEO } from "@/hooks/use-seo";
 import { useUnifiedFavorites } from "@/hooks/useUnifiedFavorites";
 import { Product } from "@/types";
-import { computeDisplayPrice, formatPrice, formatCUP, formatMoney, hasSaneDiscount, warrantyTypeLabel, hasWarranty, isChargerWarranty, type DisplayPrice } from "@/lib/format";
+import { computeDisplayPrice, formatPrice, formatCUP, formatEUR, formatMoney, hasSaneDiscount, warrantyTypeLabel, hasWarranty, isChargerWarranty, type DisplayPrice } from "@/lib/format";
 import { flyToCart, ensureNcFx } from "@/lib/fly-to-cart";
 import { responsiveImage } from "@/lib/responsive-image";
 import { useDataSaver, DATA_SAVER_WIDTHS } from "@/lib/data-saver";
@@ -57,8 +57,9 @@ function displayPriceLabel(display: DisplayPrice): string {
 // Línea secundaria de conversión (puede quedar vacía si no hay tasa).
 // NOTA: formatPrice ya incluye "$", no se añade " USD" detrás (doble símbolo).
 function displayConvertedLine(display: DisplayPrice): string | null {
-  if (display.primary === "USD") return display.cup != null ? `≈ ${formatCUP(display.cup)}` : null;
-  return display.usd != null ? `≈ ${formatPrice(display.usd)}` : null;
+  const eurPart = display.eur != null ? ` · ≈ ${formatEUR(display.eur)}` : "";
+  if (display.primary === "USD") return display.cup != null ? `≈ ${formatCUP(display.cup)}${eurPart}` : null;
+  return display.usd != null ? `≈ ${formatPrice(display.usd)}${eurPart}` : null;
 }
 
 export default function ProductDetail() {
@@ -189,13 +190,13 @@ export default function ProductDetail() {
 
   const display = useMemo(() => {
     if (!product) {
-      return { usd: 0, cup: 0, primary: "USD" as const };
+      return { usd: 0, cup: 0, eur: null, primary: "USD" as const };
     }
     try {
       return computeDisplayPrice(product, exchangeRate);
     } catch (formatError) {
       console.error("ComputeDisplayPrice error:", formatError);
-      return { usd: 0, cup: 0, primary: "USD" as const };
+      return { usd: 0, cup: 0, eur: null, primary: "USD" as const };
     }
   }, [product, exchangeRate]);
   const comparePrice = Number(product?.compare_price ?? 0);

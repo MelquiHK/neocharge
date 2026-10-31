@@ -4,7 +4,7 @@ import { batteryTypeChip } from "@/lib/product-display";
 import { memo, useState, type MouseEvent } from "react";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
-import { formatPrice, formatCUP, formatMoney, computeDisplayPrice, hasSaneDiscount } from "@/lib/format";
+import { formatPrice, formatCUP, formatEUR, formatMoney, computeDisplayPrice, hasSaneDiscount } from "@/lib/format";
 import { responsiveImage } from "@/lib/responsive-image";
 import { useDataSaver, DATA_SAVER_WIDTHS } from "@/lib/data-saver";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
@@ -269,11 +269,17 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
             </div>
             {display.primary === "USD" ? (
               display.cup != null && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">≈ {formatCUP(display.cup)}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  ≈ {formatCUP(display.cup)}
+                  {display.eur != null && <> · ≈ {formatEUR(display.eur)}</>}
+                </p>
               )
             ) : (
               display.usd != null && (
-                <p className="text-xs text-gray-500 dark:text-gray-400">≈ {formatPrice(display.usd)}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400">
+                  ≈ {formatPrice(display.usd)}
+                  {display.eur != null && <> · ≈ {formatEUR(display.eur)}</>}
+                </p>
               )
             )}
           </div>
