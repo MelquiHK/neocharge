@@ -15,7 +15,7 @@ import {
 } from "lucide-react";
 import { useSEO } from "@/hooks/use-seo";
 import { useAuth } from "@/hooks/use-auth";
-import { useCart } from "@/hooks/use-cart";
+import { useCart, type PaymentCurrency } from "@/hooks/use-cart";
 import { useDataSaver } from "@/lib/data-saver";
 import { PREFERRED_CURRENCY_KEY } from "@/contexts/CartContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -104,9 +104,9 @@ export default function Settings() {
   const [dataSaver, setDataSaver] = useDataSaver();
 
   // --- Moneda preferida (sincronizada con el carrito) ---
-  const [currency, setCurrency] = useState<"USD" | "CUP">(paymentCurrency);
+  const [currency, setCurrency] = useState<PaymentCurrency>(paymentCurrency);
   useEffect(() => setCurrency(paymentCurrency), [paymentCurrency]);
-  const changeCurrency = (c: "USD" | "CUP") => {
+  const changeCurrency = (c: PaymentCurrency) => {
     setCurrency(c);
     writeLS(PREFERRED_CURRENCY_KEY, c);
     setPaymentCurrency(c);
@@ -240,7 +240,7 @@ export default function Settings() {
                 Así se muestran los precios y se calcula tu carrito.
               </p>
               <div className="flex bg-white dark:bg-slate-950 p-1.5 rounded-2xl border border-border/50 shadow-inner max-w-xs">
-                {(["USD", "CUP"] as const).map((c) => (
+                {(["USD", "CUP", "EUR"] as const).map((c) => (
                   <button
                     key={c}
                     type="button"
@@ -252,7 +252,7 @@ export default function Settings() {
                         : "text-muted-foreground hover:text-foreground",
                     )}
                   >
-                    {c === "USD" ? "USD ($)" : "CUP ($)"}
+                    {c === "USD" ? "USD ($)" : c === "EUR" ? "EUR (€)" : "CUP ($)"}
                   </button>
                 ))}
               </div>

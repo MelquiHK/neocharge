@@ -4,7 +4,7 @@ import { useEffect } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
 import { useCart } from "@/hooks/use-cart";
-import { formatPrice, formatCUP } from "@/lib/format";
+import { formatPrice, formatCUP, formatEUR } from "@/lib/format";
 import { ensureNcFx } from "@/lib/fly-to-cart";
 import { cn } from "@/lib/utils";
 
@@ -21,14 +21,22 @@ export function CartSheet() {
     setPaymentCurrency,
     totalUSD,
     totalCUP,
+    totalEUR,
     completeUSD,
     completeCUP,
+    completeEUR,
     priceNotice,
     dismissPriceNotice
   } = useCart();
   // Sin tasa no se inventan conversiones: un total incompleto se muestra como "—".
   const shownTotalUSD = completeUSD ? formatPrice(totalUSD) : "—";
   const shownTotalCUP = completeCUP ? formatCUP(totalCUP) : "—";
+  const shownTotalEUR = completeEUR && totalEUR != null ? formatEUR(totalEUR) : "—";
+  // La opción de pagar en EUR solo se ofrece si hay tasa EUR registrada
+  // (completeEUR exige precio EUR en todos los ítems: respaldo limpio).
+  const eurAvailable = completeEUR && totalEUR != null;
+  const shownTotal =
+    paymentCurrency === "USD" ? shownTotalUSD : paymentCurrency === "EUR" ? shownTotalEUR : shownTotalCUP;
 
   useEffect(() => {
     ensureNcFx();
@@ -114,19 +122,24 @@ export function CartSheet() {
                     </Link>
                     <div className="mt-1">
                       {(() => {
-                        // Ambas monedas siempre: la de pago en grande y la
-                        // otra en pequeño. Sin tasa no se inventa conversión:
-                        // se muestra el precio nativo disponible, nunca un 0.
+                        // La moneda de pago en grande y una equivalencia en
+                        // pequeño. Sin tasa no se inventa conversión: se
+                        // muestra el precio nativo disponible, nunca un 0.
                         const usd = item.displayPriceUSD ?? null;
                         const cup = item.displayPriceCUP ?? null;
+                        const eur = item.displayPriceEUR ?? null;
                         const main =
                           paymentCurrency === "USD"
                             ? usd !== null ? formatPrice(usd) : cup !== null ? formatCUP(cup) : "—"
-                            : cup !== null ? formatCUP(cup) : usd !== null ? formatPrice(usd) : "—";
+                            : paymentCurrency === "EUR"
+                              ? eur !== null ? formatEUR(eur) : usd !== null ? formatPrice(usd) : "—"
+                              : cup !== null ? formatCUP(cup) : usd !== null ? formatPrice(usd) : "—";
                         const secondary =
                           paymentCurrency === "USD"
                             ? cup !== null && usd !== null ? `≈ ${formatCUP(cup)}` : null
-                            : usd !== null && cup !== null ? `≈ ${formatPrice(usd)}` : null;
+                            : paymentCurrency === "EUR"
+                              ? usd !== null && eur !== null ? `≈ ${formatPrice(usd)}` : null
+                              : usd !== null && cup !== null ? `≈ ${formatPrice(usd)}` : null;
                         return (
                           <>
                             <p className="text-base font-bold text-primary">{main}</p>
@@ -208,12 +221,23 @@ export function CartSheet() {
                 >
                   Pagar en CUP
                 </button>
+                {eurAvailable && (
+                  <button
+                    onClick={() => setPaymentCurrency("EUR")}
+                    className={cn(
+                      "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
+                      paymentCurrency === "EUR" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    Pagar en EUR
+                  </button>
+                )}
               </div>
 
               <div className="space-y-1.5">
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>Subtotal</span>
-                  <span>{paymentCurrency === "USD" ? shownTotalUSD : shownTotalCUP}</span>
+                  <span>{shownTotal}</span>
                 </div>
                 <div className="flex items-center justify-between text-sm text-muted-foreground">
                   <span>Envío</span>
@@ -223,10 +247,12 @@ export function CartSheet() {
                   <span className="tracking-tight">Total estimado</span>
                   <div className="text-right">
                     <span className="text-primary text-3xl block tracking-tighter text-glow">
-                      {paymentCurrency === "USD" ? shownTotalUSD : shownTotalCUP}
+                      {shownTotal}
                     </span>
                     {paymentCurrency === "USD" ? (
                       completeCUP && <span className="text-xs text-muted-foreground block font-normal">≈ {formatCUP(totalCUP)}</span>
+                    ) : paymentCurrency === "EUR" ? (
+                      completeUSD && <span className="text-xs text-muted-foreground block font-normal">≈ {formatPrice(totalUSD)}</span>
                     ) : (
                       completeUSD && <span className="text-xs text-muted-foreground block font-normal">≈ {formatPrice(totalUSD)}</span>
                     )}

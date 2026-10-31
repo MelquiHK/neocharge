@@ -1,5 +1,8 @@
 import { createContext, useContext } from "react";
 
+/** Monedas en las que el cliente puede pagar: efectivo USD, CUP o EUR. */
+export type PaymentCurrency = "USD" | "CUP" | "EUR";
+
 export interface CartItem {
   id: string;
   name: string;
@@ -14,6 +17,7 @@ export interface CartItem {
   warranty_type?: string;
   displayPriceUSD?: number | null;
   displayPriceCUP?: number | null;
+  displayPriceEUR?: number | null;
 }
 
 export interface CartContextValue {
@@ -28,12 +32,15 @@ export interface CartContextValue {
   total: number;
   totalUSD: number;
   totalCUP: number;
+  /** Total en EUR (desde USD × tasaUSD ÷ tasaEUR, SIN extra). null si no hay tasa EUR. */
+  totalEUR: number | null;
   /** true si todos los ítems tienen precio conocido en esa moneda (sin tasa, una conversión puede faltar). */
   completeUSD: boolean;
   completeCUP: boolean;
+  completeEUR: boolean;
   itemCount: number;
-  paymentCurrency: "USD" | "CUP";
-  setPaymentCurrency: (currency: "USD" | "CUP") => void;
+  paymentCurrency: PaymentCurrency;
+  setPaymentCurrency: (currency: PaymentCurrency) => void;
   /** Aviso cuando los precios del carrito se revalidaron contra el catálogo y cambiaron. */
   priceNotice: string | null;
   dismissPriceNotice: () => void;

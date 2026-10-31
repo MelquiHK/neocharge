@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { ExternalLink, MapPin, MessageCircle, Trash2, Eye, Send, ShoppingBag, Handshake } from "lucide-react";
 import { toast } from "sonner";
-import { formatPrice, formatCUP } from "@/lib/format";
+import { formatPrice, formatCUP, formatEUR } from "@/lib/format";
 import { Order, OrderStatus, OrderItem } from "@/types";
 import { useAdminOrders } from "@/hooks/admin/use-admin-orders";
 import { cn } from "@/lib/utils";
@@ -34,7 +34,7 @@ import {
 
 const isRecord = (v: unknown): v is Record<string, unknown> => typeof v === "object" && v !== null;
 
-const parseOrderItems = (items: Order["items"]): (OrderItem & { currency?: string; displayPriceUSD?: number; displayPriceCUP?: number })[] => {
+const parseOrderItems = (items: Order["items"]): (OrderItem & { currency?: string; displayPriceUSD?: number; displayPriceCUP?: number; displayPriceEUR?: number })[] => {
   if (!Array.isArray(items)) return [];
   return items.flatMap((it) => {
     if (!isRecord(it)) return [];
@@ -44,9 +44,10 @@ const parseOrderItems = (items: Order["items"]): (OrderItem & { currency?: strin
     const currency = typeof it.currency === "string" ? it.currency : undefined;
     const displayPriceUSD = typeof it.displayPriceUSD === "number" ? it.displayPriceUSD : undefined;
     const displayPriceCUP = typeof it.displayPriceCUP === "number" ? it.displayPriceCUP : undefined;
+    const displayPriceEUR = typeof it.displayPriceEUR === "number" ? it.displayPriceEUR : undefined;
 
     if (!name || !Number.isFinite(quantity) || !Number.isFinite(price)) return [];
-    return [{ name, quantity, price, currency, displayPriceUSD, displayPriceCUP }];
+    return [{ name, quantity, price, currency, displayPriceUSD, displayPriceCUP, displayPriceEUR }];
   });
 };
 
@@ -134,17 +135,27 @@ export function AdminOrders() {
     const shippingValue = Number(deliveryFee || 0);
     const newTotal = paymentCurrency === "USD" ? subtotalUsd : subtotalCup + shippingValue;
     const newTotalCup = subtotalCup + shippingValue;
+    // Pedidos en EUR: el total canónico vive en total_eur y NO se recalcula
+    // con la matemática USD/CUP de arriba (mezclaría monedas). Solo se
+    // actualizan envío, mensajero y notas; los totales quedan intactos.
+    const totalsPatch =
+      paymentCurrency === "EUR" ? {} : { total: newTotal, total_cup: newTotalCup };
     const { error } = await supabase.from("orders").update({
       delivery_fee: deliveryFee,
-      total: newTotal,
-      total_cup: newTotalCup,
+      ...totalsPatch,
       courier_name: courier.trim() || null,
       admin_notes: adminNotes.trim() || null,
     }).eq("id", viewing.id);
     if (error) { toast.error(error.message); return; }
     toast.success("Detalles guardados");
     load();
-    setViewing({ ...viewing, delivery_fee: deliveryFee, total: newTotal, total_cup: newTotalCup, courier_name: courier, admin_notes: adminNotes });
+    setViewing({
+      ...viewing,
+      delivery_fee: deliveryFee,
+      ...(paymentCurrency === "EUR" ? {} : { total: newTotal, total_cup: newTotalCup }),
+      courier_name: courier,
+      admin_notes: adminNotes,
+    });
   };
 
   const sendReceipt = async () => {
@@ -152,15 +163,24 @@ export function AdminOrders() {
     const currency = viewing.payment_currency || "USD";
     const items = parseOrderItems(viewing.items)
       .map((it) => {
+        if (currency === "EUR") {
+          const eurPrice = it.displayPriceEUR;
+          return eurPrice != null
+            ? `• ${it.name} x${it.quantity} — ${formatEUR(eurPrice * it.quantity)}`
+            : `• ${it.name} x${it.quantity} — ${formatPrice((it.displayPriceUSD || it.price) * it.quantity)}`;
+        }
         const itemPrice = currency === "USD" ? (it.displayPriceUSD || it.price) : (it.displayPriceCUP || it.price);
         return `• ${it.name} x${it.quantity} — ${currency === "USD" ? formatPrice(itemPrice * it.quantity) : formatCUP(itemPrice * it.quantity)}`;
       })
       .join("\n");
 
     const paymentCurrency = viewing.payment_currency || "USD";
+    const totalEur = viewing.total_eur != null ? Number(viewing.total_eur) : null;
     const subtotalFormatted = paymentCurrency === "USD"
       ? `${formatPrice(Number(viewing.subtotal || 0))}`
-      : `${formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0))}`;
+      : paymentCurrency === "EUR"
+        ? `${totalEur != null ? formatEUR(totalEur) : formatPrice(Number(viewing.total || 0))}`
+        : `${formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0))}`;
     const shippingFormatted = viewing.delivery_method === "delivery" && Number(deliveryFee) > 0
       ? `Mensajería en CUP: ${formatCUP(Number(deliveryFee))}`
       : viewing.delivery_method === "pickup"
@@ -168,14 +188,16 @@ export function AdminOrders() {
         : "Sin mensajería";
     const totalFormatted = paymentCurrency === "USD"
       ? `${formatPrice(Number(viewing.subtotal || 0))}`
-      : `${formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0) + Number(deliveryFee))}`;
+      : paymentCurrency === "EUR"
+        ? `${totalEur != null ? formatEUR(totalEur) : formatPrice(Number(viewing.total || 0))}`
+        : `${formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0) + Number(deliveryFee))}`;
 
     const msg = `🛍️ *VALE DE PEDIDO — NeoCharge*\n\n` +
       `Hola ${viewing.customer_name}, te confirmamos tu pedido:\n\n` +
       `${items}\n\n` +
       `Producto: ${subtotalFormatted}\n` +
       `${shippingFormatted}\n` +
-      `*TOTAL ${paymentCurrency === "USD" ? "EN USD" : "EN CUP"}: ${totalFormatted}*\n\n` +
+      `*TOTAL ${paymentCurrency === "USD" ? "EN USD" : paymentCurrency === "EUR" ? "EN EUR" : "EN CUP"}: ${totalFormatted}*\n\n` +
       (viewing.delivery_method === "delivery" ? `📍 Entrega: ${viewing.customer_address}\n` : `🏪 Recoger en: ${viewing.pickup_location}\n`) +
       (courier ? `🛵 Mensajero: ${courier}\n` : "") +
       `\nGracias por tu compra. ¡Te avisamos cuando salga en camino!`;
@@ -288,7 +310,9 @@ export function AdminOrders() {
                   </div>
                 </td>
                 <td className={cn(adminTd, "whitespace-nowrap font-display text-base font-bold text-primary")}>
-                  {o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
+                  {o.payment_currency === "EUR" && o.total_eur != null
+                    ? formatEUR(Number(o.total_eur))
+                    : o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
                 </td>
                 <td className={adminTd}>{statusBadge(o.status)}</td>
                 <td className={cn(adminTd, "whitespace-nowrap text-xs text-muted-foreground")}>{new Date(o.created_at).toLocaleString("es-CU")}</td>
@@ -354,7 +378,8 @@ export function AdminOrders() {
                     const currency = viewing.payment_currency || "USD";
                     const displayUSD = typeof r.displayPriceUSD === "number" ? r.displayPriceUSD : undefined;
                     const displayCUP = typeof r.displayPriceCUP === "number" ? r.displayPriceCUP : undefined;
-                    const itemPrice = currency === "USD" ? (displayUSD || price) : (displayCUP || price);
+                    const displayEUR = typeof r.displayPriceEUR === "number" ? r.displayPriceEUR : undefined;
+                    const itemPrice = currency === "USD" ? (displayUSD || price) : currency === "EUR" ? (displayEUR ?? displayUSD ?? price) : (displayCUP || price);
                     const pid = String(r.id ?? r.product_id ?? "");
                     const pnames = viewingPartners[pid] ?? [];
                     return (
@@ -368,7 +393,13 @@ export function AdminOrders() {
                           )}
                         </span>
                         <span className="shrink-0 font-bold">
-                          {currency === "USD" ? formatPrice(itemPrice * quantity) : formatCUP(itemPrice * quantity)}
+                          {currency === "USD"
+                            ? formatPrice(itemPrice * quantity)
+                            : currency === "EUR" && displayEUR != null
+                              ? formatEUR(itemPrice * quantity)
+                              : currency === "EUR"
+                                ? formatPrice(itemPrice * quantity)
+                                : formatCUP(itemPrice * quantity)}
                         </span>
                       </div>
                     );
@@ -415,8 +446,16 @@ export function AdminOrders() {
                         <span>TOTAL</span>
                         <span className="text-right text-primary">
                           {formatPrice(Number(viewing.subtotal || 0))} / {formatCUP(Number(viewing.total_cup ?? viewing.subtotal ?? 0) + Number(deliveryFee))}
+                          {currency === "EUR" && viewing.total_eur != null && (
+                            <> / {formatEUR(Number(viewing.total_eur))}</>
+                          )}
                         </span>
                       </div>
+                      {currency === "EUR" && (
+                        <p className="text-xs text-muted-foreground">
+                          Pedido a pagar en <strong>euros en efectivo</strong> (total EUR de arriba). Los valores USD/CUP son la referencia guardada del pedido.
+                        </p>
+                      )}
                     </>
                   );
                 })()}

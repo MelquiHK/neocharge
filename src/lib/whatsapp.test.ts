@@ -34,6 +34,41 @@ describe("buildWhatsAppMessage", () => {
   });
 });
 
+describe("buildWhatsAppMessage en EUR", () => {
+  it("cobra el total en euros y aclara que el pago es en euros en efectivo", () => {
+    const message = buildWhatsAppMessage({
+      items: [
+        {
+          id: "1",
+          name: "Cargador de 72V/5A",
+          quantity: 1,
+          price: 50,
+          displayPriceUSD: 50,
+          displayPriceCUP: 44500,
+          displayPriceEUR: 45.83,
+          image: "",
+          slug: "cargador-de-72v-5a",
+        },
+      ],
+      total: 45.83,
+      paymentCurrency: "EUR",
+      customerName: "Melquisedec",
+      customerPhone: "+53 55555555",
+      deliveryMethod: "pickup",
+      shippingUSD: 0,
+      shippingCUP: 0,
+      shippingEUR: 0,
+      subtotalUSD: 50,
+      subtotalCUP: 44500,
+      subtotalEUR: 45.83,
+    });
+
+    expect(message).toContain("*TOTAL A PAGAR EN EUR:* €45.83 EUR");
+    expect(message).toContain("*PAGO:* euros en efectivo");
+    expect(message).toContain("Subtotal: €45.83 EUR");
+  });
+});
+
 describe("buildWhatsAppMessage sin tasa", () => {
   it("omite las conversiones desconocidas en vez de mostrar 0", () => {
     const message = buildWhatsAppMessage({

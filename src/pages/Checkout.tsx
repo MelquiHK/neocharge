@@ -36,10 +36,11 @@ function MapFallback() {
 const Checkout = () => {
   useSEO("checkout");
   const navigate = useNavigate();
-  const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP, completeUSD, completeCUP, removeItem, updateQuantity } = useCart();
+  const { items, total, clearCart, paymentCurrency, setPaymentCurrency, totalUSD, totalCUP, totalEUR, completeUSD, completeCUP, completeEUR, removeItem, updateQuantity } = useCart();
   // Sin tasa no se inventan conversiones: un total incompleto se muestra como "—".
   const shownTotalUSD = completeUSD ? formatPrice(totalUSD) : "—";
   const shownTotalCUP = completeCUP ? formatCUP(totalCUP) : "—";
+  const shownTotalEUR = completeEUR && totalEUR != null ? formatEUR(totalEUR) : "—";
   const { user } = useAuth();
   const { rate } = useExchangeRate();
   const { settings } = useSiteSettings();
@@ -55,6 +56,14 @@ const Checkout = () => {
   const { configError, quote, quotedCoords, quoting, quoteError, quoteFor, clearQuote, origin } = useDeliveryQuote();
   const shippingCUP = delivery === "delivery" ? quote?.priceCUP ?? 0 : 0;
   const shippingUSD = 0;
+  // El envío se cotiza en CUP; su equivalente en EUR sale de dividir entre
+  // la tasa EUR de elTOQUE (sin extra: el extra es solo de productos pa CUP).
+  const shippingEUR = rate?.eur_to_cup ? shippingCUP / rate.eur_to_cup : 0;
+  // Pagar en EUR solo se ofrece si hay tasa EUR registrada (respaldo limpio).
+  const eurAvailable = !!rate?.eur_to_cup;
+  // Total completo en EUR (productos + envío), redondeado a 2 decimales.
+  const grandTotalEUR =
+    completeEUR && totalEUR != null ? Math.round((totalEUR + shippingEUR) * 100) / 100 : null;
 
   // NOTA M11/H5 (2026-10-07): "Recoger en local" es GENÉRICO a propósito.
   // Los locales de socios (p. ej. Yusi – Playa / Boyeros) viven en
@@ -289,8 +298,10 @@ const Checkout = () => {
       const breakdown = buildOrderBreakdown({
         subtotal: completeUSD ? totalUSD : null,
         subtotalCUP: completeCUP ? totalCUP : null,
+        subtotalEUR: completeEUR ? totalEUR : null,
         shippingUSD,
         shippingCUP,
+        shippingEUR,
       });
 
       // El id se genera en el cliente: los invitados no tienen SELECT en
@@ -331,8 +342,13 @@ const Checkout = () => {
         latitude: coords?.lat ?? null,
         longitude: coords?.lng ?? null,
         location_link: mapLink,
-        payment_method: paymentCurrency === "USD" ? "cash_usd" : "cash_cup",
+        payment_method:
+          paymentCurrency === "USD" ? "cash_usd" : paymentCurrency === "EUR" ? "cash_eur" : "cash_cup",
         payment_currency: paymentCurrency,
+        // Total en EUR: solo se incluye en pedidos pagados en EUR — así el
+        // checkout USD/CUP no depende de que la columna total_eur exista
+        // todavía en la BD viva (mismo patrón defensivo que ref_code).
+        ...(paymentCurrency === "EUR" ? { total_eur: breakdown.totalEUR } : {}),
         // Programa de referidos: atribuye la venta al gestor cuyo enlace
         // trajo al cliente. Solo se incluye si hay código válido — así el
         // checkout no se rompe si la columna ref_code aún no existe en la BD.
@@ -375,9 +391,11 @@ const Checkout = () => {
         notes: notes.trim() || undefined,
         shippingUSD,
         shippingCUP,
+        shippingEUR,
         shippingApproximate: quote?.approximate ?? false,
         subtotalUSD: completeUSD ? totalUSD : null,
         subtotalCUP: completeCUP ? totalCUP : null,
+        subtotalEUR: completeEUR ? totalEUR : null,
       });
 
       try {
@@ -674,12 +692,25 @@ const Checkout = () => {
           <div className="nc-card p-4 flex items-center justify-between lg:hidden">
             <span className="font-display font-bold">Total a pagar</span>
             <div className="text-right">
-              <span className="text-primary font-bold block">
-                {completeUSD ? formatMoney(totalUSD + shippingUSD, "USD") : "—"}
-              </span>
-              <span className="text-[10px] text-muted-foreground block">
-                {completeCUP ? formatMoney(totalCUP + shippingCUP, "CUP") : "—"}
-              </span>
+              {paymentCurrency === "EUR" ? (
+                <>
+                  <span className="text-primary font-bold block">
+                    {grandTotalEUR != null ? formatEUR(grandTotalEUR) : "—"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground block">
+                    {completeUSD ? `≈ ${formatMoney(totalUSD + shippingUSD, "USD")}` : ""}
+                  </span>
+                </>
+              ) : (
+                <>
+                  <span className="text-primary font-bold block">
+                    {completeUSD ? formatMoney(totalUSD + shippingUSD, "USD") : "—"}
+                  </span>
+                  <span className="text-[10px] text-muted-foreground block">
+                    {completeCUP ? formatMoney(totalCUP + shippingCUP, "CUP") : "—"}
+                  </span>
+                </>
+              )}
             </div>
           </div>
 
@@ -728,6 +759,18 @@ const Checkout = () => {
               >
                 Pagar en CUP
               </button>
+              {eurAvailable && (
+                <button
+                  type="button"
+                  onClick={() => setPaymentCurrency("EUR")}
+                  className={cn(
+                    "flex-1 py-1.5 text-xs font-bold rounded-lg transition-all",
+                    paymentCurrency === "EUR" ? "bg-primary text-primary-foreground shadow-sm" : "text-muted-foreground hover:text-foreground"
+                  )}
+                >
+                  Pagar en EUR
+                </button>
+              )}
             </div>
 
             <div className="space-y-3 max-h-80 overflow-y-auto">
@@ -744,7 +787,9 @@ const Checkout = () => {
                     {(() => {
                       const usd = it.displayPriceUSD != null ? formatPrice(it.displayPriceUSD * it.quantity) : null;
                       const cup = it.displayPriceCUP != null ? formatCUP(it.displayPriceCUP * it.quantity) : null;
+                      const eur = it.displayPriceEUR != null ? formatEUR(it.displayPriceEUR * it.quantity) : null;
                       if (paymentCurrency === "USD") return usd ?? cup ?? "—";
+                      if (paymentCurrency === "EUR") return eur ?? usd ?? cup ?? "—";
                       return cup ?? usd ?? "—";
                     })()}
                   </span>
@@ -754,7 +799,7 @@ const Checkout = () => {
             <div className="border-t border-border pt-4 space-y-2 text-sm">
               <div className="flex items-center justify-between">
                 <span className="text-muted-foreground">Subtotal</span>
-                <span>{shownTotalUSD} / {shownTotalCUP}</span>
+                <span>{eurAvailable ? `${shownTotalUSD} / ${shownTotalCUP} / ${shownTotalEUR}` : `${shownTotalUSD} / ${shownTotalCUP}`}</span>
               </div>
               <div className="space-y-2 rounded-2xl border border-dashed border-primary/30 bg-primary/5 p-3">
                 <div className="flex items-center justify-between text-xs uppercase tracking-wide text-muted-foreground">
@@ -790,20 +835,37 @@ const Checkout = () => {
               <div className="flex items-center justify-between font-display font-bold text-lg pt-3 border-t-2 border-primary/30 bg-primary/5 -mx-2 px-2 py-2 rounded-xl">
                 <span>Total a pagar</span>
                 <div className="text-right">
-                  <span className="text-primary text-xl block">
-                    {completeUSD ? formatMoney(totalUSD + shippingUSD, "USD") : "—"}
-                  </span>
-                  <span className="text-xs text-muted-foreground block">
-                    {completeCUP ? formatMoney(totalCUP + shippingCUP, "CUP") : "—"}
-                  </span>
+                  {paymentCurrency === "EUR" ? (
+                    <>
+                      <span className="text-primary text-xl block">
+                        {grandTotalEUR != null ? formatEUR(grandTotalEUR) : "—"}
+                      </span>
+                      <span className="text-xs text-muted-foreground block">
+                        {completeUSD ? `≈ ${formatMoney(totalUSD + shippingUSD, "USD")}` : ""}
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-primary text-xl block">
+                        {completeUSD ? formatMoney(totalUSD + shippingUSD, "USD") : "—"}
+                      </span>
+                      <span className="text-xs text-muted-foreground block">
+                        {completeCUP ? formatMoney(totalCUP + shippingCUP, "CUP") : "—"}
+                      </span>
+                      {grandTotalEUR != null && (
+                        <span className="text-xs text-muted-foreground block">
+                          ≈ {formatEUR(grandTotalEUR)}
+                        </span>
+                      )}
+                    </>
+                  )}
                 </div>
               </div>
-              {rate?.eur_to_cup && completeCUP && (
+              {rate?.eur_to_cup && paymentCurrency !== "EUR" && grandTotalEUR != null && (
                 <p className="text-xs text-muted-foreground rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3">
-                  💶 ¿Prefieres pagar en euros? También aceptamos <strong>euros en efectivo</strong> al
-                  cambio de hoy (1 EUR = {Math.round(rate.eur_to_cup)} CUP, elTOQUE): este pedido serían
-                  ≈ <strong>{formatEUR((totalCUP + shippingCUP) / rate.eur_to_cup)}</strong>. El monto
-                  exacto se confirma al coordinar la entrega.
+                  💶 ¿Prefieres pagar en euros? Elige <strong>«Pagar en EUR»</strong> aquí arriba:
+                  este pedido serían <strong>{formatEUR(grandTotalEUR)}</strong> en euros en efectivo,
+                  al cambio de hoy (1 EUR = {Math.round(rate.eur_to_cup)} CUP, elTOQUE, sin recargos).
                 </p>
               )}
             </div>

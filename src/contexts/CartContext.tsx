@@ -2,14 +2,15 @@ import { startTransition, useCallback, useEffect, useMemo, useRef, useState, typ
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { computeDisplayPrice } from "@/lib/format";
 import { getSupabase } from "@/integrations/supabase/lazy-client";
-import { CartContext, type CartItem, type CartContextValue } from "@/hooks/use-cart";
+import { CartContext, type CartItem, type CartContextValue, type PaymentCurrency } from "@/hooks/use-cart";
 
 /** Preferencia de moneda guardada desde Ajustes. El carrito la respeta al arrancar. */
 export const PREFERRED_CURRENCY_KEY = "nc-preferred-currency";
 
-function readPreferredCurrency(): "USD" | "CUP" {
+function readPreferredCurrency(): PaymentCurrency {
   try {
-    return window.localStorage.getItem(PREFERRED_CURRENCY_KEY) === "CUP" ? "CUP" : "USD";
+    const v = window.localStorage.getItem(PREFERRED_CURRENCY_KEY);
+    return v === "CUP" || v === "EUR" ? v : "USD";
   } catch {
     return "USD";
   }
@@ -21,7 +22,7 @@ export function CartProvider({ children }: { children: ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isOpen, setIsOpen] = useState(false);
   const [hydrated, setHydrated] = useState(false);
-  const [paymentCurrency, setPaymentCurrency] = useState<"USD" | "CUP">(readPreferredCurrency);
+  const [paymentCurrency, setPaymentCurrency] = useState<PaymentCurrency>(readPreferredCurrency);
   // Aviso de precios revalidados contra el catálogo (se muestra en el CartSheet).
   const [priceNotice, setPriceNotice] = useState<string | null>(null);
   const dismissPriceNotice = useCallback(() => setPriceNotice(null), []);
@@ -171,25 +172,34 @@ export function CartProvider({ children }: { children: ReactNode }) {
 
   const value = useMemo<CartContextValue>(() => {
     const updatedItems = items.map(item => {
-      const { usd, cup } = computeDisplayPrice(item, exchangeRate);
+      const { usd, cup, eur } = computeDisplayPrice(item, exchangeRate);
       return {
         ...item,
         displayPriceUSD: usd,
         displayPriceCUP: cup,
+        displayPriceEUR: eur,
       };
     });
 
     const initialTotalUSD = updatedItems.reduce((sum, i) => sum + (i.displayPriceUSD ?? 0) * i.quantity, 0);
     const initialTotalCUP = updatedItems.reduce((sum, i) => sum + (i.displayPriceCUP ?? 0) * i.quantity, 0);
+    const initialTotalEUR = updatedItems.reduce((sum, i) => sum + (i.displayPriceEUR ?? 0) * i.quantity, 0);
     const itemCount = updatedItems.reduce((sum, i) => sum + i.quantity, 0);
 
     const totalUSD = roundToNearestWhole(initialTotalUSD);
     const totalCUP = roundToNearestWhole(initialTotalCUP);
-    const total = paymentCurrency === "USD" ? totalUSD : totalCUP;
     // Sin tasa de cambio no se inventan conversiones: un total solo es
     // "completo" si cada ítem tiene precio conocido en esa moneda.
     const completeUSD = updatedItems.every((i) => i.displayPriceUSD != null);
     const completeCUP = updatedItems.every((i) => i.displayPriceCUP != null);
+    const completeEUR = updatedItems.every((i) => i.displayPriceEUR != null);
+    // EUR: desde el precio USD × tasaUSD ÷ tasaEUR (computeDisplayPrice),
+    // SIN el extra de cargadores (ese es solo pa CUP). Redondeo a 2
+    // decimales. Sin tasa EUR registrada, totalEUR queda null y la opción
+    // de pagar en EUR no se ofrece (respaldo limpio).
+    const totalEUR = completeEUR ? Math.round(initialTotalEUR * 100) / 100 : null;
+    const total =
+      paymentCurrency === "USD" ? totalUSD : paymentCurrency === "CUP" ? totalCUP : totalEUR ?? totalUSD;
 
     return {
       items: updatedItems,
@@ -203,11 +213,13 @@ export function CartProvider({ children }: { children: ReactNode }) {
       total,
       totalUSD,
       totalCUP,
+      totalEUR,
       completeUSD,
       completeCUP,
+      completeEUR,
       itemCount,
       paymentCurrency,
-      setPaymentCurrency: (currency: "USD" | "CUP") => setPaymentCurrency(currency),
+      setPaymentCurrency: (currency: PaymentCurrency) => setPaymentCurrency(currency),
       priceNotice,
       dismissPriceNotice,
     };
