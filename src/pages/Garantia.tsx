@@ -40,9 +40,9 @@ const Garantia = () => {
 
           <div className="nc-card p-6 space-y-3 hover-lift">
             <Clock className="w-6 h-6 text-accent" />
-            <h3 className="font-display font-bold text-lg">24 horas para probar</h3>
+            <h3 className="font-display font-bold text-lg">De 24 a 48 horas para probar</h3>
             <p className="text-sm text-muted-foreground leading-relaxed">
-              Si no puedes probar el cargador en el momento (por apagones u otras razones), tienes 24 horas
+              Si no puedes probar el cargador en el momento (por apagones u otras razones), tienes de 24 a 48 horas
               para hacerlo. Dentro de ese plazo puedes cambiarlo o pedir la devolución.
             </p>
           </div>
