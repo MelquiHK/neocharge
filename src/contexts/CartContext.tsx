@@ -18,108 +18,125 @@ function readPreferredCurrency(): PaymentCurrency {
 
 const STORAGE_KEY = "neocharge_cart_v1";
 
+/** Lee el carrito guardado de forma SÍNCRONA (initializer del estado). Antes
+ * se cargaba en un efecto tras el primer render: eso abría una ventana en la
+ * que el estado aún no reflejaba lo guardado y la revalidación de precios
+ * podía pisar productos recién añadidos con la foto vieja del carrito. */
+function readStoredCart(): CartItem[] {
+  try {
+    const raw = window.localStorage.getItem(STORAGE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn("Cart: unable to load from storage", e);
+    return [];
+  }
+}
+
 export function CartProvider({ children }: { children: ReactNode }) {
-  const [items, setItems] = useState<CartItem[]>([]);
+  const [items, setItems] = useState<CartItem[]>(readStoredCart);
   const [isOpen, setIsOpen] = useState(false);
-  const [hydrated, setHydrated] = useState(false);
   const [paymentCurrency, setPaymentCurrency] = useState<PaymentCurrency>(readPreferredCurrency);
   // Aviso de precios revalidados contra el catálogo (se muestra en el CartSheet).
   const [priceNotice, setPriceNotice] = useState<string | null>(null);
   const dismissPriceNotice = useCallback(() => setPriceNotice(null), []);
   const revalidatedRef = useRef(false);
 
-  useEffect(() => {
-    try {
-      const raw = localStorage.getItem(STORAGE_KEY);
-      if (raw) setItems(JSON.parse(raw));
-    } catch (e) {
-      console.warn("Cart: unable to load from storage", e);
-    }
-    setHydrated(true);
-  }, []);
-
   // Revalidar los precios guardados contra el catálogo en vivo: si un precio
   // cambió desde que se añadió al carrito, se actualiza y se avisa al cliente.
   // Si el producto ya no existe o está inactivo, se quita del carrito.
+  // OJO: la mezcla se hace con setItems funcional contra el estado ACTUAL.
+  // La versión anterior reconstruía el carrito desde la foto capturada al
+  // hidratar y, como el cliente de Supabase carga diferido (segundos), al
+  // resolverse pisaba productos que el cliente hubiera añadido mientras
+  // tanto: al recargar, el carrito "perdía" lo nuevo y volvía al viejo.
   useEffect(() => {
-    if (!hydrated || revalidatedRef.current || items.length === 0) return;
+    if (revalidatedRef.current || items.length === 0) return;
     revalidatedRef.current = true;
+    const storedIds = items.map((i) => i.id);
     (async () => {
       try {
         const supabase = await getSupabase();
-        const ids = items.map((i) => i.id);
         const { data, error } = await supabase
           .from("products")
           .select("id,price,currency,price_cup,extra_cup_per_usd,stock,is_active")
-          .in("id", ids);
+          .in("id", storedIds);
         if (error || !data) return;
         const byId = new Map(data.map((p) => [String(p.id), p]));
-        const changed: string[] = [];
-        const removed: string[] = [];
-        let next = items;
-        for (const item of items) {
-          const live = byId.get(String(item.id));
-          if (!live || live.is_active === false) {
-            removed.push(item.name);
-            next = next.filter((i) => i.id !== item.id);
-            continue;
+        const requested = new Set(storedIds.map((id) => String(id)));
+        setItems((prev) => {
+          const changed: string[] = [];
+          const removed: string[] = [];
+          let next = prev;
+          for (const item of prev) {
+            // Solo se revalidan los productos que venían guardados; lo que
+            // el cliente añadió en esta sesión ya viene del catálogo vivo.
+            if (!requested.has(String(item.id))) continue;
+            const live = byId.get(String(item.id));
+            if (!live || live.is_active === false) {
+              removed.push(item.name);
+              next = next.filter((i) => i.id !== item.id);
+              continue;
+            }
+            const priceChanged =
+              Number(live.price) !== Number(item.price) ||
+              String(live.currency ?? "") !== String(item.currency ?? "") ||
+              Number(live.price_cup ?? 0) !== Number(item.price_cup ?? 0) ||
+              Number(live.extra_cup_per_usd ?? 0) !== Number(item.extra_cup_per_usd ?? 0);
+            const stockChanged = live.stock != null && Number(live.stock) !== Number(item.stock ?? -1);
+            if (priceChanged || stockChanged) {
+              changed.push(item.name);
+              next = next.map((i) =>
+                i.id === item.id
+                  ? {
+                      ...i,
+                      price: Number(live.price),
+                      currency: live.currency ?? i.currency,
+                      price_cup: live.price_cup != null ? Number(live.price_cup) : i.price_cup,
+                      extra_cup_per_usd:
+                        live.extra_cup_per_usd != null ? Number(live.extra_cup_per_usd) : i.extra_cup_per_usd,
+                      stock: live.stock != null ? Number(live.stock) : i.stock,
+                    }
+                  : i,
+              );
+            }
           }
-          const priceChanged =
-            Number(live.price) !== Number(item.price) ||
-            String(live.currency ?? "") !== String(item.currency ?? "") ||
-            Number(live.price_cup ?? 0) !== Number(item.price_cup ?? 0) ||
-            Number(live.extra_cup_per_usd ?? 0) !== Number(item.extra_cup_per_usd ?? 0);
-          const stockChanged = live.stock != null && Number(live.stock) !== Number(item.stock ?? -1);
-          if (priceChanged || stockChanged) {
-            changed.push(item.name);
-            next = next.map((i) =>
-              i.id === item.id
-                ? {
-                    ...i,
-                    price: Number(live.price),
-                    currency: live.currency ?? i.currency,
-                    price_cup: live.price_cup != null ? Number(live.price_cup) : i.price_cup,
-                    extra_cup_per_usd:
-                      live.extra_cup_per_usd != null ? Number(live.extra_cup_per_usd) : i.extra_cup_per_usd,
-                    stock: live.stock != null ? Number(live.stock) : i.stock,
-                  }
-                : i,
-            );
+          if (changed.length > 0 || removed.length > 0) {
+            const parts: string[] = [];
+            if (changed.length > 0)
+              parts.push(
+                changed.length === 1
+                  ? `El precio de "${changed[0]}" cambió y se actualizó.`
+                  : `Se actualizaron los precios de ${changed.length} productos.`,
+              );
+            if (removed.length > 0)
+              parts.push(
+                removed.length === 1
+                  ? `"${removed[0]}" ya no está disponible y se quitó del carrito.`
+                  : `${removed.length} productos ya no están disponibles y se quitaron del carrito.`,
+              );
+            const notice = parts.join(" ");
+            queueMicrotask(() => setPriceNotice(notice));
           }
-        }
-        if (changed.length > 0 || removed.length > 0) {
-          setItems(next);
-          const parts: string[] = [];
-          if (changed.length > 0)
-            parts.push(
-              changed.length === 1
-                ? `El precio de "${changed[0]}" cambió y se actualizó.`
-                : `Se actualizaron los precios de ${changed.length} productos.`,
-            );
-          if (removed.length > 0)
-            parts.push(
-              removed.length === 1
-                ? `"${removed[0]}" ya no está disponible y se quitó del carrito.`
-                : `${removed.length} productos ya no están disponibles y se quitaron del carrito.`,
-            );
-          setPriceNotice(parts.join(" "));
-        }
+          return next;
+        });
       } catch (e) {
         console.warn("Cart: price revalidation failed", e);
       }
     })();
-    // Solo al hidratar; los cambios posteriores ya vienen del catálogo en vivo.
+    // Solo al montar, sobre el carrito que venía guardado; los cambios
+    // posteriores ya vienen del catálogo en vivo.
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [hydrated]);
+  }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
     try {
       localStorage.setItem(STORAGE_KEY, JSON.stringify(items));
     } catch (e) {
       console.warn("Cart: unable to save to storage", e);
     }
-  }, [items, hydrated]);
+  }, [items]);
 
   const addItem: CartContextValue["addItem"] = useCallback((incoming) => {
     setItems((prev) => {
