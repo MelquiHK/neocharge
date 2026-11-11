@@ -70,8 +70,8 @@ describe("hasSaneDiscount", () => {
 
 describe("warrantyTypeLabel", () => {
   it("mapea los valores reales de la tabla products", () => {
-    expect(warrantyTypeLabel("charger")).toBe("Garantía del cargador");
-    expect(warrantyTypeLabel("charger-1w")).toBe("Garantía de 1 semana");
+    expect(warrantyTypeLabel("charger")).toBe("Garantía de 24 a 48 horas");
+    expect(warrantyTypeLabel("charger-1w")).toBe("Garantía de 24 a 48 horas");
     expect(warrantyTypeLabel("electronics")).toBe("Garantía de electrónica");
   });
 
