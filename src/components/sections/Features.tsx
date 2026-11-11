@@ -24,7 +24,7 @@ const features = [
   {
     icon: MessageCircle,
     title: "Atención por WhatsApp",
-    desc: "De 8am a 8pm te atendemos directo por WhatsApp. Te asesoramos para elegir el cargador ideal para tu moto.",
+    desc: "Te atendemos directo por WhatsApp las 24 horas. Te asesoramos para elegir el cargador ideal para tu moto.",
     color: "from-accent to-primary",
   },
 ];
