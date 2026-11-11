@@ -125,8 +125,21 @@ const ShopPage = () => {
         if (cat) list = list.filter((p) => p.category_id === cat.id);
       }
       if (search.trim()) {
-        const q = search.trim().toLowerCase();
-        list = list.filter((p) => (p.name?.toLowerCase().includes(q) || p.description?.toLowerCase().includes(q)) ?? false);
+        // Búsqueda por PALABRAS, no por frase exacta: antes "cargador 72V" no
+        // encontraba "Cargador de 72V/5A" porque se buscaba la frase completa
+        // como substring. Ahora cada palabra de la consulta (sin acentos y
+        // sin muletillas como "de") debe aparecer en nombre/descripción/
+        // categoría del producto.
+        const normalize = (s: string) =>
+          s.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "");
+        const STOPWORDS = new Set(["de", "del", "para", "con", "el", "la", "los", "las", "un", "una", "unos", "unas", "y", "o", "en", "a"]);
+        const tokens = normalize(search).split(/[^a-z0-9/+.-]+/).filter((t) => t && !STOPWORDS.has(t));
+        if (tokens.length > 0) {
+          list = list.filter((p) => {
+            const haystack = normalize(`${p.name ?? ""} ${p.description ?? ""} ${p.category_name ?? ""}`);
+            return tokens.every((t) => haystack.includes(t));
+          });
+        }
       }
       return sortProductsForShop(list, sort, {
         toUsd: (item) => {
