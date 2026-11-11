@@ -186,7 +186,7 @@ function ProductCardComponent({ product, variant = "default", isFavorite: propIs
           </Link>
 
           {/* Quick Add Button — visible en táctil, revelado en hover en escritorio */}
-          <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/50 nc-liquid-soft p-2 translate-y-[130%] group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500 z-30 pointer-events-auto shadow-xl">
+          <div className="absolute bottom-3 left-3 right-3 rounded-2xl border border-white/50 nc-liquid-soft p-2 translate-y-[130%] group-hover:translate-y-0 [@media(hover:none)]:translate-y-0 transition-transform duration-500 z-30 shadow-xl opacity-0 group-hover:opacity-100 [@media(hover:none)]:opacity-100 pointer-events-none group-hover:pointer-events-auto [@media(hover:none)]:pointer-events-auto">
             <Button
               type="button"
               onClick={handleAdd}
