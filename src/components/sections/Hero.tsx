@@ -119,7 +119,7 @@ export function Hero() {
               </h1>
               <p className="text-lg md:text-xl text-slate-600 max-w-xl leading-relaxed font-light">
                 Cargadores para motos eléctricas, audio y piezas. Garantía real, entrega a domicilio
-                y pago en USD o CUP cuando el producto está en tus manos.
+                y pago en USD, EUR o CUP cuando el producto está en tus manos.
               </p>
             </div>
 
