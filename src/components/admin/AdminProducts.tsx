@@ -898,8 +898,8 @@ export function AdminProducts() {
                     <Select value={editing.warranty_type ?? "electronics"} onValueChange={(v) => setEditing({ ...editing, warranty_type: v })}>
                       <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="charger">Cargador (24h prueba + cambio)</SelectItem>
-                        <SelectItem value="charger-1w">Cargador (1 semana de garantía)</SelectItem>
+                        <SelectItem value="charger">Cargador (24 a 48 horas, prueba + cambio)</SelectItem>
+                        <SelectItem value="charger-1w">Cargador (24 a 48 horas de garantía)</SelectItem>
                         <SelectItem value="electronics">Electrónica (prueba en local, sin devolución)</SelectItem>
                         <SelectItem value="no-warranty">Sin garantía</SelectItem>
                       </SelectContent>
