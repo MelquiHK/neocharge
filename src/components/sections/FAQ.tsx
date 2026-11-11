@@ -16,7 +16,7 @@ const faqs = [
   },
   {
     q: "¿Cuáles son las formas de pago?",
-    a: "Aceptamos efectivo en USD y CUP. El pago se realiza al momento de recibir el producto, ya sea en el punto de recogida o por mensajería.",
+    a: "Aceptamos efectivo en USD, EUR y CUP. El pago se realiza al momento de recibir el producto, ya sea en el punto de recogida o por mensajería.",
   },
   {
     q: "¿Tienen garantía los productos?",
