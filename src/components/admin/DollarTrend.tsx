@@ -39,11 +39,11 @@ const SCENARIO_TARGETS = [800, 850, 900];
 
 /** Precios reales de Mel (fallback si no se puede leer la BD). */
 const FALLBACK_CHARGERS: ChargerPrice[] = [
-  { name: "Cargador 72V/10A", usd: 150 },
-  { name: "Cargador 72V/7A", usd: 110 },
-  { name: "Cargador 72V/5A", usd: 60 },
+  { name: "Cargador 72V/10A", usd: 105 },
+  { name: "Cargador 72V/7A", usd: 85 },
+  { name: "Cargador 72V/5A", usd: 50 },
   { name: "Cargador 72V/3A", usd: 45 },
-  { name: "Cargador 48V/5A", usd: 55 },
+  { name: "Cargador 48V/5A", usd: 50 },
   { name: "Cargador 48V/3A", usd: 45 },
 ];
 
