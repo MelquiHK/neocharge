@@ -27,7 +27,14 @@ const fakeSession = {
 } as unknown as import("@supabase/supabase-js").Session;
 
 /** Contador de intentos de la consulta de roles (una por intento de carga). */
-const state = { rolesCalls: 0, rolesFailTimes: 0 };
+const state = {
+  rolesCalls: 0,
+  rolesFailTimes: 0,
+  /** Callback de onAuthStateChange capturado: las pruebas emiten eventos. */
+  authCallback: null as null | ((event: string, session: unknown) => void),
+  /** Sesión que devuelve getSession() (programable por prueba). */
+  session: fakeSession as unknown,
+};
 
 function makeFakeClient() {
   const chain = (result: { data: unknown; error: unknown }) => {
@@ -45,9 +52,15 @@ function makeFakeClient() {
   };
   return {
     auth: {
-      onAuthStateChange: () => ({ data: { subscription: { unsubscribe: vi.fn() } } }),
-      getSession: () => Promise.resolve({ data: { session: fakeSession } }),
-      signOut: vi.fn(),
+      onAuthStateChange: (cb: (event: string, session: unknown) => void) => {
+        state.authCallback = cb;
+        return { data: { subscription: { unsubscribe: vi.fn() } } };
+      },
+      getSession: () => Promise.resolve({ data: { session: state.session } }),
+      // Como la librería real: signOut emite SIGNED_OUT a los suscriptores.
+      signOut: vi.fn(async () => {
+        state.authCallback?.("SIGNED_OUT", null);
+      }),
     },
     from: (table: string) => {
       if (table === "user_roles") {
@@ -75,7 +88,9 @@ function Probe() {
       <span data-testid="role">{auth.role}</span>
       <span data-testid="ready">{String(auth.authDataReady)}</span>
       <span data-testid="failed">{String(auth.authDataFailed)}</span>
+      <span data-testid="user">{auth.user ? "yes" : "no"}</span>
       <button onClick={auth.retryAuthData}>retry</button>
+      <button onClick={auth.signOut}>out</button>
     </div>
   );
 }
@@ -85,6 +100,8 @@ describe("AuthProvider — carga de roles ante fallos de red", () => {
     vi.useFakeTimers();
     state.rolesCalls = 0;
     state.rolesFailTimes = 0;
+    state.authCallback = null;
+    state.session = fakeSession;
     vi.mocked(getSupabase).mockResolvedValue(
       makeFakeClient() as unknown as Awaited<ReturnType<typeof getSupabase>>,
     );
@@ -135,5 +152,88 @@ describe("AuthProvider — carga de roles ante fallos de red", () => {
     });
     expect(screen.getByTestId("role").textContent).toBe("owner");
     expect(screen.getByTestId("failed").textContent).toBe("false");
+  });
+});
+
+/* Regresión del «bucle de login» (2026-11-15, segunda parte): pongo el
+   correo, hace como que entra y me saca. Un SIGNED_OUT que NO pidió el
+   usuario (ajeno por BroadcastChannel — otra pestaña o la app instalada
+   comparten almacenamiento — o tardío tras un login nuevo) NO debe
+   tumbar la sesión si el almacenamiento aún guarda una sesión viva:
+   primero se confirma con getSession(). El cierre real (sin sesión ni
+   token) y el cierre pedido con el botón sí se obedecen. */
+describe("AuthProvider — SIGNED_OUT ajeno y bucle de login", () => {
+  beforeEach(() => {
+    vi.useFakeTimers();
+    state.rolesCalls = 0;
+    state.rolesFailTimes = 0;
+    state.authCallback = null;
+    state.session = fakeSession;
+    window.localStorage.clear();
+    vi.mocked(getSupabase).mockResolvedValue(
+      makeFakeClient() as unknown as Awaited<ReturnType<typeof getSupabase>>,
+    );
+  });
+
+  afterEach(() => {
+    vi.useRealTimers();
+    vi.clearAllMocks();
+  });
+
+  async function renderLoggedIn() {
+    render(
+      <AuthProvider>
+        <Probe />
+      </AuthProvider>,
+    );
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(500);
+    });
+    expect(screen.getByTestId("user").textContent).toBe("yes");
+    expect(screen.getByTestId("role").textContent).toBe("owner");
+  }
+
+  it("un SIGNED_OUT ajeno con la sesión viva en el almacenamiento NO bota al usuario", async () => {
+    await renderLoggedIn();
+    // Llega un SIGNED_OUT que el usuario no pidió (otra ventana, tardío…).
+    await act(async () => {
+      state.authCallback?.("SIGNED_OUT", null);
+    });
+    // Durante la ventana de confirmación el usuario SIGUE dentro.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(300);
+    });
+    expect(screen.getByTestId("user").textContent).toBe("yes");
+    // La confirmación relee la sesión (sigue viva) y restaura: no hay salida.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.getByTestId("user").textContent).toBe("yes");
+    expect(screen.getByTestId("role").textContent).toBe("owner");
+  });
+
+  it("un SIGNED_OUT real (sin sesión ni token guardado) SÍ cierra la sesión", async () => {
+    await renderLoggedIn();
+    // La sesión murió de verdad: getSession ya no devuelve nada y no
+    // queda token en el almacenamiento (jsdom arranca vacío).
+    state.session = null;
+    await act(async () => {
+      state.authCallback?.("SIGNED_OUT", null);
+    });
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(3000);
+    });
+    expect(screen.getByTestId("user").textContent).toBe("no");
+    expect(screen.getByTestId("role").textContent).toBe("user");
+  });
+
+  it("el cierre pedido con el botón de salir se honra al instante, sin confirmación", async () => {
+    await renderLoggedIn();
+    fireEvent.click(screen.getByText("out"));
+    // Sin esperar la ventana de confirmación (900 ms): ya está fuera.
+    await act(async () => {
+      await vi.advanceTimersByTimeAsync(100);
+    });
+    expect(screen.getByTestId("user").textContent).toBe("no");
   });
 });

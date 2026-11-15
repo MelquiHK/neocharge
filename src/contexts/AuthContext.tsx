@@ -13,6 +13,36 @@ const OWNER_ADMIN_EMAIL = "melcraft96@gmail.com";
  *  sin ser un cierre de sesión ni una falta de permisos real. */
 const AUTH_DATA_RETRY_DELAYS_MS = [800, 2000];
 
+/** Confirmación de un SIGNED_OUT NO pedido por el usuario antes de
+ *  obedecerlo. Un evento sin sesión puede ser ajeno (otra pestaña o la
+ *  app instalada cerrando/recuperando su sesión, con BroadcastChannel
+ *  compartido) o TARDÍO (llega justo después de un login nuevo, de una
+ *  recuperación que ya lo reemplazó). Obedecerlo a ciegas tumbaba `user`
+ *  a null y las guardias de /cuenta y /admin rebotaban al login aunque
+ *  la sesión siguiera viva en el almacenamiento: el «bucle de login»
+ *  (pongo el correo, hace como que entra y me saca) del 2026-11-15.
+ *  Solo se obedece al instante el cierre pedido con el botón de salir;
+ *  cualquier otro se confirma contra el almacenamiento (ver
+ *  confirmSignOut dentro del efecto de suscripción). */
+const SIGNOUT_CONFIRM_DELAY_MS = 900;
+const SIGNOUT_CONFIRM_RETRY_DELAY_MS = 2000;
+
+/** ¿Queda alguna sesión de Supabase guardada en este navegador? La clave
+ *  por defecto de auth-js es `sb-<ref>-auth-token`; se busca por patrón
+ *  para no amarrarse al ref del proyecto. */
+function hasStoredSessionToken(): boolean {
+  try {
+    if (typeof window === "undefined" || !window.localStorage) return false;
+    for (let i = 0; i < window.localStorage.length; i++) {
+      const k = window.localStorage.key(i);
+      if (k && /^sb-.+-auth-token$/.test(k)) return true;
+    }
+  } catch {
+    /* almacenamiento inaccesible: se trata como «sin token» */
+  }
+  return false;
+}
+
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
@@ -37,6 +67,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   // Carga en curso (deduplicación): el arranque dispara loadAuthData por
   // dos vías (onAuthStateChange y getSession) y no deben correr en paralelo.
   const inflightLoad = useRef<{ userId: string; promise: Promise<void> } | null>(null);
+  // Cierre pedido EXPLÍCITAMENTE por el usuario (botón «Cerrar sesión»):
+  // su SIGNED_OUT se honra al instante. Cualquier otro evento sin sesión
+  // pasa por la confirmación contra el almacenamiento.
+  const intentionalSignOut = useRef(false);
+  // Temporizador de la confirmación de un SIGNED_OUT no pedido.
+  const signOutConfirmTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const loadAuthData = useCallback(async (userId: string, email?: string, userMetadata?: Record<string, unknown>) => {
     if (inflightLoad.current?.userId === userId) return inflightLoad.current.promise;
@@ -156,46 +192,141 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       getSupabase()
         .then((supabase) => {
           if (cancelled) return;
-          const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
-            const newUserId = newSession?.user?.id ?? null;
+
+          // Aplica una sesión viva al estado. Solo recarga roles si el
+          // usuario cambió de verdad (login/cambio de cuenta): un
+          // TOKEN_REFRESHED no toca authDataReady, así las páginas con
+          // guardia no se desmontan ni pierden su estado.
+          const applySession = (liveSession: Session) => {
+            // Una sesión viva invalida cualquier cierre en confirmación
+            // y cualquier marca de cierre intencional ya consumida.
+            intentionalSignOut.current = false;
+            if (signOutConfirmTimer.current) {
+              clearTimeout(signOutConfirmTimer.current);
+              signOutConfirmTimer.current = null;
+            }
+            const newUserId = liveSession.user.id;
             const userChanged = newUserId !== resolvedUserId.current;
-            setSession(newSession);
-            setUser(newSession?.user ?? null);
-            if (newSession?.user) {
-              // Solo recargar roles si el usuario cambió de verdad (login/logout/
-              // cambio de cuenta). Un TOKEN_REFRESHED no toca authDataReady: las
-              // páginas con guardia no se desmontan ni pierden su estado.
-              if (userChanged) {
-                resolvedUserId.current = newUserId;
-                const u = newSession.user;
-                setAuthDataReady(false);
-                setTimeout(() => loadAuthData(u.id, u.email ?? undefined, u.user_metadata ?? undefined), 0);
+            setSession(liveSession);
+            setUser(liveSession.user);
+            if (userChanged) {
+              resolvedUserId.current = newUserId;
+              const u = liveSession.user;
+              setAuthDataReady(false);
+              setTimeout(() => loadAuthData(u.id, u.email ?? undefined, u.user_metadata ?? undefined), 0);
+            }
+          };
+
+          // Da la sesión por cerrada de verdad: limpia todo el estado.
+          const teardownSession = () => {
+            resolvedUserId.current = null;
+            roleResolvedFor.current = null;
+            setSession(null);
+            setUser(null);
+            setRole("user");
+            setProfile(null);
+            setPermissions(NO_PERMS);
+            setAuthDataFailed(false);
+            setAuthDataReady(true);
+          };
+
+          // Confirmación de un SIGNED_OUT no pedido: se relee la sesión
+          // del almacenamiento compartido antes de botar a nadie.
+          // - Si hay sesión viva → el evento era ajeno o tardío: se
+          //   restaura y NO se sale (esto rompe el bucle de login).
+          // - Si no hay sesión NI token guardado → cierre real: se sale.
+          // - Zona gris (token guardado pero getSession sin sesión, o
+          //   getSession fallando): un reintento; si la duda persiste se
+          //   CONSERVA el estado — un fallo de red o un refresco en
+          //   curso en otro contexto no es un cierre de sesión.
+          const confirmSignOut = async (confirmAttempt: number): Promise<void> => {
+            if (cancelled) return;
+            const retryLater = () => {
+              if (cancelled || confirmAttempt > 0) return;
+              signOutConfirmTimer.current = setTimeout(() => {
+                signOutConfirmTimer.current = null;
+                void confirmSignOut(confirmAttempt + 1);
+              }, SIGNOUT_CONFIRM_RETRY_DELAY_MS);
+            };
+            try {
+              const { data: { session: current } } = await supabase.auth.getSession();
+              if (cancelled) return;
+              if (current?.user) {
+                applySession(current);
+                return;
               }
+              if (!hasStoredSessionToken()) {
+                teardownSession();
+                return;
+              }
+              retryLater();
+            } catch (err) {
+              console.error("Error confirmando el cierre de sesión:", err);
+              retryLater();
+            }
+          };
+
+          const scheduleSignOutConfirmation = () => {
+            if (signOutConfirmTimer.current) return; // ya hay una en curso
+            signOutConfirmTimer.current = setTimeout(() => {
+              signOutConfirmTimer.current = null;
+              void confirmSignOut(0);
+            }, SIGNOUT_CONFIRM_DELAY_MS);
+          };
+
+          const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, newSession) => {
+            if (newSession?.user) {
+              applySession(newSession);
+            } else if (intentionalSignOut.current) {
+              // Cierre pedido por el propio usuario: se honra al instante.
+              intentionalSignOut.current = false;
+              if (signOutConfirmTimer.current) {
+                clearTimeout(signOutConfirmTimer.current);
+                signOutConfirmTimer.current = null;
+              }
+              teardownSession();
             } else {
-              resolvedUserId.current = null;
-              roleResolvedFor.current = null;
-              setRole("user");
-              setProfile(null);
-              setPermissions(NO_PERMS);
-              setAuthDataFailed(false);
-              setAuthDataReady(true);
+              // SIGNED_OUT ajeno/tardío o INITIAL_SESSION sin sesión:
+              // NO se obedece a ciegas; se confirma contra el
+              // almacenamiento antes de botar al usuario al login.
+              scheduleSignOutConfirmation();
             }
           });
           unsubscribe = () => subscription.unsubscribe();
 
-          supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
-            if (cancelled) return;
-            setSession(currentSession);
-            setUser(currentSession?.user ?? null);
-            if (currentSession?.user) loadAuthData(currentSession.user.id, currentSession.user.email ?? undefined, currentSession.user.user_metadata ?? undefined);
-            else setAuthDataReady(true);
-            setLoading(false);
-          }).catch((err) => {
-            // Si getSession() rechaza (storage corrupto/bloqueado), salir del loader
-            // en vez de dejar la app atorada en la pantalla de carga.
-            console.error("Error obteniendo la sesión:", err);
-            if (!cancelled) { setLoading(false); setAuthDataReady(true); }
-          });
+          // Sesión inicial del arranque. Un rechazo de getSession() (p.
+          // ej. timeout del lock porque OTRA ventana está refrescando)
+          // NO significa «sin sesión»: rendirse al primer fallo dejaba
+          // user=null y la guardia botaba al login con la sesión viva
+          // guardada. Se reintenta una vez antes de darla por ausente.
+          const resolveInitialSession = (initAttempt: number) => {
+            supabase.auth.getSession().then(({ data: { session: currentSession } }) => {
+              if (cancelled) return;
+              if (currentSession?.user) {
+                setSession(currentSession);
+                setUser(currentSession.user);
+                loadAuthData(currentSession.user.id, currentSession.user.email ?? undefined, currentSession.user.user_metadata ?? undefined);
+              } else if (!resolvedUserId.current) {
+                // Solo se acepta el «sin sesión» si ningún evento ya
+                // resolvió un usuario entretanto (login rápido tras un
+                // arranque lento): un null viejo no tumba un login nuevo.
+                setSession(null);
+                setUser(null);
+                setAuthDataReady(true);
+              }
+              setLoading(false);
+            }).catch((err) => {
+              console.error("Error obteniendo la sesión:", err);
+              if (cancelled) return;
+              if (initAttempt === 0) {
+                retryTimer = setTimeout(() => resolveInitialSession(1), 1500);
+              } else {
+                setLoading(false);
+                setAuthDataReady(true);
+              }
+            });
+          };
+          resolveInitialSession(0);
         })
         .catch((err) => {
           // Si el chunk de Supabase no pudo cargarse (red caída en el
@@ -217,6 +348,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     return () => {
       cancelled = true;
       if (retryTimer) clearTimeout(retryTimer);
+      if (signOutConfirmTimer.current) {
+        clearTimeout(signOutConfirmTimer.current);
+        signOutConfirmTimer.current = null;
+      }
       unsubscribe?.();
     };
   }, [loadAuthData]);
@@ -243,6 +378,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [user]);
 
   const signOut = useCallback(async () => {
+    // Marca el cierre como pedido por el usuario: el SIGNED_OUT que
+    // provoca se honra al instante, sin pasar por la confirmación que
+    // protege contra cierres ajenos o tardíos.
+    intentionalSignOut.current = true;
     const supabase = await getSupabase();
     await supabase.auth.signOut();
   }, []);

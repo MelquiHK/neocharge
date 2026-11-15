@@ -1,1 +1,21 @@
 project_id = "xchcxeqtanfomrklkquw"
+
+# OJO: este config.toml NO es el del proyecto en producción
+# (producción es txkgchetianfvypnkziq y su configuración de Auth vive
+# solo en el panel de Supabase). Esta sección queda como REGISTRO de la
+# configuración deseada; para que surta efecto hay que fijar el mismo
+# valor en el panel del proyecto en producción:
+#   Authentication → Configuration → Sessions →
+#   «Refresh token reuse interval» = 120 s
+# (o aplicar este archivo con `supabase config push` apuntando al
+# proyecto correcto).
+[auth]
+# Rotación de refresh tokens: con la red de Cuba (y VPN), una respuesta
+# de refresco puede perderse DESPUÉS de que el servidor ya rotó el
+# token; el reintento llega entonces con el token viejo. Con el
+# intervalo por defecto (10 s) ese reintento se trata como
+# REUTILIZACIÓN y Supabase revoca la sesión entera: el «me bota de mi
+# cuenta» intermitente del 2026-11-15, en /cuenta y en /admin a la vez.
+# 120 s da margen a los reintentos reales de un teléfono que se congela
+# y despierta, sin abrir una ventana grande a una reutilización real.
+refresh_token_reuse_interval = 120
