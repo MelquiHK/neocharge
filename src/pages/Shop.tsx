@@ -262,7 +262,7 @@ const ShopPage = () => {
         <button
           onClick={() => setCat("all")}
           className={cn(
-            "px-4 py-2 rounded-full text-sm font-semibold transition-all",
+            "px-4 py-2 rounded-full text-sm font-semibold transition-all active:scale-95",
             activeCat === "all"
               ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm"
               : "bg-secondary text-foreground hover:bg-muted",
@@ -274,7 +274,7 @@ const ShopPage = () => {
           <button
             onClick={() => setCat("favorites")}
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-semibold transition-all",
+              "px-4 py-2 rounded-full text-sm font-semibold transition-all active:scale-95",
               activeCat === "favorites"
                 ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm"
                 : "bg-secondary text-foreground hover:bg-muted",
@@ -288,7 +288,7 @@ const ShopPage = () => {
             key={c.id}
             onClick={() => setCat(c.slug)}
             className={cn(
-              "px-4 py-2 rounded-full text-sm font-semibold transition-all",
+              "px-4 py-2 rounded-full text-sm font-semibold transition-all active:scale-95",
               activeCat === c.slug
                 ? "bg-gradient-to-br from-brand-500 via-brand-600 to-grape-600 text-white shadow-glow-brand-sm"
                 : "bg-secondary text-foreground hover:bg-muted",
@@ -346,16 +346,39 @@ const ShopPage = () => {
           </div>
         </div>
       ) : (
-        <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
-          {filtered.map((p) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              isFavorite={isFavorite(p.id)}
-              onToggleFavorite={() => toggleFavorite(p.id)}
-            />
-          ))}
-        </div>
+        <>
+          {/* Resumen de resultados: el cliente sabe al instante cuántos
+              productos hay y para qué búsqueda/categoría. */}
+          <p className="mb-6 text-sm text-muted-foreground" aria-live="polite">
+            <strong className="text-foreground font-semibold">{filtered.length}</strong>{" "}
+            {filtered.length === 1 ? "producto" : "productos"}
+            {search.trim() && (
+              <>
+                {" "}para «<span className="font-semibold text-foreground">{search.trim()}</span>»
+              </>
+            )}
+            {activeCategory && (
+              <>
+                {" "}en <span className="font-semibold text-foreground">{displayCategoryName(activeCategory.name)}</span>
+              </>
+            )}
+          </p>
+          <div className="grid sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+            {filtered.map((p, i) => (
+              <div
+                key={p.id}
+                className="nc-card-in h-full [&>*]:h-full"
+                style={{ animationDelay: `${Math.min(i, 11) * 45}ms` }}
+              >
+                <ProductCard
+                  product={p}
+                  isFavorite={isFavorite(p.id)}
+                  onToggleFavorite={() => toggleFavorite(p.id)}
+                />
+              </div>
+            ))}
+          </div>
+        </>
       )}
     </div>
   );

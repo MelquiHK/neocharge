@@ -3,6 +3,7 @@ import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { Menu, Search, ShoppingBag, User, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Logo } from "@/components/Logo";
+import { SearchSuggestions } from "@/components/SearchSuggestions";
 import { WelcomeTransition, type WelcomeData } from "@/components/WelcomeTransition";
 import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
@@ -90,6 +91,7 @@ export function Header({ className }: { className?: string }) {
 
   useEffect(() => {
     setMobileOpen(false);
+    setSearchOpen(false);
   }, [location.pathname]);
 
   return (
@@ -139,27 +141,36 @@ export function Header({ className }: { className?: string }) {
           </nav>
 
           <div className="flex items-center gap-2">
-            {/* Buscador: siempre visible, expande al tocar */}
+            {/* Buscador: siempre visible, expande al tocar. Con sugerencias
+                en vivo mientras se escribe (productos con foto y precio). */}
             {searchOpen ? (
-              <form onSubmit={submitSearch} className="flex items-center gap-1 animate-fade-in" role="search">
-                <input
-                  autoFocus
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  onKeyDown={(e) => e.key === "Escape" && setSearchOpen(false)}
-                  placeholder="Buscar productos…"
-                  aria-label="Buscar productos"
-                  className="h-10 w-40 sm:w-56 rounded-full bg-secondary/70 border border-border px-4 text-sm outline-none focus:border-primary/50 placeholder:text-muted-foreground"
+              <div className="relative">
+                <form onSubmit={submitSearch} className="flex items-center gap-1 animate-fade-in" role="search">
+                  <input
+                    autoFocus
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    onKeyDown={(e) => e.key === "Escape" && setSearchOpen(false)}
+                    placeholder="Buscar productos…"
+                    aria-label="Buscar productos"
+                    aria-expanded={searchTerm.trim().length >= 2}
+                    className="h-10 w-40 sm:w-56 rounded-full bg-secondary/70 border border-border px-4 text-sm outline-none focus:border-primary/50 placeholder:text-muted-foreground"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setSearchOpen(false)}
+                    className="rounded-full h-10 w-10 flex items-center justify-center hover:bg-secondary transition-colors"
+                    aria-label="Cerrar buscador"
+                  >
+                    <X className="w-5 h-5" />
+                  </button>
+                </form>
+                <SearchSuggestions
+                  term={searchTerm}
+                  onNavigate={() => setSearchOpen(false)}
+                  onSeeAll={() => submitSearch()}
                 />
-                <button
-                  type="button"
-                  onClick={() => setSearchOpen(false)}
-                  className="rounded-full h-10 w-10 flex items-center justify-center hover:bg-secondary transition-colors"
-                  aria-label="Cerrar buscador"
-                >
-                  <X className="w-5 h-5" />
-                </button>
-              </form>
+              </div>
             ) : (
               <button
                 onClick={() => setSearchOpen(true)}

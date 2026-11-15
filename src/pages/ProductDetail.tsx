@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { fetchWithCache } from "@/lib/offline-cache";
@@ -74,6 +74,9 @@ export default function ProductDetail() {
   const [loading, setLoading] = useState(true);
   const [loadError, setLoadError] = useState<string | null>(null);
   const [activeImage, setActiveImage] = useState(0);
+  // Deslizamiento sobre la foto principal: punto de partida del gesto y
+  // marca de «fue swipe» para no abrir el visor al soltar.
+  const swipeRef = useRef({ x: 0, swiped: false });
   const [quantity, setQuantity] = useState(1);
   const [viewerOpen, setViewerOpen] = useState(false);
   const [descExpanded, setDescExpanded] = useState(false);
@@ -351,25 +354,53 @@ export default function ProductDetail() {
       <div className="grid lg:grid-cols-2 gap-12 mb-16">
         {/* Images */}
         <div className="space-y-4">
-          <div className="relative aspect-square rounded-3xl overflow-hidden bg-muted">
+          <div
+            className="relative aspect-square rounded-3xl overflow-hidden bg-muted"
+            style={{ touchAction: "pan-y" }}
+            onPointerDown={(e) => {
+              swipeRef.current = { x: e.clientX, swiped: false };
+            }}
+            onPointerUp={(e) => {
+              // Deslizar sobre la foto principal cambia de foto sin tener
+              // que abrir el visor (el visor completo sigue a un toque).
+              const dx = e.clientX - swipeRef.current.x;
+              if (Math.abs(dx) > 48 && images.length > 1) {
+                swipeRef.current.swiped = true;
+                setActiveImage((i) =>
+                  dx < 0
+                    ? Math.min(i + 1, images.length - 1)
+                    : Math.max(i - 1, 0),
+                );
+              }
+            }}
+          >
             {mainImage ? (
               (() => {
                 const ri = responsiveImage(mainImage, "(max-width: 1024px) 100vw, 600px", imgWidths);
                 return (
                   <button
                     type="button"
-                    onClick={() => setViewerOpen(true)}
+                    onClick={() => {
+                      // Si el gesto fue un deslizamiento, no abrir el visor.
+                      if (swipeRef.current.swiped) {
+                        swipeRef.current.swiped = false;
+                        return;
+                      }
+                      setViewerOpen(true);
+                    }}
                     aria-label="Ampliar fotos del producto"
                     className="block w-full h-full cursor-zoom-in"
                   >
                     <img
+                      key={mainImage}
                       src={ri.src}
                       srcSet={ri.srcSet}
                       sizes={ri.sizes}
                       alt={product.name}
-                      className="w-full h-full object-cover"
+                      className="w-full h-full object-cover animate-fade-in"
                       fetchPriority="high"
                       decoding="async"
+                      draggable={false}
                     />
                   </button>
                 );
@@ -377,6 +408,18 @@ export default function ProductDetail() {
             ) : (
               <div className="w-full h-full flex items-center justify-center text-muted-foreground">
                 Sin imagen
+              </div>
+            )}
+            {images.length > 1 && (
+              <div className="absolute bottom-3 left-1/2 -translate-x-1/2 flex gap-1.5 pointer-events-none" aria-hidden>
+                {images.map((_, idx) => (
+                  <span
+                    key={idx}
+                    className={`h-1.5 rounded-full transition-all duration-300 ${
+                      idx === activeImage ? "w-5 bg-white shadow" : "w-1.5 bg-white/60"
+                    }`}
+                  />
+                ))}
               </div>
             )}
             {mainImage && (

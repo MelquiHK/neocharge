@@ -694,3 +694,16 @@
   transition-duration: 0.01ms !important;
 }
 [data-data-saver="1"] .marquee-track { animation: none !important; }
+
+/* Entrada de tarjetas de producto (catálogo y destacados): subida suave
+   con fundido. Solo opacity/transform (barato en teléfonos medios) y la
+   guarda global de prefers-reduced-motion la neutraliza. Como React
+   reutiliza los nodos por key (id del producto), al filtrar solo se
+   animan las tarjetas que montan de verdad, no toda la rejilla. */
+@keyframes nc-card-in {
+  from { opacity: 0; transform: translateY(14px) scale(0.985); }
+  to { opacity: 1; transform: translateY(0) scale(1); }
+}
+.nc-card-in {
+  animation: nc-card-in 0.55s cubic-bezier(0.22, 0.61, 0.36, 1) both;
+}
