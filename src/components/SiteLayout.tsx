@@ -2,7 +2,6 @@ import { useEffect, useState, type ComponentType } from "react";
 import { Header } from "@/components/Header";
 import { Footer } from "@/components/Footer";
 import { InstallAppBubble } from "@/components/InstallAppBubble";
-import { OfflineBanner } from "@/components/OfflineBanner";
 import { Outlet } from "react-router-dom";
 import { useCart } from "@/hooks/use-cart";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
@@ -73,7 +72,6 @@ export function SiteLayout() {
       </div>
       
       <Header className="top-0 md:top-10" />
-      <OfflineBanner />
       <main className="flex-1 pt-24 md:pt-36">
         <Outlet />
       </main>

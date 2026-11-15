@@ -66,12 +66,6 @@ export async function loadFromCache<T>(key: string, maxAgeMs: number = DEFAULT_M
   return rec.value;
 }
 
-/** Fecha (ms) en que se guardó la clave, o null si no hay datos. */
-export async function getCacheSavedAt(key: string): Promise<number | null> {
-  const rec = await readWithMigration<unknown>(key);
-  return rec ? rec.savedAt : null;
-}
-
 export async function hasCache(key: string): Promise<boolean> {
   const rec = await readWithMigration<unknown>(key);
   return rec != null;
