@@ -18,6 +18,14 @@ let clientPromise: Promise<SupabaseClient<Database>> | null = null;
 export function getSupabase(): Promise<SupabaseClient<Database>> {
   if (!clientPromise) {
     clientPromise = import("./client").then((m) => m.supabase);
+    // Si la descarga del chunk falla (red inestable, chunk viejo tras un
+    // despliegue), NO se cachea la promesa rechazada: dejarla fijada
+    // condenaba toda la sesión de página a «sin Supabase» (el panel
+    // botaba al login sin ser un cierre de sesión real). Se olvida el
+    // fallo para que el próximo intento vuelva a descargar el chunk.
+    clientPromise.catch(() => {
+      clientPromise = null;
+    });
   }
   return clientPromise;
 }

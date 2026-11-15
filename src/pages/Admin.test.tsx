@@ -92,4 +92,54 @@ describe("Admin — montaje en frío (regresión del error de React #310)", () =
     expect(screen.getByText("dashboard-mock")).toBeInTheDocument();
     expect(screen.getByText("NeoCharge")).toBeInTheDocument();
   });
+
+  it("sesión válida pero permisos sin cargar: ofrece Reintentar, no «Acceso restringido»", () => {
+    const mockUseAuth = vi.mocked(useAuth);
+    // El caso del «me bota de mi usuario»: hay sesión, pero la carga de
+    // roles/permisos falló por red (authDataFailed). La guardia debe
+    // distinguirlo de un usuario sin privilegios de verdad.
+    mockUseAuth.mockReturnValue({
+      user: { email: "melcraft96@gmail.com" },
+      isAdmin: false,
+      permissions: fullPermissions,
+      loading: false,
+      authDataReady: true,
+      authDataFailed: true,
+      retryAuthData: vi.fn(),
+      signOut: vi.fn(),
+    } as unknown as ReturnType<typeof useAuth>);
+
+    render(
+      <MemoryRouter>
+        <Admin />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/No se pudo cargar tu sesión/)).toBeInTheDocument();
+    expect(screen.getByText("Reintentar")).toBeInTheDocument();
+    expect(screen.queryByText(/Acceso restringido/)).not.toBeInTheDocument();
+  });
+
+  it("sin fallo de carga y sin privilegios: sí muestra «Acceso restringido»", () => {
+    const mockUseAuth = vi.mocked(useAuth);
+    mockUseAuth.mockReturnValue({
+      user: { email: "cliente@example.com" },
+      isAdmin: false,
+      permissions: fullPermissions,
+      loading: false,
+      authDataReady: true,
+      authDataFailed: false,
+      retryAuthData: vi.fn(),
+      signOut: vi.fn(),
+    } as unknown as ReturnType<typeof useAuth>);
+
+    render(
+      <MemoryRouter>
+        <Admin />
+      </MemoryRouter>
+    );
+
+    expect(screen.getByText(/Acceso restringido/)).toBeInTheDocument();
+    expect(screen.queryByText("Reintentar")).not.toBeInTheDocument();
+  });
 });

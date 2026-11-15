@@ -51,7 +51,7 @@ import { cn } from "@/lib/utils";
 import { useSEO } from "@/hooks/use-seo";
 
 const Admin = () => {
-  useSEO("admin");  const { user, isAdmin, permissions, loading, authDataReady, signOut } = useAuth();
+  useSEO("admin");  const { user, isAdmin, permissions, loading, authDataReady, authDataFailed, retryAuthData, signOut } = useAuth();
   const [activeTab, setActiveTab] = useState(() => {
     // Permite enlaces directos a pestañas: /admin#tab=rates
     const m = window.location.hash.match(/tab=([a-z]+)/);
@@ -187,6 +187,42 @@ const Admin = () => {
     );
 
   if (!user) return <Navigate to="/auth" replace />;
+
+  // La sesión SÍ existe, pero los roles/permisos no pudieron cargarse
+  // (red caída al abrir el panel): esto NO es «acceso restringido».
+  // Antes este caso caía en la pantalla de restringido y Mel quedaba
+  // «botado» sin camino de vuelta; ahora se ofrece reintentar la carga
+  // sin cerrar la sesión.
+  if (!isAdmin && authDataFailed)
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
+        <div className="w-full max-w-md space-y-6 rounded-3xl border border-white/10 bg-slate-900 p-8 text-center shadow-dramatic">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-amber-500/10 text-amber-400">
+            <ShieldAlert className="h-8 w-8" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="font-display text-2xl font-bold text-white">No se pudo cargar tu sesión</h1>
+            <p className="text-sm text-slate-400">
+              Tu cuenta sigue iniciada, pero la conexión falló al verificar tus permisos. Revisa la conexión y toca Reintentar.
+            </p>
+          </div>
+          <div className="flex flex-col items-center gap-3">
+            <button
+              onClick={retryAuthData}
+              className="inline-flex min-h-11 items-center gap-2 rounded-full bg-gradient-primary px-6 text-sm font-semibold text-white shadow-glow transition-opacity hover:opacity-90"
+            >
+              Reintentar
+            </button>
+            <button
+              onClick={signOut}
+              className="inline-flex items-center gap-2 text-sm font-semibold text-slate-400 hover:text-white hover:underline"
+            >
+              <LogOut className="h-4 w-4" /> Cerrar sesión
+            </button>
+          </div>
+        </div>
+      </div>
+    );
 
   if (!isAdmin)
     return (

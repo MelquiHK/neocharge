@@ -117,6 +117,7 @@ export function AdminDashboard() {
 
   useEffect(() => {
     const load = async () => {
+     try {
       const startMonth = startOfHavanaMonthISO();
       const startDay = startOfHavanaDayISO();
 
@@ -199,7 +200,14 @@ export function AdminDashboard() {
         // Sin datos de socios: no se muestra el card.
       }
 
+     } catch (err) {
+      // Si algo lanza (red, RPC), el Resumen sale igualmente de la
+      // pantalla de esqueletos con lo que haya: quedarse «cargando»
+      // para siempre era peor que mostrar ceros parciales.
+      console.error("Error cargando el resumen:", err);
+     } finally {
       setLoaded(true);
+     }
     };
     load();
   }, []);
@@ -481,7 +489,7 @@ export function AdminDashboard() {
             title="Top páginas (7d)"
             action={rateMissing ? (
               <Button asChild size="sm" variant="secondary" className="min-h-9">
-                <a href="/admin#tab=rates" title="Ve a Tasa USD en el panel">Falta tasa USD hoy</a>
+                <a href="#tab=rates" title="Ve a Tasa USD en el panel">Falta tasa USD hoy</a>
               </Button>
             ) : undefined}
           />

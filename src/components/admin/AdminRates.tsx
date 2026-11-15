@@ -22,6 +22,7 @@ import {
   AdminLoading,
 } from "./ui";
 import { DollarTrend } from "./DollarTrend";
+import { havanaDate } from "@/lib/havana-date";
 
 interface Rate {
   id: string;
@@ -46,7 +47,9 @@ export function AdminRates() {
     setRates((data ?? []) as Rate[]);
     let eurFromRow = 0;
     if (data && data.length > 0) {
-      const today = new Date().toISOString().split("T")[0];
+      // «Hoy» es el día de La Habana: con la fecha UTC, de 8pm a 12am la
+      // tasa de esta noche se buscaba (y guardaba) con fecha de mañana.
+      const today = havanaDate();
       const todays = data.find((r: Rate) => r.rate_date === today);
       if (todays) {
         setTodayRate(String(todays.usd_to_cup));
@@ -80,7 +83,7 @@ export function AdminRates() {
     if (!todayRate || isNaN(rateNum) || rateNum <= 0) { toast.error("La tasa debe ser un número mayor que 0"); return; }
     const eurNum = Number(todayEur);
     if (todayEur && (isNaN(eurNum) || eurNum <= 0)) { toast.error("La tasa EUR debe ser un número mayor que 0 (o déjala vacía)"); return; }
-    const today = new Date().toISOString().split("T")[0];
+    const today = havanaDate();
     const basePayload = {
       rate_date: today,
       usd_to_cup: Number(todayRate),
@@ -117,7 +120,7 @@ export function AdminRates() {
     load();
   };
 
-  const todayStr = new Date().toISOString().split("T")[0];
+  const todayStr = havanaDate();
   const current = rates.find((r) => r.rate_date === todayStr) ?? rates[0];
   const isToday = !!current && current.rate_date === todayStr;
 
