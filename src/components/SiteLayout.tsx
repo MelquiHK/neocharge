@@ -9,6 +9,7 @@ import { ensureNcFx } from "@/lib/fly-to-cart";
 import { seedFromBundle } from "@/lib/offline-cache";
 import { captureRefFromUrl } from "@/lib/referral";
 import { Info } from "lucide-react";
+import { formatRateValue } from "@/lib/format";
 
 // El drawer del carrito va en chunk separado, pero SIN React.lazy():
 // el lazy() suspende en su primer render y eso rompía la app con el
@@ -41,9 +42,13 @@ export function SiteLayout() {
     const preload = () => { void getCartSheet(); };
     // Programa de referidos: captura ?ref=CODIGO una sola vez por carga.
     void captureRefFromUrl();
-    if ("requestIdleCallback" in window) {
-      const id = (window as unknown as { requestIdleCallback: (cb: () => void, o?: { timeout: number }) => number }).requestIdleCallback(() => { void preload(); }, { timeout: 4000 });
-      return () => (window as unknown as { cancelIdleCallback: (id: number) => void }).cancelIdleCallback(id);
+    const idleWindow = window as unknown as {
+      requestIdleCallback?: (cb: () => void, o?: { timeout: number }) => number;
+      cancelIdleCallback?: (id: number) => void;
+    };
+    if (typeof idleWindow.requestIdleCallback === "function") {
+      const id = idleWindow.requestIdleCallback(() => { void preload(); }, { timeout: 4000 });
+      return () => idleWindow.cancelIdleCallback?.(id);
     }
     const t = window.setTimeout(() => { void preload(); }, 2500);
     return () => window.clearTimeout(t);
@@ -67,7 +72,7 @@ export function SiteLayout() {
       <div className="bg-brand-200/50 border-b border-brand-400/25 py-2 hidden md:block backdrop-blur-xl">
         <div className="container-page flex items-center justify-center gap-2 text-[11px] font-bold uppercase tracking-[0.1em] text-brand-800">
           <Info className="w-3 h-3" />
-          Precios actualizados · Tasa hoy: {rate ? `${Math.round(rate.usd_to_cup)} CUP/USD${rate.eur_to_cup ? ` · ${Math.round(rate.eur_to_cup)} CUP/EUR` : ""} · elTOQUE` : "—"} · Pagos aceptados en USD, EUR y CUP · Entrega en 24h
+          Precios actualizados · Tasa hoy: {rate ? `${formatRateValue(rate.usd_to_cup)} CUP/USD${rate.eur_to_cup ? ` · ${formatRateValue(rate.eur_to_cup)} CUP/EUR` : ""} · elTOQUE` : "—"} · Pagos aceptados en USD, EUR y CUP · Entrega en 24h
         </div>
       </div>
       

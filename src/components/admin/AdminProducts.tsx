@@ -110,7 +110,9 @@ export function AdminProducts() {
       return;
     }
     setPpLocs(
-      ((data ?? []) as Array<PartnerLocation & { partners: { name: string } }>).map((l) => ({
+      // Doble cast: los tipos generados no conocen la relación
+      // partner_locations → partners (TODO de regeneración en types.ts).
+      ((data ?? []) as unknown as Array<PartnerLocation & { partners: { name: string } }>).map((l) => ({
         ...l,
         partner_name: l.partners.name,
       }))

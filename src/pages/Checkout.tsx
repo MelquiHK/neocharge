@@ -11,7 +11,7 @@ import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { useSiteSettings } from "@/hooks/use-site-settings";
 import { useDeliveryQuote } from "@/hooks/use-delivery-quote";
 import { supabase } from "@/integrations/supabase/client";
-import { formatMoney, formatCUP, formatEUR, formatPrice } from "@/lib/format";
+import { formatMoney, formatCUP, formatEUR, formatPrice, formatRateValue } from "@/lib/format";
 import { buildWhatsAppMessage, getWhatsAppLink } from "@/lib/whatsapp";
 import { buildOrderBreakdown } from "@/lib/order-pricing";
 import { normalizeCubanPhone } from "@/lib/cuban-phone";
@@ -106,11 +106,15 @@ const Checkout = () => {
 
   useEffect(() => {
     if (!user) return;
-    supabase
-      .from("profiles")
-      .select("full_name,phone,username")
-      .eq("id", user.id)
-      .maybeSingle()
+    // Promise.resolve: el builder de Supabase es PromiseLike (sin .catch
+    // en los tipos); al envolverlo se obtiene una Promise nativa.
+    void Promise.resolve(
+      supabase
+        .from("profiles")
+        .select("full_name,phone,username")
+        .eq("id", user.id)
+        .maybeSingle()
+    )
       .then(({ data }) => {
         if (data) {
           if (data.full_name) setName(data.full_name);
@@ -203,7 +207,7 @@ const Checkout = () => {
     // devuelve null si no es 53 + 8 dígitos (móvil), y ese es el formato que se guarda.
     const normalizedPhone = normalizeCubanPhone(phone);
     if (!name.trim() || !normalizedPhone) {
-      toast.error("Revisa tus datos: nombre completo y móvil cubano de 8 dígitos (ej: 5842 7265).");
+      toast.error("Revisa tus datos: nombre completo y móvil cubano de 8 dígitos (ej: 5123 4567).");
       return;
     }
     if (delivery === "delivery" && !address.trim()) {
@@ -460,7 +464,7 @@ const Checkout = () => {
                   className={phone.length > 0 && !normalizeCubanPhone(phone) ? "border-destructive" : ""}
                 />
                 {phone.length > 0 && !normalizeCubanPhone(phone) && (
-                  <p className="text-xs text-destructive">Escribe un móvil cubano válido (ej. 5842 7265).</p>
+                  <p className="text-xs text-destructive">Escribe un móvil cubano válido (ej. 5123 4567).</p>
                 )}
               </div>
             </div>
@@ -865,7 +869,7 @@ const Checkout = () => {
                 <p className="text-xs text-muted-foreground rounded-xl border border-dashed border-primary/30 bg-primary/5 p-3">
                   💶 ¿Prefieres pagar en euros? Elige <strong>«Pagar en EUR»</strong> aquí arriba:
                   este pedido serían <strong>{formatEUR(grandTotalEUR)}</strong> en euros en efectivo,
-                  al cambio de hoy (1 EUR = {Math.round(rate.eur_to_cup)} CUP, elTOQUE, sin recargos).
+                  al cambio de hoy (1 EUR = {formatRateValue(rate.eur_to_cup)} CUP, elTOQUE, sin recargos).
                 </p>
               )}
             </div>

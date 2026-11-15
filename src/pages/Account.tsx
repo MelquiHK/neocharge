@@ -144,11 +144,15 @@ const Account = () => {
     if (!user) return;
 
     // Load orders
-    supabase
-      .from("orders")
-      .select("id,created_at,total,status,items")
-      .eq("user_id", user.id)
-      .order("created_at", { ascending: false })
+    // Promise.resolve: el builder de Supabase es PromiseLike (sin .catch
+    // en los tipos); al envolverlo se obtiene una Promise nativa.
+    void Promise.resolve(
+      supabase
+        .from("orders")
+        .select("id,created_at,total,status,items")
+        .eq("user_id", user.id)
+        .order("created_at", { ascending: false })
+    )
       // Lectura de conveniencia: si falla, la lista queda vacía.
       .then(({ data }) => data && setOrders(data as Order[]))
       .catch(() => {});
@@ -157,22 +161,26 @@ const Account = () => {
 
     // Load sales if gestor
     const loadSales = () => {
-      supabase
-        .from("seller_sales")
-        .select("*")
-        .eq("seller_user_id", user.id)
-        .order("created_at", { ascending: false })
+      void Promise.resolve(
+        supabase
+          .from("seller_sales")
+          .select("*")
+          .eq("seller_user_id", user.id)
+          .order("created_at", { ascending: false })
+      )
         // Lectura de conveniencia: si falla, la lista queda vacía.
         .then(({ data }) => data && setGestorSales(data))
         .catch(() => {});
     };
     const checkPendingRequest = () => {
-      supabase
-        .from("payment_requests")
-        .select("id")
-        .eq("user_id", user.id)
-        .eq("status", "pending")
-        .limit(1)
+      void Promise.resolve(
+        supabase
+          .from("payment_requests")
+          .select("id")
+          .eq("user_id", user.id)
+          .eq("status", "pending")
+          .limit(1)
+      )
         // Lectura de conveniencia: si falla, se asume sin solicitud pendiente.
         .then(({ data }) => setHasPendingRequest(!!data && data.length > 0))
         .catch(() => {});
@@ -327,11 +335,13 @@ const handleAvatarUpload = async (file: File) => {
   const handleSaleSaved = () => {
     // Recarga inmediata (el realtime también lo haría, pero así se ve al instante).
     if (!user) return;
-    supabase
-      .from("seller_sales")
-      .select("*")
-      .eq("seller_user_id", user.id)
-      .order("created_at", { ascending: false })
+    void Promise.resolve(
+      supabase
+        .from("seller_sales")
+        .select("*")
+        .eq("seller_user_id", user.id)
+        .order("created_at", { ascending: false })
+    )
       // Lectura de conveniencia: si falla, el realtime actualiza solo.
       .then(({ data }) => data && setGestorSales(data))
       .catch(() => {});

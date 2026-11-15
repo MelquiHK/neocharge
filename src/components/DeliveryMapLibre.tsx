@@ -4,6 +4,7 @@ import {
   Marker as MlMarker,
   Popup as MlPopup,
   NavigationControl,
+  type GeoJSONSource,
 } from "maplibre-gl";
 import "maplibre-gl/dist/maplibre-gl.css";
 
@@ -202,9 +203,7 @@ export function DeliveryMapLibre({
   useEffect(() => {
     const map = mapRef.current;
     if (!map || !styleLoadedRef.current) return;
-    const src = map.getSource(ROUTE_SOURCE_ID) as
-      | { setData: (d: unknown) => void }
-      | undefined;
+    const src = map.getSource(ROUTE_SOURCE_ID) as GeoJSONSource | undefined;
     src?.setData(routeGeoJSON(route));
   }, [route]);
 

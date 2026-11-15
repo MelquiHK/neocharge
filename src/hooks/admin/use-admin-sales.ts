@@ -127,7 +127,7 @@ export function useAdminSales() {
     }
 
     // Fallback: insert directo (sin surtido por socio).
-    const safePayload = {
+    const safePayload: Record<string, unknown> = {
       ...payload,
       seller_user_id: resolvedSellerId,
       seller_name: resolvedSellerName,

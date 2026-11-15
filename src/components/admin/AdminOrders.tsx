@@ -110,14 +110,21 @@ export function AdminOrders() {
         .filter(Boolean)
     )];
     if (ids.length > 0) {
-      supabase
-        .from("product_partners")
-        .select("product_id, partners!inner(name)")
-        .in("product_id", ids)
-        .eq("is_active", true)
+      // Promise.resolve: el builder de Supabase es PromiseLike (sin .catch
+      // en los tipos); al envolverlo se obtiene una Promise nativa.
+      void Promise.resolve(
+        supabase
+          .from("product_partners")
+          .select("product_id, partners!inner(name)")
+          .in("product_id", ids)
+          .eq("is_active", true)
+      )
         .then(({ data }) => {
           const map: Record<string, string[]> = {};
-          ((data ?? []) as { product_id: string; partners: { name: string } }[]).forEach((r) => {
+          // Los tipos generados no conocen la relación product_partners →
+          // partners (TODO de regeneración en types.ts); en runtime el
+          // embed funciona, de ahí el doble cast.
+          ((data ?? []) as unknown as { product_id: string; partners: { name: string } }[]).forEach((r) => {
             const pid = String(r.product_id);
             map[pid] = [...(map[pid] ?? []), r.partners.name];
           });
@@ -204,7 +211,12 @@ export function AdminOrders() {
     const phone = (viewing.customer_phone ?? "").replace(/\D/g, "");
     const link = `https://wa.me/${phone}?text=${encodeURIComponent(msg)}`;
     window.open(link, "_blank");
-    await supabase.from("orders").update({ receipt_sent_at: new Date().toISOString() }).eq("id", viewing.id);
+    const { error: receiptError } = await supabase.from("orders").update({ receipt_sent_at: new Date().toISOString() }).eq("id", viewing.id);
+    if (receiptError) {
+      // El vale sí se abrió en WhatsApp, pero el pedido no quedó marcado:
+      // avisar en vez de dar por hecho el guardado.
+      toast.error("El vale se abrió en WhatsApp, pero no se pudo marcar como enviado: " + receiptError.message);
+    }
     toast.success("Vale enviado por WhatsApp");
     load();
   };

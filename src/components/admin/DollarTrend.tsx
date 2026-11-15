@@ -135,7 +135,9 @@ export function DollarTrend({ rates }: { rates: DollarRateRow[] }) {
           .in("warranty_type", ["charger", "charger-1w"])
           .order("price", { ascending: false });
         if (error) throw error;
-        if (alive) setChargers((data ?? []) as ChargerPrice[]);
+        // La tabla trae `price`; ChargerPrice usa `usd`. Sin este mapeo el
+        // impacto salía NaN (usd quedaba undefined con los datos reales).
+        if (alive) setChargers((data ?? []).map((r) => ({ name: r.name, usd: Number(r.price) })));
       } catch {
         if (alive) setChargers(FALLBACK_CHARGERS);
       }

@@ -129,7 +129,9 @@ export interface CachedResult<T> {
  */
 export async function fetchWithCache<T>(
   key: string,
-  fetcher: () => Promise<T | null | undefined>,
+  // PromiseLike: los builders de Supabase no son Promise nativas, y los
+  // llamadores pasan `builder.then(...)` (que devuelve PromiseLike).
+  fetcher: () => PromiseLike<T | null | undefined>,
   maxAgeMs: number = DEFAULT_MAX_AGE,
   staleMaxAgeMs?: number,
 ): Promise<CachedResult<T>> {
