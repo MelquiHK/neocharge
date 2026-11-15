@@ -9,6 +9,7 @@ import { useCart } from "@/hooks/use-cart";
 import { useAuth } from "@/hooks/use-auth";
 import { useExchangeRate } from "@/hooks/use-exchange-rate";
 import { cn } from "@/lib/utils";
+import { formatRateValue } from "@/lib/format";
 
 // El menú de cuenta (radix dropdown-menu) no bloquea el primer paint: se
 // hidrata en un chunk asíncrono. El fallback pinta el mismo botón fantasma
@@ -247,7 +248,7 @@ export function Header({ className }: { className?: string }) {
             </nav>
             {/* Tasa del día (visible en móvil; en escritorio va en la barra superior) */}
             <p className="mt-3 px-4 text-xs text-muted-foreground">
-              Tasa hoy: {rate ? `${Math.round(rate.usd_to_cup)} CUP/USD${rate.eur_to_cup ? ` · ${Math.round(rate.eur_to_cup)} CUP/EUR` : ""} · elTOQUE` : "—"}
+              Tasa hoy: {rate ? `${formatRateValue(rate.usd_to_cup)} CUP/USD${rate.eur_to_cup ? ` · ${formatRateValue(rate.eur_to_cup)} CUP/EUR` : ""} · elTOQUE` : "—"}
             </p>
           </div>
         )}

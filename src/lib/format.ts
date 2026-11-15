@@ -19,15 +19,26 @@ export function formatCUP(value: number) {
  * los tiene (997,50 CUP). `formatCUP` redondea siempre, y una tasa como
  * la EUR de elTOQUE (997.50) se mostraba como «998» en el Resumen.
  */
-export function formatRate(value: number | null | undefined) {
+/**
+ * Solo el número de la tasa, exacto y sin sufijo: "920" / "997,50".
+ * Para bandas y textos que ya ponen la moneda al lado ("920 CUP/USD",
+ * "1 EUR = 997,50 CUP"): usar `Math.round` ahí mostraba la EUR de
+ * elTOQUE (997.50) como «998».
+ */
+export function formatRateValue(value: number | null | undefined) {
   if (value == null) return "—";
   const v = Number(value);
   if (!Number.isFinite(v)) return "—";
-  const hasDecimals = Number.isFinite(v) && Math.abs(v - Math.round(v)) > 0.0001;
-  return `${new Intl.NumberFormat("es-CU", {
+  const hasDecimals = Math.abs(v - Math.round(v)) > 0.0001;
+  return new Intl.NumberFormat("es-CU", {
     minimumFractionDigits: hasDecimals ? 2 : 0,
     maximumFractionDigits: 2,
-  }).format(v)} CUP`;
+  }).format(v);
+}
+
+export function formatRate(value: number | null | undefined) {
+  if (value == null || !Number.isFinite(Number(value))) return "—";
+  return `${formatRateValue(value)} CUP`;
 }
 
 /** Formatea un monto en euros ("€45,50"). */

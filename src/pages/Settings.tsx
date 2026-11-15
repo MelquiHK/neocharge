@@ -130,7 +130,7 @@ export default function Settings() {
     if (!user) return;
     const normalizedPhone = normalizeCubanPhone(phone);
     if (!normalizedPhone) {
-      toast.error("El teléfono es obligatorio: usa tu móvil cubano de 8 dígitos (ej: 5842 7265).");
+      toast.error("El teléfono es obligatorio: usa tu móvil cubano de 8 dígitos (ej: 5123 4567).");
       return;
     }
     setSaving(true);
@@ -298,7 +298,7 @@ export default function Settings() {
                     id="set-phone"
                     value={phone}
                     onChange={(e) => setPhone(e.target.value)}
-                    placeholder="Ej: 5842 7265"
+                    placeholder="Ej: 5123 4567"
                     inputMode="tel"
                     className="rounded-2xl pl-10"
                   />

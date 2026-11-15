@@ -3,7 +3,7 @@
 
 /**
  * Normaliza un número cubano al formato 53XXXXXXXX.
- * Acepta: "58427265", "63180910", "53 5842 7265", "+53 58427265", "5358427265".
+ * Acepta: "51234567", "63180910", "53 5123 4567", "+53 51234567", "5351234567".
  * Devuelve null si no es un móvil cubano válido (5 o 6 + 7 dígitos).
  * Nota: los móviles cubanos pueden empezar con 5 (series clásicas) o con 6
  * (series nuevas de ETECSA, ej. 63xx xxxx).
@@ -18,7 +18,7 @@ export function normalizeCubanPhone(input: string): string | null {
   return null;
 }
 
-/** Formato legible: 5358427265 -> "+53 5842 7265". */
+/** Formato legible: 5351234567 -> "+53 5123 4567". */
 export function formatCubanPhoneDisplay(normalized: string): string {
   const d = String(normalized ?? "").replace(/\D/g, "");
   if (/^53[56]\d{7}$/.test(d)) return `+53 ${d.slice(2, 6)} ${d.slice(6)}`;

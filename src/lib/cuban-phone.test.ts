@@ -3,7 +3,7 @@ import { normalizeCubanPhone, formatCubanPhoneDisplay } from "./cuban-phone";
 
 describe("normalizeCubanPhone", () => {
   it("acepta móvil de 8 dígitos y antepone 53", () => {
-    expect(normalizeCubanPhone("58427265")).toBe("5358427265");
+    expect(normalizeCubanPhone("51234567")).toBe("5351234567");
   });
 
   it("acepta móviles que empiezan con 6 (series nuevas de ETECSA)", () => {
@@ -13,17 +13,17 @@ describe("normalizeCubanPhone", () => {
   });
 
   it("acepta formatos con espacios, guiones y +53", () => {
-    expect(normalizeCubanPhone("53 5842 7265")).toBe("5358427265");
-    expect(normalizeCubanPhone("+53 5842-7265")).toBe("5358427265");
-    expect(normalizeCubanPhone("5358427265")).toBe("5358427265");
+    expect(normalizeCubanPhone("53 5123 4567")).toBe("5351234567");
+    expect(normalizeCubanPhone("+53 5123-4567")).toBe("5351234567");
+    expect(normalizeCubanPhone("5351234567")).toBe("5351234567");
   });
 
   it("rechaza fijos y formatos inválidos", () => {
     expect(normalizeCubanPhone("78301234")).toBeNull(); // fijo de La Habana
     expect(normalizeCubanPhone("12345")).toBeNull();
     expect(normalizeCubanPhone("")).toBeNull();
-    expect(normalizeCubanPhone("5842726")).toBeNull(); // 7 dígitos
-    expect(normalizeCubanPhone("584272657")).toBeNull(); // 9 dígitos
+    expect(normalizeCubanPhone("5123456")).toBeNull(); // 7 dígitos
+    expect(normalizeCubanPhone("512345677")).toBeNull(); // 9 dígitos
     expect(normalizeCubanPhone("abc")).toBeNull();
   });
 
@@ -33,7 +33,7 @@ describe("normalizeCubanPhone", () => {
 });
 
 describe("formatCubanPhoneDisplay", () => {
-  it("formatea 5358427265 como +53 5842 7265", () => {
-    expect(formatCubanPhoneDisplay("5358427265")).toBe("+53 5842 7265");
+  it("formatea 5351234567 como +53 5123 4567", () => {
+    expect(formatCubanPhoneDisplay("5351234567")).toBe("+53 5123 4567");
   });
 });

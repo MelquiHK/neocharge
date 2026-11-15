@@ -37,7 +37,7 @@ export function StockAlertSignup({ productId, productName }: Props) {
     e.preventDefault();
     const normalized = normalizeCubanPhone(phone);
     if (!normalized) {
-      toast.error("Revisa el número: usa tu móvil cubano de 8 dígitos (ej: 5842 7265).");
+      toast.error("Revisa el número: usa tu móvil cubano de 8 dígitos (ej: 5123 4567).");
       return;
     }
     setLoading(true);
@@ -117,7 +117,7 @@ export function StockAlertSignup({ productId, productName }: Props) {
           type="tel"
           inputMode="tel"
           autoComplete="tel"
-          placeholder="Tu WhatsApp (ej: 5842 7265)"
+          placeholder="Tu WhatsApp (ej: 5123 4567)"
           value={phone}
           onChange={(e) => setPhone(e.target.value)}
           disabled={loading}

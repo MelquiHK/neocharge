@@ -5,6 +5,7 @@ import {
   formatMoney,
   formatPrice,
   formatRate,
+  formatRateValue,
   hasSaneDiscount,
   hasWarranty,
   warrantyTypeLabel,
@@ -40,6 +41,20 @@ describe("formatRate (tarjetas de tasa del Resumen)", () => {
 
   it("acepta null sin romper", () => {
     expect(formatRate(null)).toBe("—");
+  });
+});
+
+describe("formatRateValue (bandas públicas de tasa)", () => {
+  it("sin sufijo: entera sin decimales y decimal exacta, nunca redondeada", () => {
+    expect(formatRateValue(920)).toBe("920");
+    // La banda pública mostraba «998 CUP/EUR» con Math.round.
+    expect(formatRateValue(997.5)).toMatch(/^997[.,]50$/);
+    expect(formatRateValue(997.5)).not.toBe("998");
+  });
+
+  it("acepta null sin romper", () => {
+    expect(formatRateValue(null)).toBe("—");
+    expect(formatRateValue(undefined)).toBe("—");
   });
 });
 
