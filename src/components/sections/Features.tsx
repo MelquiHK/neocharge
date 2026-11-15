@@ -18,7 +18,7 @@ const features = [
   {
     icon: Banknote,
     title: "Pagas al recibir",
-    desc: "Sin pagos por adelantado ni enredos: efectivo en USD o CUP cuando el producto está en tus manos.",
+    desc: "Sin pagos por adelantado ni enredos: efectivo en USD, EUR o CUP cuando el producto está en tus manos.",
     color: "from-primary to-accent",
   },
   {

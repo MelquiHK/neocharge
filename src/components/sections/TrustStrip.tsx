@@ -5,7 +5,7 @@ import { cn } from "@/lib/utils";
 const props = [
   { icon: ShieldCheck, text: "Garantía en productos" },
   { icon: Truck, text: "Entrega en La Habana" },
-  { icon: Banknote, text: "Pago en USD o CUP" },
+  { icon: Banknote, text: "Pago en USD, EUR o CUP" },
   { icon: MessageCircle, text: "Soporte por WhatsApp" },
   { icon: BadgeCheck, text: "Prueba tu producto al recibirlo" },
 ];

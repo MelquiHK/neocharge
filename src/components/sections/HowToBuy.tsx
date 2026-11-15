@@ -18,7 +18,7 @@ const steps = [
   {
     icon: Banknote,
     title: "Recibe y paga",
-    desc: "Te lo llevamos a casa o lo recoges en el Vedado. Lo pruebas frente a ti y pagas en USD o CUP.",
+    desc: "Te lo llevamos a casa o lo recoges en el Vedado. Lo pruebas frente a ti y pagas en USD, EUR o CUP.",
   },
 ];
 

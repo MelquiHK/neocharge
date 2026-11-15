@@ -48,7 +48,12 @@ export default async (req, res) => {
   }
 
   try {
-    const r = await fetch(target.toString(), { redirect: "follow" });
+    // Timeout: sin él, un upstream colgado dejaba la función esperando
+    // hasta el límite de Vercel en vez de responder el error.
+    const r = await fetch(target.toString(), {
+      redirect: "follow",
+      signal: AbortSignal.timeout(8000),
+    });
     res.status(200).json({ finalUrl: r.url });
   } catch (e) {
     res.status(500).json({ error: "No se pudo resolver el enlace" });

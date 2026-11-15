@@ -43,7 +43,7 @@ export function CTA() {
             </h2>
             <p className="text-lg md:text-xl text-brand-100 font-light leading-relaxed max-w-2xl mx-auto">
               Explora el catálogo, confirma por WhatsApp y recibe en La Habana. Sin enredos: garantía real
-              y pagas en USD o CUP al recibir.
+              y pagas en USD, EUR o CUP al recibir.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center pt-4">
               <Button

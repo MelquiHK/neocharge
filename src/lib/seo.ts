@@ -41,7 +41,7 @@ export const seoConfig: Record<string, MetaTags> = {
   checkout: {
     title: "Finalizar pedido — NeoCharge",
     description:
-      "Finaliza tu compra en NeoCharge: paga en USD o CUP y elige mensajería a domicilio o recogida en el local.",
+      "Finaliza tu compra en NeoCharge: paga en USD, EUR o CUP y elige mensajería a domicilio o recogida en el local.",
   },
   auth: {
     title: "Iniciar Sesión - NeoCharge",
