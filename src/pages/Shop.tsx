@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { supabase } from "@/integrations/supabase/client";
-import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
+import { fetchWithCache, loadFromCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { cn } from "@/lib/utils";
 import { displayCategoryName } from "@/lib/format";
 import { ensureNcFx } from "@/lib/fly-to-cart";
@@ -87,8 +87,35 @@ const ShopPage = () => {
   }, []);
 
   useEffect(() => {
+    let cancelled = false;
+    type ShopProduct = Product & { category_id: string | null; category_name?: string | null; created_at?: string | null };
+    const apply = (cats: Category[], prods: ShopProduct[]) => {
+      const categoriesById = new Map(cats.map((cat) => [cat.id, cat.name]));
+      setCategories(cats);
+      setProducts(prods.map((item) => ({
+        ...item,
+        category_id: item.category_id ?? "",
+        category_name: categoriesById.get(item.category_id ?? "") ?? null,
+      })));
+    };
     const load = async () => {
-      setLoading(true);
+      // 1) Primera pintura INSTANTÁNEA desde la caché local del teléfono
+      // (incluye la semilla empaquetada en la app): si el catálogo ya está
+      // guardado, se ve al momento en vez de quedarse en «Cargando
+      // productos…» esperando a la red, que en Cuba puede tardar mucho.
+      const [cachedCats, cachedProds] = await Promise.all([
+        loadFromCache<Category[]>(CACHE_KEYS.categories),
+        loadFromCache<ShopProduct[]>(CACHE_KEYS.products),
+      ]);
+      if (cancelled) return;
+      let painted = false;
+      if (cachedProds && cachedProds.length > 0) {
+        apply(cachedCats ?? [], cachedProds);
+        painted = true;
+        setLoading(false);
+      }
+      if (!painted) setLoading(true);
+      // 2) Red en segundo plano: si trae datos más frescos, se actualiza.
       // Offline: si no hay internet, se sirven los datos guardados.
       const [catRes, prodRes] = await Promise.all([
         fetchWithCache(CACHE_KEYS.categories, () =>
@@ -104,16 +131,19 @@ const ShopPage = () => {
             .then(r => { if (r.error) throw r.error; return r.data; })
         ),
       ]);
-      const categoriesById = new Map((catRes.data ?? []).map((cat) => [cat.id, cat.name]));
-      if (catRes.data) setCategories(catRes.data);
-      if (prodRes.data) setProducts((prodRes.data as Product[]).map((item: Product) => ({
-        ...item,
-        category_id: item.category_id ?? "",
-        category_name: categoriesById.get(item.category_id ?? "") ?? null,
-      })));
+      if (cancelled) return;
+      if (catRes.data || prodRes.data) {
+        apply(
+          (catRes.data as Category[] | null) ?? cachedCats ?? [],
+          (prodRes.data as ShopProduct[] | null) ?? cachedProds ?? []
+        );
+      }
       setLoading(false);
     };
     load();
+    return () => {
+      cancelled = true;
+    };
   }, []);
 
   const filtered = useMemo(() => {

@@ -16,7 +16,7 @@ import {
   AdminCard,
   AdminCardTitle,
   AdminEmptyState,
-  AdminLoading,
+  AdminStatsSkeleton,
   AdminSectionHeader,
   AdminStat,
   AdminTable,
@@ -30,6 +30,7 @@ import {
 interface Stats {
   products: number;
   lowStock: number;
+  outOfStock: number;
   ordersToday: number;
   ordersPending: number;
   revenueMonth: number;
@@ -103,7 +104,7 @@ export function AdminDashboard() {
   const { permissions } = useAuth();
   const [loaded, setLoaded] = useState(false);
   const [stats, setStats] = useState<Stats>({
-    products: 0, lowStock: 0, ordersToday: 0, ordersPending: 0,
+    products: 0, lowStock: 0, outOfStock: 0, ordersToday: 0, ordersPending: 0,
     revenueMonth: 0, costsMonth: 0, customers: 0,
     visitsToday: 0, unique7d: 0, visits7d: 0,
   });
@@ -143,6 +144,7 @@ export function AdminDashboard() {
 
       const activeProducts = (products ?? []).filter((p: DashboardProduct) => p.is_active);
       const lowStock = activeProducts.filter((p: DashboardProduct) => (p.stock ?? 0) <= (p.low_stock_threshold ?? 5)).length;
+      const outOfStock = activeProducts.filter((p: DashboardProduct) => (p.stock ?? 0) <= 0).length;
       const revenue = (ordersMonth ?? []).reduce((s, o: DashboardOrder) => {
         // Si el pedido fue en CUP, lo convertimos a USD para la analítica consolidada
         if (o.payment_currency === "CUP") {
@@ -165,6 +167,7 @@ export function AdminDashboard() {
       setStats({
         products: pCount ?? 0,
         lowStock,
+        outOfStock,
         ordersToday: (ordersToday ?? []).length,
         ordersPending: (pendingOrders ?? []).length,
         revenueMonth: revenue,
@@ -232,7 +235,16 @@ export function AdminDashboard() {
   ];
 
   if (!loaded) {
-    return <AdminLoading label="Cargando resumen…" />;
+    return (
+      <div className="animate-fade-in space-y-6">
+        <AdminSectionHeader
+          icon={LayoutDashboard}
+          title="Resumen"
+          description="El pulso de tu negocio: ventas, pedidos y stock de un vistazo."
+        />
+        <AdminStatsSkeleton count={8} />
+      </div>
+    );
   }
 
   return (
@@ -254,6 +266,40 @@ export function AdminDashboard() {
             tone={c.tone}
           />
         ))}
+      </div>
+
+      {/* Tasa vigente y agotados: lo que más se consulta en el día a día.
+          La tasa sale del mismo hook que usa toda la tienda (sin queries
+          nuevas); los agotados se cuentan del query de productos de arriba. */}
+      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+        <AdminStat
+          icon={DollarSign}
+          label="Tasa USD hoy"
+          value={rateValue > 0 ? formatCUP(rateValue) : "—"}
+          sub={rateMissing ? "Falta registrar la de hoy" : "elTOQUE · vigente"}
+          tone="violet"
+        />
+        <AdminStat
+          icon={TrendingUp}
+          label="Tasa EUR hoy"
+          value={rate?.eur_to_cup ? formatCUP(rate.eur_to_cup) : "—"}
+          sub="Sin extra en euros"
+          tone="violet"
+        />
+        <AdminStat
+          icon={Wallet}
+          label="Extra en cargadores"
+          value={rate ? `+${formatCUP(rate.extra_cup_chargers)}` : "—"}
+          sub="Por cada USD, solo en CUP"
+          tone="slate"
+        />
+        <AdminStat
+          icon={Package}
+          label="Sin stock"
+          value={stats.outOfStock}
+          sub="Productos agotados"
+          tone="rose"
+        />
       </div>
 
       {permissions.can_view_finances && (

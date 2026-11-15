@@ -18,6 +18,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Eye, Trash2, Shield, ShoppingBag, UserCog, Map, Users, Search, Wallet } from "lucide-react";
 import { UserRole } from "@/types";
+import { ADMIN_CACHE_KEYS, getAdminCache, setAdminCache } from "@/lib/admin-cache";
 import {
   AdminCard,
   AdminSectionHeader,
@@ -87,31 +88,41 @@ function initialOf(c: Customer): string {
 
 export function AdminCustomers() {
   const { permissions } = useAuth();
-  const [customers, setCustomers] = useState<Customer[]>([]);
+  // Caché en memoria: al volver a la pestaña, la lista pinta al instante
+  // y se refresca en segundo plano (sin «Cargando…» bloqueante).
+  const [customers, setCustomers] = useState<Customer[]>(
+    () => getAdminCache<Customer[]>(ADMIN_CACHE_KEYS.customers) ?? []
+  );
   const [history, setHistory] = useState<OrderHistory[]>([]);
   const [viewing, setViewing] = useState<Customer | null>(null);
   const [perms, setPerms] = useState<AdminPerms | null>(null);
   const [messengerProfile, setMessengerProfile] = useState<MessengerProfile | null>(null);
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(
+    () => !getAdminCache<Customer[]>(ADMIN_CACHE_KEYS.customers)
+  );
   const [query, setQuery] = useState("");
 
-  const load = async () => {
-    setLoading(true);
+  const load = async (silent = false) => {
+    if (!silent) setLoading(true);
     const [{ data: profiles }, { data: roles }] = await Promise.all([
       supabase.from("profiles").select("id,full_name,username,phone,created_at").order("created_at", { ascending: false }),
       supabase.from("user_roles").select("user_id, role")
     ]);
-    
+
     const combined = (profiles ?? []).map(p => ({
       ...p,
       role: roles?.find(r => r.user_id === p.id)?.role as UserRole || "user"
     }));
-    
+
     setCustomers(combined as Customer[]);
+    setAdminCache(ADMIN_CACHE_KEYS.customers, combined as Customer[]);
     setLoading(false);
   };
 
-  useEffect(() => { load(); }, []);
+  useEffect(() => {
+    void load(!!getAdminCache<Customer[]>(ADMIN_CACHE_KEYS.customers));
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const openCustomer = async (c: Customer) => {
     setViewing(c);
@@ -155,7 +166,7 @@ export function AdminCustomers() {
       setPerms(data);
     }
     toast.success("Permisos actualizados");
-    load();
+    void load(true);
   };
 
   const updateRole = async (newRole: UserRole) => {
@@ -176,7 +187,7 @@ export function AdminCustomers() {
 
       setViewing({ ...viewing, role: newRole });
       toast.success(`Rol actualizado a ${newRole}`);
-      load();
+      void load(true);
     } catch (error: unknown) {
       const msg =
         error instanceof Error ? error.message
@@ -208,7 +219,7 @@ export function AdminCustomers() {
 
       toast.success("Cliente eliminado exitosamente.");
       setViewing(null);
-      load(); // Reload the customer list
+      void load(true); // Refresca la lista en segundo plano
     } catch (error: unknown) {
       toast.error("Error al eliminar cliente: " + (error instanceof Error ? error.message : String(error)));
     }

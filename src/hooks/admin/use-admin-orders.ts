@@ -1,24 +1,43 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Order, OrderStatus } from "@/types";
 import { toast } from "sonner";
+import { ADMIN_CACHE_KEYS, getAdminCache, setAdminCache } from "@/lib/admin-cache";
 
+/**
+ * Pedidos del panel con caché en memoria y mutaciones locales.
+ * Cambiar el estado de un pedido o eliminarlo ya NO recarga la lista
+ * completa: se aplica en memoria en cuanto la BD confirma. Al volver a
+ * la pestaña, la lista pinta al instante desde la caché y el realtime
+ * refresca en segundo plano sin bloquear.
+ */
 export function useAdminOrders() {
-  const [orders, setOrders] = useState<Order[]>([]);
-  const [loading, setLoading] = useState(true);
+  const cached = getAdminCache<Order[]>(ADMIN_CACHE_KEYS.orders);
+  const [orders, setOrdersState] = useState<Order[]>(cached ?? []);
+  const [loading, setLoading] = useState(!cached);
+  const hasData = useRef(!!cached);
 
-  const load = async () => {
-    setLoading(true);
+  const setOrders = useCallback((next: Order[]) => {
+    hasData.current = true;
+    setOrdersState(next);
+    setAdminCache(ADMIN_CACHE_KEYS.orders, next);
+  }, []);
+
+  const load = useCallback(async () => {
+    // Si ya hay datos pintados, el refresco es silencioso (sin spinner).
+    if (!hasData.current) setLoading(true);
     try {
       const { data, error } = await supabase.from("orders").select("*").order("created_at", { ascending: false });
       if (error) throw error;
-      setOrders(data ?? []);
+      setOrders((data ?? []) as Order[]);
     } catch (error: unknown) {
-      toast.error(error instanceof Error ? error.message : String(error));
+      if (!hasData.current) {
+        toast.error(error instanceof Error ? error.message : String(error));
+      }
     } finally {
       setLoading(false);
     }
-  };
+  }, [setOrders]);
 
   useEffect(() => {
     load();
@@ -29,7 +48,7 @@ export function useAdminOrders() {
     return () => {
       supabase.removeChannel(channel);
     };
-  }, []);
+  }, [load]);
 
   const updateStatus = async (id: string, status: OrderStatus) => {
     const { error } = await supabase.from("orders").update({ status }).eq("id", id);
@@ -37,8 +56,12 @@ export function useAdminOrders() {
       toast.error(error.message);
       return false;
     }
+    setOrdersState((prev) => {
+      const next = prev.map((o) => (o.id === id ? { ...o, status } : o));
+      setAdminCache(ADMIN_CACHE_KEYS.orders, next);
+      return next;
+    });
     toast.success("Estado actualizado");
-    await load();
     return true;
   };
 
@@ -48,8 +71,12 @@ export function useAdminOrders() {
       toast.error(error.message);
       return false;
     }
+    setOrdersState((prev) => {
+      const next = prev.filter((o) => o.id !== id);
+      setAdminCache(ADMIN_CACHE_KEYS.orders, next);
+      return next;
+    });
     toast.success("Pedido eliminado");
-    await load();
     return true;
   };
 
@@ -59,8 +86,13 @@ export function useAdminOrders() {
       toast.error(error.message);
       return false;
     }
+    const idSet = new Set(ids);
+    setOrdersState((prev) => {
+      const next = prev.filter((o) => !idSet.has(o.id));
+      setAdminCache(ADMIN_CACHE_KEYS.orders, next);
+      return next;
+    });
     toast.success("Pedidos eliminados");
-    await load();
     return true;
   };
 

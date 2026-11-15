@@ -27,13 +27,16 @@ import {
   useAdminPartners,
   type PartnerLocation,
 } from "@/hooks/admin/use-admin-partners";
-import { productSchema } from "@/lib/schemas";import {
+import { productSchema } from "@/lib/schemas";
+import { responsiveImage } from "@/lib/responsive-image";
+import {
   AdminSectionHeader,
   AdminFilters,
   AdminTable,
   AdminTableHead,
   AdminEmptyState,
-  AdminLoading,
+  AdminTableSkeleton,
+  AdminRefreshing,
   AdminCardTitle,
   StatusBadge,
   adminTh,
@@ -53,7 +56,7 @@ const empty: Partial<Product> = {
 };
 
 export function AdminProducts() {
-  const { products, categories, locations, loading, refresh, deleteProduct } = useAdminProducts();
+  const { products, categories, locations, loading, refreshing, deleteProduct, upsertLocal, patchLocal, removeLocal } = useAdminProducts();
   const {
     partners,
     needsMigration: partnersNeedMigration,
@@ -200,9 +203,18 @@ export function AdminProducts() {
     });
   };
 
+  /**
+   * Parche rápido (stock, visible, destacado): se pinta AL INSTANTE en la
+   * lista y se confirma contra la base de datos; si la BD falla, se
+   * revierte el valor anterior. Antes cada toque disparaba un refetch
+   * completo de productos + categorías + locales.
+   */
   const patchOne = async (id: string, patch: Partial<Product>) => {
+    const prev = products.find((x) => x.id === id);
+    patchLocal([id], patch);
     const { error } = await supabase.from("products").update(patch).eq("id", id);
     if (error) {
+      if (prev) patchLocal([id], prev);
       toast.error(error.message);
       return false;
     }
@@ -217,9 +229,9 @@ export function AdminProducts() {
       toast.error(error.message);
       return;
     }
+    patchLocal(ids, patch);
     toast.success(`Actualizados ${ids.length} productos`);
     setSelected(new Set());
-    refresh();
   };
 
   const bulkDelete = async () => {
@@ -230,9 +242,9 @@ export function AdminProducts() {
       toast.error(error.message);
       return;
     }
+    removeLocal(ids);
     toast.success(`Eliminados ${ids.length} productos`);
     setSelected(new Set());
-    refresh();
   };
 
   const duplicateProduct = async (p: Product) => {
@@ -246,10 +258,10 @@ export function AdminProducts() {
     } as Partial<Product>;
     delete base.created_at;
     delete base.updated_at;
-    const { error } = await supabase.from("products").insert(base);
+    const { data, error } = await supabase.from("products").insert(base).select().single();
     if (error) return toast.error(error.message);
+    if (data) upsertLocal(data as Product);
     toast.success("Producto duplicado (queda inactivo)");
-    refresh();
   };
 
   const exportCsv = () => {
@@ -361,14 +373,28 @@ export function AdminProducts() {
     }
 
     // Sync socios: precios, moneda/prioridad, stock por local y totales (stock = propio + socios)
+    let partnerTotal: number | null = null;
     if (productId && !partnersNeedMigration) {
-      const total = await saveProductPartnerData(productId, ownUnits, ppPrices, ppStock, ppMeta);
-      if (total === null) return;
+      partnerTotal = await saveProductPartnerData(productId, ownUnits, ppPrices, ppStock, ppMeta);
+      if (partnerTotal === null) return;
+    }
+
+    // La lista se actualiza en memoria con lo que se acaba de guardar:
+    // sin refetch, sin «Cargando productos…», el cambio se ve al instante.
+    if (productId) {
+      const previous = products.find((x) => x.id === productId);
+      const saved = {
+        ...(previous ?? {}),
+        ...payload,
+        id: productId,
+        stock: partnerTotal ?? payload.stock,
+        created_at: previous?.created_at ?? new Date().toISOString(),
+      } as unknown as Product;
+      upsertLocal(saved);
     }
 
     toast.success("Producto guardado");
     setDialogOpen(false);
-    refresh();
   };
 
   const hasFilters = search.trim() !== "" || categoryFilter !== "all" || statusFilter !== "all";
@@ -441,8 +467,8 @@ export function AdminProducts() {
         </div>
       </AdminFilters>
 
-      {loading ? (
-        <AdminLoading label="Cargando productos…" />
+      {loading && products.length === 0 ? (
+        <AdminTableSkeleton rows={8} cols={5} />
       ) : (
         <>
           {selected.size > 0 && (
@@ -506,8 +532,11 @@ export function AdminProducts() {
             />
           ) : (
             <>
-              <p className="text-sm text-muted-foreground">
-                {filtered.length} {filtered.length === 1 ? "producto" : "productos"}
+              <p className="flex items-center gap-3 text-sm text-muted-foreground">
+                <span>
+                  {filtered.length} {filtered.length === 1 ? "producto" : "productos"}
+                </span>
+                {refreshing && <AdminRefreshing />}
               </p>
               <AdminTable>
                 <AdminTableHead>
@@ -553,7 +582,12 @@ export function AdminProducts() {
                           <div className="flex items-center gap-3">
                             <div className="flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted">
                               {img ? (
-                                <img src={img} alt="" className="h-full w-full object-cover" />
+                                <img
+                                  src={responsiveImage(img, "96px", [200]).src}
+                                  alt=""
+                                  loading="lazy"
+                                  className="h-full w-full object-cover"
+                                />
                               ) : (
                                 <ImageIcon className="h-5 w-5 text-muted-foreground" />
                               )}
@@ -575,7 +609,6 @@ export function AdminProducts() {
                               onChange={async (e) => {
                                 const v = Number(e.target.value);
                                 await patchOne(p.id, { stock: v });
-                                refresh();
                               }}
                               className={isLow ? "h-10 w-24 border-destructive" : "h-10 w-24"}
                             />
@@ -588,8 +621,7 @@ export function AdminProducts() {
                               <Switch
                                 checked={!!p.is_active}
                                 onCheckedChange={async (v) => {
-                                  const ok = await patchOne(p.id, { is_active: v });
-                                  if (ok) refresh();
+                                  await patchOne(p.id, { is_active: v });
                                 }}
                               />
                               <StatusBadge tone={p.is_active ? "neutral" : "info"}>
@@ -600,8 +632,7 @@ export function AdminProducts() {
                               <Switch
                                 checked={!!p.is_featured}
                                 onCheckedChange={async (v) => {
-                                  const ok = await patchOne(p.id, { is_featured: v });
-                                  if (ok) refresh();
+                                  await patchOne(p.id, { is_featured: v });
                                 }}
                               />
                               <span className="inline-flex items-center gap-1">
@@ -928,7 +959,7 @@ export function AdminProducts() {
                 <div className="grid grid-cols-3 gap-3 sm:grid-cols-4">
                   {(editing.images ?? []).map((url, i) => (
                     <div key={i} className={`relative aspect-square overflow-hidden rounded-xl border-2 ${(editing.main_image_index ?? 0) === i ? "border-primary" : "border-border"}`}>
-                      <img src={url} alt="" className="h-full w-full object-cover" />
+                      <img src={responsiveImage(url, "200px", [400]).src} alt="" loading="lazy" className="h-full w-full object-cover" />
                       <button type="button" onClick={() => removeImage(i)} className="absolute right-1 top-1 flex h-6 w-6 items-center justify-center rounded-full bg-destructive text-destructive-foreground"><X className="h-3 w-3" /></button>
                       <button type="button" onClick={() => setEditing({ ...editing, main_image_index: i })} className="absolute bottom-1 left-1 right-1 rounded bg-background/80 px-1 py-0.5 text-[10px]">
                         {(editing.main_image_index ?? 0) === i ? "Principal" : "Hacer principal"}

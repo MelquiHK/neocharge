@@ -27,6 +27,8 @@ import {
   Bell,
   CheckCheck,
   Share2,
+  Zap,
+  LayoutGrid,
 } from "lucide-react";
 import { AdminDashboard } from "@/components/admin/AdminDashboard";
 import { AdminProducts } from "@/components/admin/AdminProducts";
@@ -91,8 +93,8 @@ const Admin = () => {
     return (
       <div className="flex min-h-screen items-center justify-center bg-slate-950">
         <div className="flex flex-col items-center gap-5">
-          <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-3xl bg-gradient-primary font-display text-3xl font-bold text-white shadow-glow">
-            N
+          <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-3xl bg-gradient-primary text-white shadow-glow">
+            <Zap className="h-8 w-8" strokeWidth={2.5} fill="currentColor" />
           </div>
           <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/15 border-t-primary" />
           <p className="text-sm text-slate-400">Abriendo tu panel…</p>
@@ -174,8 +176,8 @@ const Admin = () => {
   const activeTabInfo = allTabs.find((t) => t.v === activeTab) || allTabs[0];
   const ActiveIcon = activeTabInfo.icon;
 
-  const renderContent = () => {
-    switch (activeTab) {
+  const renderContent = (tab: string) => {
+    switch (tab) {
       case "dashboard": return <AdminDashboard />;
       case "orders": return <AdminOrders />;
       case "products": return <AdminProducts />;
@@ -206,13 +208,47 @@ const Admin = () => {
     }
   };
 
+  // Pestaña efectiva: si el hash trae una sin permiso o inexistente, se
+  // cae a la primera disponible (mismo comportamiento que el switch de
+  // antes, que terminaba en el Resumen).
+  const effectiveTab = allTabs.some((t) => t.v === activeTab)
+    ? activeTab
+    : allTabs[0]?.v ?? "dashboard";
+
+  // Pestañas que se quedan MONTADAS tras visitarlas: volver a ellas es
+  // instantáneo, con filtros, búsqueda y scroll intactos (y sus hooks
+  // sirven la caché en memoria). Resumen y Mensajería quedan fuera: el
+  // Resumen se recarga fresco en cada visita y Mensajería usa mapas en
+  // vivo que no deben vivir ocultos.
+  const KEEP_ALIVE_TABS = new Set([
+    "orders", "products", "categories", "services", "locations", "socios",
+    "customers", "rates", "settings", "blog", "sales", "referrals",
+    "analytics", "cashbox",
+  ]);
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set([effectiveTab]));
+  useEffect(() => {
+    setVisitedTabs((prev) =>
+      prev.has(effectiveTab) ? prev : new Set(prev).add(effectiveTab)
+    );
+  }, [effectiveTab]);
+
+  // Acceso rápido móvil (una mano): las 4 secciones de uso diario que el
+  // usuario tenga permitidas + botón «Más» que abre el menú completo.
+  const quickOrder = ["dashboard", "orders", "products", "sales"];
+  const quickTabs = [
+    ...quickOrder
+      .map((v) => allTabs.find((t) => t.v === v))
+      .filter((t): t is (typeof allTabs)[number] => !!t),
+    ...allTabs.filter((t) => !quickOrder.includes(t.v)),
+  ].slice(0, 4);
+
   const SidebarContent = () => (
     <div className="flex h-full flex-col bg-slate-950 text-slate-200">
       {/* Marca */}
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
         <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-primary font-display text-xl font-bold text-white shadow-glow">
-            N
+          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-primary text-white shadow-glow">
+            <Zap className="h-5 w-5" strokeWidth={2.5} fill="currentColor" />
           </div>
           <div>
             <p className="font-display text-base font-bold leading-none text-white">NeoCharge</p>
@@ -253,18 +289,24 @@ const Admin = () => {
             <div className="space-y-1">
               {g.items.map((t) => {
                 const Icon = t.icon;
-                const isActive = activeTab === t.v;
+                const isActive = effectiveTab === t.v;
                 return (
                   <button
                     key={t.v}
                     onClick={() => goTo(t.v)}
                     className={cn(
-                      "group flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                      "group relative flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
                       isActive
-                        ? "bg-primary font-semibold text-white shadow-lg shadow-primary/25"
+                        ? "bg-gradient-primary font-semibold text-white shadow-glow"
                         : "text-slate-400 hover:bg-white/5 hover:text-white"
                     )}
                   >
+                    <span
+                      className={cn(
+                        "absolute left-0 top-1/2 h-5 w-1 -translate-y-1/2 rounded-full bg-white/90 transition-opacity",
+                        isActive ? "opacity-100" : "opacity-0"
+                      )}
+                    />
                     <span className="flex items-center gap-3">
                       <Icon
                         className={cn(
@@ -430,16 +472,72 @@ const Admin = () => {
           </div>
         </header>
 
-        {/* Contenido desplazable */}
+        {/* Contenido desplazable: cada pestaña visitada queda montada y
+            solo se oculta (hidden), así volver a ella no recarga nada. */}
         <main className="flex-1 overflow-y-auto">
-          <div
-            key={activeTab}
-            className="mx-auto max-w-[1440px] animate-fade-in space-y-6 px-4 py-6 sm:px-6 lg:px-8 lg:py-8"
-          >
-            {renderContent()}
-          </div>
+          {allTabs
+            .filter((t) => visitedTabs.has(t.v))
+            .map((t) => {
+              const isActive = t.v === effectiveTab;
+              if (!isActive && !KEEP_ALIVE_TABS.has(t.v)) return null;
+              return (
+                <div
+                  key={t.v}
+                  hidden={!isActive}
+                  className="mx-auto max-w-[1440px] animate-fade-in space-y-6 px-4 pb-24 pt-6 sm:px-6 lg:px-8 lg:pb-10 lg:pt-8"
+                >
+                  {renderContent(t.v)}
+                </div>
+              );
+            })}
         </main>
       </div>
+
+      {/* Acceso rápido móvil: pulgar, sin abrir el menú lateral */}
+      <nav
+        className="fixed inset-x-0 bottom-0 z-40 border-t border-white/10 bg-slate-950/95 pb-[env(safe-area-inset-bottom)] backdrop-blur-xl lg:hidden"
+        aria-label="Acceso rápido"
+      >
+        <div className="grid grid-cols-5">
+          {quickTabs.map((t) => {
+            const Icon = t.icon;
+            const isActive = effectiveTab === t.v;
+            return (
+              <button
+                key={t.v}
+                onClick={() => goTo(t.v)}
+                className={cn(
+                  "relative flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition-colors",
+                  isActive ? "text-white" : "text-slate-500 hover:text-slate-300"
+                )}
+              >
+                <span
+                  className={cn(
+                    "absolute inset-x-8 top-0 h-0.5 rounded-full bg-gradient-primary transition-opacity",
+                    isActive ? "opacity-100" : "opacity-0"
+                  )}
+                />
+                <span className="relative">
+                  <Icon className={cn("h-5 w-5", isActive && "text-primary")} />
+                  {t.badge ? (
+                    <span className="absolute -right-2.5 -top-1 flex h-4 min-w-4 items-center justify-center rounded-full bg-red-500 px-1 text-[9px] font-bold text-white">
+                      {t.badge > 99 ? "99+" : t.badge}
+                    </span>
+                  ) : null}
+                </span>
+                {t.l}
+              </button>
+            );
+          })}
+          <button
+            onClick={() => setSidebarOpen(true)}
+            className="flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold text-slate-500 transition-colors hover:text-slate-300"
+          >
+            <LayoutGrid className="h-5 w-5" />
+            Más
+          </button>
+        </div>
+      </nav>
     </div>
   );
 };

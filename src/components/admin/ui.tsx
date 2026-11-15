@@ -219,3 +219,53 @@ export function AdminLoading({ label = "Cargando…" }: { label?: string }) {
     </div>
   );
 }
+
+/** Esqueleto de tabla: se usa SOLO en la primera carga, cuando aún no hay
+ *  ningún dato que pintar (después la sección sirve la caché al instante). */
+export function AdminTableSkeleton({ rows = 6, cols = 5 }: { rows?: number; cols?: number }) {
+  return (
+    <div className="overflow-hidden rounded-2xl border border-border/60" aria-hidden>
+      <div className="space-y-0">
+        {Array.from({ length: rows }).map((_, r) => (
+          <div
+            key={r}
+            className="flex items-center gap-4 border-t border-border/60 px-4 py-3.5 first:border-t-0"
+          >
+            {Array.from({ length: cols }).map((_, c) => (
+              <div
+                key={c}
+                className="h-4 animate-pulse rounded-md bg-muted"
+                style={{ width: c === 0 ? "22%" : `${Math.max(8, 18 - c * 2)}%` }}
+              />
+            ))}
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+/** Esqueleto de tarjetas de métricas (Resumen) para la primera carga. */
+export function AdminStatsSkeleton({ count = 8 }: { count?: number }) {
+  return (
+    <div className="grid grid-cols-2 gap-4 lg:grid-cols-4" aria-hidden>
+      {Array.from({ length: count }).map((_, i) => (
+        <div key={i} className="rounded-2xl border border-border/60 bg-card p-4 shadow-soft">
+          <div className="h-3 w-2/3 animate-pulse rounded-md bg-muted" />
+          <div className="mt-3 h-7 w-1/2 animate-pulse rounded-md bg-muted" />
+          <div className="mt-2 h-3 w-1/3 animate-pulse rounded-md bg-muted" />
+        </div>
+      ))}
+    </div>
+  );
+}
+
+/** Indicador discreto de refresco en segundo plano (nunca bloquea). */
+export function AdminRefreshing() {
+  return (
+    <span className="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
+      <Loader2 className="h-3.5 w-3.5 animate-spin text-primary" />
+      Actualizando…
+    </span>
+  );
+}

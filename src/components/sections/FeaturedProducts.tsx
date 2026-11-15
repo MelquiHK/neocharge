@@ -4,7 +4,7 @@ import { ArrowRight } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ProductCard, type Product } from "@/components/ProductCard";
 import { getSupabase } from "@/integrations/supabase/lazy-client";
-import { fetchWithCache, CACHE_KEYS } from "@/lib/offline-cache";
+import { fetchWithCache, loadFromCache, CACHE_KEYS } from "@/lib/offline-cache";
 import { useReveal } from "@/hooks/use-reveal";
 import { cn } from "@/lib/utils";
 
@@ -16,6 +16,13 @@ export function FeaturedProducts() {
   useEffect(() => {
     let cancelled = false;
     const load = async () => {
+      // Primera pintura desde la caché local si ya hay destacados
+      // guardados: la portada no espera a la red para mostrar productos.
+      const cached = await loadFromCache<Product[]>(CACHE_KEYS.featured);
+      if (!cancelled && cached && cached.length > 0) {
+        setProducts(cached);
+        setLoading(false);
+      }
       const supabase = await getSupabase();
       const { data } = await fetchWithCache(CACHE_KEYS.featured, () =>
         supabase

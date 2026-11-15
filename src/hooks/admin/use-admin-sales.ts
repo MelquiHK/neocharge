@@ -1,16 +1,30 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/hooks/use-auth";
 import type { SellerSale } from "@/lib/sales";
 import type { TablesInsert, TablesUpdate } from "@/integrations/supabase/types";
+import { ADMIN_CACHE_KEYS, getAdminCache, setAdminCache } from "@/lib/admin-cache";
 
 export function useAdminSales() {
   const { user, permissions } = useAuth();
-  const [sales, setSales] = useState<SellerSale[]>([]);
-  const [loading, setLoading] = useState(true);
+  // Caché en memoria por usuario y rol (el dueño ve todo; el gestor, lo
+  // suyo): al volver a la pestaña la lista pinta al instante y la carga
+  // pasa en segundo plano. Las mutaciones ya actualizaban en local; ahora
+  // además dejan la caché al día.
+  const cacheKey = `${ADMIN_CACHE_KEYS.sales}:${user?.id ?? "anon"}:${permissions.is_owner ? "owner" : "seller"}`;
+  const [sales, setSales] = useState<SellerSale[]>(
+    () => getAdminCache<SellerSale[]>(cacheKey) ?? []
+  );
+  const [loading, setLoading] = useState(() => !getAdminCache<SellerSale[]>(cacheKey));
+  const hasData = useRef(!!getAdminCache<SellerSale[]>(cacheKey));
+  const loadOk = useRef(false);
+
+  useEffect(() => {
+    if (loadOk.current) setAdminCache(cacheKey, sales);
+  }, [sales, cacheKey]);
 
   const load = useCallback(async () => {
-    setLoading(true);
+    if (!hasData.current) setLoading(true);
 
     let query = supabase.from("seller_sales").select("*");
 
@@ -21,8 +35,10 @@ export function useAdminSales() {
     const { data, error } = await query.order("created_at", { ascending: false });
     if (error) {
       console.error("Load sales error:", error);
-      setSales([]);
+      if (!hasData.current) setSales([]);
     } else {
+      hasData.current = true;
+      loadOk.current = true;
       setSales(data ?? []);
     }
     setLoading(false);

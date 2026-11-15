@@ -2,6 +2,11 @@
 // maps.app.goo.gl, etc.) siguiendo los redirects y devolviendo la URL final.
 // La calculadora pública la usa cuando el cliente pega un enlace corto que
 // no contiene las coordenadas directamente.
+//
+// OJO: va como módulo ES (export default) porque el package.json del
+// proyecto trae "type": "module"; con module.exports la función moría al
+// arrancar en producción (FUNCTION_INVOCATION_FAILED) — corregido el
+// 2026-11-15. La lógica y el contrato ({ finalUrl } / { error }) no cambian.
 
 const ALLOWED_HOSTS = [
   "goo.gl",
@@ -17,7 +22,7 @@ function isAllowedHost(host) {
   return ALLOWED_HOSTS.some((a) => h === a || h.endsWith("." + a));
 }
 
-module.exports = async (req, res) => {
+export default async (req, res) => {
   const raw = req.query && req.query.url;
   if (!raw || typeof raw !== "string") {
     res.status(400).json({ error: "Falta el parámetro url" });
