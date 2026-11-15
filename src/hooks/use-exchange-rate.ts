@@ -16,6 +16,13 @@ export interface ExchangeRate {
 let cached: ExchangeRate | null = null;
 let inflight: Promise<ExchangeRate | null> | null = null;
 
+/** La tasa de elTOQUE cambia a diario: el caché se considera fresco solo
+ * 1 hora y el respaldo offline caduca a las 24 horas. Antes el respaldo
+ * no tenía tope y la tienda podía enseñar una tasa de hacía días (pasó
+ * con la de 910 del 11/11, que siguió saliendo tras subir a 915 y 917). */
+const RATE_MAX_AGE_MS = 60 * 60 * 1000; // 1 hora
+const RATE_STALE_MAX_AGE_MS = 24 * 60 * 60 * 1000; // 24 horas
+
 /**
  * Invalida la tasa cacheada (llamar después de actualizarla en el admin).
  * La próxima lectura trae el valor fresco de la BD.
@@ -82,7 +89,7 @@ async function fetchRate(): Promise<ExchangeRate | null> {
         rate_date: String(row.rate_date),
         eur_to_cup: Number.isFinite(eur) && eur > 0 ? eur : null,
       } as ExchangeRate;
-    });
+    }, RATE_MAX_AGE_MS, RATE_STALE_MAX_AGE_MS);
     if (data) cached = data;
     return cached;
   })();

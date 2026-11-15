@@ -112,10 +112,15 @@ export async function seedFromBundle(): Promise<void> {
 
 /**
  * Lee el caché sin importar su antigüedad (último recurso offline).
+ * Si se pasa maxAgeMs, el respaldo también caduca: pasado ese tope se
+ * devuelve null en vez de un dato demasiado viejo (lo usa la tasa de
+ * cambio, que cambia a diario y no debe servirse vencida sin límite).
  */
-async function loadStale<T>(key: string): Promise<T | null> {
+async function loadStale<T>(key: string, maxAgeMs?: number): Promise<T | null> {
   const rec = await readWithMigration<T>(key);
-  return rec ? rec.value : null;
+  if (!rec) return null;
+  if (maxAgeMs != null && Date.now() - rec.savedAt > maxAgeMs) return null;
+  return rec.value;
 }
 
 export interface CachedResult<T> {
@@ -132,11 +137,13 @@ export async function fetchWithCache<T>(
   key: string,
   fetcher: () => Promise<T | null | undefined>,
   maxAgeMs: number = DEFAULT_MAX_AGE,
+  staleMaxAgeMs?: number,
 ): Promise<CachedResult<T>> {
   // Sin conexión: ir directo al caché, sin intentar la red.
   // Se acepta aunque esté vencido: datos viejos > pantalla vacía.
+  // (Si la clave define staleMaxAgeMs, ni siquiera el respaldo es eterno.)
   if (typeof navigator !== "undefined" && !navigator.onLine) {
-    return { data: await loadStale<T>(key), fromCache: true };
+    return { data: await loadStale<T>(key, staleMaxAgeMs), fromCache: true };
   }
   try {
     const data = await fetcher();
@@ -146,7 +153,7 @@ export async function fetchWithCache<T>(
     }
     throw new Error("empty response");
   } catch {
-    return { data: (await loadFromCache<T>(key, maxAgeMs)) ?? (await loadStale<T>(key)), fromCache: true };
+    return { data: (await loadFromCache<T>(key, maxAgeMs)) ?? (await loadStale<T>(key, staleMaxAgeMs)), fromCache: true };
   }
 }
 

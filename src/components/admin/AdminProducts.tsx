@@ -899,7 +899,6 @@ export function AdminProducts() {
                       <SelectTrigger className="h-11"><SelectValue /></SelectTrigger>
                       <SelectContent>
                         <SelectItem value="charger">Cargador (24 a 48 horas, prueba + cambio)</SelectItem>
-                        <SelectItem value="charger-1w">Cargador (24 a 48 horas de garantía)</SelectItem>
                         <SelectItem value="electronics">Electrónica (prueba en local, sin devolución)</SelectItem>
                         <SelectItem value="no-warranty">Sin garantía</SelectItem>
                       </SelectContent>
