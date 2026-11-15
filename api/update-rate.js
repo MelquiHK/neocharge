@@ -12,6 +12,10 @@
 //
 // El secreto NUNCA va en el código: sale de las variables de entorno
 // RATE_UPDATE_SECRET o CRON_SECRET.
+//
+// OJO: va como módulo ES (export default) porque el package.json del
+// proyecto trae "type": "module"; con module.exports la función muere
+// al arrancar (ese es el fallo que ya tenía api/resolve-link.js).
 
 const ELTOQUE_URL = "https://eltoque.com/tasas-de-cambio-cuba";
 const SUPABASE_URL =
@@ -151,7 +155,7 @@ async function callRpc(usd, eur, source) {
   };
 }
 
-module.exports = async (req, res) => {
+export default async function handler(req, res) {
   res.setHeader("Cache-Control", "no-store");
 
   if (!isAuthorized(req)) {
@@ -199,4 +203,4 @@ module.exports = async (req, res) => {
       .status(502)
       .json({ ok: false, error: "rpc_unreachable", detail: String(e).slice(0, 200) });
   }
-};
+}
