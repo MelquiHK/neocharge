@@ -3,6 +3,11 @@
   "regions": ["iad1"],
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "crons": [
+    { "path": "/api/update-rate", "schedule": "15 14 * * *" },
+    { "path": "/api/update-rate", "schedule": "15 19 * * *" },
+    { "path": "/api/update-rate", "schedule": "15 0 * * *" }
+  ],
   "rewrites": [
     {
       "source": "/((?!assets/|favicon\\.ico|robots\\.txt|manifest\\.webmanifest|registerSW\\.js|sw\\.js).*)",
