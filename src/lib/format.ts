@@ -13,6 +13,23 @@ export function formatCUP(value: number) {
   return `${new Intl.NumberFormat("es-CU", { maximumFractionDigits: 0 }).format(Math.round(value))} CUP`;
 }
 
+/**
+ * Formatea una TASA de cambio (CUP por USD/EUR) con su valor exacto:
+ * entera cuando no tiene decimales (920 CUP) y con dos decimales cuando
+ * los tiene (997,50 CUP). `formatCUP` redondea siempre, y una tasa como
+ * la EUR de elTOQUE (997.50) se mostraba como «998» en el Resumen.
+ */
+export function formatRate(value: number | null | undefined) {
+  if (value == null) return "—";
+  const v = Number(value);
+  if (!Number.isFinite(v)) return "—";
+  const hasDecimals = Number.isFinite(v) && Math.abs(v - Math.round(v)) > 0.0001;
+  return `${new Intl.NumberFormat("es-CU", {
+    minimumFractionDigits: hasDecimals ? 2 : 0,
+    maximumFractionDigits: 2,
+  }).format(v)} CUP`;
+}
+
 /** Formatea un monto en euros ("€45,50"). */
 export function formatEUR(value: number) {
   return new Intl.NumberFormat("es-CU", {

@@ -224,7 +224,7 @@ export function AdminOrders() {
 
       <AdminFilters>
         <Select value={filter} onValueChange={setFilter}>
-          <SelectTrigger className="h-10 w-full sm:w-48"><SelectValue /></SelectTrigger>
+          <SelectTrigger className="h-11 w-full sm:w-48"><SelectValue /></SelectTrigger>
           <SelectContent>
             <SelectItem value="all">Todos ({orders.length})</SelectItem>
             {STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.l}</SelectItem>)}
@@ -233,7 +233,7 @@ export function AdminOrders() {
         {selected.size > 0 && (
           <AlertDialog>
             <AlertDialogTrigger asChild>
-              <Button variant="destructive" size="sm" className="h-10"><Trash2 className="h-4 w-4" /> Eliminar {selected.size}</Button>
+              <Button variant="destructive" size="sm" className="h-11"><Trash2 className="h-4 w-4" /> Eliminar {selected.size}</Button>
             </AlertDialogTrigger>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -258,6 +258,61 @@ export function AdminOrders() {
           description={filter === "all" ? "Aún no se han registrado pedidos en la tienda." : "No hay pedidos con este estado. Prueba con otro filtro."}
         />
       ) : (
+        <>
+          {/* Móvil: tarjetas de pedido, sin scroll horizontal. La tabla
+              queda solo en escritorio (md:). */}
+          <div className="space-y-3 md:hidden">
+            {filtered.map((o) => (
+              <article key={o.id} className="space-y-3 rounded-3xl border border-border/60 bg-card p-4 shadow-soft">
+                <div className="flex items-start gap-2">
+                  <label className="-ml-2 flex h-11 w-11 shrink-0 cursor-pointer items-center justify-center" aria-label="Seleccionar pedido">
+                    <Checkbox
+                      className="h-6 w-6"
+                      checked={selected.has(o.id)}
+                      onCheckedChange={(v) => {
+                        const n = new Set(selected);
+                        if (v === true) n.add(o.id);
+                        else n.delete(o.id);
+                        setSelected(n);
+                      }}
+                    />
+                  </label>
+                  <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-primary/10 font-display text-sm font-bold text-primary">
+                    {(o.customer_name || "?").trim().charAt(0).toUpperCase()}
+                  </div>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-semibold">{o.customer_name}</p>
+                    <p className="text-xs text-muted-foreground">{o.customer_phone}</p>
+                  </div>
+                  <p className="shrink-0 font-display text-lg font-bold text-primary">
+                    {o.payment_currency === "EUR" && o.total_eur != null
+                      ? formatEUR(Number(o.total_eur))
+                      : o.payment_currency === "CUP" ? formatCUP(Number(o.total)) : formatPrice(Number(o.total))}
+                  </p>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
+                  {statusBadge(o.status)}
+                  <span>{o.delivery_method === "delivery" ? "🚚 Domicilio" : "🏪 Recoger"}</span>
+                  {o.location_link && (
+                    <a href={o.location_link} target="_blank" rel="noreferrer" className="flex h-8 w-8 items-center justify-center text-primary" aria-label="Ver ubicación">
+                      <MapPin className="h-4 w-4" />
+                    </a>
+                  )}
+                  <span className="ml-auto">{new Date(o.created_at).toLocaleString("es-CU")}</span>
+                </div>
+                <div className="flex gap-2">
+                  <Button variant="outline" className="h-11 flex-1" onClick={() => openView(o)}>
+                    <Eye className="h-4 w-4" /> Ver pedido
+                  </Button>
+                  <Select value={o.status} onValueChange={(v) => updateStatus(o.id, v as OrderStatus)}>
+                    <SelectTrigger className="h-11 flex-1" aria-label="Cambiar estado"><SelectValue /></SelectTrigger>
+                    <SelectContent>{STATUSES.map((s) => <SelectItem key={s.v} value={s.v}>{s.l}</SelectItem>)}</SelectContent>
+                  </Select>
+                </div>
+              </article>
+            ))}
+          </div>
+          <div className="hidden md:block">
         <AdminTable>
           <AdminTableHead>
             <tr>
@@ -329,6 +384,8 @@ export function AdminOrders() {
             ))}
           </tbody>
         </AdminTable>
+          </div>
+        </>
       )}
 
       <Dialog open={!!viewing} onOpenChange={(v) => !v && setViewing(null)}>
@@ -469,7 +526,7 @@ export function AdminOrders() {
           <DialogFooter className="gap-2">
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <Button variant="ghost" className="mr-auto h-10 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /> Eliminar</Button>
+                <Button variant="ghost" className="mr-auto h-11 text-destructive hover:text-destructive"><Trash2 className="h-4 w-4" /> Eliminar</Button>
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader><AlertDialogTitle>¿Eliminar pedido?</AlertDialogTitle>
@@ -480,8 +537,8 @@ export function AdminOrders() {
                 </AlertDialogFooter>
               </AlertDialogContent>
             </AlertDialog>
-            <Button variant="outline" className="h-10" onClick={saveOrderDetails}>Guardar cambios</Button>
-            <Button variant="hero" className="h-10" onClick={sendReceipt}><Send className="h-4 w-4" /> Enviar vale por WhatsApp</Button>
+            <Button variant="outline" className="h-11" onClick={saveOrderDetails}>Guardar cambios</Button>
+            <Button variant="hero" className="h-11" onClick={sendReceipt}><Send className="h-4 w-4" /> Enviar vale por WhatsApp</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

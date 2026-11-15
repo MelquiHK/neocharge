@@ -14,7 +14,7 @@ import {
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Switch } from "@/components/ui/switch";
 import {
-  Copy, Download, Plus, Pencil, Trash2, Image as ImageIcon, X, Star, Sparkles, CheckSquare, Square,
+  Copy, Download, Plus, Minus, Pencil, Trash2, Image as ImageIcon, X, Star, Sparkles, CheckSquare, Square,
   Package, Search, Tag, DollarSign, Layers, FolderTree, Eye, Store, QrCode, Handshake,
 } from "lucide-react";
 import { toast } from "sonner";
@@ -477,12 +477,12 @@ export function AdminProducts() {
                 <span className="font-semibold text-foreground">{selected.size}</span> seleccionados
               </p>
               <div className="flex flex-wrap gap-2">
-                <Button size="sm" className="h-10" variant="secondary" onClick={() => bulkPatch({ is_active: true })}>Activar</Button>
-                <Button size="sm" className="h-10" variant="secondary" onClick={() => bulkPatch({ is_active: false })}>Desactivar</Button>
-                <Button size="sm" className="h-10" variant="secondary" onClick={() => bulkPatch({ is_featured: true })}><Sparkles className="h-4 w-4" /> Destacar</Button>
-                <Button size="sm" className="h-10" variant="secondary" onClick={() => bulkPatch({ is_featured: false })}>Quitar destacado</Button>
+                <Button size="sm" className="h-11 lg:h-10" variant="secondary" onClick={() => bulkPatch({ is_active: true })}>Activar</Button>
+                <Button size="sm" className="h-11 lg:h-10" variant="secondary" onClick={() => bulkPatch({ is_active: false })}>Desactivar</Button>
+                <Button size="sm" className="h-11 lg:h-10" variant="secondary" onClick={() => bulkPatch({ is_featured: true })}><Sparkles className="h-4 w-4" /> Destacar</Button>
+                <Button size="sm" className="h-11 lg:h-10" variant="secondary" onClick={() => bulkPatch({ is_featured: false })}>Quitar destacado</Button>
                 <Select value={bulkCategoryId} onValueChange={setBulkCategoryId}>
-                  <SelectTrigger className="h-10 w-56"><SelectValue placeholder="Mover a categoría" /></SelectTrigger>
+                  <SelectTrigger className="h-11 w-full sm:w-56 lg:h-10"><SelectValue placeholder="Mover a categoría" /></SelectTrigger>
                   <SelectContent>
                     <SelectItem value="none">Sin categoría</SelectItem>
                     {categories.map((c) => <SelectItem key={c.id} value={c.id}>{c.name}</SelectItem>)}
@@ -490,7 +490,7 @@ export function AdminProducts() {
                 </Select>
                 <Button
                   size="sm"
-                  className="h-10"
+                  className="h-11 lg:h-10"
                   variant="secondary"
                   onClick={() => bulkPatch({ category_id: bulkCategoryId === "none" ? null : bulkCategoryId })}
                 >
@@ -498,7 +498,7 @@ export function AdminProducts() {
                 </Button>
                 <AlertDialog>
                   <AlertDialogTrigger asChild>
-                    <Button size="sm" className="h-10" variant="destructive"><Trash2 className="h-4 w-4" /> Eliminar</Button>
+                    <Button size="sm" className="h-11 lg:h-10" variant="destructive"><Trash2 className="h-4 w-4" /> Eliminar</Button>
                   </AlertDialogTrigger>
                   <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
                     <AlertDialogHeader>
@@ -538,6 +538,147 @@ export function AdminProducts() {
                 </span>
                 {refreshing && <AdminRefreshing />}
               </p>
+
+              {/* Móvil: cada producto como tarjeta cómoda de pulgar, sin
+                  scroll horizontal. La tabla ancha queda solo en escritorio. */}
+              <div className="space-y-3 md:hidden">
+                <div className="flex min-h-11 items-center gap-1 rounded-2xl border border-border/60 bg-card px-2 shadow-soft">
+                  <button
+                    type="button"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg"
+                    onClick={() => toggleSelectAll(!allSelectedOnPage)}
+                    aria-label="Seleccionar todo"
+                  >
+                    {allSelectedOnPage ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5" />}
+                  </button>
+                  <span className="text-sm font-medium">Seleccionar todo</span>
+                </div>
+                {filtered.map((p) => {
+                  const img = p.images?.[p.main_image_index ?? 0];
+                  const isLow = isLowStock(p);
+                  const stockValue = Number(p.stock ?? 0);
+                  const stockTone: "danger" | "warning" | "success" =
+                    stockValue <= 0 ? "danger" : isLow ? "warning" : "success";
+                  const stockLabel = stockValue <= 0 ? "Agotado" : isLow ? "Bajo" : "Disponible";
+                  return (
+                    <article key={p.id} className="space-y-3 rounded-3xl border border-border/60 bg-card p-4 shadow-soft">
+                      <div className="flex items-start gap-2">
+                        <button
+                          type="button"
+                          className="-ml-2 flex h-11 w-11 shrink-0 items-center justify-center rounded-lg"
+                          onClick={() => toggleSelectOne(p.id, !selected.has(p.id))}
+                          aria-label="Seleccionar producto"
+                        >
+                          {selected.has(p.id) ? <CheckSquare className="h-5 w-5 text-primary" /> : <Square className="h-5 w-5" />}
+                        </button>
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-xl bg-muted">
+                          {img ? (
+                            <img
+                              src={responsiveImage(img, "112px", [200]).src}
+                              alt=""
+                              loading="lazy"
+                              className="h-full w-full object-cover"
+                            />
+                          ) : (
+                            <ImageIcon className="h-6 w-6 text-muted-foreground" />
+                          )}
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <p className="font-semibold leading-snug">{p.name}</p>
+                          <p className="truncate font-mono text-xs text-muted-foreground">{p.slug}</p>
+                          <p className="mt-0.5 font-display text-lg font-bold text-primary">
+                            {formatPrice(Number(p.price))} {p.currency}
+                          </p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center justify-between gap-3">
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/70 transition-opacity disabled:opacity-40"
+                            disabled={stockValue <= 0}
+                            onClick={() => void patchOne(p.id, { stock: stockValue - 1 })}
+                            aria-label="Quitar uno de stock"
+                          >
+                            <Minus className="h-5 w-5" />
+                          </button>
+                          <Input
+                            type="number"
+                            value={stockValue}
+                            onChange={async (e) => {
+                              const v = Number(e.target.value);
+                              await patchOne(p.id, { stock: v });
+                            }}
+                            className="h-11 w-[4.5rem] text-center"
+                            aria-label="Stock"
+                          />
+                          <button
+                            type="button"
+                            className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/70"
+                            onClick={() => void patchOne(p.id, { stock: stockValue + 1 })}
+                            aria-label="Añadir uno de stock"
+                          >
+                            <Plus className="h-5 w-5" />
+                          </button>
+                        </div>
+                        <StatusBadge tone={stockTone}>{stockLabel}</StatusBadge>
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <label className="flex min-h-11 flex-1 items-center gap-2 text-sm">
+                          <Switch
+                            checked={!!p.is_active}
+                            onCheckedChange={async (v) => {
+                              await patchOne(p.id, { is_active: v });
+                            }}
+                          />
+                          {p.is_active ? "Visible" : "Oculto"}
+                        </label>
+                        <label className="flex min-h-11 flex-1 items-center gap-2 text-sm">
+                          <Switch
+                            checked={!!p.is_featured}
+                            onCheckedChange={async (v) => {
+                              await patchOne(p.id, { is_featured: v });
+                            }}
+                          />
+                          <span className="inline-flex items-center gap-1">
+                            <Star className="h-3.5 w-3.5" /> Destacado
+                          </span>
+                        </label>
+                      </div>
+
+                      <div className="flex gap-2">
+                        <Button variant="outline" className="h-11 flex-1" onClick={() => openEdit(p)}>
+                          <Pencil className="h-4 w-4" /> Editar
+                        </Button>
+                        <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" onClick={() => duplicateProduct(p)} aria-label="Duplicar">
+                          <Copy className="h-4 w-4" />
+                        </Button>
+                        <AlertDialog>
+                          <AlertDialogTrigger asChild>
+                            <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 text-destructive" aria-label="Eliminar">
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </AlertDialogTrigger>
+                          <AlertDialogContent className="max-h-[90vh] overflow-y-auto">
+                            <AlertDialogHeader>
+                              <AlertDialogTitle>¿Eliminar producto?</AlertDialogTitle>
+                              <AlertDialogDescription>Esto borrará "{p.name}" definitivamente.</AlertDialogDescription>
+                            </AlertDialogHeader>
+                            <AlertDialogFooter>
+                              <AlertDialogCancel className="h-11">Cancelar</AlertDialogCancel>
+                              <AlertDialogAction onClick={() => deleteProduct(p.id)} className="h-11 bg-destructive">Eliminar</AlertDialogAction>
+                            </AlertDialogFooter>
+                          </AlertDialogContent>
+                        </AlertDialog>
+                      </div>
+                    </article>
+                  );
+                })}
+              </div>
+
+              <div className="hidden md:block">
               <AdminTable>
                 <AdminTableHead>
                   <tr>
@@ -673,20 +814,24 @@ export function AdminProducts() {
                   })}
                 </tbody>
               </AdminTable>
+              </div>
             </>
           )}
         </>
       )}
 
       <Dialog open={dialogOpen} onOpenChange={setDialogOpen}>
-        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl">
-          <DialogHeader>
+        {/* En el teléfono el formulario es una hoja a pantalla completa:
+            encabezado fijo, cuerpo con scroll propio y barra de Guardar
+            fija abajo al alcance del pulgar. En escritorio, diálogo normal. */}
+        <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-3xl max-md:flex max-md:h-[100dvh] max-md:max-h-[100dvh] max-md:w-full max-md:max-w-full max-md:flex-col max-md:gap-0 max-md:overflow-hidden max-md:rounded-none max-md:border-0 max-md:p-0">
+          <DialogHeader className="max-md:shrink-0 max-md:px-4 max-md:pt-4 max-md:text-left">
             <DialogTitle>{editing?.id ? "Editar producto" : "Nuevo producto"}</DialogTitle>
             <DialogDescription>Completa la información del producto.</DialogDescription>
           </DialogHeader>
 
           {editing && (
-            <div className="space-y-6">
+            <div className="space-y-6 max-md:min-h-0 max-md:flex-1 max-md:overflow-y-auto max-md:px-4 max-md:py-4">
               {/* Datos básicos */}
               <section className="rounded-2xl border border-border/60 bg-muted/20 p-4">
                 <AdminCardTitle icon={Tag} title="Datos básicos" />
@@ -1032,9 +1177,9 @@ export function AdminProducts() {
             </div>
           )}
 
-          <DialogFooter>
-            <Button variant="ghost" className="h-11" onClick={() => setDialogOpen(false)}>Cancelar</Button>
-            <Button variant="hero" className="h-11" onClick={saveProduct}>Guardar</Button>
+          <DialogFooter className="max-md:shrink-0 max-md:flex-row max-md:gap-2 max-md:border-t max-md:border-border max-md:bg-background max-md:px-4 max-md:py-3 max-md:pb-[max(0.75rem,env(safe-area-inset-bottom))]">
+            <Button variant="ghost" className="h-11 max-md:flex-1" onClick={() => setDialogOpen(false)}>Cancelar</Button>
+            <Button variant="hero" className="h-11 max-md:flex-1" onClick={saveProduct}>Guardar</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

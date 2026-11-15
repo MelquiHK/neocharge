@@ -25,7 +25,7 @@ import {
 } from "./ui";
 
 const inputClass =
-  "h-11 w-full rounded-xl border border-border/60 bg-background px-3 text-sm font-medium outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20";
+  "h-11 w-full rounded-xl border border-border/60 bg-background px-3 text-base font-medium outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20 sm:text-sm";
 
 export function AdminCashbox() {
   const { isOwner } = useAuth();
@@ -224,7 +224,7 @@ export function AdminCashbox() {
                 onChange={(e) => setNote(e.target.value)}
                 rows={3}
                 placeholder="Anota cualquier detalle sobre la caja…"
-                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2.5 text-sm outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20"
+                className="w-full rounded-xl border border-border/60 bg-background px-3 py-2.5 text-base outline-none transition-colors focus:border-primary/60 focus:ring-2 focus:ring-primary/20 sm:text-sm"
               />
             </label>
 

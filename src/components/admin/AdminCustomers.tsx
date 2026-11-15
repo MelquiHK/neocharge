@@ -283,6 +283,32 @@ export function AdminCustomers() {
             />
           </div>
         ) : (
+          <>
+            {/* Móvil: tarjetas de cliente, sin scroll horizontal */}
+            <div className="space-y-3 p-4 md:hidden">
+              {filtered.map((c) => (
+                <article key={c.id} className="space-y-3 rounded-2xl border border-border/60 p-4">
+                  <div className="flex items-center gap-3">
+                    <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full bg-primary/10 text-base font-bold text-primary">
+                      {initialOf(c)}
+                    </div>
+                    <div className="min-w-0 flex-1">
+                      <p className="truncate font-semibold">{c.full_name ?? "—"}</p>
+                      <p className="truncate text-xs text-muted-foreground">@{c.username}</p>
+                    </div>
+                    <StatusBadge tone={roleTone(c.role)}>{c.role || "user"}</StatusBadge>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+                    <span className="truncate">{c.phone ?? "Sin teléfono"}</span>
+                    <span className="shrink-0 text-xs">{new Date(c.created_at).toLocaleDateString("es-CU")}</span>
+                  </div>
+                  <Button variant="outline" className="h-11 w-full" onClick={() => openCustomer(c)}>
+                    <Eye className="h-4 w-4" /> Ver cliente
+                  </Button>
+                </article>
+              ))}
+            </div>
+            <div className="hidden md:block">
           <AdminTable className="rounded-none border-0">
             <AdminTableHead>
               <tr>
@@ -325,6 +351,8 @@ export function AdminCustomers() {
               ))}
             </tbody>
           </AdminTable>
+            </div>
+          </>
         )}
       </section>
 
@@ -403,7 +431,7 @@ export function AdminCustomers() {
                 <div className="space-y-2">
                   <Label>Seleccionar Rol Principal</Label>
                   <Select value={viewing.role || "user"} onValueChange={(v) => updateRole(v as UserRole)}>
-                    <SelectTrigger>
+                    <SelectTrigger className="h-11">
                       <SelectValue placeholder="Selecciona un rol" />
                     </SelectTrigger>
                     <SelectContent>
@@ -495,7 +523,7 @@ export function AdminCustomers() {
                   </div>
                   <div className="space-y-2">
                     {Object.entries(PERM_LABELS).map(([key, label]) => (
-                      <div key={key} className="flex items-center justify-between">
+                      <div key={key} className="flex min-h-11 items-center justify-between">
                         <Label htmlFor={key} className="text-sm">{label}</Label>
                         <Switch id={key} checked={!!perms?.[key]} onCheckedChange={(v) => togglePerm(key, v)} />
                       </div>
@@ -516,7 +544,7 @@ export function AdminCustomers() {
                   </div>
                   <div className="space-y-2">
                     {Object.entries(PERM_LABELS).map(([key, label]) => (
-                      <div key={key} className="flex items-center justify-between">
+                      <div key={key} className="flex min-h-11 items-center justify-between">
                         <Label htmlFor={key} className="text-sm">{label}</Label>
                         <Switch id={key} checked={!!perms?.[key]} onCheckedChange={(v) => togglePerm(key, v)} />
                       </div>

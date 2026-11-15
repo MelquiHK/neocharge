@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { formatPrice, formatCUP } from "@/lib/format";
+import { formatPrice, formatCUP, formatRate } from "@/lib/format";
 import { havanaDate, startOfHavanaDayISO, startOfHavanaMonthISO } from "@/lib/havana-date";
 import { useAdminSales } from "@/hooks/admin/use-admin-sales";
 import { computeOwnerSalesSummary, computeSalesTotalsBySeller } from "@/lib/sales";
@@ -223,11 +223,18 @@ export function AdminDashboard() {
   const summaryMonth = computeOwnerSalesSummary(monthSales, rateValue);
   const partnerTotalUsd = partnerPending.reduce((s, p) => s + p.balance_usd, 0);
 
-  const cards = [
+  const cards: {
+    icon: typeof Package;
+    label: string;
+    value: number;
+    tone: "blue" | "emerald" | "amber" | "violet" | "rose" | "sky" | "slate";
+    sub: string;
+    className?: string;
+  }[] = [
     { icon: Package, label: "Productos activos", value: stats.products, tone: "blue" as const, sub: "En catálogo" },
     { icon: AlertTriangle, label: "Stock bajo", value: stats.lowStock, tone: "amber" as const, sub: "Necesitan reposición" },
     { icon: ShoppingBag, label: "Pedidos hoy", value: stats.ordersToday, tone: "blue" as const, sub: "Recibidos en el día" },
-    { icon: AlertTriangle, label: "Pedidos pendientes", value: stats.ordersPending, tone: "rose" as const, sub: "Por atender" },
+    { icon: AlertTriangle, label: "Pedidos pendientes", value: stats.ordersPending, tone: "rose" as const, sub: "Por atender", className: "max-lg:order-first" },
     { icon: Users, label: "Clientes registrados", value: stats.customers, tone: "violet" as const, sub: "En la plataforma" },
     { icon: Eye, label: "Visitas hoy", value: stats.visitsToday, tone: "sky" as const, sub: "Tráfico del día" },
     { icon: UserCheck, label: "Visitantes únicos (7d)", value: stats.unique7d, tone: "slate" as const, sub: "Últimos 7 días" },
@@ -248,14 +255,17 @@ export function AdminDashboard() {
   }
 
   return (
-    <div className="animate-fade-in space-y-6">
+    <div className="animate-fade-in flex flex-col gap-6">
       <AdminSectionHeader
         icon={LayoutDashboard}
         title="Resumen"
         description="El pulso de tu negocio: ventas, pedidos y stock de un vistazo."
       />
 
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      {/* En el teléfono lo clave va primero (tasas, pendientes y agotados);
+          en escritorio el orden visual es el de siempre. El reorden solo
+          usa `order` de flex/grid por debajo de lg. */}
+      <div className="order-2 grid grid-cols-2 gap-4 lg:order-1 lg:grid-cols-4">
         {cards.map((c) => (
           <AdminStat
             key={c.label}
@@ -264,6 +274,7 @@ export function AdminDashboard() {
             value={c.value}
             sub={c.sub}
             tone={c.tone}
+            className={c.className}
           />
         ))}
       </div>
@@ -271,20 +282,22 @@ export function AdminDashboard() {
       {/* Tasa vigente y agotados: lo que más se consulta en el día a día.
           La tasa sale del mismo hook que usa toda la tienda (sin queries
           nuevas); los agotados se cuentan del query de productos de arriba. */}
-      <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
+      <div className="order-1 grid grid-cols-2 gap-4 lg:order-2 lg:grid-cols-4">
         <AdminStat
           icon={DollarSign}
           label="Tasa USD hoy"
-          value={rateValue > 0 ? formatCUP(rateValue) : "—"}
+          value={rateValue > 0 ? formatRate(rateValue) : "—"}
           sub={rateMissing ? "Falta registrar la de hoy" : "elTOQUE · vigente"}
           tone="violet"
+          className="max-lg:order-1"
         />
         <AdminStat
           icon={TrendingUp}
           label="Tasa EUR hoy"
-          value={rate?.eur_to_cup ? formatCUP(rate.eur_to_cup) : "—"}
+          value={rate?.eur_to_cup ? formatRate(rate.eur_to_cup) : "—"}
           sub="Sin extra en euros"
           tone="violet"
+          className="max-lg:order-2"
         />
         <AdminStat
           icon={Wallet}
@@ -292,6 +305,7 @@ export function AdminDashboard() {
           value={rate ? `+${formatCUP(rate.extra_cup_chargers)}` : "—"}
           sub="Por cada USD, solo en CUP"
           tone="slate"
+          className="max-lg:order-4"
         />
         <AdminStat
           icon={Package}
@@ -299,12 +313,13 @@ export function AdminDashboard() {
           value={stats.outOfStock}
           sub="Productos agotados"
           tone="rose"
+          className="max-lg:order-3"
         />
       </div>
 
       {permissions.can_view_finances && (
         <>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="order-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <AdminStat
               icon={DollarSign}
               label="Ingresos del mes"
@@ -327,7 +342,7 @@ export function AdminDashboard() {
               tone="emerald"
             />
           </div>
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+          <div className="order-3 grid grid-cols-1 gap-4 sm:grid-cols-3">
             <AdminStat
               icon={ShoppingBag}
               label="Ventas del mes"
@@ -354,7 +369,7 @@ export function AdminDashboard() {
       )}
 
       {permissions.can_view_finances && (
-        <AdminCard>
+        <AdminCard className="order-4">
           <AdminCardTitle icon={HandCoins} title="Ventas registradas (gestores)" />
           {salesTotals.totalCount === 0 ? (
             <AdminEmptyState
@@ -402,7 +417,7 @@ export function AdminDashboard() {
       )}
 
       {permissions.can_view_finances && partnerPending.length > 0 && (
-        <AdminCard>
+        <AdminCard className="order-5">
           <AdminCardTitle icon={Handshake} title="Pendiente de recoger en socios" />
           <div className="space-y-1.5">
             {partnerPending.map((p) => (
@@ -419,7 +434,7 @@ export function AdminDashboard() {
         </AdminCard>
       )}
 
-      <AdminCard>
+      <AdminCard className="order-6">
         <AdminCardTitle icon={ShoppingBag} title="Pedidos recientes" />
         {recent.length === 0 ? (
           <AdminEmptyState
@@ -459,7 +474,7 @@ export function AdminDashboard() {
         )}
       </AdminCard>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="order-7 grid gap-4 lg:grid-cols-2">
         <AdminCard>
           <AdminCardTitle
             icon={Globe}

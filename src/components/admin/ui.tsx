@@ -185,10 +185,22 @@ export function StatusBadge({
   );
 }
 
-/** Contenedor de tabla con scroll horizontal en móvil y bordes redondeados. */
+/** Contenedor de tabla con scroll horizontal en móvil y bordes redondeados.
+ *  En el teléfono la primera columna queda FIJA a la izquierda (con fondo
+ *  sólido y sombra de borde) pa que al desplazar lateralmente nunca se
+ *  pierda de vista a qué fila pertenece cada dato; el scroll es suave.
+ *  En escritorio no cambia nada. Las secciones con tarjetas móviles
+ *  propias (Productos, Pedidos…) ni siquiera muestran la tabla en móvil. */
 export function AdminTable({ children, className }: { children: ReactNode; className?: string }) {
   return (
-    <div className={cn("overflow-x-auto rounded-2xl border border-border/60", className)}>
+    <div
+      className={cn(
+        "overflow-x-auto scroll-smooth rounded-2xl border border-border/60",
+        "max-lg:[&_thead_th:first-child]:sticky max-lg:[&_thead_th:first-child]:left-0 max-lg:[&_thead_th:first-child]:z-20 max-lg:[&_thead_th:first-child]:bg-muted",
+        "max-lg:[&_tbody_td:first-child]:sticky max-lg:[&_tbody_td:first-child]:left-0 max-lg:[&_tbody_td:first-child]:z-10 max-lg:[&_tbody_td:first-child]:bg-card max-lg:[&_tbody_td:first-child]:shadow-[10px_0_14px_-10px_rgba(0,0,0,0.35)]",
+        className
+      )}
+    >
       <table className="w-full min-w-[640px] text-sm">{children}</table>
     </div>
   );

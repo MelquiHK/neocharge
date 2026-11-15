@@ -280,6 +280,42 @@ export function AdminReferrals() {
             }
           />
         ) : (
+          <>
+            {/* Móvil: tarjeta por código, sin scroll horizontal */}
+            <div className="space-y-3 md:hidden">
+              {codes.map((row) => (
+                <article key={row.id} className="space-y-3 rounded-2xl border border-border/60 p-4">
+                  <div className="flex items-center gap-2">
+                    <code className="rounded-lg bg-muted px-2 py-1 font-mono text-sm font-bold">{row.code}</code>
+                    <span className="min-w-0 flex-1 truncate font-medium">{row.seller_name ?? "—"}</span>
+                    <Badge variant={row.is_active ? "default" : "secondary"}>
+                      {row.is_active ? "Activo" : "Inactivo"}
+                    </Badge>
+                  </div>
+                  <div className="flex items-center justify-between gap-3 text-sm text-muted-foreground">
+                    <span className="truncate">{row.seller_phone ?? "Sin teléfono"}</span>
+                    <span className="shrink-0">{orderCountByCode.get(row.code) ?? 0} pedidos</span>
+                  </div>
+                  <label className="flex min-h-11 items-center gap-2 text-sm">
+                    <Switch checked={row.is_active} onCheckedChange={() => void toggleActive(row)} aria-label={`Activar código ${row.code}`} />
+                    Código activo
+                  </label>
+                  <div className="flex gap-2">
+                    <Button variant="outline" className="h-11 flex-1 gap-1.5" onClick={() => void copyLink(row.code)}>
+                      {copiedCode === row.code ? <Check className="h-4 w-4 text-emerald-600" /> : <Copy className="h-4 w-4" />}
+                      Copiar enlace
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-11 w-11 shrink-0" onClick={() => openEdit(row)} aria-label="Editar">
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button variant="outline" size="icon" className="h-11 w-11 shrink-0 text-destructive" onClick={() => setDeleteTarget(row)} aria-label="Eliminar">
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </article>
+              ))}
+            </div>
+            <div className="hidden md:block">
           <AdminTable>
             <AdminTableHead>
               <tr>
@@ -335,6 +371,8 @@ export function AdminReferrals() {
               ))}
             </tbody>
           </AdminTable>
+            </div>
+          </>
         )}
       </AdminCard>
 
@@ -347,6 +385,24 @@ export function AdminReferrals() {
             description="Cuando un cliente compre entrando con un enlace ?ref=, el pedido aparecerá aquí."
           />
         ) : (
+          <>
+            {/* Móvil: filas apiladas del reporte, sin scroll horizontal */}
+            <div className="space-y-2 md:hidden">
+              {report.map((r) => (
+                <div key={r.code} className="flex items-center gap-3 rounded-2xl border border-border/60 p-3.5">
+                  <code className="rounded-lg bg-muted px-2 py-1 font-mono text-sm font-bold">{r.code}</code>
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate font-medium">{r.seller}</p>
+                    <p className="text-xs text-muted-foreground">{r.count} pedidos</p>
+                  </div>
+                  <div className="shrink-0 text-right text-sm">
+                    <p className="font-bold">{formatPrice(r.totalUSD)}</p>
+                    <p className="text-xs text-muted-foreground">{formatCUP(r.totalCUP)}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="hidden md:block">
           <AdminTable>
             <AdminTableHead>
               <tr>
@@ -371,6 +427,8 @@ export function AdminReferrals() {
               ))}
             </tbody>
           </AdminTable>
+            </div>
+          </>
         )}
       </AdminCard>
 

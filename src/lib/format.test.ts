@@ -4,6 +4,7 @@ import {
   formatCUP,
   formatMoney,
   formatPrice,
+  formatRate,
   hasSaneDiscount,
   hasWarranty,
   warrantyTypeLabel,
@@ -22,6 +23,23 @@ describe("formatPrice (bug del doble símbolo de moneda)", () => {
 
   it("formatCUP usa sufijo CUP, no doble símbolo", () => {
     expect(formatCUP(15000)).toBe("15,000 CUP");
+  });
+});
+
+describe("formatRate (tarjetas de tasa del Resumen)", () => {
+  it("una tasa entera no lleva decimales", () => {
+    expect(formatRate(920)).toBe("920 CUP");
+  });
+
+  it("una tasa con decimales los muestra exactos, sin redondear", () => {
+    // 997.5 se veía como «998» con formatCUP: la tarjeta debe dar el valor real.
+    // El separador decimal lo decide Intl según el entorno ("." o ",").
+    expect(formatRate(997.5)).toMatch(/^997[.,]50 CUP$/);
+    expect(formatRate(997.5)).not.toBe("998 CUP");
+  });
+
+  it("acepta null sin romper", () => {
+    expect(formatRate(null)).toBe("—");
   });
 });
 

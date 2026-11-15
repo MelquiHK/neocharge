@@ -900,7 +900,7 @@ export function AdminSales() {
           </div>
 
           <div className="flex justify-end">
-            <Button variant="hero" className="h-10 w-full sm:w-auto" onClick={submit}>Registrar venta</Button>
+            <Button variant="hero" className="h-11 w-full sm:w-auto lg:h-10" onClick={submit}>Registrar venta</Button>
           </div>
         </div>
       </AdminCard>
@@ -939,7 +939,36 @@ export function AdminSales() {
             className="mt-4"
           />
 
-          <div className="mt-4">
+          {/* Móvil: una tarjeta por gestor, sin scroll horizontal */}
+          <div className="mt-4 space-y-3 md:hidden">
+            {summary.sellers.map((s) => (
+              <div key={s.key} className="rounded-2xl border border-border/60 p-4">
+                <div className="flex items-center gap-2">
+                  <p className="min-w-0 flex-1 truncate font-semibold">{s.sellerName || "Desconocido"}</p>
+                  {s.isOwner && <StatusBadge tone="primary">Mel</StatusBadge>}
+                  <Button size="icon" variant="ghost" className="h-11 w-11 shrink-0 text-primary" onClick={() => { setAuditGestor(s); setIsAuditOpen(true); }} aria-label="Auditar gestor">
+                    <ShieldAlert className="h-5 w-5" />
+                  </Button>
+                </div>
+                <p className="text-xs text-muted-foreground">{s.count} ventas</p>
+                <div className="mt-3 grid grid-cols-3 gap-2 text-center">
+                  <div className="rounded-xl bg-muted/40 p-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pagado</p>
+                    <p className="mt-0.5 text-sm font-semibold text-emerald-600 dark:text-emerald-400">{formatCUP(s.paidCUP)}</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/40 p-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">Pendiente</p>
+                    <p className="mt-0.5 text-sm font-semibold text-amber-600 dark:text-amber-400">{formatCUP(s.pendingCUP)}</p>
+                  </div>
+                  <div className="rounded-xl bg-muted/40 p-2.5">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">A deber</p>
+                    <p className="mt-0.5 text-sm font-bold">{formatCUP(s.owedCUP)}</p>
+                  </div>
+                </div>
+              </div>
+            ))}
+          </div>
+          <div className="mt-4 hidden md:block">
             <AdminTable>
               <AdminTableHead>
                 <tr>
@@ -980,7 +1009,7 @@ export function AdminSales() {
             <div className="w-full space-y-2 sm:w-auto">
               <Label>Filtrar por gestor</Label>
               <Select value={filterSeller} onValueChange={setFilterSeller}>
-                <SelectTrigger className="h-10 w-full md:w-[240px]">
+                <SelectTrigger className="h-11 w-full md:w-[240px]">
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent>
@@ -1026,16 +1055,16 @@ export function AdminSales() {
 
                 <div className="flex flex-wrap items-center gap-2.5 md:justify-end">
                   <div className="font-display text-lg font-bold text-primary">{sale.currency === "USD" ? formatPrice(Number(sale.price)) : formatCUP(Number(sale.price))}</div>
-                  <Button size="icon" variant="outline" className="h-9 w-9" onClick={() => openDetails(sale)} aria-label="Ver detalles">
+                  <Button size="icon" variant="outline" className="h-11 w-11 md:h-9 md:w-9" onClick={() => openDetails(sale)} aria-label="Ver detalles">
                     <Eye className="h-4 w-4" />
                   </Button>
                   {!sale.is_paid && (
-                    <Button size="sm" className="h-9" onClick={async () => { try { await markPaid(sale.id, getSaleOwed(sale, rateValue)); toast.success("Venta marcada como pagada"); } catch (e: unknown) { toast.error((e instanceof Error ? e.message : null) || "No se pudo actualizar"); } }}>
+                    <Button size="sm" className="h-11 md:h-9" onClick={async () => { try { await markPaid(sale.id, getSaleOwed(sale, rateValue)); toast.success("Venta marcada como pagada"); } catch (e: unknown) { toast.error((e instanceof Error ? e.message : null) || "No se pudo actualizar"); } }}>
                       Marcar pagada
                     </Button>
                   )}
                   {(isOwner || sale.seller_user_id === user?.id) && (
-                    <Button size="icon" variant="ghost" className="h-9 w-9 text-destructive hover:text-destructive" onClick={async () => {
+                    <Button size="icon" variant="ghost" className="h-11 w-11 text-destructive hover:text-destructive md:h-9 md:w-9" onClick={async () => {
                       if (!confirm("¿Eliminar esta venta?")) return;
                       try { await removeSale(sale.id); toast.success("Venta eliminada"); } catch (e: unknown) { toast.error((e instanceof Error ? e.message : null) || "No se pudo eliminar"); }
                     }} aria-label="Eliminar venta">

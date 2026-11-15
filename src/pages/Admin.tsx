@@ -89,44 +89,17 @@ const Admin = () => {
     };
   }, []);
 
-  if (loading || !authDataReady)
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950">
-        <div className="flex flex-col items-center gap-5">
-          <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-3xl bg-gradient-primary text-white shadow-glow">
-            <Zap className="h-8 w-8" strokeWidth={2.5} fill="currentColor" />
-          </div>
-          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/15 border-t-primary" />
-          <p className="text-sm text-slate-400">Abriendo tu panel…</p>
-        </div>
-      </div>
-    );
-
-  if (!user) return <Navigate to="/auth" replace />;
-
-  if (!isAdmin)
-    return (
-      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
-        <div className="w-full max-w-md space-y-6 rounded-3xl border border-white/10 bg-slate-900 p-8 text-center shadow-dramatic">
-          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-400">
-            <ShieldAlert className="h-8 w-8" />
-          </div>
-          <div className="space-y-2">
-            <h1 className="font-display text-2xl font-bold text-white">Acceso restringido</h1>
-            <p className="text-sm text-slate-400">
-              Necesitas privilegios de administrador para ingresar a esta sección.
-            </p>
-          </div>
-          <Link
-            to="/"
-            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
-          >
-            <ArrowLeft className="h-4 w-4" /> Volver al sitio principal
-          </Link>
-        </div>
-      </div>
-    );
-
+  /* ── Derivaciones de navegación y hooks de pestañas visitadas ────────
+     IMPORTANTE (regresión 2026-11-15 · error de React #310): TODOS los
+     hooks del componente van ANTES de los retornos tempranos de abajo.
+     Antes, `visitedTabs` vivía tras los `if (loading) return…`: en el
+     montaje en frío (entrada directa o recarga en /admin) el primer
+     render salía por el retorno de carga sin ejecutar esos hooks, y al
+     resolverse la sesión el render siguiente ejecutaba MÁS hooks que el
+     anterior → «Rendered more hooks than during the previous render» y
+     la app caía en «Algo salió mal». Por navegación interna la sesión ya
+     venía resuelta al montar y nunca se notó. No mover hooks bajo los
+     retornos tempranos. */
   const isOwner = permissions.is_owner;
   const groups: { label: string; items: { v: string; l: string; icon: typeof LayoutDashboard; show: boolean; badge?: number }[] }[] = [
     {
@@ -176,6 +149,68 @@ const Admin = () => {
   const activeTabInfo = allTabs.find((t) => t.v === activeTab) || allTabs[0];
   const ActiveIcon = activeTabInfo.icon;
 
+  // Pestaña efectiva: si el hash trae una sin permiso o inexistente, se
+  // cae a la primera disponible (mismo comportamiento que el switch de
+  // antes, que terminaba en el Resumen).
+  const effectiveTab = allTabs.some((t) => t.v === activeTab)
+    ? activeTab
+    : allTabs[0]?.v ?? "dashboard";
+
+  // Pestañas que se quedan MONTADAS tras visitarlas: volver a ellas es
+  // instantáneo, con filtros, búsqueda y scroll intactos (y sus hooks
+  // sirven la caché en memoria). Resumen y Mensajería quedan fuera: el
+  // Resumen se recarga fresco en cada visita y Mensajería usa mapas en
+  // vivo que no deben vivir ocultos.
+  const KEEP_ALIVE_TABS = new Set([
+    "orders", "products", "categories", "services", "locations", "socios",
+    "customers", "rates", "settings", "blog", "sales", "referrals",
+    "analytics", "cashbox",
+  ]);
+  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set([effectiveTab]));
+  useEffect(() => {
+    setVisitedTabs((prev) =>
+      prev.has(effectiveTab) ? prev : new Set(prev).add(effectiveTab)
+    );
+  }, [effectiveTab]);
+
+  if (loading || !authDataReady)
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950">
+        <div className="flex flex-col items-center gap-5">
+          <div className="flex h-16 w-16 animate-pulse items-center justify-center rounded-3xl bg-gradient-primary text-white shadow-glow">
+            <Zap className="h-8 w-8" strokeWidth={2.5} fill="currentColor" />
+          </div>
+          <div className="h-8 w-8 animate-spin rounded-full border-[3px] border-white/15 border-t-primary" />
+          <p className="text-sm text-slate-400">Abriendo tu panel…</p>
+        </div>
+      </div>
+    );
+
+  if (!user) return <Navigate to="/auth" replace />;
+
+  if (!isAdmin)
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-slate-950 px-4">
+        <div className="w-full max-w-md space-y-6 rounded-3xl border border-white/10 bg-slate-900 p-8 text-center shadow-dramatic">
+          <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-red-500/10 text-red-400">
+            <ShieldAlert className="h-8 w-8" />
+          </div>
+          <div className="space-y-2">
+            <h1 className="font-display text-2xl font-bold text-white">Acceso restringido</h1>
+            <p className="text-sm text-slate-400">
+              Necesitas privilegios de administrador para ingresar a esta sección.
+            </p>
+          </div>
+          <Link
+            to="/"
+            className="inline-flex items-center gap-2 text-sm font-semibold text-primary hover:underline"
+          >
+            <ArrowLeft className="h-4 w-4" /> Volver al sitio principal
+          </Link>
+        </div>
+      </div>
+    );
+
   const renderContent = (tab: string) => {
     switch (tab) {
       case "dashboard": return <AdminDashboard />;
@@ -208,30 +243,6 @@ const Admin = () => {
     }
   };
 
-  // Pestaña efectiva: si el hash trae una sin permiso o inexistente, se
-  // cae a la primera disponible (mismo comportamiento que el switch de
-  // antes, que terminaba en el Resumen).
-  const effectiveTab = allTabs.some((t) => t.v === activeTab)
-    ? activeTab
-    : allTabs[0]?.v ?? "dashboard";
-
-  // Pestañas que se quedan MONTADAS tras visitarlas: volver a ellas es
-  // instantáneo, con filtros, búsqueda y scroll intactos (y sus hooks
-  // sirven la caché en memoria). Resumen y Mensajería quedan fuera: el
-  // Resumen se recarga fresco en cada visita y Mensajería usa mapas en
-  // vivo que no deben vivir ocultos.
-  const KEEP_ALIVE_TABS = new Set([
-    "orders", "products", "categories", "services", "locations", "socios",
-    "customers", "rates", "settings", "blog", "sales", "referrals",
-    "analytics", "cashbox",
-  ]);
-  const [visitedTabs, setVisitedTabs] = useState<Set<string>>(() => new Set([effectiveTab]));
-  useEffect(() => {
-    setVisitedTabs((prev) =>
-      prev.has(effectiveTab) ? prev : new Set(prev).add(effectiveTab)
-    );
-  }, [effectiveTab]);
-
   // Acceso rápido móvil (una mano): las 4 secciones de uso diario que el
   // usuario tenga permitidas + botón «Más» que abre el menú completo.
   const quickOrder = ["dashboard", "orders", "products", "sales"];
@@ -244,12 +255,14 @@ const Admin = () => {
 
   const SidebarContent = () => (
     <div className="flex h-full flex-col bg-slate-950 text-slate-200">
-      {/* Marca */}
+      {/* Marca: logo oficial de NeoCharge (el mismo /icon.svg de la tienda) */}
       <div className="flex items-center justify-between border-b border-white/10 px-5 py-5">
         <Link to="/" className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-2xl bg-gradient-primary text-white shadow-glow">
-            <Zap className="h-5 w-5" strokeWidth={2.5} fill="currentColor" />
-          </div>
+          <img
+            src="/icon.svg"
+            alt="NeoCharge"
+            className="h-10 w-10 shrink-0 rounded-[10px] shadow-glow"
+          />
           <div>
             <p className="font-display text-base font-bold leading-none text-white">NeoCharge</p>
             <p className="mt-1 text-[9px] font-bold uppercase tracking-[0.22em] text-primary">
@@ -258,7 +271,7 @@ const Admin = () => {
           </div>
         </Link>
         <button
-          className="rounded-lg p-1.5 text-slate-400 hover:bg-white/10 hover:text-white lg:hidden"
+          className="flex h-11 w-11 items-center justify-center rounded-lg text-slate-400 hover:bg-white/10 hover:text-white lg:hidden"
           onClick={() => setSidebarOpen(false)}
           aria-label="Cerrar menú"
         >
@@ -295,7 +308,7 @@ const Admin = () => {
                     key={t.v}
                     onClick={() => goTo(t.v)}
                     className={cn(
-                      "group relative flex w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200",
+                      "group relative flex min-h-11 w-full items-center justify-between rounded-xl px-3 py-2.5 text-sm font-medium transition-all duration-200 lg:min-h-0",
                       isActive
                         ? "bg-gradient-primary font-semibold text-white shadow-glow"
                         : "text-slate-400 hover:bg-white/5 hover:text-white"
@@ -334,17 +347,17 @@ const Admin = () => {
         ))}
       </nav>
 
-      {/* Acciones de pie */}
-      <div className="space-y-1 border-t border-white/10 bg-white/[0.02] p-3">
+      {/* Acciones de pie (con margen del área segura inferior del teléfono) */}
+      <div className="space-y-1 border-t border-white/10 bg-white/[0.02] p-3 pb-[max(0.75rem,env(safe-area-inset-bottom))] lg:pb-3">
         <Link
           to="/"
-          className="flex items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-white"
+          className="flex min-h-11 items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-medium text-slate-400 transition-all hover:bg-white/5 hover:text-white lg:min-h-0"
         >
           <ArrowLeft className="h-3.5 w-3.5" /> Volver a la Tienda
         </Link>
         <button
           onClick={signOut}
-          className="flex w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-medium text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300"
+          className="flex min-h-11 w-full items-center gap-3 rounded-xl px-4 py-2.5 text-xs font-medium text-red-400 transition-all hover:bg-red-500/10 hover:text-red-300 lg:min-h-0"
         >
           <LogOut className="h-3.5 w-3.5" /> Cerrar sesión
         </button>
@@ -366,7 +379,7 @@ const Admin = () => {
           onClick={() => setSidebarOpen(false)}
         >
           <div
-            className="h-full w-72 animate-slide-in-left shadow-2xl"
+            className="h-full w-[85vw] max-w-72 animate-slide-in-left shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             <SidebarContent />
@@ -381,7 +394,7 @@ const Admin = () => {
           <div className="flex min-w-0 items-center gap-3">
             <button
               onClick={() => setSidebarOpen(true)}
-              className="rounded-xl border border-border/70 p-2 transition-colors hover:bg-muted lg:hidden"
+              className="flex h-11 w-11 items-center justify-center rounded-xl border border-border/70 transition-colors hover:bg-muted lg:hidden"
               aria-label="Abrir menú"
             >
               <Menu className="h-5 w-5" />
@@ -400,7 +413,7 @@ const Admin = () => {
             {unreadCount > 0 && (
               <button
                 onClick={() => { markAllAsRead(); goTo("orders"); }}
-                className="flex items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400"
+                className="flex min-h-11 items-center gap-1.5 rounded-full border border-red-500/25 bg-red-500/10 px-3 py-1.5 text-xs font-bold text-red-600 dark:text-red-400 lg:min-h-0"
                 title="Ver pedidos y marcar como vistos"
               >
                 <span className="h-1.5 w-1.5 rounded-full bg-red-500" />
@@ -410,7 +423,7 @@ const Admin = () => {
             <div className="relative">
               <button
                 onClick={() => setNotifOpen((v) => !v)}
-                className="relative rounded-full border border-border/70 p-2 transition-colors hover:bg-muted"
+                className="relative flex h-11 w-11 items-center justify-center rounded-full border border-border/70 transition-colors hover:bg-muted lg:h-9 lg:w-9"
                 aria-label="Notificaciones"
               >
                 <Bell className="h-4 w-4" />
@@ -464,7 +477,7 @@ const Admin = () => {
             </div>
             <Link
               to="/"
-              className="inline-flex items-center gap-2 rounded-full border border-border/70 px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted sm:px-4"
+              className="inline-flex min-h-11 items-center gap-2 rounded-full border border-border/70 px-3 py-2 text-xs font-semibold transition-colors hover:bg-muted sm:px-4 lg:min-h-0"
             >
               <Store className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Ver tienda</span>
@@ -507,7 +520,7 @@ const Admin = () => {
                 key={t.v}
                 onClick={() => goTo(t.v)}
                 className={cn(
-                  "relative flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold transition-colors",
+                  "relative flex min-h-[52px] flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold transition-colors",
                   isActive ? "text-white" : "text-slate-500 hover:text-slate-300"
                 )}
               >
@@ -531,7 +544,7 @@ const Admin = () => {
           })}
           <button
             onClick={() => setSidebarOpen(true)}
-            className="flex flex-col items-center gap-0.5 py-2.5 text-[10px] font-semibold text-slate-500 transition-colors hover:text-slate-300"
+            className="flex min-h-[52px] flex-col items-center justify-center gap-1 py-2 text-[11px] font-semibold text-slate-500 transition-colors hover:text-slate-300"
           >
             <LayoutGrid className="h-5 w-5" />
             Más
