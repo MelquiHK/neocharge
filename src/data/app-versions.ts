@@ -8,6 +8,15 @@ export interface AppVersion {
 
 export const APP_VERSIONS: AppVersion[] = [
   {
+    version: "2.3.1",
+    date: "2026-11-15",
+    apkUrl: "/descargas/neocharge-tienda.apk",
+    size: "38 MB",
+    highlights: [
+      "Corrección: la garantía ya se lee en español claro en el detalle del producto — «Garantía de 24 a 48 horas» en los cargadores, igual que en la web",
+    ],
+  },
+  {
     version: "2.3.0",
     date: "2026-11-15",
     apkUrl: "/descargas/neocharge-tienda.apk",
