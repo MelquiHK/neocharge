@@ -44,6 +44,7 @@ const DescargarApp = lazy(() => import("./pages/DescargarApp.tsx"));
 const Descargas = lazy(() => import("./pages/Descargas.tsx"));
 const OrderConfirmed = lazy(() => import("./pages/OrderConfirmed.tsx"));
 const TrackOrder = lazy(() => import("./pages/TrackOrder.tsx"));
+const Seguir = lazy(() => import("./pages/Seguir.tsx"));
 const Settings = lazy(() => import("./pages/Settings.tsx"));
 
 // Loading placeholder component
@@ -67,6 +68,11 @@ const App = () => (
           <AuthProvider>
             <CartProvider>
               <Routes>
+                {/* Seguimiento en vivo por enlace (sin login, fuera del
+                    layout de la tienda: es una pantalla de mapa a
+                    pantalla completa para el cliente que recibe el
+                    enlace por WhatsApp). */}
+                <Route path="/seguir" element={<Suspense fallback={<LoadingPlaceholder />}><Seguir /></Suspense>} />
                 <Route element={<SiteLayout />}>
                   <Route path="/" element={<Index />} />
                   <Route path="/tienda" element={<Suspense fallback={<LoadingPlaceholder />}><Shop /></Suspense>} />
