@@ -8,6 +8,16 @@ export interface AppVersion {
 
 export const APP_VERSIONS: AppVersion[] = [
   {
+    version: "2.3.4",
+    date: "2026-11-17",
+    apkUrl: "/descargas/neocharge-tienda.apk",
+    size: "38 MB",
+    highlights: [
+      "El formulario de compra ya no pierde tu nombre, teléfono ni dirección al elegir la ubicación en el mapa",
+      "Precio de la mensajería bien visible al hacer el pedido: monto, distancia y que se paga en efectivo al recibir, también en la confirmación",
+    ],
+  },
+  {
     version: "2.3.3",
     date: "2026-11-17",
     apkUrl: "/descargas/neocharge-tienda.apk",
