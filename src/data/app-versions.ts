@@ -8,6 +8,16 @@ export interface AppVersion {
 
 export const APP_VERSIONS: AppVersion[] = [
   {
+    version: "2.3.3",
+    date: "2026-11-17",
+    apkUrl: "/descargas/neocharge-tienda.apk",
+    size: "38 MB",
+    highlights: [
+      "Compra arreglada: se corrigió el error que impedía confirmar pedidos desde la app",
+      "Mapa de entrega con recorrido: al elegir tu ubicación ves la ruta desde la tienda hasta tu punto, igual que en la web",
+    ],
+  },
+  {
     version: "2.3.2",
     date: "2026-11-15",
     apkUrl: "/descargas/neocharge-tienda.apk",
