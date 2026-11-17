@@ -8,6 +8,17 @@ export interface AppVersion {
 
 export const APP_VERSIONS: AppVersion[] = [
   {
+    version: "2.3.6",
+    date: "2026-11-17",
+    apkUrl: "/descargas/neocharge-tienda.apk",
+    size: "38 MB",
+    highlights: [
+      "Si tienes puesta tu cuenta del negocio, la app te avisa con una notificación en cuanto un cliente hace un pedido nuevo",
+      "Toca la notificación y caes directo en el detalle de ese pedido: el cliente, el total y todo lo que pidió",
+      "El aviso llega aunque tengas la app cerrada: la app revisa sola cada pocos minutos si entró un pedido",
+    ],
+  },
+  {
     version: "2.3.5",
     date: "2026-11-17",
     apkUrl: "/descargas/neocharge-tienda.apk",
