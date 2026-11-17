@@ -57,12 +57,13 @@ BEGIN
     RAISE EXCEPTION 'Ese usuario no existe';
   END IF;
 
-  -- Perfil público: se crea si falta y se completan nombre/teléfono
-  -- solo con valores no vacíos (nunca se borra lo que ya haya).
-  INSERT INTO public.profiles (id, email, full_name, phone)
+  -- Perfil público: el trigger de registro ya lo crea con el
+  -- nombre/teléfono de los metadatos; aquí solo se completa lo que
+  -- venga informado (nunca se borra lo que ya haya). OJO: profiles
+  -- NO tiene columna email (comprobado en producción 2026-11-17).
+  INSERT INTO public.profiles (id, full_name, phone)
   VALUES (
     p_user_id,
-    v_email,
     NULLIF(trim(COALESCE(p_full_name, '')), ''),
     NULLIF(trim(COALESCE(p_phone, '')), '')
   )
