@@ -40,6 +40,8 @@ interface TrackingRow {
   speed_kmh: number | null;
   last_seen_at: string | null;
   delivery_fee: number | null;
+  eta_factor: number | null;
+  eta_samples: number | null;
 }
 
 interface LatLng {
@@ -335,9 +337,16 @@ export default function Seguir() {
   } else if (pos && dest) {
     const km = routeInfo?.km ?? haversineKm(pos, dest) * 1.3;
     const speed = Number(data.speed_kmh ?? 0);
-    const etaMin = speed >= 5 ? (km / speed) * 60 : routeInfo?.min ?? (km / CITY_SPEED_KMH) * 60;
+    const baseEtaMin = speed >= 5 ? (km / speed) * 60 : routeInfo?.min ?? (km / CITY_SPEED_KMH) * 60;
+    const etaFactor = data.eta_factor != null ? Number(data.eta_factor) : null;
+    const etaSamples = data.eta_samples != null ? Number(data.eta_samples) : null;
+    const useLearnedFactor =
+      etaFactor != null && Number.isFinite(etaFactor) && etaFactor > 0 && etaSamples != null && etaSamples >= 3;
+    const etaMin = useLearnedFactor ? baseEtaMin * etaFactor : baseEtaMin;
     etaBig = `~${Math.max(1, Math.round(etaMin))} min`;
-    etaSub = `llega ${fmtClock(new Date(Date.now() + etaMin * 60000))}`;
+    etaSub = useLearnedFactor
+      ? "según entregas pasadas de tu zona"
+      : `llega ${fmtClock(new Date(Date.now() + etaMin * 60000))}`;
     const stale = data.last_seen_at && Date.now() - new Date(data.last_seen_at).getTime() > 90000;
     liveLine = stale
       ? `Última ubicación ${agoText(data.last_seen_at)} (puede haber perdido la conexión)`
